@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'people_analytics' => [
+        'base_url' => env('PEOPLE_ANALYTICS_BASE_URL', 'http://localhost:8000'),
+        'timeout' => env('PEOPLE_ANALYTICS_TIMEOUT', 30),
+    ],
+
 ];
+

@@ -10,14 +10,55 @@ use App\Models\CashShift;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * @group Turnos de Caixa
+ *
+ * Endpoints para gerenciar turnos de caixa.
+ * Cada turno representa um período de trabalho de um vendedor em uma loja.
+ */
 class CashShiftController extends Controller
 {
     use ApiResponse;
 
     /**
-     * List cash shifts with filters.
+     * Listar turnos de caixa
      *
-     * GET /api/v1/cash/shifts?store_id=&date=&status=
+     * Retorna os turnos de caixa das lojas às quais o usuário tem acesso,
+     * com filtros por loja, data e status.
+     *
+     * **Quem pode usar:** Qualquer usuário autenticado.
+     *
+     * **Filtros disponíveis:**
+     * - `store_id` - Filtrar por loja específica
+     * - `date` - Filtrar por data específica (YYYY-MM-DD)
+     * - `status` - Filtrar por status (open, closed, pending)
+     *
+     * **Códigos de turno:**
+     * - `M` - Manhã
+     * - `T` - Tarde
+     * - `N` - Noite
+     *
+     * @queryParam store_id integer ID da loja para filtrar. Example: 1
+     * @queryParam date string Data específica (YYYY-MM-DD). Example: 2026-01-07
+     * @queryParam status string Status do turno. Example: open
+     * @queryParam per_page integer Itens por página (1-100). Example: 25
+     *
+     * @response 200 scenario="Lista de turnos" {
+     *   "data": [
+     *     {
+     *       "id": 1,
+     *       "store_id": 1,
+     *       "date": "2026-01-07",
+     *       "shift_code": "M",
+     *       "seller_id": 6,
+     *       "status": "open",
+     *       "store": { "id": 1, "name": "Mais Capinhas Tijucas" },
+     *       "seller": { "id": 6, "name": "João Vendedor" },
+     *       "cash_closing": null
+     *     }
+     *   ],
+     *   "meta": { "current_page": 1, "per_page": 25, "total": 84 }
+     * }
      */
     public function index(Request $request): JsonResponse
     {
@@ -57,9 +98,44 @@ class CashShiftController extends Controller
     }
 
     /**
-     * Create a new cash shift.
+     * Criar novo turno de caixa
      *
-     * POST /api/v1/cash/shifts
+     * Cria um novo turno de caixa para uma loja/data/período.
+     *
+     * **Quem pode usar:** Usuários com acesso à loja.
+     *
+     * **Regras de negócio:**
+     * - Não pode haver dois turnos com mesma loja + data + turno + vendedor
+     * - O turno inicia com status `open`
+     * - Se `seller_id` não for informado, assume o usuário atual
+     *
+     * **Códigos de turno:**
+     * - `M` - Manhã (08h-14h)
+     * - `T` - Tarde (14h-20h)
+     * - `N` - Noite (20h-00h)
+     *
+     * @bodyParam store_id integer required ID da loja. Example: 1
+     * @bodyParam date string required Data do turno (YYYY-MM-DD). Example: 2026-01-07
+     * @bodyParam shift_code string required Código do turno (M, T ou N). Example: M
+     * @bodyParam seller_id integer ID do vendedor (padrão: usuário atual). Example: 6
+     *
+     * @response 201 scenario="Turno criado" {
+     *   "data": {
+     *     "id": 1,
+     *     "store_id": 1,
+     *     "date": "2026-01-07",
+     *     "shift_code": "M",
+     *     "seller_id": 6,
+     *     "status": "open",
+     *     "store": { "id": 1, "name": "Mais Capinhas Tijucas" },
+     *     "seller": { "id": 6, "name": "João Vendedor" }
+     *   },
+     *   "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+     * }
+     *
+     * @response 403 scenario="Sem acesso" {
+     *   "error": { "code": 403, "message": "You do not have access to this store." }
+     * }
      */
     public function store(Request $request): JsonResponse
     {
@@ -77,7 +153,6 @@ class CashShiftController extends Controller
             return $this->forbidden('You do not have access to this store.');
         }
 
-        // Default seller to current user if not specified
         $sellerId = $request->input('seller_id', $user->id);
 
         $shift = CashShift::create([
@@ -92,9 +167,29 @@ class CashShiftController extends Controller
     }
 
     /**
-     * Get a specific cash shift.
+     * Obter detalhes de um turno
      *
-     * GET /api/v1/cash/shifts/{shift}
+     * Retorna os detalhes de um turno específico, incluindo o fechamento se existir.
+     *
+     * **Quem pode usar:** Usuários com acesso à loja.
+     *
+     * @urlParam shift integer required ID do turno. Example: 1
+     *
+     * @response 200 scenario="Turno encontrado" {
+     *   "data": {
+     *     "id": 1,
+     *     "store_id": 1,
+     *     "date": "2026-01-07",
+     *     "shift_code": "M",
+     *     "status": "closed",
+     *     "cash_closing": {
+     *       "id": 1,
+     *       "status": "approved",
+     *       "lines": []
+     *     }
+     *   },
+     *   "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+     * }
      */
     public function show(Request $request, CashShift $shift): JsonResponse
     {

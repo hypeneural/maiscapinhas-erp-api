@@ -1,0 +1,337 @@
+name: Dashboards
+description: |-
+
+  Endpoints de dashboard com métricas e KPIs por perfil de usuário.
+  Cada dashboard retorna informações personalizadas para o papel do usuário.
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/dashboard/vendedor
+    metadata:
+      custom: []
+      groupName: Dashboards
+      groupDescription: |-
+
+        Endpoints de dashboard com métricas e KPIs por perfil de usuário.
+        Cada dashboard retorna informações personalizadas para o papel do usuário.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Dashboard do Vendedor'
+      description: |-
+        Retorna métricas do vendedor no dia, incluindo suas vendas pessoais
+        comparadas com o total da loja e status dos seus turnos.
+
+        **Quem pode usar:** Vendedores e níveis superiores.
+
+        **Métricas retornadas:**
+        - `my_sales` - Quantidade e valor total das vendas do vendedor no dia
+        - `store_sales` - Quantidade e valor total de todas as vendas da loja no dia
+        - `my_shifts` - Lista dos turnos do vendedor naquele dia com status do fechamento
+
+        **Dica:** Compare `my_sales` com `store_sales` para ver sua participação nas vendas da loja.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'ID da loja.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      date:
+        custom: []
+        name: date
+        description: 'Data no formato YYYY-MM-DD (padrão: hoje).'
+        required: false
+        example: '2026-01-07'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      store_id: 1
+      date: '2026-01-07'
+    bodyParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'The <code>id</code> of an existing record in the stores table.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      date:
+        custom: []
+        name: date
+        description: 'Must be a valid date.'
+        required: false
+        example: '2026-01-07T19:59:14'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      store_id: 16
+      date: '2026-01-07T19:59:14'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "date": "2026-01-07",
+              "my_sales": { "count": 5, "total": 850.00 },
+              "store_sales": { "count": 23, "total": 3200.00 },
+              "my_shifts": [
+                { "id": 1, "date": "2026-01-07", "shift_code": "M", "status": "open", "cash_closing": null }
+              ]
+            },
+            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+          }
+        headers: []
+        description: 'Vendas do dia'
+      -
+        custom: []
+        status: 403
+        content: |-
+          {
+            "error": { "code": 403, "message": "You do not have access to this store." }
+          }
+        headers: []
+        description: 'Sem acesso à loja'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/dashboard/conferente
+    metadata:
+      custom: []
+      groupName: Dashboards
+      groupDescription: |-
+
+        Endpoints de dashboard com métricas e KPIs por perfil de usuário.
+        Cada dashboard retorna informações personalizadas para o papel do usuário.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Dashboard do Conferente'
+      description: |-
+        Retorna métricas para conferência de caixa, incluindo fechamentos
+        pendentes de aprovação e ranking de vendedores.
+
+        **Quem pode usar:** Conferentes, Gerentes e Admins.
+
+        **Métricas retornadas:**
+        - `pending_closings` - Lista de fechamentos aguardando aprovação/rejeição
+        - `pending_count` - Quantidade de fechamentos pendentes
+        - `store_sales` - Total de vendas da loja no dia
+        - `shifts_today` - Resumo de turnos por status (open, closed, pending)
+        - `top_sellers` - Top 5 vendedores do dia por valor vendido
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'ID da loja.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      date:
+        custom: []
+        name: date
+        description: 'Data no formato YYYY-MM-DD (padrão: hoje).'
+        required: false
+        example: '2026-01-07'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      store_id: 1
+      date: '2026-01-07'
+    bodyParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'The <code>id</code> of an existing record in the stores table.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      date:
+        custom: []
+        name: date
+        description: 'Must be a valid date.'
+        required: false
+        example: '2026-01-07T19:59:14'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      store_id: 16
+      date: '2026-01-07T19:59:14'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "date": "2026-01-07",
+              "pending_closings": [],
+              "pending_count": 0,
+              "store_sales": { "count": 23, "total": 3200.00 },
+              "shifts_today": { "open": 2, "closed": 4 },
+              "top_sellers": [
+                { "seller_id": 6, "name": "João Vendedor", "total": 1500.00 }
+              ]
+            },
+            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+          }
+        headers: []
+        description: 'Dashboard do conferente'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/dashboard/admin
+    metadata:
+      custom: []
+      groupName: Dashboards
+      groupDescription: |-
+
+        Endpoints de dashboard com métricas e KPIs por perfil de usuário.
+        Cada dashboard retorna informações personalizadas para o papel do usuário.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Dashboard do Admin'
+      description: |-
+        Retorna visão consolidada de todas as lojas que o usuário administra,
+        com métricas mensais agregadas.
+
+        **Quem pode usar:** Admins e Gerentes.
+
+        **Métricas retornadas:**
+        - `total_sales` - Soma de vendas de todas as lojas no mês
+        - `sales_by_store` - Vendas detalhadas por loja
+        - `closings_summary` - Contagem de fechamentos por status
+        - `top_sellers` - Top 10 vendedores do mês (todas as lojas)
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      month:
+        custom: []
+        name: month
+        description: 'Mês no formato YYYY-MM (padrão: mês atual).'
+        required: false
+        example: 2026-01
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      month: 2026-01
+    bodyParameters:
+      month:
+        custom: []
+        name: month
+        description: 'Must match the regex /^\d{4}-\d{2}$/.'
+        required: false
+        example: 6425-59
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      month: 6425-59
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "month": "2026-01",
+              "total_sales": { "count": 450, "total": 67500.00 },
+              "sales_by_store": [
+                { "store_id": 1, "store_name": "Mais Capinhas Tijucas", "count": 180, "total": 28000.00 }
+              ],
+              "closings_summary": { "approved": 40, "submitted": 5, "draft": 3 },
+              "top_sellers": [
+                { "seller_id": 6, "name": "João Vendedor", "total": 12500.00, "count": 85 }
+              ]
+            },
+            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+          }
+        headers: []
+        description: 'Dashboard consolidado'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

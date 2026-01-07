@@ -3,11 +3,16 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\BonusRuleController;
 use App\Http\Controllers\Api\V1\CashClosingController;
 use App\Http\Controllers\Api\V1\CashShiftController;
+use App\Http\Controllers\Api\V1\CommissionRuleController;
 use App\Http\Controllers\Api\V1\DashboardController;
+use App\Http\Controllers\Api\V1\FinanceController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\MeController;
+use App\Http\Controllers\Api\V1\MonthlyGoalController;
+use App\Http\Controllers\Api\V1\PeopleAnalyticsController;
 use App\Http\Controllers\Api\V1\SaleController;
 use App\Http\Controllers\Api\V1\StoreController;
 use App\Http\Controllers\Api\V1\VersionController;
@@ -78,7 +83,45 @@ Route::middleware('auth:sanctum')->group(function () {
         });
     });
 
+    // ============================================
+    // Rules (CRUD - admin/gerente only)
+    // ============================================
+    Route::prefix('rules')->name('rules.')->group(function () {
+        Route::apiResource('bonus', BonusRuleController::class)->parameters(['bonus' => 'rule']);
+        Route::apiResource('commission', CommissionRuleController::class)->parameters(['commission' => 'rule']);
+    });
+
+    // ============================================
+    // Goals (CRUD - admin/gerente only)
+    // ============================================
+    Route::prefix('goals')->name('goals.')->group(function () {
+        Route::get('/monthly', [MonthlyGoalController::class, 'index'])->name('monthly.index');
+        Route::post('/monthly', [MonthlyGoalController::class, 'store'])->name('monthly.store');
+        Route::get('/monthly/{goal}', [MonthlyGoalController::class, 'show'])->name('monthly.show');
+        Route::put('/monthly/{goal}', [MonthlyGoalController::class, 'update'])->name('monthly.update');
+        Route::delete('/monthly/{goal}', [MonthlyGoalController::class, 'destroy'])->name('monthly.destroy');
+        Route::put('/monthly/{goal}/splits', [MonthlyGoalController::class, 'setSplits'])->name('monthly.splits');
+    });
+
+    // ============================================
+    // Finance Ledger (extrato)
+    // ============================================
+    Route::prefix('finance')->name('finance.')->group(function () {
+        Route::get('/bonus', [FinanceController::class, 'bonus'])->name('bonus');
+        Route::get('/commission', [FinanceController::class, 'commission'])->name('commission');
+    });
+
+    // ============================================
+    // Analytics
+    // ============================================
+    Route::prefix('analytics')->name('analytics.')->group(function () {
+        Route::get('/people/shift', [PeopleAnalyticsController::class, 'shift'])->name('people.shift');
+        Route::post('/people/shift', [PeopleAnalyticsController::class, 'store'])->name('people.shift.store');
+    });
+
+    // ============================================
     // Dashboards
+    // ============================================
     Route::prefix('dashboard')->name('dashboard.')->group(function () {
         Route::get('/vendedor', [DashboardController::class, 'vendedor'])->name('vendedor');
         Route::get('/conferente', [DashboardController::class, 'conferente'])->name('conferente');

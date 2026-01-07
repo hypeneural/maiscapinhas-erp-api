@@ -1,5 +1,5 @@
 # MaisCapinhas ERP API - HTTP Requests
-# Use com a extensão REST Client do VS Code ou similar
+# Use com a extensão REST Client do VS Code
 
 @baseUrl = http://localhost:8000/api/v1
 @token = {{login.response.body.data.token}}
@@ -28,8 +28,16 @@ Content-Type: application/json
     "password": "password"
 }
 
+### Login (Gerente)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+    "email": "carlos.gerente@maiscapinhas.com.br",
+    "password": "password"
+}
+
 ### Login (Vendedor)
-# @name loginVendedor
 POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
@@ -38,29 +46,15 @@ Content-Type: application/json
     "password": "password"
 }
 
-### Login (Conferente)
-# @name loginConferente
-POST {{baseUrl}}/auth/login
-Content-Type: application/json
-
-{
-    "email": "ana.conferente@maiscapinhas.com.br",
-    "password": "password"
-}
-
 ### Logout
 POST {{baseUrl}}/auth/logout
 Authorization: Bearer {{token}}
 
-### Logout All Sessions
-POST {{baseUrl}}/auth/logout-all
-Authorization: Bearer {{token}}
-
 ### ==============================================
-### ME (Current User)
+### ME
 ### ==============================================
 
-### Get Current User with Stores and Roles
+### Get Current User
 GET {{baseUrl}}/me
 Authorization: Bearer {{token}}
 
@@ -77,118 +71,257 @@ GET {{baseUrl}}/stores/1
 Authorization: Bearer {{token}}
 
 ### ==============================================
-### SALES
+### BONUS RULES (admin/gerente)
 ### ==============================================
 
-### List Sales (all my stores)
-GET {{baseUrl}}/sales
+### List Bonus Rules
+GET {{baseUrl}}/rules/bonus
 Authorization: Bearer {{token}}
 
-### List Sales with Filters
-GET {{baseUrl}}/sales?store_id=1&from=2026-01-01&to=2026-01-31&per_page=10
+### Create Global Bonus Rule
+POST {{baseUrl}}/rules/bonus
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "store_id": null,
+    "effective_from": "2026-01-01",
+    "config_json": [
+        {"min_sales": 500, "bonus": 10},
+        {"min_sales": 800, "bonus": 20},
+        {"min_sales": 1200, "bonus": 35}
+    ]
+}
+
+### Create Store-Specific Bonus Rule
+POST {{baseUrl}}/rules/bonus
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "store_id": 1,
+    "effective_from": "2026-01-01",
+    "config_json": [
+        {"min_sales": 400, "bonus": 15},
+        {"min_sales": 700, "bonus": 25}
+    ]
+}
+
+### Get Bonus Rule
+GET {{baseUrl}}/rules/bonus/1
 Authorization: Bearer {{token}}
 
-### List Sales by Seller
-GET {{baseUrl}}/sales?store_id=1&seller_id=6
+### Update Bonus Rule
+PUT {{baseUrl}}/rules/bonus/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "effective_from": "2026-02-01",
+    "config_json": [
+        {"min_sales": 600, "bonus": 12},
+        {"min_sales": 1000, "bonus": 25}
+    ]
+}
+
+### Delete Bonus Rule
+DELETE {{baseUrl}}/rules/bonus/1
 Authorization: Bearer {{token}}
 
 ### ==============================================
-### CASH SHIFTS
+### COMMISSION RULES (admin/gerente)
 ### ==============================================
 
-### List Shifts
-GET {{baseUrl}}/cash/shifts
+### List Commission Rules
+GET {{baseUrl}}/rules/commission
 Authorization: Bearer {{token}}
 
-### List Shifts with Filters
-GET {{baseUrl}}/cash/shifts?store_id=1&status=open
+### Create Global Commission Rule
+POST {{baseUrl}}/rules/commission
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "store_id": null,
+    "effective_from": "2026-01-01",
+    "config_json": [
+        {"min_attainment": 0, "rate": 2},
+        {"min_attainment": 80, "rate": 2.5},
+        {"min_attainment": 100, "rate": 3},
+        {"min_attainment": 120, "rate": 4}
+    ]
+}
+
+### Get Commission Rule
+GET {{baseUrl}}/rules/commission/1
 Authorization: Bearer {{token}}
 
-### List Shifts by Date
-GET {{baseUrl}}/cash/shifts?store_id=1&date=2026-01-07
+### ==============================================
+### MONTHLY GOALS (admin/gerente)
+### ==============================================
+
+### List Goals
+GET {{baseUrl}}/goals/monthly
 Authorization: Bearer {{token}}
 
-### Create New Shift
-POST {{baseUrl}}/cash/shifts
+### List Goals for Store
+GET {{baseUrl}}/goals/monthly?store_id=1
+Authorization: Bearer {{token}}
+
+### Create Monthly Goal
+POST {{baseUrl}}/goals/monthly
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "store_id": 1,
+    "month": "2026-02",
+    "goal_amount": 75000.00,
+    "active": true
+}
+
+### Get Goal Details
+GET {{baseUrl}}/goals/monthly/1
+Authorization: Bearer {{token}}
+
+### Update Goal Amount
+PUT {{baseUrl}}/goals/monthly/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "goal_amount": 80000.00
+}
+
+### Set Goal Splits (must sum to 100%)
+PUT {{baseUrl}}/goals/monthly/1/splits
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "splits": [
+        {"user_id": 6, "percent": 50.00},
+        {"user_id": 7, "percent": 50.00}
+    ]
+}
+
+### Set Unequal Splits
+PUT {{baseUrl}}/goals/monthly/2/splits
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "splits": [
+        {"user_id": 8, "percent": 45.00},
+        {"user_id": 9, "percent": 55.00}
+    ]
+}
+
+### ==============================================
+### FINANCE LEDGER
+### ==============================================
+
+### Get Bonus Ledger
+GET {{baseUrl}}/finance/bonus?store_id=1&from=2026-01-01&to=2026-01-31
+Authorization: Bearer {{token}}
+
+### Get Bonus (vendedor sees own only)
+GET {{baseUrl}}/finance/bonus
+Authorization: Bearer {{token}}
+
+### Get Commission Ledger
+GET {{baseUrl}}/finance/commission?store_id=1&month=2026-01
+Authorization: Bearer {{token}}
+
+### Get Commission (vendedor sees own only)
+GET {{baseUrl}}/finance/commission
+Authorization: Bearer {{token}}
+
+### ==============================================
+### PEOPLE ANALYTICS
+### ==============================================
+
+### Get People KPIs for Store/Date
+GET {{baseUrl}}/analytics/people/shift?store_id=1&date=2026-01-07
+Authorization: Bearer {{token}}
+
+### Insert Manual KPI
+POST {{baseUrl}}/analytics/people/shift
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
     "store_id": 1,
     "date": "2026-01-07",
-    "shift_code": "T"
+    "shift_code": "N",
+    "in_count": 45,
+    "out_count": 12,
+    "staff_in": 2,
+    "staff_out": 2
 }
 
-### Get Shift Details
-GET {{baseUrl}}/cash/shifts/1
+### ==============================================
+### SALES
+### ==============================================
+
+### List Sales
+GET {{baseUrl}}/sales?store_id=1&from=2026-01-01&to=2026-01-31
 Authorization: Bearer {{token}}
 
 ### ==============================================
-### CASH CLOSINGS
+### CASH SHIFTS & CLOSINGS
 ### ==============================================
+
+### List Shifts
+GET {{baseUrl}}/cash/shifts?store_id=1
+Authorization: Bearer {{token}}
 
 ### Get Closing Details
 GET {{baseUrl}}/cash/closings/1
 Authorization: Bearer {{token}}
 
-### Submit Closing for Review
+### Submit Closing
 POST {{baseUrl}}/cash/closings/1/submit
 Authorization: Bearer {{token}}
 
-### Approve Closing (requires conferente/gerente/admin)
+### Approve Closing (conferente/gerente/admin)
 POST {{baseUrl}}/cash/closings/1/approve
 Authorization: Bearer {{token}}
 
-### Reject Closing (requires reason)
+### Reject Closing
 POST {{baseUrl}}/cash/closings/1/reject
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-    "reason": "Valores do dinheiro não conferem com o relatório do PDV. Por favor, revisar."
+    "reason": "Valores não conferem com relatório do PDV"
 }
 
 ### ==============================================
 ### DASHBOARDS
 ### ==============================================
 
-### Dashboard Vendedor (Seller)
+### Dashboard Vendedor
 GET {{baseUrl}}/dashboard/vendedor?store_id=1
 Authorization: Bearer {{token}}
 
-### Dashboard Vendedor with Date
-GET {{baseUrl}}/dashboard/vendedor?store_id=1&date=2026-01-06
-Authorization: Bearer {{token}}
-
-### Dashboard Conferente (Reviewer)
+### Dashboard Conferente
 GET {{baseUrl}}/dashboard/conferente?store_id=1
 Authorization: Bearer {{token}}
 
-### Dashboard Conferente with Date
-GET {{baseUrl}}/dashboard/conferente?store_id=1&date=2026-01-06
-Authorization: Bearer {{token}}
-
 ### Dashboard Admin
-GET {{baseUrl}}/dashboard/admin
-Authorization: Bearer {{token}}
-
-### Dashboard Admin with Month
 GET {{baseUrl}}/dashboard/admin?month=2026-01
 Authorization: Bearer {{token}}
 
 ### ==============================================
-### EXAMPLE WORKFLOWS
+### ARTISAN COMMANDS (run in terminal)
 ### ==============================================
 
-### Workflow 1: Complete Shift Closing
-### 1. Login as vendedor
-### 2. Create shift (done via seed)
-### 3. Submit closing
-### 4. Login as conferente
-### 5. Approve or reject
+# Sync People Analytics from FastAPI
+# php artisan people:sync-kpis --store=1 --date=2026-01-07
 
-### Workflow 2: Check Pending Closings
-### 1. Login as conferente
-### 2. GET /dashboard/conferente?store_id=1
-### 3. Review pending_closings array
-### 4. POST /cash/closings/{shift_id}/approve or /reject
+# Sync all stores
+# php artisan people:sync-kpis --all-stores --date=2026-01-07
+
+# Run queue worker for bonus/commission recalculation
+# php artisan queue:work --queue=finance

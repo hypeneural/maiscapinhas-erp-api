@@ -9,14 +9,49 @@ use App\Http\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * @group Perfil do Usuário
+ *
+ * Endpoint para obter informações do usuário autenticado.
+ */
 class MeController extends Controller
 {
     use ApiResponse;
 
     /**
-     * Get the authenticated user with their stores and roles.
+     * Obter perfil do usuário atual
      *
-     * GET /api/v1/me
+     * Retorna os dados do usuário autenticado, incluindo as lojas
+     * às quais ele tem acesso e seu papel (role) em cada uma.
+     *
+     * **Quem pode usar:** Qualquer usuário autenticado.
+     *
+     * **Informações retornadas:**
+     * - Dados básicos do usuário (id, nome, email, status ativo)
+     * - Lista de lojas com o papel do usuário em cada uma
+     *
+     * **Papéis possíveis:**
+     * - `admin` - Administrador global (acesso total)
+     * - `gerente` - Gerente da loja (gerencia vendedores e metas)
+     * - `conferente` - Confere fechamentos de caixa
+     * - `vendedor` - Vendedor (registra vendas e turnos)
+     *
+     * @response 200 scenario="Perfil com múltiplas lojas" {
+     *   "data": {
+     *     "user": {
+     *       "id": 1,
+     *       "name": "Admin Sistema",
+     *       "email": "admin@maiscapinhas.com.br",
+     *       "active": true,
+     *       "created_at": "2026-01-01T00:00:00+00:00"
+     *     },
+     *     "stores": [
+     *       { "id": 1, "name": "Mais Capinhas Tijucas", "city": "Tijucas", "role": "admin" },
+     *       { "id": 2, "name": "Mais Capinhas Itapema", "city": "Itapema", "role": "admin" }
+     *     ]
+     *   },
+     *   "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+     * }
      */
     public function __invoke(Request $request): JsonResponse
     {

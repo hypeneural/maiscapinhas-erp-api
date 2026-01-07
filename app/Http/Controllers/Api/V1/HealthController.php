@@ -8,14 +8,36 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 
 /**
- * Health check endpoint for monitoring and container orchestration.
+ * @group Saúde & Versão
+ *
+ * Endpoints para verificação de saúde e status da API.
+ * Estes endpoints são públicos e não requerem autenticação.
  */
 class HealthController extends Controller
 {
     /**
-     * Return system health status.
+     * Verificar saúde da API
      *
-     * @return JsonResponse
+     * Retorna o status de saúde da API. Use este endpoint para
+     * verificar se a API está online e respondendo corretamente.
+     *
+     * **Casos de uso:**
+     * - Monitoramento de uptime (Uptime Robot, Pingdom, etc.)
+     * - Health checks em load balancers
+     * - Verificação de conectividade antes de operações
+     *
+     * **Resposta:**
+     * - `status: "ok"` - API funcionando normalmente
+     * - `timestamp` - Data/hora ISO 8601 da requisição
+     *
+     * @unauthenticated
+     *
+     * @response 200 scenario="API saudável" {
+     *   "data": {
+     *     "status": "ok",
+     *     "timestamp": "2026-01-07T12:00:00+00:00"
+     *   }
+     * }
      */
     public function __invoke(): JsonResponse
     {

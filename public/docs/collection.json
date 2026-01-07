@@ -1,0 +1,1804 @@
+{
+    "variable": [
+        {
+            "id": "baseUrl",
+            "key": "baseUrl",
+            "type": "string",
+            "name": "string",
+            "value": "http:\/\/localhost:8000"
+        }
+    ],
+    "info": {
+        "name": "MaisCapinhas ERP API - Documenta\u00e7\u00e3o",
+        "_postman_id": "31c2cc80-509c-411e-867a-f29df8901736",
+        "description": "API REST para gest\u00e3o de vendas, metas, fechamento de caixa, b\u00f4nus e comiss\u00f5es do ERP MaisCapinhas.",
+        "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json",
+        "version": "1.0.0"
+    },
+    "item": [
+        {
+            "name": "Sa\u00fade & Vers\u00e3o",
+            "description": "\nEndpoints para verifica\u00e7\u00e3o de sa\u00fade e status da API.\nEstes endpoints s\u00e3o p\u00fablicos e n\u00e3o requerem autentica\u00e7\u00e3o.",
+            "item": [
+                {
+                    "name": "Verificar sa\u00fade da API",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/health",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/health"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna o status de sa\u00fade da API. Use este endpoint para\nverificar se a API est\u00e1 online e respondendo corretamente.\n\n**Casos de uso:**\n- Monitoramento de uptime (Uptime Robot, Pingdom, etc.)\n- Health checks em load balancers\n- Verifica\u00e7\u00e3o de conectividade antes de opera\u00e7\u00f5es\n\n**Resposta:**\n- `status: \"ok\"` - API funcionando normalmente\n- `timestamp` - Data\/hora ISO 8601 da requisi\u00e7\u00e3o",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"status\": \"ok\",\n    \"timestamp\": \"2026-01-07T12:00:00+00:00\"\n  }\n}",
+                            "name": "API saud\u00e1vel"
+                        }
+                    ]
+                },
+                {
+                    "name": "Obter vers\u00e3o da API",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/version",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/version"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna informa\u00e7\u00f5es sobre a vers\u00e3o atual da API, incluindo\nvers\u00f5es do PHP e Laravel utilizadas.\n\n**Casos de uso:**\n- Verificar compatibilidade de vers\u00e3o antes de integra\u00e7\u00f5es\n- Debug e troubleshooting\n- Documenta\u00e7\u00e3o t\u00e9cnica\n\n**Resposta:**\n- `name` - Nome da API\n- `api` - Vers\u00e3o da API (v1, v2, etc.)\n- `php` - Vers\u00e3o do PHP\n- `laravel` - Vers\u00e3o do Laravel",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"name\": \"MaisCapinhas ERP API\",\n    \"api\": \"v1\",\n    \"php\": \"8.3.16\",\n    \"laravel\": \"12.45.2\"\n  }\n}",
+                            "name": "Vers\u00e3o atual"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Autentica\u00e7\u00e3o",
+            "description": "\nEndpoints para autentica\u00e7\u00e3o via Bearer Token (Sanctum).\nA API suporta dois modos de autentica\u00e7\u00e3o:\n\n1. **Bearer Token** (recomendado para desenvolvimento e integra\u00e7\u00f5es)\n2. **Cookie SPA** (para frontends React\/Vue com `withCredentials`)",
+            "item": [
+                {
+                    "name": "Fazer login e obter token",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/auth\/login",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/login"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"email\":\"admin@maiscapinhas.com.br\",\"password\":\"password\",\"device_name\":\"postman-dev\"}"
+                        },
+                        "description": "Autentica o usu\u00e1rio e retorna um Bearer Token para uso nas pr\u00f3ximas requisi\u00e7\u00f5es.\n\n**Quem pode usar:** Qualquer usu\u00e1rio ativo com email e senha v\u00e1lidos.\n\n**Regras de neg\u00f3cio:**\n- Usu\u00e1rios inativos (`active = false`) n\u00e3o podem fazer login\n- O token n\u00e3o expira automaticamente, mas pode ser revogado via logout\n- Cada login gera um novo token (m\u00faltiplos dispositivos s\u00e3o permitidos)\n\n**Erros poss\u00edveis:**\n- `422` - Credenciais inv\u00e1lidas ou conta desativada",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"token\": \"1|abc123xyz...\",\n    \"token_type\": \"Bearer\",\n    \"user\": {\n      \"id\": 1,\n      \"name\": \"Admin Sistema\",\n      \"email\": \"admin@maiscapinhas.com.br\"\n    }\n  },\n  \"meta\": { \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
+                            "name": "Login bem-sucedido"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n  \"message\": \"The provided credentials are incorrect.\",\n  \"errors\": { \"email\": [\"The provided credentials are incorrect.\"] }\n}",
+                            "name": "Credenciais inv\u00e1lidas"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n  \"message\": \"This account is deactivated.\",\n  \"errors\": { \"email\": [\"This account is deactivated.\"] }\n}",
+                            "name": "Conta desativada"
+                        }
+                    ]
+                },
+                {
+                    "name": "Fazer logout (revogar token atual)",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/auth\/logout",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/logout"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Revoga o token que foi usado para autenticar esta requisi\u00e7\u00e3o.\nOs demais tokens do usu\u00e1rio (outros dispositivos) permanecem v\u00e1lidos.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado.\n\n**Casos de uso:**\n- Logout manual do usu\u00e1rio\n- Encerrar sess\u00e3o em um dispositivo espec\u00edfico"
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": { \"message\": \"Successfully logged out.\" },\n  \"meta\": { \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
+                            "name": "Logout bem-sucedido"
+                        }
+                    ]
+                },
+                {
+                    "name": "Revogar todos os tokens",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/auth\/logout-all",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/logout-all"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Revoga **todos** os tokens do usu\u00e1rio, desconectando-o de todos os dispositivos.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado.\n\n**Casos de uso:**\n- Suspeita de comprometimento de seguran\u00e7a\n- For\u00e7ar re-login em todos os dispositivos\n- Altera\u00e7\u00e3o de senha"
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": { \"message\": \"All tokens revoked.\" },\n  \"meta\": { \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
+                            "name": "Todos tokens revogados"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Perfil do Usu\u00e1rio",
+            "description": "\nEndpoint para obter informa\u00e7\u00f5es do usu\u00e1rio autenticado.",
+            "item": [
+                {
+                    "name": "Obter perfil do usu\u00e1rio atual",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/me",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/me"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna os dados do usu\u00e1rio autenticado, incluindo as lojas\n\u00e0s quais ele tem acesso e seu papel (role) em cada uma.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado.\n\n**Informa\u00e7\u00f5es retornadas:**\n- Dados b\u00e1sicos do usu\u00e1rio (id, nome, email, status ativo)\n- Lista de lojas com o papel do usu\u00e1rio em cada uma\n\n**Pap\u00e9is poss\u00edveis:**\n- `admin` - Administrador global (acesso total)\n- `gerente` - Gerente da loja (gerencia vendedores e metas)\n- `conferente` - Confere fechamentos de caixa\n- `vendedor` - Vendedor (registra vendas e turnos)"
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"user\": {\n      \"id\": 1,\n      \"name\": \"Admin Sistema\",\n      \"email\": \"admin@maiscapinhas.com.br\",\n      \"active\": true,\n      \"created_at\": \"2026-01-01T00:00:00+00:00\"\n    },\n    \"stores\": [\n      { \"id\": 1, \"name\": \"Mais Capinhas Tijucas\", \"city\": \"Tijucas\", \"role\": \"admin\" },\n      { \"id\": 2, \"name\": \"Mais Capinhas Itapema\", \"city\": \"Itapema\", \"role\": \"admin\" }\n    ]\n  },\n  \"meta\": { \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
+                            "name": "Perfil com m\u00faltiplas lojas"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Lojas",
+            "description": "\nEndpoints para consultar lojas \u00e0s quais o usu\u00e1rio tem acesso.\nO usu\u00e1rio s\u00f3 pode visualizar lojas onde est\u00e1 vinculado via `store_users`.",
+            "item": [
+                {
+                    "name": "Listar lojas do usu\u00e1rio",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/stores",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/stores"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna todas as lojas ativas \u00e0s quais o usu\u00e1rio autenticado tem acesso.\nCada loja inclui o papel (role) do usu\u00e1rio naquela loja.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado.\n\n**Regras:**\n- Apenas lojas ativas (`active = true`) s\u00e3o retornadas\n- Apenas lojas onde o usu\u00e1rio est\u00e1 vinculado s\u00e3o listadas"
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": [\n    { \"id\": 1, \"name\": \"Mais Capinhas Tijucas\", \"city\": \"Tijucas\", \"role\": \"admin\" },\n    { \"id\": 2, \"name\": \"Mais Capinhas Itapema\", \"city\": \"Itapema\", \"role\": \"gerente\" }\n  ],\n  \"meta\": { \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
+                            "name": "Lista de lojas"
+                        }
+                    ]
+                },
+                {
+                    "name": "Obter detalhes de uma loja",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/stores\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/stores\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "1",
+                                    "description": "The ID of the store."
+                                },
+                                {
+                                    "id": "store",
+                                    "key": "store",
+                                    "value": "1",
+                                    "description": "ID da loja."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna os detalhes de uma loja espec\u00edfica, se o usu\u00e1rio tiver acesso.\n\n**Quem pode usar:** Usu\u00e1rios com v\u00ednculo na loja.\n\n**Erros poss\u00edveis:**\n- `403` - Usu\u00e1rio n\u00e3o tem acesso a esta loja\n- `404` - Loja n\u00e3o encontrada"
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Mais Capinhas Tijucas\",\n    \"city\": \"Tijucas\",\n    \"active\": true,\n    \"role\": \"admin\",\n    \"created_at\": \"2026-01-01T00:00:00+00:00\"\n  },\n  \"meta\": { \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
+                            "name": "Loja encontrada"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\n  \"error\": {\n    \"code\": 403,\n    \"message\": \"You do not have access to this store.\"\n  }\n}",
+                            "name": "Sem acesso"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Dashboards",
+            "description": "\nEndpoints de dashboard com m\u00e9tricas e KPIs por perfil de usu\u00e1rio.\nCada dashboard retorna informa\u00e7\u00f5es personalizadas para o papel do usu\u00e1rio.",
+            "item": [
+                {
+                    "name": "Dashboard do Vendedor",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/dashboard\/vendedor",
+                            "query": [
+                                {
+                                    "key": "store_id",
+                                    "value": "1",
+                                    "description": "ID da loja.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "date",
+                                    "value": "2026-01-07",
+                                    "description": "Data no formato YYYY-MM-DD (padr\u00e3o: hoje).",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/dashboard\/vendedor?store_id=1&date=2026-01-07"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T19:59:14\"}"
+                        },
+                        "description": "Retorna m\u00e9tricas do vendedor no dia, incluindo suas vendas pessoais\ncomparadas com o total da loja e status dos seus turnos.\n\n**Quem pode usar:** Vendedores e n\u00edveis superiores.\n\n**M\u00e9tricas retornadas:**\n- `my_sales` - Quantidade e valor total das vendas do vendedor no dia\n- `store_sales` - Quantidade e valor total de todas as vendas da loja no dia\n- `my_shifts` - Lista dos turnos do vendedor naquele dia com status do fechamento\n\n**Dica:** Compare `my_sales` com `store_sales` para ver sua participa\u00e7\u00e3o nas vendas da loja."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"date\": \"2026-01-07\",\n    \"my_sales\": { \"count\": 5, \"total\": 850.00 },\n    \"store_sales\": { \"count\": 23, \"total\": 3200.00 },\n    \"my_shifts\": [\n      { \"id\": 1, \"date\": \"2026-01-07\", \"shift_code\": \"M\", \"status\": \"open\", \"cash_closing\": null }\n    ]\n  },\n  \"meta\": { \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
+                            "name": "Vendas do dia"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\n  \"error\": { \"code\": 403, \"message\": \"You do not have access to this store.\" }\n}",
+                            "name": "Sem acesso \u00e0 loja"
+                        }
+                    ]
+                },
+                {
+                    "name": "Dashboard do Conferente",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/dashboard\/conferente",
+                            "query": [
+                                {
+                                    "key": "store_id",
+                                    "value": "1",
+                                    "description": "ID da loja.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "date",
+                                    "value": "2026-01-07",
+                                    "description": "Data no formato YYYY-MM-DD (padr\u00e3o: hoje).",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/dashboard\/conferente?store_id=1&date=2026-01-07"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T19:59:14\"}"
+                        },
+                        "description": "Retorna m\u00e9tricas para confer\u00eancia de caixa, incluindo fechamentos\npendentes de aprova\u00e7\u00e3o e ranking de vendedores.\n\n**Quem pode usar:** Conferentes, Gerentes e Admins.\n\n**M\u00e9tricas retornadas:**\n- `pending_closings` - Lista de fechamentos aguardando aprova\u00e7\u00e3o\/rejei\u00e7\u00e3o\n- `pending_count` - Quantidade de fechamentos pendentes\n- `store_sales` - Total de vendas da loja no dia\n- `shifts_today` - Resumo de turnos por status (open, closed, pending)\n- `top_sellers` - Top 5 vendedores do dia por valor vendido"
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"date\": \"2026-01-07\",\n    \"pending_closings\": [],\n    \"pending_count\": 0,\n    \"store_sales\": { \"count\": 23, \"total\": 3200.00 },\n    \"shifts_today\": { \"open\": 2, \"closed\": 4 },\n    \"top_sellers\": [\n      { \"seller_id\": 6, \"name\": \"Jo\u00e3o Vendedor\", \"total\": 1500.00 }\n    ]\n  },\n  \"meta\": { \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
+                            "name": "Dashboard do conferente"
+                        }
+                    ]
+                },
+                {
+                    "name": "Dashboard do Admin",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/dashboard\/admin",
+                            "query": [
+                                {
+                                    "key": "month",
+                                    "value": "2026-01",
+                                    "description": "M\u00eas no formato YYYY-MM (padr\u00e3o: m\u00eas atual).",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/dashboard\/admin?month=2026-01"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"month\":\"6425-59\"}"
+                        },
+                        "description": "Retorna vis\u00e3o consolidada de todas as lojas que o usu\u00e1rio administra,\ncom m\u00e9tricas mensais agregadas.\n\n**Quem pode usar:** Admins e Gerentes.\n\n**M\u00e9tricas retornadas:**\n- `total_sales` - Soma de vendas de todas as lojas no m\u00eas\n- `sales_by_store` - Vendas detalhadas por loja\n- `closings_summary` - Contagem de fechamentos por status\n- `top_sellers` - Top 10 vendedores do m\u00eas (todas as lojas)"
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"month\": \"2026-01\",\n    \"total_sales\": { \"count\": 450, \"total\": 67500.00 },\n    \"sales_by_store\": [\n      { \"store_id\": 1, \"store_name\": \"Mais Capinhas Tijucas\", \"count\": 180, \"total\": 28000.00 }\n    ],\n    \"closings_summary\": { \"approved\": 40, \"submitted\": 5, \"draft\": 3 },\n    \"top_sellers\": [\n      { \"seller_id\": 6, \"name\": \"Jo\u00e3o Vendedor\", \"total\": 12500.00, \"count\": 85 }\n    ]\n  },\n  \"meta\": { \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
+                            "name": "Dashboard consolidado"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Vendas",
+            "description": "\nEndpoints para consultar vendas registradas.\nVendas s\u00e3o registradas automaticamente via integra\u00e7\u00e3o PDV ou manualmente.",
+            "item": [
+                {
+                    "name": "Listar vendas",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/sales",
+                            "query": [
+                                {
+                                    "key": "store_id",
+                                    "value": "1",
+                                    "description": "ID da loja para filtrar.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "seller_id",
+                                    "value": "6",
+                                    "description": "ID do vendedor para filtrar.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "from",
+                                    "value": "2026-01-01",
+                                    "description": "Data inicial (YYYY-MM-DD).",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "to",
+                                    "value": "2026-01-31",
+                                    "description": "Data final (YYYY-MM-DD).",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "per_page",
+                                    "value": "25",
+                                    "description": "Itens por p\u00e1gina (1-100).",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/sales?store_id=1&seller_id=6&from=2026-01-01&to=2026-01-31&per_page=25"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"store_id\":16,\"seller_id\":16,\"from\":\"2026-01-07T19:59:14\",\"to\":\"2026-01-07T19:59:14\",\"per_page\":22}"
+                        },
+                        "description": "Retorna a lista de vendas das lojas \u00e0s quais o usu\u00e1rio tem acesso,\ncom filtros por loja, vendedor e per\u00edodo.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado (v\u00ea apenas suas lojas).\n\n**Filtros dispon\u00edveis:**\n- `store_id` - Filtrar por loja espec\u00edfica\n- `seller_id` - Filtrar por vendedor espec\u00edfico\n- `from` \/ `to` - Per\u00edodo de datas (formato YYYY-MM-DD)\n\n**Pagina\u00e7\u00e3o:** Resultados paginados (padr\u00e3o 25 por p\u00e1gina, m\u00e1x 100)."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"store_id\": 1,\n      \"seller_id\": 6,\n      \"sold_at\": \"2026-01-07T10:30:00+00:00\",\n      \"amount\": \"150.00\",\n      \"source\": \"pdv\",\n      \"store\": { \"id\": 1, \"name\": \"Mais Capinhas Tijucas\" },\n      \"seller\": { \"id\": 6, \"name\": \"Jo\u00e3o Vendedor\" }\n    }\n  ],\n  \"meta\": {\n    \"current_page\": 1,\n    \"per_page\": 25,\n    \"total\": 150,\n    \"last_page\": 6\n  }\n}",
+                            "name": "Lista de vendas"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Turnos de Caixa",
+            "description": "\nEndpoints para gerenciar turnos de caixa.\nCada turno representa um per\u00edodo de trabalho de um vendedor em uma loja.",
+            "item": [
+                {
+                    "name": "Listar turnos de caixa",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/cash\/shifts",
+                            "query": [
+                                {
+                                    "key": "store_id",
+                                    "value": "1",
+                                    "description": "ID da loja para filtrar.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "date",
+                                    "value": "2026-01-07",
+                                    "description": "Data espec\u00edfica (YYYY-MM-DD).",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "open",
+                                    "description": "Status do turno.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "per_page",
+                                    "value": "25",
+                                    "description": "Itens por p\u00e1gina (1-100).",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/cash\/shifts?store_id=1&date=2026-01-07&status=open&per_page=25"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T19:59:14\",\"status\":\"pending\",\"per_page\":22}"
+                        },
+                        "description": "Retorna os turnos de caixa das lojas \u00e0s quais o usu\u00e1rio tem acesso,\ncom filtros por loja, data e status.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado.\n\n**Filtros dispon\u00edveis:**\n- `store_id` - Filtrar por loja espec\u00edfica\n- `date` - Filtrar por data espec\u00edfica (YYYY-MM-DD)\n- `status` - Filtrar por status (open, closed, pending)\n\n**C\u00f3digos de turno:**\n- `M` - Manh\u00e3\n- `T` - Tarde\n- `N` - Noite"
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"store_id\": 1,\n      \"date\": \"2026-01-07\",\n      \"shift_code\": \"M\",\n      \"seller_id\": 6,\n      \"status\": \"open\",\n      \"store\": { \"id\": 1, \"name\": \"Mais Capinhas Tijucas\" },\n      \"seller\": { \"id\": 6, \"name\": \"Jo\u00e3o Vendedor\" },\n      \"cash_closing\": null\n    }\n  ],\n  \"meta\": { \"current_page\": 1, \"per_page\": 25, \"total\": 84 }\n}",
+                            "name": "Lista de turnos"
+                        }
+                    ]
+                },
+                {
+                    "name": "Criar novo turno de caixa",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/cash\/shifts",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/cash\/shifts"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"store_id\":1,\"date\":\"2026-01-07\",\"shift_code\":\"M\",\"seller_id\":6}"
+                        },
+                        "description": "Cria um novo turno de caixa para uma loja\/data\/per\u00edodo.\n\n**Quem pode usar:** Usu\u00e1rios com acesso \u00e0 loja.\n\n**Regras de neg\u00f3cio:**\n- N\u00e3o pode haver dois turnos com mesma loja + data + turno + vendedor\n- O turno inicia com status `open`\n- Se `seller_id` n\u00e3o for informado, assume o usu\u00e1rio atual\n\n**C\u00f3digos de turno:**\n- `M` - Manh\u00e3 (08h-14h)\n- `T` - Tarde (14h-20h)\n- `N` - Noite (20h-00h)"
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"store_id\": 1,\n    \"date\": \"2026-01-07\",\n    \"shift_code\": \"M\",\n    \"seller_id\": 6,\n    \"status\": \"open\",\n    \"store\": { \"id\": 1, \"name\": \"Mais Capinhas Tijucas\" },\n    \"seller\": { \"id\": 6, \"name\": \"Jo\u00e3o Vendedor\" }\n  },\n  \"meta\": { \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
+                            "name": "Turno criado"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\n  \"error\": { \"code\": 403, \"message\": \"You do not have access to this store.\" }\n}",
+                            "name": "Sem acesso"
+                        }
+                    ]
+                },
+                {
+                    "name": "Obter detalhes de um turno",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/cash\/shifts\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/cash\/shifts\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "1",
+                                    "description": "The ID of the shift."
+                                },
+                                {
+                                    "id": "shift",
+                                    "key": "shift",
+                                    "value": "1",
+                                    "description": "ID do turno."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna os detalhes de um turno espec\u00edfico, incluindo o fechamento se existir.\n\n**Quem pode usar:** Usu\u00e1rios com acesso \u00e0 loja."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"store_id\": 1,\n    \"date\": \"2026-01-07\",\n    \"shift_code\": \"M\",\n    \"status\": \"closed\",\n    \"cash_closing\": {\n      \"id\": 1,\n      \"status\": \"approved\",\n      \"lines\": []\n    }\n  },\n  \"meta\": { \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
+                            "name": "Turno encontrado"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Fechamento de Caixa",
+            "description": "\nEndpoints para gerenciar o fluxo de fechamento de caixa.\n\n**Workflow de Estados:**\n```\ndraft \u2192 submitted \u2192 approved\n                  \u2192 rejected \u2192 draft \u2192 ...\n```\n\n- `draft` - Rascunho (edit\u00e1vel)\n- `submitted` - Enviado para confer\u00eancia\n- `approved` - Aprovado (imut\u00e1vel)\n- `rejected` - Rejeitado (volta para draft para corre\u00e7\u00e3o)",
+            "item": [
+                {
+                    "name": "Obter detalhes do fechamento",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/cash\/closings\/:shift_id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/cash\/closings\/:shift_id",
+                            "variable": [
+                                {
+                                    "id": "shift_id",
+                                    "key": "shift_id",
+                                    "value": "1",
+                                    "description": "The ID of the shift."
+                                },
+                                {
+                                    "id": "shift",
+                                    "key": "shift",
+                                    "value": "1",
+                                    "description": "ID do turno."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna os detalhes completos de um fechamento de caixa,\nincluindo todas as linhas e diverg\u00eancias.\n\n**Quem pode usar:** Qualquer usu\u00e1rio com acesso \u00e0 loja."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"status\": \"approved\",\n    \"version\": 2,\n    \"closed_at\": \"2026-01-07T12:00:00+00:00\",\n    \"lines\": [\n      { \"id\": 1, \"label\": \"Dinheiro\", \"system_value\": 500.00, \"real_value\": 495.00, \"diff_value\": -5.00, \"justification_text\": \"Troco incorreto\" }\n    ],\n    \"cash_shift\": { \"id\": 1, \"date\": \"2026-01-07\", \"shift_code\": \"M\" },\n    \"closed_by_user\": { \"id\": 3, \"name\": \"Ana Conferente\" }\n  },\n  \"meta\": { \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
+                            "name": "Detalhes do fechamento"
+                        }
+                    ]
+                },
+                {
+                    "name": "Enviar fechamento para confer\u00eancia",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/cash\/closings\/:shift_id\/submit",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/cash\/closings\/:shift_id\/submit",
+                            "variable": [
+                                {
+                                    "id": "shift_id",
+                                    "key": "shift_id",
+                                    "value": "1",
+                                    "description": "The ID of the shift."
+                                },
+                                {
+                                    "id": "shift",
+                                    "key": "shift",
+                                    "value": "1",
+                                    "description": "ID do turno."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Envia um fechamento de caixa para ser conferido\/aprovado.\nO fechamento deve estar em status `draft` ou `rejected` para ser enviado.\n\n**Quem pode usar:** Vendedor respons\u00e1vel pelo turno ou n\u00edveis superiores.\n\n**Regras de neg\u00f3cio:**\n- Todas as diverg\u00eancias (diff_value \u2260 0) devem ter justificativa preenchida\n- O status deve ser `draft` ou `rejected` para poder enviar\n\n**Erros poss\u00edveis:**\n- `409` - Status inv\u00e1lido (j\u00e1 enviado ou aprovado)\n- `422` - Diverg\u00eancias sem justificativa\n- `403` - Sem acesso \u00e0 loja\n- `404` - Fechamento n\u00e3o encontrado"
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"status\": \"submitted\",\n    \"version\": 1,\n    \"lines\": [],\n    \"cash_shift\": { \"id\": 1, \"date\": \"2026-01-07\", \"shift_code\": \"M\" }\n  },\n  \"meta\": { \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
+                            "name": "Enviado com sucesso"
+                        },
+                        {
+                            "header": [],
+                            "code": 409,
+                            "body": "{\n  \"error\": { \"code\": 409, \"message\": \"Cannot submit closing with status 'approved'.\" }\n}",
+                            "name": "Status inv\u00e1lido"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n  \"message\": \"All divergences must be justified before submitting.\",\n  \"errors\": { \"lines\": [\"Linha 'Dinheiro' possui diverg\u00eancia sem justificativa.\"] }\n}",
+                            "name": "Diverg\u00eancia sem justificativa"
+                        }
+                    ]
+                },
+                {
+                    "name": "Aprovar fechamento de caixa",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/cash\/closings\/:shift_id\/approve",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/cash\/closings\/:shift_id\/approve",
+                            "variable": [
+                                {
+                                    "id": "shift_id",
+                                    "key": "shift_id",
+                                    "value": "1",
+                                    "description": "The ID of the shift."
+                                },
+                                {
+                                    "id": "shift",
+                                    "key": "shift",
+                                    "value": "1",
+                                    "description": "ID do turno."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Aprova um fechamento que foi enviado para confer\u00eancia.\nEsta a\u00e7\u00e3o \u00e9 **irrevers\u00edvel** - fechamentos aprovados n\u00e3o podem ser editados.\n\n**Quem pode usar:** Conferentes, Gerentes ou Admins da loja.\n\n**Regras de neg\u00f3cio:**\n- O fechamento deve estar em status `submitted`\n- Ap\u00f3s aprova\u00e7\u00e3o, os dados s\u00e3o considerados oficiais para c\u00e1lculo de b\u00f4nus\/comiss\u00e3o\n\n**Erros poss\u00edveis:**\n- `409` - Status inv\u00e1lido (n\u00e3o est\u00e1 em submitted)\n- `403` - Sem permiss\u00e3o para aprovar\n- `404` - Fechamento n\u00e3o encontrado"
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"status\": \"approved\",\n    \"closed_by\": 3,\n    \"closed_at\": \"2026-01-07T12:00:00+00:00\"\n  },\n  \"meta\": { \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
+                            "name": "Aprovado com sucesso"
+                        },
+                        {
+                            "header": [],
+                            "code": 409,
+                            "body": "{\n  \"error\": { \"code\": 409, \"message\": \"Cannot approve closing with status 'draft'.\" }\n}",
+                            "name": "N\u00e3o pode aprovar"
+                        }
+                    ]
+                },
+                {
+                    "name": "Rejeitar fechamento de caixa",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/cash\/closings\/:shift_id\/reject",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/cash\/closings\/:shift_id\/reject",
+                            "variable": [
+                                {
+                                    "id": "shift_id",
+                                    "key": "shift_id",
+                                    "value": "1",
+                                    "description": "The ID of the shift."
+                                },
+                                {
+                                    "id": "shift",
+                                    "key": "shift",
+                                    "value": "1",
+                                    "description": "ID do turno."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"reason\":\"Valores de cart\u00e3o n\u00e3o conferem com relat\u00f3rio do PDV.\"}"
+                        },
+                        "description": "Rejeita um fechamento enviado para confer\u00eancia, retornando-o ao status `draft`\npara que o vendedor possa corrigir os problemas apontados.\n\n**Quem pode usar:** Conferentes, Gerentes ou Admins da loja.\n\n**Regras de neg\u00f3cio:**\n- O fechamento deve estar em status `submitted`\n- \u00c9 obrigat\u00f3rio informar o motivo da rejei\u00e7\u00e3o (m\u00edn. 10 caracteres)\n- O vendedor ser\u00e1 notificado e poder\u00e1 reenviar ap\u00f3s corre\u00e7\u00f5es\n\n**Erros poss\u00edveis:**\n- `409` - Status inv\u00e1lido (n\u00e3o est\u00e1 em submitted)\n- `403` - Sem permiss\u00e3o para rejeitar\n- `422` - Motivo n\u00e3o informado ou muito curto"
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"status\": \"rejected\"\n  },\n  \"meta\": { \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
+                            "name": "Rejeitado com sucesso"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n  \"message\": \"The reason field is required.\",\n  \"errors\": { \"reason\": [\"The reason field is required.\"] }\n}",
+                            "name": "Motivo n\u00e3o informado"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Regras de B\u00f4nus",
+            "description": "\nGerenciamento de regras de b\u00f4nus di\u00e1rio.\nRegras definem faixas de vendas m\u00ednimas e valores de b\u00f4nus correspondentes.\n\n**Hierarquia de regras:**\n- Regra espec\u00edfica de loja (`store_id` preenchido) tem prioridade sobre regra global\n- Regra mais recente (`effective_from` maior) tem prioridade\n- Versionamento autom\u00e1tico a cada atualiza\u00e7\u00e3o",
+            "item": [
+                {
+                    "name": "List bonus rules.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/rules\/bonus",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/rules\/bonus"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "GET \/api\/v1\/rules\/bonus"
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "access-control-allow-origin",
+                                    "value": "http:\/\/localhost:5173"
+                                },
+                                {
+                                    "key": "access-control-allow-credentials",
+                                    "value": "true"
+                                }
+                            ],
+                            "code": 401,
+                            "body": "{\"message\":\"Unauthenticated.\"}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Create a new bonus rule.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/rules\/bonus",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/rules\/bonus"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-07T19:59:14\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
+                        },
+                        "description": "POST \/api\/v1\/rules\/bonus"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Show a specific bonus rule.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/rules\/bonus\/:rule_id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/rules\/bonus\/:rule_id",
+                            "variable": [
+                                {
+                                    "id": "rule_id",
+                                    "key": "rule_id",
+                                    "value": "1",
+                                    "description": "The ID of the rule."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "GET \/api\/v1\/rules\/bonus\/{rule}"
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "access-control-allow-origin",
+                                    "value": "http:\/\/localhost:5173"
+                                },
+                                {
+                                    "key": "access-control-allow-credentials",
+                                    "value": "true"
+                                }
+                            ],
+                            "code": 401,
+                            "body": "{\"message\":\"Unauthenticated.\"}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Update a bonus rule.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/rules\/bonus\/:rule_id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/rules\/bonus\/:rule_id",
+                            "variable": [
+                                {
+                                    "id": "rule_id",
+                                    "key": "rule_id",
+                                    "value": "1",
+                                    "description": "The ID of the rule."
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-07T19:59:14\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
+                        },
+                        "description": "PUT \/api\/v1\/rules\/bonus\/{rule}"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete a bonus rule.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/rules\/bonus\/:rule_id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/rules\/bonus\/:rule_id",
+                            "variable": [
+                                {
+                                    "id": "rule_id",
+                                    "key": "rule_id",
+                                    "value": "1",
+                                    "description": "The ID of the rule."
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "DELETE \/api\/v1\/rules\/bonus\/{rule}"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Regras de Comiss\u00e3o",
+            "description": "\nGerenciamento de regras de comiss\u00e3o mensal.\nRegras definem faixas de atingimento de meta e taxas de comiss\u00e3o.\n\n**Hierarquia de regras:**\n- Regra espec\u00edfica de loja tem prioridade sobre global\n- Comiss\u00e3o calculada: vendas \u00d7 taxa (baseada no % de atingimento)",
+            "item": [
+                {
+                    "name": "List commission rules.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/rules\/commission",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/rules\/commission"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "GET \/api\/v1\/rules\/commission"
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "access-control-allow-origin",
+                                    "value": "http:\/\/localhost:5173"
+                                },
+                                {
+                                    "key": "access-control-allow-credentials",
+                                    "value": "true"
+                                }
+                            ],
+                            "code": 401,
+                            "body": "{\"message\":\"Unauthenticated.\"}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Create a new commission rule.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/rules\/commission",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/rules\/commission"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-07T19:59:14\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
+                        },
+                        "description": "POST \/api\/v1\/rules\/commission"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Show a specific commission rule.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/rules\/commission\/:rule_id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/rules\/commission\/:rule_id",
+                            "variable": [
+                                {
+                                    "id": "rule_id",
+                                    "key": "rule_id",
+                                    "value": "1",
+                                    "description": "The ID of the rule."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "GET \/api\/v1\/rules\/commission\/{rule}"
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "access-control-allow-origin",
+                                    "value": "http:\/\/localhost:5173"
+                                },
+                                {
+                                    "key": "access-control-allow-credentials",
+                                    "value": "true"
+                                }
+                            ],
+                            "code": 401,
+                            "body": "{\"message\":\"Unauthenticated.\"}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Update a commission rule.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/rules\/commission\/:rule_id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/rules\/commission\/:rule_id",
+                            "variable": [
+                                {
+                                    "id": "rule_id",
+                                    "key": "rule_id",
+                                    "value": "1",
+                                    "description": "The ID of the rule."
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-07T19:59:14\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
+                        },
+                        "description": "PUT \/api\/v1\/rules\/commission\/{rule}"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete a commission rule.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/rules\/commission\/:rule_id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/rules\/commission\/:rule_id",
+                            "variable": [
+                                {
+                                    "id": "rule_id",
+                                    "key": "rule_id",
+                                    "value": "1",
+                                    "description": "The ID of the rule."
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "DELETE \/api\/v1\/rules\/commission\/{rule}"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Metas Mensais",
+            "description": "\nGerenciamento de metas mensais por loja e distribui\u00e7\u00e3o entre vendedores (splits).\nCada split define a porcentagem da meta que cada vendedor deve atingir.\n\n**Regra:** A soma dos splits deve ser exatamente 100%.",
+            "item": [
+                {
+                    "name": "List monthly goals.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/goals\/monthly",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/goals\/monthly"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "GET \/api\/v1\/goals\/monthly"
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "access-control-allow-origin",
+                                    "value": "http:\/\/localhost:5173"
+                                },
+                                {
+                                    "key": "access-control-allow-credentials",
+                                    "value": "true"
+                                }
+                            ],
+                            "code": 401,
+                            "body": "{\"message\":\"Unauthenticated.\"}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Create a new monthly goal.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/goals\/monthly",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/goals\/monthly"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"store_id\":16,\"month\":\"6425-59\",\"goal_amount\":9,\"active\":false}"
+                        },
+                        "description": "POST \/api\/v1\/goals\/monthly"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Show a specific goal.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/goals\/monthly\/:goal_id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/goals\/monthly\/:goal_id",
+                            "variable": [
+                                {
+                                    "id": "goal_id",
+                                    "key": "goal_id",
+                                    "value": "1",
+                                    "description": "The ID of the goal."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "GET \/api\/v1\/goals\/monthly\/{goal}"
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "access-control-allow-origin",
+                                    "value": "http:\/\/localhost:5173"
+                                },
+                                {
+                                    "key": "access-control-allow-credentials",
+                                    "value": "true"
+                                }
+                            ],
+                            "code": 401,
+                            "body": "{\"message\":\"Unauthenticated.\"}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Update a monthly goal.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/goals\/monthly\/:goal_id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/goals\/monthly\/:goal_id",
+                            "variable": [
+                                {
+                                    "id": "goal_id",
+                                    "key": "goal_id",
+                                    "value": "1",
+                                    "description": "The ID of the goal."
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"goal_amount\":27,\"active\":true}"
+                        },
+                        "description": "PUT \/api\/v1\/goals\/monthly\/{goal}"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete a monthly goal.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/goals\/monthly\/:goal_id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/goals\/monthly\/:goal_id",
+                            "variable": [
+                                {
+                                    "id": "goal_id",
+                                    "key": "goal_id",
+                                    "value": "1",
+                                    "description": "The ID of the goal."
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "DELETE \/api\/v1\/goals\/monthly\/{goal}"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Set splits for a goal.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/goals\/monthly\/:goal_id\/splits",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/goals\/monthly\/:goal_id\/splits",
+                            "variable": [
+                                {
+                                    "id": "goal_id",
+                                    "key": "goal_id",
+                                    "value": "1",
+                                    "description": "The ID of the goal."
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"splits\":[{\"user_id\":16,\"percent\":22}]}"
+                        },
+                        "description": "PUT \/api\/v1\/goals\/monthly\/{goal}\/splits"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Extrato Financeiro",
+            "description": "\nEndpoints para consultar o extrato de b\u00f4nus di\u00e1rio e comiss\u00e3o mensal.\nVendedores veem apenas seus pr\u00f3prios dados; gerentes\/admins veem todos.",
+            "item": [
+                {
+                    "name": "Get bonus ledger.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/finance\/bonus",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/finance\/bonus"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"store_id\":16,\"from\":\"2026-01-07T19:59:14\",\"to\":\"2026-01-07T19:59:14\",\"per_page\":22}"
+                        },
+                        "description": "GET \/api\/v1\/finance\/bonus?store_id=&from=&to="
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "access-control-allow-origin",
+                                    "value": "http:\/\/localhost:5173"
+                                },
+                                {
+                                    "key": "access-control-allow-credentials",
+                                    "value": "true"
+                                }
+                            ],
+                            "code": 401,
+                            "body": "{\"message\":\"Unauthenticated.\"}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Get commission ledger.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/finance\/commission",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/finance\/commission"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"store_id\":16,\"month\":\"6425-59\",\"per_page\":19}"
+                        },
+                        "description": "GET \/api\/v1\/finance\/commission?store_id=&month="
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "access-control-allow-origin",
+                                    "value": "http:\/\/localhost:5173"
+                                },
+                                {
+                                    "key": "access-control-allow-credentials",
+                                    "value": "true"
+                                }
+                            ],
+                            "code": 401,
+                            "body": "{\"message\":\"Unauthenticated.\"}",
+                            "name": ""
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "People Analytics",
+            "description": "\nEndpoints para consultar e inserir KPIs de fluxo de pessoas por turno.\nDados podem vir de sincroniza\u00e7\u00e3o com FastAPI ou inser\u00e7\u00e3o manual.",
+            "item": [
+                {
+                    "name": "Get People KPIs for a store and date.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/analytics\/people\/shift",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/analytics\/people\/shift"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T19:59:14\"}"
+                        },
+                        "description": "GET \/api\/v1\/analytics\/people\/shift?store_id=&date="
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "access-control-allow-origin",
+                                    "value": "http:\/\/localhost:5173"
+                                },
+                                {
+                                    "key": "access-control-allow-credentials",
+                                    "value": "true"
+                                }
+                            ],
+                            "code": 401,
+                            "body": "{\"message\":\"Unauthenticated.\"}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Manually insert KPI data.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/analytics\/people\/shift",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/analytics\/people\/shift"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T19:59:14\",\"shift_code\":\"M\",\"in_count\":39,\"out_count\":84,\"staff_in\":12,\"staff_out\":77}"
+                        },
+                        "description": "POST \/api\/v1\/analytics\/people\/shift"
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "Authorization",
+                "type": "string"
+            }
+        ]
+    }
+}

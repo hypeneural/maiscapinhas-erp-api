@@ -1,0 +1,2603 @@
+openapi: 3.0.3
+info:
+  title: 'MaisCapinhas ERP API - Documentação'
+  description: 'API REST para gestão de vendas, metas, fechamento de caixa, bônus e comissões do ERP MaisCapinhas.'
+  version: 1.0.0
+servers:
+  -
+    url: 'http://localhost:8000'
+tags:
+  -
+    name: 'Saúde & Versão'
+    description: "\nEndpoints para verificação de saúde e status da API.\nEstes endpoints são públicos e não requerem autenticação."
+  -
+    name: Autenticação
+    description: "\nEndpoints para autenticação via Bearer Token (Sanctum).\nA API suporta dois modos de autenticação:\n\n1. **Bearer Token** (recomendado para desenvolvimento e integrações)\n2. **Cookie SPA** (para frontends React/Vue com `withCredentials`)"
+  -
+    name: 'Perfil do Usuário'
+    description: "\nEndpoint para obter informações do usuário autenticado."
+  -
+    name: Lojas
+    description: "\nEndpoints para consultar lojas às quais o usuário tem acesso.\nO usuário só pode visualizar lojas onde está vinculado via `store_users`."
+  -
+    name: Dashboards
+    description: "\nEndpoints de dashboard com métricas e KPIs por perfil de usuário.\nCada dashboard retorna informações personalizadas para o papel do usuário."
+  -
+    name: Vendas
+    description: "\nEndpoints para consultar vendas registradas.\nVendas são registradas automaticamente via integração PDV ou manualmente."
+  -
+    name: 'Turnos de Caixa'
+    description: "\nEndpoints para gerenciar turnos de caixa.\nCada turno representa um período de trabalho de um vendedor em uma loja."
+  -
+    name: 'Fechamento de Caixa'
+    description: "\nEndpoints para gerenciar o fluxo de fechamento de caixa.\n\n**Workflow de Estados:**\n```\ndraft → submitted → approved\n                  → rejected → draft → ...\n```\n\n- `draft` - Rascunho (editável)\n- `submitted` - Enviado para conferência\n- `approved` - Aprovado (imutável)\n- `rejected` - Rejeitado (volta para draft para correção)"
+  -
+    name: 'Regras de Bônus'
+    description: "\nGerenciamento de regras de bônus diário.\nRegras definem faixas de vendas mínimas e valores de bônus correspondentes.\n\n**Hierarquia de regras:**\n- Regra específica de loja (`store_id` preenchido) tem prioridade sobre regra global\n- Regra mais recente (`effective_from` maior) tem prioridade\n- Versionamento automático a cada atualização"
+  -
+    name: 'Regras de Comissão'
+    description: "\nGerenciamento de regras de comissão mensal.\nRegras definem faixas de atingimento de meta e taxas de comissão.\n\n**Hierarquia de regras:**\n- Regra específica de loja tem prioridade sobre global\n- Comissão calculada: vendas × taxa (baseada no % de atingimento)"
+  -
+    name: 'Metas Mensais'
+    description: "\nGerenciamento de metas mensais por loja e distribuição entre vendedores (splits).\nCada split define a porcentagem da meta que cada vendedor deve atingir.\n\n**Regra:** A soma dos splits deve ser exatamente 100%."
+  -
+    name: 'Extrato Financeiro'
+    description: "\nEndpoints para consultar o extrato de bônus diário e comissão mensal.\nVendedores veem apenas seus próprios dados; gerentes/admins veem todos."
+  -
+    name: 'People Analytics'
+    description: "\nEndpoints para consultar e inserir KPIs de fluxo de pessoas por turno.\nDados podem vir de sincronização com FastAPI ou inserção manual."
+components:
+  securitySchemes:
+    default:
+      type: http
+      scheme: bearer
+      description: "    Para obter um token, faça login em `POST /api/v1/auth/login` com email e senha.\n\n    **Usuários de teste:**\n    - `admin@maiscapinhas.com.br` / `password` (Admin - todas as lojas)\n    - `joao.vendedor@maiscapinhas.com.br` / `password` (Vendedor - Tijucas)\n\n    O token deve ser enviado no header `Authorization: Bearer {token}`.\n\n    **Modo SPA (Cookie):** Para aplicações frontend, use `withCredentials: true` após obter o CSRF token em `/sanctum/csrf-cookie`."
+security:
+  -
+    default: []
+paths:
+  /api/v1/health:
+    get:
+      summary: 'Verificar saúde da API'
+      operationId: verificarSadeDaAPI
+      description: "Retorna o status de saúde da API. Use este endpoint para\nverificar se a API está online e respondendo corretamente.\n\n**Casos de uso:**\n- Monitoramento de uptime (Uptime Robot, Pingdom, etc.)\n- Health checks em load balancers\n- Verificação de conectividade antes de operações\n\n**Resposta:**\n- `status: \"ok\"` - API funcionando normalmente\n- `timestamp` - Data/hora ISO 8601 da requisição"
+      parameters: []
+      responses:
+        200:
+          description: 'API saudável'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    status: ok
+                    timestamp: '2026-01-07T12:00:00+00:00'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        example: ok
+                      timestamp:
+                        type: string
+                        example: '2026-01-07T12:00:00+00:00'
+      tags:
+        - 'Saúde & Versão'
+      security: []
+  /api/v1/version:
+    get:
+      summary: 'Obter versão da API'
+      operationId: obterVersoDaAPI
+      description: "Retorna informações sobre a versão atual da API, incluindo\nversões do PHP e Laravel utilizadas.\n\n**Casos de uso:**\n- Verificar compatibilidade de versão antes de integrações\n- Debug e troubleshooting\n- Documentação técnica\n\n**Resposta:**\n- `name` - Nome da API\n- `api` - Versão da API (v1, v2, etc.)\n- `php` - Versão do PHP\n- `laravel` - Versão do Laravel"
+      parameters: []
+      responses:
+        200:
+          description: 'Versão atual'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    name: 'MaisCapinhas ERP API'
+                    api: v1
+                    php: 8.3.16
+                    laravel: 12.45.2
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        example: 'MaisCapinhas ERP API'
+                      api:
+                        type: string
+                        example: v1
+                      php:
+                        type: string
+                        example: 8.3.16
+                      laravel:
+                        type: string
+                        example: 12.45.2
+      tags:
+        - 'Saúde & Versão'
+      security: []
+  /api/v1/auth/login:
+    post:
+      summary: 'Fazer login e obter token'
+      operationId: fazerLoginEObterToken
+      description: "Autentica o usuário e retorna um Bearer Token para uso nas próximas requisições.\n\n**Quem pode usar:** Qualquer usuário ativo com email e senha válidos.\n\n**Regras de negócio:**\n- Usuários inativos (`active = false`) não podem fazer login\n- O token não expira automaticamente, mas pode ser revogado via logout\n- Cada login gera um novo token (múltiplos dispositivos são permitidos)\n\n**Erros possíveis:**\n- `422` - Credenciais inválidas ou conta desativada"
+      parameters: []
+      responses:
+        200:
+          description: 'Login bem-sucedido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    token: 1|abc123xyz...
+                    token_type: Bearer
+                    user:
+                      id: 1
+                      name: 'Admin Sistema'
+                      email: admin@maiscapinhas.com.br
+                  meta:
+                    timestamp: '2026-01-07T12:00:00Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        example: 1|abc123xyz...
+                      token_type:
+                        type: string
+                        example: Bearer
+                      user:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          name:
+                            type: string
+                            example: 'Admin Sistema'
+                          email:
+                            type: string
+                            example: admin@maiscapinhas.com.br
+                  meta:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        example: '2026-01-07T12:00:00Z'
+        422:
+          description: ''
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  -
+                    description: 'Credenciais inválidas'
+                    type: object
+                    example:
+                      message: 'The provided credentials are incorrect.'
+                      errors:
+                        email:
+                          - 'The provided credentials are incorrect.'
+                    properties:
+                      message:
+                        type: string
+                        example: 'The provided credentials are incorrect.'
+                      errors:
+                        type: object
+                        properties:
+                          email:
+                            type: array
+                            example:
+                              - 'The provided credentials are incorrect.'
+                            items:
+                              type: string
+                  -
+                    description: 'Conta desativada'
+                    type: object
+                    example:
+                      message: 'This account is deactivated.'
+                      errors:
+                        email:
+                          - 'This account is deactivated.'
+                    properties:
+                      message:
+                        type: string
+                        example: 'This account is deactivated.'
+                      errors:
+                        type: object
+                        properties:
+                          email:
+                            type: array
+                            example:
+                              - 'This account is deactivated.'
+                            items:
+                              type: string
+      tags:
+        - Autenticação
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 'Email do usuário.'
+                  example: admin@maiscapinhas.com.br
+                password:
+                  type: string
+                  description: 'Senha do usuário.'
+                  example: password
+                device_name:
+                  type: string
+                  description: 'Nome do dispositivo (opcional, usado para identificar tokens).'
+                  example: postman-dev
+              required:
+                - email
+                - password
+      security: []
+  /api/v1/auth/logout:
+    post:
+      summary: 'Fazer logout (revogar token atual)'
+      operationId: fazerLogoutrevogarTokenAtual
+      description: "Revoga o token que foi usado para autenticar esta requisição.\nOs demais tokens do usuário (outros dispositivos) permanecem válidos.\n\n**Quem pode usar:** Qualquer usuário autenticado.\n\n**Casos de uso:**\n- Logout manual do usuário\n- Encerrar sessão em um dispositivo específico"
+      parameters: []
+      responses:
+        200:
+          description: 'Logout bem-sucedido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    message: 'Successfully logged out.'
+                  meta:
+                    timestamp: '2026-01-07T12:00:00Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: 'Successfully logged out.'
+                  meta:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        example: '2026-01-07T12:00:00Z'
+      tags:
+        - Autenticação
+  /api/v1/auth/logout-all:
+    post:
+      summary: 'Revogar todos os tokens'
+      operationId: revogarTodosOsTokens
+      description: "Revoga **todos** os tokens do usuário, desconectando-o de todos os dispositivos.\n\n**Quem pode usar:** Qualquer usuário autenticado.\n\n**Casos de uso:**\n- Suspeita de comprometimento de segurança\n- Forçar re-login em todos os dispositivos\n- Alteração de senha"
+      parameters: []
+      responses:
+        200:
+          description: 'Todos tokens revogados'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    message: 'All tokens revoked.'
+                  meta:
+                    timestamp: '2026-01-07T12:00:00Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: 'All tokens revoked.'
+                  meta:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        example: '2026-01-07T12:00:00Z'
+      tags:
+        - Autenticação
+  /api/v1/me:
+    get:
+      summary: 'Obter perfil do usuário atual'
+      operationId: obterPerfilDoUsurioAtual
+      description: "Retorna os dados do usuário autenticado, incluindo as lojas\nàs quais ele tem acesso e seu papel (role) em cada uma.\n\n**Quem pode usar:** Qualquer usuário autenticado.\n\n**Informações retornadas:**\n- Dados básicos do usuário (id, nome, email, status ativo)\n- Lista de lojas com o papel do usuário em cada uma\n\n**Papéis possíveis:**\n- `admin` - Administrador global (acesso total)\n- `gerente` - Gerente da loja (gerencia vendedores e metas)\n- `conferente` - Confere fechamentos de caixa\n- `vendedor` - Vendedor (registra vendas e turnos)"
+      parameters: []
+      responses:
+        200:
+          description: 'Perfil com múltiplas lojas'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    user:
+                      id: 1
+                      name: 'Admin Sistema'
+                      email: admin@maiscapinhas.com.br
+                      active: true
+                      created_at: '2026-01-01T00:00:00+00:00'
+                    stores:
+                      -
+                        id: 1
+                        name: 'Mais Capinhas Tijucas'
+                        city: Tijucas
+                        role: admin
+                      -
+                        id: 2
+                        name: 'Mais Capinhas Itapema'
+                        city: Itapema
+                        role: admin
+                  meta:
+                    timestamp: '2026-01-07T12:00:00Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          name:
+                            type: string
+                            example: 'Admin Sistema'
+                          email:
+                            type: string
+                            example: admin@maiscapinhas.com.br
+                          active:
+                            type: boolean
+                            example: true
+                          created_at:
+                            type: string
+                            example: '2026-01-01T00:00:00+00:00'
+                      stores:
+                        type: array
+                        example:
+                          -
+                            id: 1
+                            name: 'Mais Capinhas Tijucas'
+                            city: Tijucas
+                            role: admin
+                          -
+                            id: 2
+                            name: 'Mais Capinhas Itapema'
+                            city: Itapema
+                            role: admin
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            name:
+                              type: string
+                              example: 'Mais Capinhas Tijucas'
+                            city:
+                              type: string
+                              example: Tijucas
+                            role:
+                              type: string
+                              example: admin
+                  meta:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        example: '2026-01-07T12:00:00Z'
+      tags:
+        - 'Perfil do Usuário'
+  /api/v1/stores:
+    get:
+      summary: 'Listar lojas do usuário'
+      operationId: listarLojasDoUsurio
+      description: "Retorna todas as lojas ativas às quais o usuário autenticado tem acesso.\nCada loja inclui o papel (role) do usuário naquela loja.\n\n**Quem pode usar:** Qualquer usuário autenticado.\n\n**Regras:**\n- Apenas lojas ativas (`active = true`) são retornadas\n- Apenas lojas onde o usuário está vinculado são listadas"
+      parameters: []
+      responses:
+        200:
+          description: 'Lista de lojas'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    -
+                      id: 1
+                      name: 'Mais Capinhas Tijucas'
+                      city: Tijucas
+                      role: admin
+                    -
+                      id: 2
+                      name: 'Mais Capinhas Itapema'
+                      city: Itapema
+                      role: gerente
+                  meta:
+                    timestamp: '2026-01-07T12:00:00Z'
+                properties:
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        name: 'Mais Capinhas Tijucas'
+                        city: Tijucas
+                        role: admin
+                      -
+                        id: 2
+                        name: 'Mais Capinhas Itapema'
+                        city: Itapema
+                        role: gerente
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: 'Mais Capinhas Tijucas'
+                        city:
+                          type: string
+                          example: Tijucas
+                        role:
+                          type: string
+                          example: admin
+                  meta:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        example: '2026-01-07T12:00:00Z'
+      tags:
+        - Lojas
+  '/api/v1/stores/{id}':
+    get:
+      summary: 'Obter detalhes de uma loja'
+      operationId: obterDetalhesDeUmaLoja
+      description: "Retorna os detalhes de uma loja específica, se o usuário tiver acesso.\n\n**Quem pode usar:** Usuários com vínculo na loja.\n\n**Erros possíveis:**\n- `403` - Usuário não tem acesso a esta loja\n- `404` - Loja não encontrada"
+      parameters: []
+      responses:
+        200:
+          description: 'Loja encontrada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    name: 'Mais Capinhas Tijucas'
+                    city: Tijucas
+                    active: true
+                    role: admin
+                    created_at: '2026-01-01T00:00:00+00:00'
+                  meta:
+                    timestamp: '2026-01-07T12:00:00Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: 'Mais Capinhas Tijucas'
+                      city:
+                        type: string
+                        example: Tijucas
+                      active:
+                        type: boolean
+                        example: true
+                      role:
+                        type: string
+                        example: admin
+                      created_at:
+                        type: string
+                        example: '2026-01-01T00:00:00+00:00'
+                  meta:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        example: '2026-01-07T12:00:00Z'
+        403:
+          description: 'Sem acesso'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  error:
+                    code: 403
+                    message: 'You do not have access to this store.'
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 403
+                      message:
+                        type: string
+                        example: 'You do not have access to this store.'
+      tags:
+        - Lojas
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the store.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: store
+        description: 'ID da loja.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/dashboard/vendedor:
+    get:
+      summary: 'Dashboard do Vendedor'
+      operationId: dashboardDoVendedor
+      description: "Retorna métricas do vendedor no dia, incluindo suas vendas pessoais\ncomparadas com o total da loja e status dos seus turnos.\n\n**Quem pode usar:** Vendedores e níveis superiores.\n\n**Métricas retornadas:**\n- `my_sales` - Quantidade e valor total das vendas do vendedor no dia\n- `store_sales` - Quantidade e valor total de todas as vendas da loja no dia\n- `my_shifts` - Lista dos turnos do vendedor naquele dia com status do fechamento\n\n**Dica:** Compare `my_sales` com `store_sales` para ver sua participação nas vendas da loja."
+      parameters:
+        -
+          in: query
+          name: store_id
+          description: 'ID da loja.'
+          example: 1
+          required: true
+          schema:
+            type: integer
+            description: 'ID da loja.'
+            example: 1
+        -
+          in: query
+          name: date
+          description: 'Data no formato YYYY-MM-DD (padrão: hoje).'
+          example: '2026-01-07'
+          required: false
+          schema:
+            type: string
+            description: 'Data no formato YYYY-MM-DD (padrão: hoje).'
+            example: '2026-01-07'
+      responses:
+        200:
+          description: 'Vendas do dia'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    date: '2026-01-07'
+                    my_sales:
+                      count: 5
+                      total: 850.0
+                    store_sales:
+                      count: 23
+                      total: 3200.0
+                    my_shifts:
+                      -
+                        id: 1
+                        date: '2026-01-07'
+                        shift_code: M
+                        status: open
+                        cash_closing: null
+                  meta:
+                    timestamp: '2026-01-07T12:00:00Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      date:
+                        type: string
+                        example: '2026-01-07'
+                      my_sales:
+                        type: object
+                        properties:
+                          count:
+                            type: integer
+                            example: 5
+                          total:
+                            type: number
+                            example: 850.0
+                      store_sales:
+                        type: object
+                        properties:
+                          count:
+                            type: integer
+                            example: 23
+                          total:
+                            type: number
+                            example: 3200.0
+                      my_shifts:
+                        type: array
+                        example:
+                          -
+                            id: 1
+                            date: '2026-01-07'
+                            shift_code: M
+                            status: open
+                            cash_closing: null
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            date:
+                              type: string
+                              example: '2026-01-07'
+                            shift_code:
+                              type: string
+                              example: M
+                            status:
+                              type: string
+                              example: open
+                            cash_closing:
+                              type: string
+                              example: null
+                  meta:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        example: '2026-01-07T12:00:00Z'
+        403:
+          description: 'Sem acesso à loja'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  error:
+                    code: 403
+                    message: 'You do not have access to this store.'
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 403
+                      message:
+                        type: string
+                        example: 'You do not have access to this store.'
+      tags:
+        - Dashboards
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                store_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: 16
+                date:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2026-01-07T19:59:14'
+              required:
+                - store_id
+  /api/v1/dashboard/conferente:
+    get:
+      summary: 'Dashboard do Conferente'
+      operationId: dashboardDoConferente
+      description: "Retorna métricas para conferência de caixa, incluindo fechamentos\npendentes de aprovação e ranking de vendedores.\n\n**Quem pode usar:** Conferentes, Gerentes e Admins.\n\n**Métricas retornadas:**\n- `pending_closings` - Lista de fechamentos aguardando aprovação/rejeição\n- `pending_count` - Quantidade de fechamentos pendentes\n- `store_sales` - Total de vendas da loja no dia\n- `shifts_today` - Resumo de turnos por status (open, closed, pending)\n- `top_sellers` - Top 5 vendedores do dia por valor vendido"
+      parameters:
+        -
+          in: query
+          name: store_id
+          description: 'ID da loja.'
+          example: 1
+          required: true
+          schema:
+            type: integer
+            description: 'ID da loja.'
+            example: 1
+        -
+          in: query
+          name: date
+          description: 'Data no formato YYYY-MM-DD (padrão: hoje).'
+          example: '2026-01-07'
+          required: false
+          schema:
+            type: string
+            description: 'Data no formato YYYY-MM-DD (padrão: hoje).'
+            example: '2026-01-07'
+      responses:
+        200:
+          description: 'Dashboard do conferente'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    date: '2026-01-07'
+                    pending_closings: []
+                    pending_count: 0
+                    store_sales:
+                      count: 23
+                      total: 3200.0
+                    shifts_today:
+                      open: 2
+                      closed: 4
+                    top_sellers:
+                      -
+                        seller_id: 6
+                        name: 'João Vendedor'
+                        total: 1500.0
+                  meta:
+                    timestamp: '2026-01-07T12:00:00Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      date:
+                        type: string
+                        example: '2026-01-07'
+                      pending_closings:
+                        type: array
+                        example: []
+                      pending_count:
+                        type: integer
+                        example: 0
+                      store_sales:
+                        type: object
+                        properties:
+                          count:
+                            type: integer
+                            example: 23
+                          total:
+                            type: number
+                            example: 3200.0
+                      shifts_today:
+                        type: object
+                        properties:
+                          open:
+                            type: integer
+                            example: 2
+                          closed:
+                            type: integer
+                            example: 4
+                      top_sellers:
+                        type: array
+                        example:
+                          -
+                            seller_id: 6
+                            name: 'João Vendedor'
+                            total: 1500
+                        items:
+                          type: object
+                          properties:
+                            seller_id:
+                              type: integer
+                              example: 6
+                            name:
+                              type: string
+                              example: 'João Vendedor'
+                            total:
+                              type: number
+                              example: 1500.0
+                  meta:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        example: '2026-01-07T12:00:00Z'
+      tags:
+        - Dashboards
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                store_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: 16
+                date:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2026-01-07T19:59:14'
+              required:
+                - store_id
+  /api/v1/dashboard/admin:
+    get:
+      summary: 'Dashboard do Admin'
+      operationId: dashboardDoAdmin
+      description: "Retorna visão consolidada de todas as lojas que o usuário administra,\ncom métricas mensais agregadas.\n\n**Quem pode usar:** Admins e Gerentes.\n\n**Métricas retornadas:**\n- `total_sales` - Soma de vendas de todas as lojas no mês\n- `sales_by_store` - Vendas detalhadas por loja\n- `closings_summary` - Contagem de fechamentos por status\n- `top_sellers` - Top 10 vendedores do mês (todas as lojas)"
+      parameters:
+        -
+          in: query
+          name: month
+          description: 'Mês no formato YYYY-MM (padrão: mês atual).'
+          example: 2026-01
+          required: false
+          schema:
+            type: string
+            description: 'Mês no formato YYYY-MM (padrão: mês atual).'
+            example: 2026-01
+      responses:
+        200:
+          description: 'Dashboard consolidado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    month: 2026-01
+                    total_sales:
+                      count: 450
+                      total: 67500.0
+                    sales_by_store:
+                      -
+                        store_id: 1
+                        store_name: 'Mais Capinhas Tijucas'
+                        count: 180
+                        total: 28000.0
+                    closings_summary:
+                      approved: 40
+                      submitted: 5
+                      draft: 3
+                    top_sellers:
+                      -
+                        seller_id: 6
+                        name: 'João Vendedor'
+                        total: 12500.0
+                        count: 85
+                  meta:
+                    timestamp: '2026-01-07T12:00:00Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      month:
+                        type: string
+                        example: 2026-01
+                      total_sales:
+                        type: object
+                        properties:
+                          count:
+                            type: integer
+                            example: 450
+                          total:
+                            type: number
+                            example: 67500.0
+                      sales_by_store:
+                        type: array
+                        example:
+                          -
+                            store_id: 1
+                            store_name: 'Mais Capinhas Tijucas'
+                            count: 180
+                            total: 28000
+                        items:
+                          type: object
+                          properties:
+                            store_id:
+                              type: integer
+                              example: 1
+                            store_name:
+                              type: string
+                              example: 'Mais Capinhas Tijucas'
+                            count:
+                              type: integer
+                              example: 180
+                            total:
+                              type: number
+                              example: 28000.0
+                      closings_summary:
+                        type: object
+                        properties:
+                          approved:
+                            type: integer
+                            example: 40
+                          submitted:
+                            type: integer
+                            example: 5
+                          draft:
+                            type: integer
+                            example: 3
+                      top_sellers:
+                        type: array
+                        example:
+                          -
+                            seller_id: 6
+                            name: 'João Vendedor'
+                            total: 12500
+                            count: 85
+                        items:
+                          type: object
+                          properties:
+                            seller_id:
+                              type: integer
+                              example: 6
+                            name:
+                              type: string
+                              example: 'João Vendedor'
+                            total:
+                              type: number
+                              example: 12500.0
+                            count:
+                              type: integer
+                              example: 85
+                  meta:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        example: '2026-01-07T12:00:00Z'
+      tags:
+        - Dashboards
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                month:
+                  type: string
+                  description: 'Must match the regex /^\d{4}-\d{2}$/.'
+                  example: 6425-59
+  /api/v1/sales:
+    get:
+      summary: 'Listar vendas'
+      operationId: listarVendas
+      description: "Retorna a lista de vendas das lojas às quais o usuário tem acesso,\ncom filtros por loja, vendedor e período.\n\n**Quem pode usar:** Qualquer usuário autenticado (vê apenas suas lojas).\n\n**Filtros disponíveis:**\n- `store_id` - Filtrar por loja específica\n- `seller_id` - Filtrar por vendedor específico\n- `from` / `to` - Período de datas (formato YYYY-MM-DD)\n\n**Paginação:** Resultados paginados (padrão 25 por página, máx 100)."
+      parameters:
+        -
+          in: query
+          name: store_id
+          description: 'ID da loja para filtrar.'
+          example: 1
+          required: false
+          schema:
+            type: integer
+            description: 'ID da loja para filtrar.'
+            example: 1
+        -
+          in: query
+          name: seller_id
+          description: 'ID do vendedor para filtrar.'
+          example: 6
+          required: false
+          schema:
+            type: integer
+            description: 'ID do vendedor para filtrar.'
+            example: 6
+        -
+          in: query
+          name: from
+          description: 'Data inicial (YYYY-MM-DD).'
+          example: '2026-01-01'
+          required: false
+          schema:
+            type: string
+            description: 'Data inicial (YYYY-MM-DD).'
+            example: '2026-01-01'
+        -
+          in: query
+          name: to
+          description: 'Data final (YYYY-MM-DD).'
+          example: '2026-01-31'
+          required: false
+          schema:
+            type: string
+            description: 'Data final (YYYY-MM-DD).'
+            example: '2026-01-31'
+        -
+          in: query
+          name: per_page
+          description: 'Itens por página (1-100).'
+          example: 25
+          required: false
+          schema:
+            type: integer
+            description: 'Itens por página (1-100).'
+            example: 25
+      responses:
+        200:
+          description: 'Lista de vendas'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    -
+                      id: 1
+                      store_id: 1
+                      seller_id: 6
+                      sold_at: '2026-01-07T10:30:00+00:00'
+                      amount: '150.00'
+                      source: pdv
+                      store:
+                        id: 1
+                        name: 'Mais Capinhas Tijucas'
+                      seller:
+                        id: 6
+                        name: 'João Vendedor'
+                  meta:
+                    current_page: 1
+                    per_page: 25
+                    total: 150
+                    last_page: 6
+                properties:
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        store_id: 1
+                        seller_id: 6
+                        sold_at: '2026-01-07T10:30:00+00:00'
+                        amount: '150.00'
+                        source: pdv
+                        store:
+                          id: 1
+                          name: 'Mais Capinhas Tijucas'
+                        seller:
+                          id: 6
+                          name: 'João Vendedor'
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        store_id:
+                          type: integer
+                          example: 1
+                        seller_id:
+                          type: integer
+                          example: 6
+                        sold_at:
+                          type: string
+                          example: '2026-01-07T10:30:00+00:00'
+                        amount:
+                          type: string
+                          example: '150.00'
+                        source:
+                          type: string
+                          example: pdv
+                        store:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            name:
+                              type: string
+                              example: 'Mais Capinhas Tijucas'
+                        seller:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 6
+                            name:
+                              type: string
+                              example: 'João Vendedor'
+                  meta:
+                    type: object
+                    properties:
+                      current_page:
+                        type: integer
+                        example: 1
+                      per_page:
+                        type: integer
+                        example: 25
+                      total:
+                        type: integer
+                        example: 150
+                      last_page:
+                        type: integer
+                        example: 6
+      tags:
+        - Vendas
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                store_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: 16
+                seller_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the users table.'
+                  example: 16
+                from:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2026-01-07T19:59:14'
+                to:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2026-01-07T19:59:14'
+                per_page:
+                  type: integer
+                  description: 'Must be at least 1. Must not be greater than 100.'
+                  example: 22
+  /api/v1/cash/shifts:
+    get:
+      summary: 'Listar turnos de caixa'
+      operationId: listarTurnosDeCaixa
+      description: "Retorna os turnos de caixa das lojas às quais o usuário tem acesso,\ncom filtros por loja, data e status.\n\n**Quem pode usar:** Qualquer usuário autenticado.\n\n**Filtros disponíveis:**\n- `store_id` - Filtrar por loja específica\n- `date` - Filtrar por data específica (YYYY-MM-DD)\n- `status` - Filtrar por status (open, closed, pending)\n\n**Códigos de turno:**\n- `M` - Manhã\n- `T` - Tarde\n- `N` - Noite"
+      parameters:
+        -
+          in: query
+          name: store_id
+          description: 'ID da loja para filtrar.'
+          example: 1
+          required: false
+          schema:
+            type: integer
+            description: 'ID da loja para filtrar.'
+            example: 1
+        -
+          in: query
+          name: date
+          description: 'Data específica (YYYY-MM-DD).'
+          example: '2026-01-07'
+          required: false
+          schema:
+            type: string
+            description: 'Data específica (YYYY-MM-DD).'
+            example: '2026-01-07'
+        -
+          in: query
+          name: status
+          description: 'Status do turno.'
+          example: open
+          required: false
+          schema:
+            type: string
+            description: 'Status do turno.'
+            example: open
+        -
+          in: query
+          name: per_page
+          description: 'Itens por página (1-100).'
+          example: 25
+          required: false
+          schema:
+            type: integer
+            description: 'Itens por página (1-100).'
+            example: 25
+      responses:
+        200:
+          description: 'Lista de turnos'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    -
+                      id: 1
+                      store_id: 1
+                      date: '2026-01-07'
+                      shift_code: M
+                      seller_id: 6
+                      status: open
+                      store:
+                        id: 1
+                        name: 'Mais Capinhas Tijucas'
+                      seller:
+                        id: 6
+                        name: 'João Vendedor'
+                      cash_closing: null
+                  meta:
+                    current_page: 1
+                    per_page: 25
+                    total: 84
+                properties:
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        store_id: 1
+                        date: '2026-01-07'
+                        shift_code: M
+                        seller_id: 6
+                        status: open
+                        store:
+                          id: 1
+                          name: 'Mais Capinhas Tijucas'
+                        seller:
+                          id: 6
+                          name: 'João Vendedor'
+                        cash_closing: null
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        store_id:
+                          type: integer
+                          example: 1
+                        date:
+                          type: string
+                          example: '2026-01-07'
+                        shift_code:
+                          type: string
+                          example: M
+                        seller_id:
+                          type: integer
+                          example: 6
+                        status:
+                          type: string
+                          example: open
+                        store:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            name:
+                              type: string
+                              example: 'Mais Capinhas Tijucas'
+                        seller:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 6
+                            name:
+                              type: string
+                              example: 'João Vendedor'
+                        cash_closing:
+                          type: string
+                          example: null
+                  meta:
+                    type: object
+                    properties:
+                      current_page:
+                        type: integer
+                        example: 1
+                      per_page:
+                        type: integer
+                        example: 25
+                      total:
+                        type: integer
+                        example: 84
+      tags:
+        - 'Turnos de Caixa'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                store_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: 16
+                date:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2026-01-07T19:59:14'
+                status:
+                  type: string
+                  description: ''
+                  example: pending
+                  enum:
+                    - open
+                    - closed
+                    - pending
+                per_page:
+                  type: integer
+                  description: 'Must be at least 1. Must not be greater than 100.'
+                  example: 22
+    post:
+      summary: 'Criar novo turno de caixa'
+      operationId: criarNovoTurnoDeCaixa
+      description: "Cria um novo turno de caixa para uma loja/data/período.\n\n**Quem pode usar:** Usuários com acesso à loja.\n\n**Regras de negócio:**\n- Não pode haver dois turnos com mesma loja + data + turno + vendedor\n- O turno inicia com status `open`\n- Se `seller_id` não for informado, assume o usuário atual\n\n**Códigos de turno:**\n- `M` - Manhã (08h-14h)\n- `T` - Tarde (14h-20h)\n- `N` - Noite (20h-00h)"
+      parameters: []
+      responses:
+        201:
+          description: 'Turno criado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    store_id: 1
+                    date: '2026-01-07'
+                    shift_code: M
+                    seller_id: 6
+                    status: open
+                    store:
+                      id: 1
+                      name: 'Mais Capinhas Tijucas'
+                    seller:
+                      id: 6
+                      name: 'João Vendedor'
+                  meta:
+                    timestamp: '2026-01-07T12:00:00Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      store_id:
+                        type: integer
+                        example: 1
+                      date:
+                        type: string
+                        example: '2026-01-07'
+                      shift_code:
+                        type: string
+                        example: M
+                      seller_id:
+                        type: integer
+                        example: 6
+                      status:
+                        type: string
+                        example: open
+                      store:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          name:
+                            type: string
+                            example: 'Mais Capinhas Tijucas'
+                      seller:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 6
+                          name:
+                            type: string
+                            example: 'João Vendedor'
+                  meta:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        example: '2026-01-07T12:00:00Z'
+        403:
+          description: 'Sem acesso'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  error:
+                    code: 403
+                    message: 'You do not have access to this store.'
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 403
+                      message:
+                        type: string
+                        example: 'You do not have access to this store.'
+      tags:
+        - 'Turnos de Caixa'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                store_id:
+                  type: integer
+                  description: 'ID da loja.'
+                  example: 1
+                date:
+                  type: string
+                  description: 'Data do turno (YYYY-MM-DD).'
+                  example: '2026-01-07'
+                shift_code:
+                  type: string
+                  description: 'Código do turno (M, T ou N).'
+                  example: M
+                seller_id:
+                  type: integer
+                  description: 'ID do vendedor (padrão: usuário atual).'
+                  example: 6
+              required:
+                - store_id
+                - date
+                - shift_code
+  '/api/v1/cash/shifts/{id}':
+    get:
+      summary: 'Obter detalhes de um turno'
+      operationId: obterDetalhesDeUmTurno
+      description: "Retorna os detalhes de um turno específico, incluindo o fechamento se existir.\n\n**Quem pode usar:** Usuários com acesso à loja."
+      parameters: []
+      responses:
+        200:
+          description: 'Turno encontrado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    store_id: 1
+                    date: '2026-01-07'
+                    shift_code: M
+                    status: closed
+                    cash_closing:
+                      id: 1
+                      status: approved
+                      lines: []
+                  meta:
+                    timestamp: '2026-01-07T12:00:00Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      store_id:
+                        type: integer
+                        example: 1
+                      date:
+                        type: string
+                        example: '2026-01-07'
+                      shift_code:
+                        type: string
+                        example: M
+                      status:
+                        type: string
+                        example: closed
+                      cash_closing:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          status:
+                            type: string
+                            example: approved
+                          lines:
+                            type: array
+                            example: []
+                  meta:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        example: '2026-01-07T12:00:00Z'
+      tags:
+        - 'Turnos de Caixa'
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the shift.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: shift
+        description: 'ID do turno.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/cash/closings/{shift_id}':
+    get:
+      summary: 'Obter detalhes do fechamento'
+      operationId: obterDetalhesDoFechamento
+      description: "Retorna os detalhes completos de um fechamento de caixa,\nincluindo todas as linhas e divergências.\n\n**Quem pode usar:** Qualquer usuário com acesso à loja."
+      parameters: []
+      responses:
+        200:
+          description: 'Detalhes do fechamento'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    status: approved
+                    version: 2
+                    closed_at: '2026-01-07T12:00:00+00:00'
+                    lines:
+                      -
+                        id: 1
+                        label: Dinheiro
+                        system_value: 500.0
+                        real_value: 495.0
+                        diff_value: -5.0
+                        justification_text: 'Troco incorreto'
+                    cash_shift:
+                      id: 1
+                      date: '2026-01-07'
+                      shift_code: M
+                    closed_by_user:
+                      id: 3
+                      name: 'Ana Conferente'
+                  meta:
+                    timestamp: '2026-01-07T12:00:00Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      status:
+                        type: string
+                        example: approved
+                      version:
+                        type: integer
+                        example: 2
+                      closed_at:
+                        type: string
+                        example: '2026-01-07T12:00:00+00:00'
+                      lines:
+                        type: array
+                        example:
+                          -
+                            id: 1
+                            label: Dinheiro
+                            system_value: 500
+                            real_value: 495
+                            diff_value: -5
+                            justification_text: 'Troco incorreto'
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            label:
+                              type: string
+                              example: Dinheiro
+                            system_value:
+                              type: number
+                              example: 500.0
+                            real_value:
+                              type: number
+                              example: 495.0
+                            diff_value:
+                              type: number
+                              example: -5.0
+                            justification_text:
+                              type: string
+                              example: 'Troco incorreto'
+                      cash_shift:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          date:
+                            type: string
+                            example: '2026-01-07'
+                          shift_code:
+                            type: string
+                            example: M
+                      closed_by_user:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 3
+                          name:
+                            type: string
+                            example: 'Ana Conferente'
+                  meta:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        example: '2026-01-07T12:00:00Z'
+      tags:
+        - 'Fechamento de Caixa'
+    parameters:
+      -
+        in: path
+        name: shift_id
+        description: 'The ID of the shift.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: shift
+        description: 'ID do turno.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/cash/closings/{shift_id}/submit':
+    post:
+      summary: 'Enviar fechamento para conferência'
+      operationId: enviarFechamentoParaConferncia
+      description: "Envia um fechamento de caixa para ser conferido/aprovado.\nO fechamento deve estar em status `draft` ou `rejected` para ser enviado.\n\n**Quem pode usar:** Vendedor responsável pelo turno ou níveis superiores.\n\n**Regras de negócio:**\n- Todas as divergências (diff_value ≠ 0) devem ter justificativa preenchida\n- O status deve ser `draft` ou `rejected` para poder enviar\n\n**Erros possíveis:**\n- `409` - Status inválido (já enviado ou aprovado)\n- `422` - Divergências sem justificativa\n- `403` - Sem acesso à loja\n- `404` - Fechamento não encontrado"
+      parameters: []
+      responses:
+        200:
+          description: 'Enviado com sucesso'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    status: submitted
+                    version: 1
+                    lines: []
+                    cash_shift:
+                      id: 1
+                      date: '2026-01-07'
+                      shift_code: M
+                  meta:
+                    timestamp: '2026-01-07T12:00:00Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      status:
+                        type: string
+                        example: submitted
+                      version:
+                        type: integer
+                        example: 1
+                      lines:
+                        type: array
+                        example: []
+                      cash_shift:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          date:
+                            type: string
+                            example: '2026-01-07'
+                          shift_code:
+                            type: string
+                            example: M
+                  meta:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        example: '2026-01-07T12:00:00Z'
+        409:
+          description: 'Status inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  error:
+                    code: 409
+                    message: "Cannot submit closing with status 'approved'."
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 409
+                      message:
+                        type: string
+                        example: "Cannot submit closing with status 'approved'."
+        422:
+          description: 'Divergência sem justificativa'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'All divergences must be justified before submitting.'
+                  errors:
+                    lines:
+                      - "Linha 'Dinheiro' possui divergência sem justificativa."
+                properties:
+                  message:
+                    type: string
+                    example: 'All divergences must be justified before submitting.'
+                  errors:
+                    type: object
+                    properties:
+                      lines:
+                        type: array
+                        example:
+                          - "Linha 'Dinheiro' possui divergência sem justificativa."
+                        items:
+                          type: string
+      tags:
+        - 'Fechamento de Caixa'
+    parameters:
+      -
+        in: path
+        name: shift_id
+        description: 'The ID of the shift.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: shift
+        description: 'ID do turno.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/cash/closings/{shift_id}/approve':
+    post:
+      summary: 'Aprovar fechamento de caixa'
+      operationId: aprovarFechamentoDeCaixa
+      description: "Aprova um fechamento que foi enviado para conferência.\nEsta ação é **irreversível** - fechamentos aprovados não podem ser editados.\n\n**Quem pode usar:** Conferentes, Gerentes ou Admins da loja.\n\n**Regras de negócio:**\n- O fechamento deve estar em status `submitted`\n- Após aprovação, os dados são considerados oficiais para cálculo de bônus/comissão\n\n**Erros possíveis:**\n- `409` - Status inválido (não está em submitted)\n- `403` - Sem permissão para aprovar\n- `404` - Fechamento não encontrado"
+      parameters: []
+      responses:
+        200:
+          description: 'Aprovado com sucesso'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    status: approved
+                    closed_by: 3
+                    closed_at: '2026-01-07T12:00:00+00:00'
+                  meta:
+                    timestamp: '2026-01-07T12:00:00Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      status:
+                        type: string
+                        example: approved
+                      closed_by:
+                        type: integer
+                        example: 3
+                      closed_at:
+                        type: string
+                        example: '2026-01-07T12:00:00+00:00'
+                  meta:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        example: '2026-01-07T12:00:00Z'
+        409:
+          description: 'Não pode aprovar'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  error:
+                    code: 409
+                    message: "Cannot approve closing with status 'draft'."
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 409
+                      message:
+                        type: string
+                        example: "Cannot approve closing with status 'draft'."
+      tags:
+        - 'Fechamento de Caixa'
+    parameters:
+      -
+        in: path
+        name: shift_id
+        description: 'The ID of the shift.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: shift
+        description: 'ID do turno.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/cash/closings/{shift_id}/reject':
+    post:
+      summary: 'Rejeitar fechamento de caixa'
+      operationId: rejeitarFechamentoDeCaixa
+      description: "Rejeita um fechamento enviado para conferência, retornando-o ao status `draft`\npara que o vendedor possa corrigir os problemas apontados.\n\n**Quem pode usar:** Conferentes, Gerentes ou Admins da loja.\n\n**Regras de negócio:**\n- O fechamento deve estar em status `submitted`\n- É obrigatório informar o motivo da rejeição (mín. 10 caracteres)\n- O vendedor será notificado e poderá reenviar após correções\n\n**Erros possíveis:**\n- `409` - Status inválido (não está em submitted)\n- `403` - Sem permissão para rejeitar\n- `422` - Motivo não informado ou muito curto"
+      parameters: []
+      responses:
+        200:
+          description: 'Rejeitado com sucesso'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    status: rejected
+                  meta:
+                    timestamp: '2026-01-07T12:00:00Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      status:
+                        type: string
+                        example: rejected
+                  meta:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        example: '2026-01-07T12:00:00Z'
+        422:
+          description: 'Motivo não informado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The reason field is required.'
+                  errors:
+                    reason:
+                      - 'The reason field is required.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The reason field is required.'
+                  errors:
+                    type: object
+                    properties:
+                      reason:
+                        type: array
+                        example:
+                          - 'The reason field is required.'
+                        items:
+                          type: string
+      tags:
+        - 'Fechamento de Caixa'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  description: 'Motivo da rejeição (mín. 10, máx. 500 caracteres).'
+                  example: 'Valores de cartão não conferem com relatório do PDV.'
+              required:
+                - reason
+    parameters:
+      -
+        in: path
+        name: shift_id
+        description: 'The ID of the shift.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: shift
+        description: 'ID do turno.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/rules/bonus:
+    get:
+      summary: 'List bonus rules.'
+      operationId: listBonusRules
+      description: 'GET /api/v1/rules/bonus'
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - 'Regras de Bônus'
+    post:
+      summary: 'Create a new bonus rule.'
+      operationId: createANewBonusRule
+      description: 'POST /api/v1/rules/bonus'
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Regras de Bônus'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                store_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: 16
+                  nullable: true
+                effective_from:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2026-01-07T19:59:14'
+                config_json:
+                  type: array
+                  description: 'Must have at least 1 items.'
+                  example:
+                    - []
+                  items:
+                    type: object
+                    properties:
+                      min_sales:
+                        type: number
+                        description: 'Must be at least 0.'
+                        example: 27
+                      bonus:
+                        type: number
+                        description: 'Must be at least 0.'
+                        example: 39
+                    required:
+                      - min_sales
+                      - bonus
+              required:
+                - effective_from
+                - config_json
+  '/api/v1/rules/bonus/{rule_id}':
+    get:
+      summary: 'Show a specific bonus rule.'
+      operationId: showASpecificBonusRule
+      description: 'GET /api/v1/rules/bonus/{rule}'
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - 'Regras de Bônus'
+    put:
+      summary: 'Update a bonus rule.'
+      operationId: updateABonusRule
+      description: 'PUT /api/v1/rules/bonus/{rule}'
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Regras de Bônus'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                store_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: 16
+                  nullable: true
+                effective_from:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2026-01-07T19:59:14'
+                config_json:
+                  type: array
+                  description: 'Must have at least 1 items.'
+                  example:
+                    - []
+                  items:
+                    type: object
+                    properties:
+                      min_sales:
+                        type: number
+                        description: 'Must be at least 0.'
+                        example: 27
+                      bonus:
+                        type: number
+                        description: 'Must be at least 0.'
+                        example: 39
+                    required:
+                      - min_sales
+                      - bonus
+              required:
+                - effective_from
+                - config_json
+    delete:
+      summary: 'Delete a bonus rule.'
+      operationId: deleteABonusRule
+      description: 'DELETE /api/v1/rules/bonus/{rule}'
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Regras de Bônus'
+    parameters:
+      -
+        in: path
+        name: rule_id
+        description: 'The ID of the rule.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/rules/commission:
+    get:
+      summary: 'List commission rules.'
+      operationId: listCommissionRules
+      description: 'GET /api/v1/rules/commission'
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - 'Regras de Comissão'
+    post:
+      summary: 'Create a new commission rule.'
+      operationId: createANewCommissionRule
+      description: 'POST /api/v1/rules/commission'
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Regras de Comissão'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                store_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: 16
+                  nullable: true
+                effective_from:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2026-01-07T19:59:14'
+                config_json:
+                  type: array
+                  description: 'Must have at least 1 items.'
+                  example:
+                    - []
+                  items:
+                    type: object
+                    properties:
+                      min_attainment:
+                        type: number
+                        description: 'Must be at least 0.'
+                        example: 27
+                      rate:
+                        type: number
+                        description: 'Must be at least 0. Must not be greater than 100.'
+                        example: 22
+                    required:
+                      - min_attainment
+                      - rate
+              required:
+                - effective_from
+                - config_json
+  '/api/v1/rules/commission/{rule_id}':
+    get:
+      summary: 'Show a specific commission rule.'
+      operationId: showASpecificCommissionRule
+      description: 'GET /api/v1/rules/commission/{rule}'
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - 'Regras de Comissão'
+    put:
+      summary: 'Update a commission rule.'
+      operationId: updateACommissionRule
+      description: 'PUT /api/v1/rules/commission/{rule}'
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Regras de Comissão'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                store_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: 16
+                  nullable: true
+                effective_from:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2026-01-07T19:59:14'
+                config_json:
+                  type: array
+                  description: 'Must have at least 1 items.'
+                  example:
+                    - []
+                  items:
+                    type: object
+                    properties:
+                      min_attainment:
+                        type: number
+                        description: 'Must be at least 0.'
+                        example: 27
+                      rate:
+                        type: number
+                        description: 'Must be at least 0. Must not be greater than 100.'
+                        example: 22
+                    required:
+                      - min_attainment
+                      - rate
+              required:
+                - effective_from
+                - config_json
+    delete:
+      summary: 'Delete a commission rule.'
+      operationId: deleteACommissionRule
+      description: 'DELETE /api/v1/rules/commission/{rule}'
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Regras de Comissão'
+    parameters:
+      -
+        in: path
+        name: rule_id
+        description: 'The ID of the rule.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/goals/monthly:
+    get:
+      summary: 'List monthly goals.'
+      operationId: listMonthlyGoals
+      description: 'GET /api/v1/goals/monthly'
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - 'Metas Mensais'
+    post:
+      summary: 'Create a new monthly goal.'
+      operationId: createANewMonthlyGoal
+      description: 'POST /api/v1/goals/monthly'
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Metas Mensais'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                store_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: 16
+                month:
+                  type: string
+                  description: 'Must match the regex /^\d{4}-\d{2}$/.'
+                  example: 6425-59
+                goal_amount:
+                  type: number
+                  description: 'Must be at least 0.'
+                  example: 9
+                active:
+                  type: boolean
+                  description: ''
+                  example: false
+              required:
+                - store_id
+                - month
+                - goal_amount
+  '/api/v1/goals/monthly/{goal_id}':
+    get:
+      summary: 'Show a specific goal.'
+      operationId: showASpecificGoal
+      description: 'GET /api/v1/goals/monthly/{goal}'
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - 'Metas Mensais'
+    put:
+      summary: 'Update a monthly goal.'
+      operationId: updateAMonthlyGoal
+      description: 'PUT /api/v1/goals/monthly/{goal}'
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Metas Mensais'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                goal_amount:
+                  type: number
+                  description: 'Must be at least 0.'
+                  example: 27
+                active:
+                  type: boolean
+                  description: ''
+                  example: true
+    delete:
+      summary: 'Delete a monthly goal.'
+      operationId: deleteAMonthlyGoal
+      description: 'DELETE /api/v1/goals/monthly/{goal}'
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Metas Mensais'
+    parameters:
+      -
+        in: path
+        name: goal_id
+        description: 'The ID of the goal.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/goals/monthly/{goal_id}/splits':
+    put:
+      summary: 'Set splits for a goal.'
+      operationId: setSplitsForAGoal
+      description: 'PUT /api/v1/goals/monthly/{goal}/splits'
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Metas Mensais'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                splits:
+                  type: array
+                  description: 'Must have at least 1 items.'
+                  example:
+                    - []
+                  items:
+                    type: object
+                    properties:
+                      user_id:
+                        type: integer
+                        description: 'The <code>id</code> of an existing record in the users table.'
+                        example: 16
+                      percent:
+                        type: number
+                        description: 'Must be at least 0. Must not be greater than 100.'
+                        example: 22
+                    required:
+                      - user_id
+                      - percent
+              required:
+                - splits
+    parameters:
+      -
+        in: path
+        name: goal_id
+        description: 'The ID of the goal.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/finance/bonus:
+    get:
+      summary: 'Get bonus ledger.'
+      operationId: getBonusLedger
+      description: 'GET /api/v1/finance/bonus?store_id=&from=&to='
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - 'Extrato Financeiro'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                store_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: 16
+                from:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2026-01-07T19:59:14'
+                to:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2026-01-07T19:59:14'
+                per_page:
+                  type: integer
+                  description: 'Must be at least 1. Must not be greater than 100.'
+                  example: 22
+  /api/v1/finance/commission:
+    get:
+      summary: 'Get commission ledger.'
+      operationId: getCommissionLedger
+      description: 'GET /api/v1/finance/commission?store_id=&month='
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - 'Extrato Financeiro'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                store_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: 16
+                month:
+                  type: string
+                  description: 'Must match the regex /^\d{4}-\d{2}$/.'
+                  example: 6425-59
+                per_page:
+                  type: integer
+                  description: 'Must be at least 1. Must not be greater than 100.'
+                  example: 19
+  /api/v1/analytics/people/shift:
+    get:
+      summary: 'Get People KPIs for a store and date.'
+      operationId: getPeopleKPIsForAStoreAndDate
+      description: 'GET /api/v1/analytics/people/shift?store_id=&date='
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - 'People Analytics'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                store_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: 16
+                date:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2026-01-07T19:59:14'
+              required:
+                - store_id
+                - date
+    post:
+      summary: 'Manually insert KPI data.'
+      operationId: manuallyInsertKPIData
+      description: 'POST /api/v1/analytics/people/shift'
+      parameters: []
+      responses: {  }
+      tags:
+        - 'People Analytics'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                store_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: 16
+                date:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2026-01-07T19:59:14'
+                shift_code:
+                  type: string
+                  description: ''
+                  example: M
+                  enum:
+                    - M
+                    - T
+                    - 'N'
+                in_count:
+                  type: integer
+                  description: 'Must be at least 0.'
+                  example: 39
+                out_count:
+                  type: integer
+                  description: 'Must be at least 0.'
+                  example: 84
+                staff_in:
+                  type: integer
+                  description: 'Must be at least 0.'
+                  example: 12
+                staff_out:
+                  type: integer
+                  description: 'Must be at least 0.'
+                  example: 77
+              required:
+                - store_id
+                - date
+                - shift_code
+                - in_count
+                - out_count

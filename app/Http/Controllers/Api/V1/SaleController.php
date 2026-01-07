@@ -10,14 +10,57 @@ use App\Models\Sale;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * @group Vendas
+ *
+ * Endpoints para consultar vendas registradas.
+ * Vendas são registradas automaticamente via integração PDV ou manualmente.
+ */
 class SaleController extends Controller
 {
     use ApiResponse;
 
     /**
-     * List sales with filters.
+     * Listar vendas
      *
-     * GET /api/v1/sales?store_id=&seller_id=&from=&to=
+     * Retorna a lista de vendas das lojas às quais o usuário tem acesso,
+     * com filtros por loja, vendedor e período.
+     *
+     * **Quem pode usar:** Qualquer usuário autenticado (vê apenas suas lojas).
+     *
+     * **Filtros disponíveis:**
+     * - `store_id` - Filtrar por loja específica
+     * - `seller_id` - Filtrar por vendedor específico
+     * - `from` / `to` - Período de datas (formato YYYY-MM-DD)
+     *
+     * **Paginação:** Resultados paginados (padrão 25 por página, máx 100).
+     *
+     * @queryParam store_id integer ID da loja para filtrar. Example: 1
+     * @queryParam seller_id integer ID do vendedor para filtrar. Example: 6
+     * @queryParam from string Data inicial (YYYY-MM-DD). Example: 2026-01-01
+     * @queryParam to string Data final (YYYY-MM-DD). Example: 2026-01-31
+     * @queryParam per_page integer Itens por página (1-100). Example: 25
+     *
+     * @response 200 scenario="Lista de vendas" {
+     *   "data": [
+     *     {
+     *       "id": 1,
+     *       "store_id": 1,
+     *       "seller_id": 6,
+     *       "sold_at": "2026-01-07T10:30:00+00:00",
+     *       "amount": "150.00",
+     *       "source": "pdv",
+     *       "store": { "id": 1, "name": "Mais Capinhas Tijucas" },
+     *       "seller": { "id": 6, "name": "João Vendedor" }
+     *     }
+     *   ],
+     *   "meta": {
+     *     "current_page": 1,
+     *     "per_page": 25,
+     *     "total": 150,
+     *     "last_page": 6
+     *   }
+     * }
      */
     public function index(Request $request): JsonResponse
     {
@@ -35,7 +78,6 @@ class SaleController extends Controller
         $query = Sale::with(['store:id,name', 'seller:id,name'])
             ->whereIn('store_id', $userStoreIds);
 
-        // Filter by store
         if ($request->filled('store_id')) {
             $storeId = (int) $request->input('store_id');
             if (!in_array($storeId, $userStoreIds)) {
@@ -44,12 +86,10 @@ class SaleController extends Controller
             $query->where('store_id', $storeId);
         }
 
-        // Filter by seller
         if ($request->filled('seller_id')) {
             $query->where('seller_id', $request->input('seller_id'));
         }
 
-        // Filter by date range
         if ($request->filled('from')) {
             $query->where('sold_at', '>=', $request->input('from'));
         }

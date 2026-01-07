@@ -1,0 +1,249 @@
+name: Autenticação
+description: |-
+
+  Endpoints para autenticação via Bearer Token (Sanctum).
+  A API suporta dois modos de autenticação:
+
+  1. **Bearer Token** (recomendado para desenvolvimento e integrações)
+  2. **Cookie SPA** (para frontends React/Vue com `withCredentials`)
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/auth/login
+    metadata:
+      custom: []
+      groupName: Autenticação
+      groupDescription: |-
+
+        Endpoints para autenticação via Bearer Token (Sanctum).
+        A API suporta dois modos de autenticação:
+
+        1. **Bearer Token** (recomendado para desenvolvimento e integrações)
+        2. **Cookie SPA** (para frontends React/Vue com `withCredentials`)
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Fazer login e obter token'
+      description: |-
+        Autentica o usuário e retorna um Bearer Token para uso nas próximas requisições.
+
+        **Quem pode usar:** Qualquer usuário ativo com email e senha válidos.
+
+        **Regras de negócio:**
+        - Usuários inativos (`active = false`) não podem fazer login
+        - O token não expira automaticamente, mas pode ser revogado via logout
+        - Cada login gera um novo token (múltiplos dispositivos são permitidos)
+
+        **Erros possíveis:**
+        - `422` - Credenciais inválidas ou conta desativada
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
+        custom: []
+        name: email
+        description: 'Email do usuário.'
+        required: true
+        example: admin@maiscapinhas.com.br
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      password:
+        custom: []
+        name: password
+        description: 'Senha do usuário.'
+        required: true
+        example: password
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      device_name:
+        custom: []
+        name: device_name
+        description: 'Nome do dispositivo (opcional, usado para identificar tokens).'
+        required: false
+        example: postman-dev
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      email: admin@maiscapinhas.com.br
+      password: password
+      device_name: postman-dev
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "token": "1|abc123xyz...",
+              "token_type": "Bearer",
+              "user": {
+                "id": 1,
+                "name": "Admin Sistema",
+                "email": "admin@maiscapinhas.com.br"
+              }
+            },
+            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+          }
+        headers: []
+        description: 'Login bem-sucedido'
+      -
+        custom: []
+        status: 422
+        content: |-
+          {
+            "message": "The provided credentials are incorrect.",
+            "errors": { "email": ["The provided credentials are incorrect."] }
+          }
+        headers: []
+        description: 'Credenciais inválidas'
+      -
+        custom: []
+        status: 422
+        content: |-
+          {
+            "message": "This account is deactivated.",
+            "errors": { "email": ["This account is deactivated."] }
+          }
+        headers: []
+        description: 'Conta desativada'
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/auth/logout
+    metadata:
+      custom: []
+      groupName: Autenticação
+      groupDescription: |-
+
+        Endpoints para autenticação via Bearer Token (Sanctum).
+        A API suporta dois modos de autenticação:
+
+        1. **Bearer Token** (recomendado para desenvolvimento e integrações)
+        2. **Cookie SPA** (para frontends React/Vue com `withCredentials`)
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Fazer logout (revogar token atual)'
+      description: |-
+        Revoga o token que foi usado para autenticar esta requisição.
+        Os demais tokens do usuário (outros dispositivos) permanecem válidos.
+
+        **Quem pode usar:** Qualquer usuário autenticado.
+
+        **Casos de uso:**
+        - Logout manual do usuário
+        - Encerrar sessão em um dispositivo específico
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": { "message": "Successfully logged out." },
+            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+          }
+        headers: []
+        description: 'Logout bem-sucedido'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/auth/logout-all
+    metadata:
+      custom: []
+      groupName: Autenticação
+      groupDescription: |-
+
+        Endpoints para autenticação via Bearer Token (Sanctum).
+        A API suporta dois modos de autenticação:
+
+        1. **Bearer Token** (recomendado para desenvolvimento e integrações)
+        2. **Cookie SPA** (para frontends React/Vue com `withCredentials`)
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Revogar todos os tokens'
+      description: |-
+        Revoga **todos** os tokens do usuário, desconectando-o de todos os dispositivos.
+
+        **Quem pode usar:** Qualquer usuário autenticado.
+
+        **Casos de uso:**
+        - Suspeita de comprometimento de segurança
+        - Forçar re-login em todos os dispositivos
+        - Alteração de senha
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": { "message": "All tokens revoked." },
+            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+          }
+        headers: []
+        description: 'Todos tokens revogados'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

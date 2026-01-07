@@ -1,0 +1,463 @@
+name: 'Fechamento de Caixa'
+description: |-
+
+  Endpoints para gerenciar o fluxo de fechamento de caixa.
+
+  **Workflow de Estados:**
+  ```
+  draft → submitted → approved
+                    → rejected → draft → ...
+  ```
+
+  - `draft` - Rascunho (editável)
+  - `submitted` - Enviado para conferência
+  - `approved` - Aprovado (imutável)
+  - `rejected` - Rejeitado (volta para draft para correção)
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/cash/closings/{shift_id}'
+    metadata:
+      custom: []
+      groupName: 'Fechamento de Caixa'
+      groupDescription: |-
+
+        Endpoints para gerenciar o fluxo de fechamento de caixa.
+
+        **Workflow de Estados:**
+        ```
+        draft → submitted → approved
+                          → rejected → draft → ...
+        ```
+
+        - `draft` - Rascunho (editável)
+        - `submitted` - Enviado para conferência
+        - `approved` - Aprovado (imutável)
+        - `rejected` - Rejeitado (volta para draft para correção)
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Obter detalhes do fechamento'
+      description: |-
+        Retorna os detalhes completos de um fechamento de caixa,
+        incluindo todas as linhas e divergências.
+
+        **Quem pode usar:** Qualquer usuário com acesso à loja.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      shift_id:
+        custom: []
+        name: shift_id
+        description: 'The ID of the shift.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      shift:
+        custom: []
+        name: shift
+        description: 'ID do turno.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      shift_id: 1
+      shift: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "id": 1,
+              "status": "approved",
+              "version": 2,
+              "closed_at": "2026-01-07T12:00:00+00:00",
+              "lines": [
+                { "id": 1, "label": "Dinheiro", "system_value": 500.00, "real_value": 495.00, "diff_value": -5.00, "justification_text": "Troco incorreto" }
+              ],
+              "cash_shift": { "id": 1, "date": "2026-01-07", "shift_code": "M" },
+              "closed_by_user": { "id": 3, "name": "Ana Conferente" }
+            },
+            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+          }
+        headers: []
+        description: 'Detalhes do fechamento'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/cash/closings/{shift_id}/submit'
+    metadata:
+      custom: []
+      groupName: 'Fechamento de Caixa'
+      groupDescription: |-
+
+        Endpoints para gerenciar o fluxo de fechamento de caixa.
+
+        **Workflow de Estados:**
+        ```
+        draft → submitted → approved
+                          → rejected → draft → ...
+        ```
+
+        - `draft` - Rascunho (editável)
+        - `submitted` - Enviado para conferência
+        - `approved` - Aprovado (imutável)
+        - `rejected` - Rejeitado (volta para draft para correção)
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Enviar fechamento para conferência'
+      description: |-
+        Envia um fechamento de caixa para ser conferido/aprovado.
+        O fechamento deve estar em status `draft` ou `rejected` para ser enviado.
+
+        **Quem pode usar:** Vendedor responsável pelo turno ou níveis superiores.
+
+        **Regras de negócio:**
+        - Todas as divergências (diff_value ≠ 0) devem ter justificativa preenchida
+        - O status deve ser `draft` ou `rejected` para poder enviar
+
+        **Erros possíveis:**
+        - `409` - Status inválido (já enviado ou aprovado)
+        - `422` - Divergências sem justificativa
+        - `403` - Sem acesso à loja
+        - `404` - Fechamento não encontrado
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      shift_id:
+        custom: []
+        name: shift_id
+        description: 'The ID of the shift.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      shift:
+        custom: []
+        name: shift
+        description: 'ID do turno.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      shift_id: 1
+      shift: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "id": 1,
+              "status": "submitted",
+              "version": 1,
+              "lines": [],
+              "cash_shift": { "id": 1, "date": "2026-01-07", "shift_code": "M" }
+            },
+            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+          }
+        headers: []
+        description: 'Enviado com sucesso'
+      -
+        custom: []
+        status: 409
+        content: |-
+          {
+            "error": { "code": 409, "message": "Cannot submit closing with status 'approved'." }
+          }
+        headers: []
+        description: 'Status inválido'
+      -
+        custom: []
+        status: 422
+        content: |-
+          {
+            "message": "All divergences must be justified before submitting.",
+            "errors": { "lines": ["Linha 'Dinheiro' possui divergência sem justificativa."] }
+          }
+        headers: []
+        description: 'Divergência sem justificativa'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/cash/closings/{shift_id}/approve'
+    metadata:
+      custom: []
+      groupName: 'Fechamento de Caixa'
+      groupDescription: |-
+
+        Endpoints para gerenciar o fluxo de fechamento de caixa.
+
+        **Workflow de Estados:**
+        ```
+        draft → submitted → approved
+                          → rejected → draft → ...
+        ```
+
+        - `draft` - Rascunho (editável)
+        - `submitted` - Enviado para conferência
+        - `approved` - Aprovado (imutável)
+        - `rejected` - Rejeitado (volta para draft para correção)
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Aprovar fechamento de caixa'
+      description: |-
+        Aprova um fechamento que foi enviado para conferência.
+        Esta ação é **irreversível** - fechamentos aprovados não podem ser editados.
+
+        **Quem pode usar:** Conferentes, Gerentes ou Admins da loja.
+
+        **Regras de negócio:**
+        - O fechamento deve estar em status `submitted`
+        - Após aprovação, os dados são considerados oficiais para cálculo de bônus/comissão
+
+        **Erros possíveis:**
+        - `409` - Status inválido (não está em submitted)
+        - `403` - Sem permissão para aprovar
+        - `404` - Fechamento não encontrado
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      shift_id:
+        custom: []
+        name: shift_id
+        description: 'The ID of the shift.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      shift:
+        custom: []
+        name: shift
+        description: 'ID do turno.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      shift_id: 1
+      shift: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "id": 1,
+              "status": "approved",
+              "closed_by": 3,
+              "closed_at": "2026-01-07T12:00:00+00:00"
+            },
+            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+          }
+        headers: []
+        description: 'Aprovado com sucesso'
+      -
+        custom: []
+        status: 409
+        content: |-
+          {
+            "error": { "code": 409, "message": "Cannot approve closing with status 'draft'." }
+          }
+        headers: []
+        description: 'Não pode aprovar'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/cash/closings/{shift_id}/reject'
+    metadata:
+      custom: []
+      groupName: 'Fechamento de Caixa'
+      groupDescription: |-
+
+        Endpoints para gerenciar o fluxo de fechamento de caixa.
+
+        **Workflow de Estados:**
+        ```
+        draft → submitted → approved
+                          → rejected → draft → ...
+        ```
+
+        - `draft` - Rascunho (editável)
+        - `submitted` - Enviado para conferência
+        - `approved` - Aprovado (imutável)
+        - `rejected` - Rejeitado (volta para draft para correção)
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Rejeitar fechamento de caixa'
+      description: |-
+        Rejeita um fechamento enviado para conferência, retornando-o ao status `draft`
+        para que o vendedor possa corrigir os problemas apontados.
+
+        **Quem pode usar:** Conferentes, Gerentes ou Admins da loja.
+
+        **Regras de negócio:**
+        - O fechamento deve estar em status `submitted`
+        - É obrigatório informar o motivo da rejeição (mín. 10 caracteres)
+        - O vendedor será notificado e poderá reenviar após correções
+
+        **Erros possíveis:**
+        - `409` - Status inválido (não está em submitted)
+        - `403` - Sem permissão para rejeitar
+        - `422` - Motivo não informado ou muito curto
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      shift_id:
+        custom: []
+        name: shift_id
+        description: 'The ID of the shift.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      shift:
+        custom: []
+        name: shift
+        description: 'ID do turno.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      shift_id: 1
+      shift: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      reason:
+        custom: []
+        name: reason
+        description: 'Motivo da rejeição (mín. 10, máx. 500 caracteres).'
+        required: true
+        example: 'Valores de cartão não conferem com relatório do PDV.'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      reason: 'Valores de cartão não conferem com relatório do PDV.'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "id": 1,
+              "status": "rejected"
+            },
+            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+          }
+        headers: []
+        description: 'Rejeitado com sucesso'
+      -
+        custom: []
+        status: 422
+        content: |-
+          {
+            "message": "The reason field is required.",
+            "errors": { "reason": ["The reason field is required."] }
+          }
+        headers: []
+        description: 'Motivo não informado'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
