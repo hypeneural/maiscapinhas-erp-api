@@ -53,8 +53,7 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: 'http://localhost:5173'
-          access-control-allow-credentials: 'true'
+          vary: Origin
         description: null
     responseFields: []
     auth:
@@ -112,7 +111,7 @@ endpoints:
         name: effective_from
         description: 'Must be a valid date.'
         required: true
-        example: '2026-01-07T19:59:14'
+        example: '2026-01-07T20:48:56'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -154,7 +153,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      effective_from: '2026-01-07T19:59:14'
+      effective_from: '2026-01-07T20:48:56'
       config_json:
         -
           min_sales: 27
@@ -223,8 +222,7 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: 'http://localhost:5173'
-          access-control-allow-credentials: 'true'
+          vary: Origin
         description: null
     responseFields: []
     auth:
@@ -295,7 +293,7 @@ endpoints:
         name: effective_from
         description: 'Must be a valid date.'
         required: true
-        example: '2026-01-07T19:59:14'
+        example: '2026-01-07T20:48:56'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -337,7 +335,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      effective_from: '2026-01-07T19:59:14'
+      effective_from: '2026-01-07T20:48:56'
       config_json:
         -
           min_sales: 27

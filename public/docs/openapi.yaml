@@ -24,7 +24,7 @@ tags:
     description: "\nEndpoints de dashboard com métricas e KPIs por perfil de usuário.\nCada dashboard retorna informações personalizadas para o papel do usuário."
   -
     name: Vendas
-    description: "\nEndpoints para consultar vendas registradas.\nVendas são registradas automaticamente via integração PDV ou manualmente."
+    description: "\nGerenciamento de vendas registradas no sistema MaisCapinhas ERP.\n\nAs vendas são o **coração do sistema financeiro**, pois a partir delas\nsão calculados:\n- **Bônus diário** - baseado no total de vendas do dia\n- **Comissão mensal** - baseado no atingimento de meta\n- **KPIs de desempenho** - taxa de conversão, ticket médio\n\n**Fontes de Vendas:**\n| Origem | Descrição |\n|--------|-----------|\n| `pdv` | Importação automática do sistema de PDV |\n| `manual` | Cadastro manual via esta API |\n| `import` | Importação em lote (planilha CSV) |\n\n**Regras de Negócio Importantes:**\n- Cada venda pertence a uma **loja** (`store_id`) e um **vendedor** (`seller_id`)\n- A venda conta para a meta da **loja** onde foi realizada\n- A comissão vai para o **vendedor**, mesmo que seja \"volante\"\n- Alterações em vendas disparam recálculo automático de bônus/comissão\n\n**Impacto no Bônus:**\nQuando uma venda é criada/alterada, o sistema automaticamente\nrecalcula o bônus diário do vendedor (via Job assíncrono)."
   -
     name: 'Turnos de Caixa'
     description: "\nEndpoints para gerenciar turnos de caixa.\nCada turno representa um período de trabalho de um vendedor em uma loja."
@@ -46,6 +46,15 @@ tags:
   -
     name: 'People Analytics'
     description: "\nEndpoints para consultar e inserir KPIs de fluxo de pessoas por turno.\nDados podem vir de sincronização com FastAPI ou inserção manual."
+  -
+    name: 'Administração - Lojas'
+    description: "\nGerenciamento das lojas (pontos de venda) do sistema MaisCapinhas ERP.\n\nCada loja representa uma unidade física de venda com:\n- Equipe própria (vendedores, conferentes, gerentes)\n- Metas mensais individuais\n- Turnos de caixa e fechamentos\n- Regras de bônus/comissão (podem ser específicas ou herdar as globais)\n\n**Hierarquia de Dados:**\n```\nLoja\n├── Usuários (via store_users com roles)\n├── Vendas (registradas por vendedores)\n├── Turnos de Caixa (por data/turno/vendedor)\n├── Metas Mensais (com splits por vendedor)\n└── Regras de Bônus/Comissão (opcionais, específicas)\n```\n\n**Regras de Negócio:**\n- Uma loja desativada não aparece na lista de lojas do usuário comum\n- Dados históricos são mantidos para auditoria\n- Lojas são identificadas por ID numérico (não há código de loja)\n\n**Auditoria:** Todas as operações são registradas via Spatie ActivityLog."
+  -
+    name: 'Administração - Usuários'
+    description: "\nGerenciamento centralizado de usuários do sistema MaisCapinhas ERP.\n\nEste módulo permite criar, editar, listar e desativar usuários,\nalém de vincular usuários a lojas com roles específicas.\n\n**Modelo de Permissões:**\n- Cada usuário pode estar vinculado a múltiplas lojas\n- Em cada loja, o usuário tem uma role: `admin`, `gerente`, `conferente` ou `vendedor`\n- Usuários desativados perdem acesso a todos os endpoints protegidos\n\n**Regras de Negócio:**\n- Email deve ser único no sistema\n- Não é possível desativar o próprio usuário\n- Ao desativar, todos os tokens de acesso são revogados\n\n**Auditoria:** Todas as operações são registradas via Spatie ActivityLog."
+  -
+    name: 'Administração - Vínculos Loja-Usuário'
+    description: "\nGerenciamento dos vínculos entre lojas e usuários (tabela `store_users`).\n\nEste módulo controla **qual usuário trabalha em qual loja** e com\n**qual nível de permissão (role)**.\n\n**Sistema de Roles:**\n| Role | Pode fazer |\n|------|------------|\n| `admin` | Tudo: gerenciar usuários, lojas, regras, confirmar comissões |\n| `gerente` | Gerenciar equipe da loja, aprovar fechamentos, ver dashboards |\n| `conferente` | Aprovar/rejeitar fechamentos de caixa |\n| `vendedor` | Registrar vendas, submeter fechamento do próprio turno |\n\n**Regras de Negócio:**\n- Um usuário pode ter roles diferentes em lojas diferentes\n- A role `admin` em qualquer loja dá acesso administrativo global\n- Vendedor \"volante\" pode trabalhar temporariamente em outra loja\n- Não é possível remover seu próprio vínculo (proteção)\n\n**Vínculo × Comissão:**\n- Vendas são sempre registradas na loja onde ocorreram (`store_id` da venda)\n- Comissão vai para o vendedor que realizou a venda (`seller_id`)\n- Meta é calculada pela loja + split configurado"
 components:
   securitySchemes:
     default:
@@ -705,7 +714,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T19:59:14'
+                  example: '2026-01-07T20:48:56'
               required:
                 - store_id
   /api/v1/dashboard/conferente:
@@ -831,7 +840,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T19:59:14'
+                  example: '2026-01-07T20:48:56'
               required:
                 - store_id
   /api/v1/dashboard/admin:
@@ -978,27 +987,27 @@ paths:
     get:
       summary: 'Listar vendas'
       operationId: listarVendas
-      description: "Retorna a lista de vendas das lojas às quais o usuário tem acesso,\ncom filtros por loja, vendedor e período.\n\n**Quem pode usar:** Qualquer usuário autenticado (vê apenas suas lojas).\n\n**Filtros disponíveis:**\n- `store_id` - Filtrar por loja específica\n- `seller_id` - Filtrar por vendedor específico\n- `from` / `to` - Período de datas (formato YYYY-MM-DD)\n\n**Paginação:** Resultados paginados (padrão 25 por página, máx 100)."
+      description: "Retorna a lista paginada de vendas das lojas às quais o\nusuário tem acesso, com diversos filtros disponíveis.\n\n**Visibilidade:**\n- Vendedor: vê vendas de todas as lojas onde trabalha\n- Gerente: vê todas as vendas das lojas que gerencia\n- Admin: vê todas as vendas do sistema\n\n**Filtros disponíveis:**\n- `store_id` - Filtrar por loja específica\n- `seller_id` - Filtrar por vendedor\n- `from`/`to` - Período de datas\n\n**Ordenação:** Por data de venda, mais recentes primeiro.\n\n**Quem pode usar:** Qualquer usuário autenticado (vê apenas suas lojas)."
       parameters:
         -
           in: query
           name: store_id
-          description: 'ID da loja para filtrar.'
+          description: 'Filtrar por loja (deve ter acesso).'
           example: 1
           required: false
           schema:
             type: integer
-            description: 'ID da loja para filtrar.'
+            description: 'Filtrar por loja (deve ter acesso).'
             example: 1
         -
           in: query
           name: seller_id
-          description: 'ID do vendedor para filtrar.'
+          description: 'Filtrar por vendedor específico.'
           example: 6
           required: false
           schema:
             type: integer
-            description: 'ID do vendedor para filtrar.'
+            description: 'Filtrar por vendedor específico.'
             example: 6
         -
           in: query
@@ -1023,12 +1032,12 @@ paths:
         -
           in: query
           name: per_page
-          description: 'Itens por página (1-100).'
+          description: 'Itens por página (1-100, default: 25).'
           example: 25
           required: false
           schema:
             type: integer
-            description: 'Itens por página (1-100).'
+            description: 'Itens por página (1-100, default: 25).'
             example: 25
       responses:
         200:
@@ -1043,8 +1052,8 @@ paths:
                       id: 1
                       store_id: 1
                       seller_id: 6
-                      sold_at: '2026-01-07T10:30:00+00:00'
-                      amount: '150.00'
+                      sold_at: '2026-01-07T10:30:00Z'
+                      amount: 150.0
                       source: pdv
                       store:
                         id: 1
@@ -1065,8 +1074,8 @@ paths:
                         id: 1
                         store_id: 1
                         seller_id: 6
-                        sold_at: '2026-01-07T10:30:00+00:00'
-                        amount: '150.00'
+                        sold_at: '2026-01-07T10:30:00Z'
+                        amount: 150
                         source: pdv
                         store:
                           id: 1
@@ -1088,10 +1097,10 @@ paths:
                           example: 6
                         sold_at:
                           type: string
-                          example: '2026-01-07T10:30:00+00:00'
+                          example: '2026-01-07T10:30:00Z'
                         amount:
-                          type: string
-                          example: '150.00'
+                          type: number
+                          example: 150.0
                         source:
                           type: string
                           example: pdv
@@ -1128,6 +1137,18 @@ paths:
                       last_page:
                         type: integer
                         example: 6
+        403:
+          description: 'Loja sem acesso'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'You do not have access to this store.'
+                properties:
+                  message:
+                    type: string
+                    example: 'You do not have access to this store.'
       tags:
         - Vendas
       requestBody:
@@ -1148,15 +1169,315 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T19:59:14'
+                  example: '2026-01-07T20:48:56'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T19:59:14'
+                  example: '2026-01-07T20:48:56'
                 per_page:
                   type: integer
                   description: 'Must be at least 1. Must not be greater than 100.'
                   example: 22
+    post:
+      summary: 'Criar venda manual'
+      operationId: criarVendaManual
+      description: "Registra uma nova venda no sistema de forma manual.\n\n**Quando usar:**\n- Vendas feitas fora do PDV (dinheiro em espécie direto)\n- Correções de vendas não registradas\n- Vendas de quiosques sem sistema\n\n**Efeitos automáticos:**\nApós criar a venda, o sistema automaticamente dispara:\n1. `RecalculateSellerDailyBonusJob` - recalcula bônus do dia\n2. `RecalculateSellerMonthlyCommissionJob` - recalcula comissão do mês\n\n**Regras de Negócio:**\n- `store_id` deve ser uma loja onde o usuário tem acesso\n- `seller_id` default é o usuário logado\n- `source` default é \"manual\"\n- `amount` deve ser positivo\n\n**Quem pode usar:**\n- Vendedores (podem registrar próprias vendas)\n- Gerentes/Admins (podem registrar para qualquer vendedor)"
+      parameters: []
+      responses:
+        201:
+          description: 'Venda criada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 501
+                    store_id: 1
+                    seller_id: 6
+                    sold_at: '2026-01-07T15:30:00Z'
+                    amount: 175.5
+                    source: manual
+                    store:
+                      id: 1
+                      name: 'Mais Capinhas Tijucas'
+                    seller:
+                      id: 6
+                      name: 'João Vendedor'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 501
+                      store_id:
+                        type: integer
+                        example: 1
+                      seller_id:
+                        type: integer
+                        example: 6
+                      sold_at:
+                        type: string
+                        example: '2026-01-07T15:30:00Z'
+                      amount:
+                        type: number
+                        example: 175.5
+                      source:
+                        type: string
+                        example: manual
+                      store:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          name:
+                            type: string
+                            example: 'Mais Capinhas Tijucas'
+                      seller:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 6
+                          name:
+                            type: string
+                            example: 'João Vendedor'
+        403:
+          description: 'Sem acesso à loja'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Você não tem acesso a esta loja.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Você não tem acesso a esta loja.'
+      tags:
+        - Vendas
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                store_id:
+                  type: integer
+                  description: 'Loja onde a venda foi realizada.'
+                  example: 1
+                seller_id:
+                  type: integer
+                  description: 'Vendedor que realizou (default: você).'
+                  example: 6
+                sold_at:
+                  type: string
+                  description: 'Data/hora da venda (ISO 8601).'
+                  example: '2026-01-07T15:30:00'
+                amount:
+                  type: number
+                  description: 'Valor total da venda.'
+                  example: 175.5
+                source:
+                  type: string
+                  description: 'Origem: pdv, manual, import (default: manual).'
+                  example: manual
+              required:
+                - store_id
+                - sold_at
+                - amount
+  '/api/v1/sales/{id}':
+    get:
+      summary: 'Ver detalhes da venda'
+      operationId: verDetalhesDaVenda
+      description: "Retorna informações completas de uma venda específica.\n\n**Dados retornados:**\n- Informações básicas: `id`, `store_id`, `seller_id`, `sold_at`, `amount`, `source`\n- Loja: `store.id`, `store.name`\n- Vendedor: `seller.id`, `seller.name`\n- Timestamps: `created_at`, `updated_at`\n\n**Quem pode usar:** Usuários com acesso à loja da venda."
+      parameters: []
+      responses:
+        200:
+          description: 'Detalhes da venda'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    store_id: 1
+                    seller_id: 6
+                    sold_at: '2026-01-07T10:30:00Z'
+                    amount: 150.0
+                    source: pdv
+                    created_at: '2026-01-07T10:31:00Z'
+                    store:
+                      id: 1
+                      name: 'Mais Capinhas Tijucas'
+                    seller:
+                      id: 6
+                      name: 'João Vendedor'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      store_id:
+                        type: integer
+                        example: 1
+                      seller_id:
+                        type: integer
+                        example: 6
+                      sold_at:
+                        type: string
+                        example: '2026-01-07T10:30:00Z'
+                      amount:
+                        type: number
+                        example: 150.0
+                      source:
+                        type: string
+                        example: pdv
+                      created_at:
+                        type: string
+                        example: '2026-01-07T10:31:00Z'
+                      store:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          name:
+                            type: string
+                            example: 'Mais Capinhas Tijucas'
+                      seller:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 6
+                          name:
+                            type: string
+                            example: 'João Vendedor'
+      tags:
+        - Vendas
+    put:
+      summary: 'Atualizar venda'
+      operationId: atualizarVenda
+      description: "Edita dados de uma venda existente.\n\n**Importante:**\nAlterações disparam recálculo automático de bônus e comissão\npara o vendedor afetado.\n\n**Casos de uso:**\n- Corrigir valor digitado errado\n- Ajustar data de venda\n- Corrigir fonte da venda\n\n**Regras de Negócio:**\n- Não é possível alterar `store_id` ou `seller_id` após criação\n- Apenas gerentes e admins podem editar vendas\n- Histórico de alterações é registrado para auditoria\n\n**Quem pode usar:** Gerentes e Admins da loja."
+      parameters: []
+      responses:
+        200:
+          description: 'Venda atualizada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    amount: 180.0
+                    sold_at: '2026-01-07T16:00:00Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      amount:
+                        type: number
+                        example: 180.0
+                      sold_at:
+                        type: string
+                        example: '2026-01-07T16:00:00Z'
+        403:
+          description: 'Sem permissão'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Apenas gerentes e admins podem editar vendas.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Apenas gerentes e admins podem editar vendas.'
+      tags:
+        - Vendas
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sold_at:
+                  type: string
+                  description: 'Nova data/hora.'
+                  example: '2026-01-07T16:00:00'
+                amount:
+                  type: number
+                  description: 'Novo valor.'
+                  example: 180.0
+                source:
+                  type: string
+                  description: 'Nova origem: pdv, manual, import.'
+                  example: pdv
+    delete:
+      summary: 'Excluir venda'
+      operationId: excluirVenda
+      description: "Remove permanentemente uma venda do sistema.\n\n**Atenção:**\n- Esta ação é **irreversível**\n- O bônus/comissão do vendedor será recalculado automaticamente\n- Recomendado documentar o motivo da exclusão\n\n**Casos de uso:**\n- Venda cadastrada em duplicidade\n- Venda cancelada pelo cliente\n- Teste registrado acidentalmente em produção\n\n**Regras de Negócio:**\n- Apenas administradores podem excluir vendas\n- A exclusão é registrada no log de auditoria\n\n**Quem pode usar:** Apenas Admins."
+      parameters: []
+      responses:
+        200:
+          description: 'Venda excluída'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    message: 'Venda excluída com sucesso.'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: 'Venda excluída com sucesso.'
+        403:
+          description: 'Sem permissão'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Apenas admins podem excluir vendas.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Apenas admins podem excluir vendas.'
+      tags:
+        - Vendas
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the sale.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: sale
+        description: 'ID da venda.'
+        example: 1
+        required: true
+        schema:
+          type: integer
   /api/v1/cash/shifts:
     get:
       summary: 'Listar turnos de caixa'
@@ -1318,7 +1639,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T19:59:14'
+                  example: '2026-01-07T20:48:56'
                 status:
                   type: string
                   description: ''
@@ -2004,7 +2325,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T19:59:14'
+                  example: '2026-01-07T20:48:56'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -2071,7 +2392,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T19:59:14'
+                  example: '2026-01-07T20:48:56'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -2155,7 +2476,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T19:59:14'
+                  example: '2026-01-07T20:48:56'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -2222,7 +2543,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T19:59:14'
+                  example: '2026-01-07T20:48:56'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -2460,11 +2781,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T19:59:14'
+                  example: '2026-01-07T20:48:56'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T19:59:14'
+                  example: '2026-01-07T20:48:56'
                 per_page:
                   type: integer
                   description: 'Must be at least 1. Must not be greater than 100.'
@@ -2544,7 +2865,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T19:59:14'
+                  example: '2026-01-07T20:48:56'
               required:
                 - store_id
                 - date
@@ -2570,7 +2891,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T19:59:14'
+                  example: '2026-01-07T20:48:56'
                 shift_code:
                   type: string
                   description: ''
@@ -2601,3 +2922,1142 @@ paths:
                 - shift_code
                 - in_count
                 - out_count
+  /api/v1/admin/stores:
+    get:
+      summary: 'Listar todas as lojas'
+      operationId: listarTodasAsLojas
+      description: "Retorna uma lista completa de todas as lojas cadastradas no sistema,\nincluindo lojas ativas e inativas (para administração).\n\nEste endpoint difere do `/stores` público que mostra apenas\nas lojas às quais o usuário tem acesso.\n\n**Métricas retornadas:**\n- `users_count` - quantidade de usuários vinculados\n\n**Filtros disponíveis:**\n- `search` - busca por nome ou cidade\n- `active` - filtrar por status\n\n**Quem pode usar:** Apenas administradores."
+      parameters:
+        -
+          in: query
+          name: search
+          description: 'Busca por nome ou cidade da loja.'
+          example: tijucas
+          required: false
+          schema:
+            type: string
+            description: 'Busca por nome ou cidade da loja.'
+            example: tijucas
+        -
+          in: query
+          name: active
+          description: 'Filtrar por status ativo/inativo.'
+          example: true
+          required: false
+          schema:
+            type: boolean
+            description: 'Filtrar por status ativo/inativo.'
+            example: true
+        -
+          in: query
+          name: per_page
+          description: 'Itens por página (1-100, default: 25).'
+          example: 25
+          required: false
+          schema:
+            type: integer
+            description: 'Itens por página (1-100, default: 25).'
+            example: 25
+      responses:
+        200:
+          description: 'Lista de lojas'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    -
+                      id: 1
+                      name: 'Mais Capinhas Tijucas'
+                      city: Tijucas
+                      active: true
+                      users_count: 5
+                      created_at: '2026-01-01T00:00:00Z'
+                    -
+                      id: 2
+                      name: 'Mais Capinhas Itapema'
+                      city: Itapema
+                      active: true
+                      users_count: 3
+                  meta:
+                    current_page: 1
+                    per_page: 25
+                    total: 3
+                    last_page: 1
+                properties:
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        name: 'Mais Capinhas Tijucas'
+                        city: Tijucas
+                        active: true
+                        users_count: 5
+                        created_at: '2026-01-01T00:00:00Z'
+                      -
+                        id: 2
+                        name: 'Mais Capinhas Itapema'
+                        city: Itapema
+                        active: true
+                        users_count: 3
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: 'Mais Capinhas Tijucas'
+                        city:
+                          type: string
+                          example: Tijucas
+                        active:
+                          type: boolean
+                          example: true
+                        users_count:
+                          type: integer
+                          example: 5
+                        created_at:
+                          type: string
+                          example: '2026-01-01T00:00:00Z'
+                  meta:
+                    type: object
+                    properties:
+                      current_page:
+                        type: integer
+                        example: 1
+                      per_page:
+                        type: integer
+                        example: 25
+                      total:
+                        type: integer
+                        example: 3
+                      last_page:
+                        type: integer
+                        example: 1
+      tags:
+        - 'Administração - Lojas'
+    post:
+      summary: 'Criar nova loja'
+      operationId: criarNovaLoja
+      description: "Cadastra uma nova loja (ponto de venda) no sistema.\n\nApós criar a loja, você deve:\n1. Vincular usuários à loja (via endpoint de vínculos)\n2. Configurar metas mensais (via `/goals/monthly`)\n3. Opcionalmente criar regras específicas de bônus/comissão\n\n**Quem pode usar:** Apenas administradores."
+      parameters: []
+      responses:
+        201:
+          description: 'Loja criada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 4
+                    name: 'Mais Capinhas Shopping Center'
+                    city: Florianópolis
+                    active: true
+                    created_at: '2026-01-07T17:00:00Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 4
+                      name:
+                        type: string
+                        example: 'Mais Capinhas Shopping Center'
+                      city:
+                        type: string
+                        example: Florianópolis
+                      active:
+                        type: boolean
+                        example: true
+                      created_at:
+                        type: string
+                        example: '2026-01-07T17:00:00Z'
+      tags:
+        - 'Administração - Lojas'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Nome identificador da loja.'
+                  example: 'Mais Capinhas Shopping Center'
+                city:
+                  type: string
+                  description: 'Cidade onde a loja está localizada.'
+                  example: Florianópolis
+                active:
+                  type: boolean
+                  description: 'Se a loja está ativa (default: true).'
+                  example: true
+              required:
+                - name
+                - city
+  '/api/v1/admin/stores/{id}':
+    get:
+      summary: 'Ver detalhes da loja'
+      operationId: verDetalhesDaLoja
+      description: "Retorna informações completas de uma loja, incluindo\na lista de todos os usuários vinculados e suas roles.\n\n**Dados retornados:**\n- Informações básicas: `id`, `name`, `city`, `active`\n- Lista de usuários com: `user_id`, `user_name`, `user_email`, `role`\n\n**Quem pode usar:** Apenas administradores."
+      parameters: []
+      responses:
+        200:
+          description: 'Detalhes da loja'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    name: 'Mais Capinhas Tijucas'
+                    city: Tijucas
+                    active: true
+                    created_at: '2026-01-01T00:00:00Z'
+                    users:
+                      -
+                        user_id: 2
+                        user_name: 'Carlos Gerente'
+                        user_email: carlos@test.com
+                        role: gerente
+                      -
+                        user_id: 6
+                        user_name: 'João Vendedor'
+                        user_email: joao@test.com
+                        role: vendedor
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: 'Mais Capinhas Tijucas'
+                      city:
+                        type: string
+                        example: Tijucas
+                      active:
+                        type: boolean
+                        example: true
+                      created_at:
+                        type: string
+                        example: '2026-01-01T00:00:00Z'
+                      users:
+                        type: array
+                        example:
+                          -
+                            user_id: 2
+                            user_name: 'Carlos Gerente'
+                            user_email: carlos@test.com
+                            role: gerente
+                          -
+                            user_id: 6
+                            user_name: 'João Vendedor'
+                            user_email: joao@test.com
+                            role: vendedor
+                        items:
+                          type: object
+                          properties:
+                            user_id:
+                              type: integer
+                              example: 2
+                            user_name:
+                              type: string
+                              example: 'Carlos Gerente'
+                            user_email:
+                              type: string
+                              example: carlos@test.com
+                            role:
+                              type: string
+                              example: gerente
+      tags:
+        - 'Administração - Lojas'
+    put:
+      summary: 'Atualizar loja'
+      operationId: atualizarLoja
+      description: "Atualiza informações de uma loja existente.\nApenas os campos informados serão alterados.\n\n**Quem pode usar:** Apenas administradores."
+      parameters: []
+      responses:
+        200:
+          description: 'Loja atualizada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    name: 'Mais Capinhas Tijucas - Centro'
+                    city: Tijucas
+                    active: true
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: 'Mais Capinhas Tijucas - Centro'
+                      city:
+                        type: string
+                        example: Tijucas
+                      active:
+                        type: boolean
+                        example: true
+      tags:
+        - 'Administração - Lojas'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Novo nome da loja.'
+                  example: 'Mais Capinhas Tijucas - Centro'
+                city:
+                  type: string
+                  description: 'Nova cidade.'
+                  example: Tijucas
+                active:
+                  type: boolean
+                  description: 'Ativar (true) ou desativar (false).'
+                  example: true
+    delete:
+      summary: 'Desativar loja'
+      operationId: desativarLoja
+      description: "Define a loja como inativa. Lojas desativadas não aparecem\nna listagem de lojas dos usuários comuns, mas todos os dados\nhistóricos são mantidos para auditoria.\n\n**Importante:**\n- Vendas, turnos e fechamentos passados são mantidos\n- Metas e regras específicas são preservadas\n- A loja pode ser reativada via PUT\n\n**Quem pode usar:** Apenas administradores."
+      parameters: []
+      responses:
+        200:
+          description: 'Loja desativada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    message: 'Loja desativada com sucesso.'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: 'Loja desativada com sucesso.'
+      tags:
+        - 'Administração - Lojas'
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the store.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: store
+        description: 'ID da loja.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/admin/users:
+    get:
+      summary: 'Listar todos os usuários'
+      operationId: listarTodosOsUsurios
+      description: "Retorna uma lista paginada de todos os usuários cadastrados no sistema,\nincluindo suas lojas vinculadas e respectivas roles.\n\nEste endpoint é útil para:\n- Visão geral da equipe\n- Buscar usuários por nome/email\n- Filtrar por status ativo/inativo\n- Ver quais usuários estão em determinada loja\n\n**Quem pode usar:** Apenas administradores.\n\n**Dados retornados por usuário:**\n- `id`, `name`, `email`, `active` - dados básicos\n- `stores[]` - lista de lojas com `store_id`, `store_name`, `role`"
+      parameters:
+        -
+          in: query
+          name: search
+          description: 'Busca parcial por nome ou email (case insensitive).'
+          example: joao
+          required: false
+          schema:
+            type: string
+            description: 'Busca parcial por nome ou email (case insensitive).'
+            example: joao
+        -
+          in: query
+          name: active
+          description: 'Filtrar por status: true (ativos) ou false (inativos).'
+          example: true
+          required: false
+          schema:
+            type: boolean
+            description: 'Filtrar por status: true (ativos) ou false (inativos).'
+            example: true
+        -
+          in: query
+          name: store_id
+          description: 'Filtrar apenas usuários vinculados a esta loja.'
+          example: 1
+          required: false
+          schema:
+            type: integer
+            description: 'Filtrar apenas usuários vinculados a esta loja.'
+            example: 1
+        -
+          in: query
+          name: per_page
+          description: 'Quantidade por página (1-100, default: 25).'
+          example: 25
+          required: false
+          schema:
+            type: integer
+            description: 'Quantidade por página (1-100, default: 25).'
+            example: 25
+      responses:
+        200:
+          description: 'Lista de usuários'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    -
+                      id: 1
+                      name: 'Admin Master'
+                      email: admin@maiscapinhas.com.br
+                      active: true
+                      created_at: '2026-01-01T00:00:00Z'
+                      stores:
+                        -
+                          store_id: 1
+                          store_name: 'Mais Capinhas Tijucas'
+                          role: admin
+                        -
+                          store_id: 2
+                          store_name: 'Mais Capinhas Itapema'
+                          role: admin
+                  meta:
+                    current_page: 1
+                    per_page: 25
+                    total: 10
+                    last_page: 1
+                properties:
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        name: 'Admin Master'
+                        email: admin@maiscapinhas.com.br
+                        active: true
+                        created_at: '2026-01-01T00:00:00Z'
+                        stores:
+                          -
+                            store_id: 1
+                            store_name: 'Mais Capinhas Tijucas'
+                            role: admin
+                          -
+                            store_id: 2
+                            store_name: 'Mais Capinhas Itapema'
+                            role: admin
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: 'Admin Master'
+                        email:
+                          type: string
+                          example: admin@maiscapinhas.com.br
+                        active:
+                          type: boolean
+                          example: true
+                        created_at:
+                          type: string
+                          example: '2026-01-01T00:00:00Z'
+                        stores:
+                          type: array
+                          example:
+                            -
+                              store_id: 1
+                              store_name: 'Mais Capinhas Tijucas'
+                              role: admin
+                            -
+                              store_id: 2
+                              store_name: 'Mais Capinhas Itapema'
+                              role: admin
+                          items:
+                            type: object
+                            properties:
+                              store_id:
+                                type: integer
+                                example: 1
+                              store_name:
+                                type: string
+                                example: 'Mais Capinhas Tijucas'
+                              role:
+                                type: string
+                                example: admin
+                  meta:
+                    type: object
+                    properties:
+                      current_page:
+                        type: integer
+                        example: 1
+                      per_page:
+                        type: integer
+                        example: 25
+                      total:
+                        type: integer
+                        example: 10
+                      last_page:
+                        type: integer
+                        example: 1
+        403:
+          description: 'Sem permissão'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Apenas administradores podem acessar este recurso.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Apenas administradores podem acessar este recurso.'
+      tags:
+        - 'Administração - Usuários'
+    post:
+      summary: 'Criar novo usuário'
+      operationId: criarNovoUsurio
+      description: "Cadastra um novo usuário no sistema, opcionalmente já vinculando-o\na uma ou mais lojas com roles específicas.\n\nEste endpoint é utilizado para:\n- Onboarding de novos funcionários\n- Criar usuários administrativos\n- Configurar equipe de vendas\n\n**Fluxo recomendado:**\n1. Criar usuário com dados básicos + senha temporária\n2. Vincular às lojas onde irá trabalhar\n3. Compartilhar credenciais com o novo usuário\n\n**Regras de Negócio:**\n- Email deve ser único (validação 422 se duplicado)\n- Senha deve ter mínimo 8 caracteres\n- Vínculos são opcionais na criação (podem ser adicionados depois)\n- Se informar vínculos, `store_id` deve existir e `role` deve ser válida\n\n**Quem pode usar:** Apenas administradores."
+      parameters: []
+      responses:
+        201:
+          description: 'Usuário criado com vínculos'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 11
+                    name: 'João Silva Santos'
+                    email: joao.silva@maiscapinhas.com.br
+                    active: true
+                    created_at: '2026-01-07T17:00:00Z'
+                    stores:
+                      -
+                        store_id: 1
+                        store_name: 'Mais Capinhas Tijucas'
+                        role: vendedor
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 11
+                      name:
+                        type: string
+                        example: 'João Silva Santos'
+                      email:
+                        type: string
+                        example: joao.silva@maiscapinhas.com.br
+                      active:
+                        type: boolean
+                        example: true
+                      created_at:
+                        type: string
+                        example: '2026-01-07T17:00:00Z'
+                      stores:
+                        type: array
+                        example:
+                          -
+                            store_id: 1
+                            store_name: 'Mais Capinhas Tijucas'
+                            role: vendedor
+                        items:
+                          type: object
+                          properties:
+                            store_id:
+                              type: integer
+                              example: 1
+                            store_name:
+                              type: string
+                              example: 'Mais Capinhas Tijucas'
+                            role:
+                              type: string
+                              example: vendedor
+        422:
+          description: 'Email duplicado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The given data was invalid.'
+                  errors:
+                    email:
+                      - 'Este email já está em uso.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The given data was invalid.'
+                  errors:
+                    type: object
+                    properties:
+                      email:
+                        type: array
+                        example:
+                          - 'Este email já está em uso.'
+                        items:
+                          type: string
+      tags:
+        - 'Administração - Usuários'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Nome completo do usuário.'
+                  example: 'João Silva Santos'
+                email:
+                  type: string
+                  description: 'Email único para login.'
+                  example: joao.silva@maiscapinhas.com.br
+                password:
+                  type: string
+                  description: 'Senha de acesso (mínimo 8 caracteres).'
+                  example: senha123456
+                active:
+                  type: boolean
+                  description: 'Define se usuário está ativo (default: true).'
+                  example: true
+                stores:
+                  type: array
+                  description: 'Lista de lojas para vincular na criação.'
+                  example:
+                    - architecto
+                  items:
+                    type: string
+              required:
+                - name
+                - email
+                - password
+  '/api/v1/admin/users/{id}':
+    get:
+      summary: 'Ver detalhes do usuário'
+      operationId: verDetalhesDoUsurio
+      description: "Retorna informações completas de um usuário específico,\nincluindo todas as lojas vinculadas e suas respectivas roles.\n\nÚtil para:\n- Verificar acessos do usuário\n- Editar informações\n- Auditar permissões\n\n**Quem pode usar:** Apenas administradores.\n\n**Dados retornados:**\n- `id`, `name`, `email`, `active`, `created_at`, `updated_at`\n- `stores[]` - array de lojas com role em cada uma"
+      parameters: []
+      responses:
+        200:
+          description: 'Detalhes do usuário'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 6
+                    name: 'João Vendedor'
+                    email: joao.vendedor@maiscapinhas.com.br
+                    active: true
+                    created_at: '2026-01-01T00:00:00Z'
+                    updated_at: '2026-01-07T12:00:00Z'
+                    stores:
+                      -
+                        store_id: 1
+                        store_name: 'Mais Capinhas Tijucas'
+                        role: vendedor
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 6
+                      name:
+                        type: string
+                        example: 'João Vendedor'
+                      email:
+                        type: string
+                        example: joao.vendedor@maiscapinhas.com.br
+                      active:
+                        type: boolean
+                        example: true
+                      created_at:
+                        type: string
+                        example: '2026-01-01T00:00:00Z'
+                      updated_at:
+                        type: string
+                        example: '2026-01-07T12:00:00Z'
+                      stores:
+                        type: array
+                        example:
+                          -
+                            store_id: 1
+                            store_name: 'Mais Capinhas Tijucas'
+                            role: vendedor
+                        items:
+                          type: object
+                          properties:
+                            store_id:
+                              type: integer
+                              example: 1
+                            store_name:
+                              type: string
+                              example: 'Mais Capinhas Tijucas'
+                            role:
+                              type: string
+                              example: vendedor
+        404:
+          description: 'Usuário não encontrado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'No query results for model [App\Models\User] 999'
+                properties:
+                  message:
+                    type: string
+                    example: 'No query results for model [App\Models\User] 999'
+      tags:
+        - 'Administração - Usuários'
+    put:
+      summary: 'Atualizar usuário'
+      operationId: atualizarUsurio
+      description: "Atualiza dados cadastrais de um usuário existente.\nApenas os campos informados serão alterados.\n\n**Casos de uso:**\n- Corrigir nome ou email\n- Alterar senha\n- Ativar/desativar usuário\n\n**Regras de Negócio:**\n- Email deve continuar único (validação considera o próprio usuário)\n- Para gerenciar vínculos com lojas, use os endpoints de vínculos\n\n**Quem pode usar:** Apenas administradores."
+      parameters: []
+      responses:
+        200:
+          description: 'Usuário atualizado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 6
+                    name: 'João da Silva Atualizado'
+                    email: joao.vendedor@maiscapinhas.com.br
+                    active: true
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 6
+                      name:
+                        type: string
+                        example: 'João da Silva Atualizado'
+                      email:
+                        type: string
+                        example: joao.vendedor@maiscapinhas.com.br
+                      active:
+                        type: boolean
+                        example: true
+      tags:
+        - 'Administração - Usuários'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Novo nome completo.'
+                  example: 'João da Silva Atualizado'
+                email:
+                  type: string
+                  description: 'Novo email (deve ser único).'
+                  example: joao.novo@maiscapinhas.com.br
+                password:
+                  type: string
+                  description: 'Nova senha (mínimo 8 caracteres).'
+                  example: novasenha123
+                active:
+                  type: boolean
+                  description: 'Ativar (true) ou desativar (false).'
+                  example: true
+    delete:
+      summary: 'Desativar usuário'
+      operationId: desativarUsurio
+      description: "Define o usuário como inativo (`active = false`) e revoga\ntodos os tokens de acesso, forçando logout imediato.\n\n**Importante:**\n- Não exclui o usuário do banco (soft disable)\n- Dados históricos são mantidos para auditoria\n- Usuário pode ser reativado posteriormente via PUT\n\n**Regras de Negócio:**\n- Não é possível desativar seu próprio usuário (proteção)\n- Usuários desativados não conseguem fazer login\n- Tokens existentes são invalidados imediatamente\n\n**Quem pode usar:** Apenas administradores."
+      parameters: []
+      responses:
+        200:
+          description: 'Usuário desativado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    message: 'Usuário desativado com sucesso.'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: 'Usuário desativado com sucesso.'
+        403:
+          description: 'Tentativa de auto-desativação'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Você não pode desativar seu próprio usuário.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Você não pode desativar seu próprio usuário.'
+      tags:
+        - 'Administração - Usuários'
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the user.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: user
+        description: 'ID do usuário.'
+        example: 6
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/stores/{store_id}/users':
+    get:
+      summary: 'Listar usuários de uma loja'
+      operationId: listarUsuriosDeUmaLoja
+      description: "Retorna todos os usuários vinculados a uma loja específica,\ncom suas respectivas roles e status.\n\n**Dados retornados por vínculo:**\n- `user_id` - ID do usuário\n- `user_name` - Nome do usuário\n- `user_email` - Email do usuário\n- `user_active` - Se o usuário está ativo\n- `role` - Role do usuário nesta loja\n- `created_at` - Quando o vínculo foi criado\n\n**Quem pode usar:** Apenas administradores."
+      parameters: []
+      responses:
+        200:
+          description: 'Usuários da loja'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    -
+                      user_id: 2
+                      user_name: 'Carlos Gerente'
+                      user_email: carlos.gerente@maiscapinhas.com.br
+                      user_active: true
+                      role: gerente
+                      created_at: '2026-01-01T00:00:00Z'
+                    -
+                      user_id: 6
+                      user_name: 'João Vendedor'
+                      user_email: joao.vendedor@maiscapinhas.com.br
+                      user_active: true
+                      role: vendedor
+                      created_at: '2026-01-01T00:00:00Z'
+                properties:
+                  data:
+                    type: array
+                    example:
+                      -
+                        user_id: 2
+                        user_name: 'Carlos Gerente'
+                        user_email: carlos.gerente@maiscapinhas.com.br
+                        user_active: true
+                        role: gerente
+                        created_at: '2026-01-01T00:00:00Z'
+                      -
+                        user_id: 6
+                        user_name: 'João Vendedor'
+                        user_email: joao.vendedor@maiscapinhas.com.br
+                        user_active: true
+                        role: vendedor
+                        created_at: '2026-01-01T00:00:00Z'
+                    items:
+                      type: object
+                      properties:
+                        user_id:
+                          type: integer
+                          example: 2
+                        user_name:
+                          type: string
+                          example: 'Carlos Gerente'
+                        user_email:
+                          type: string
+                          example: carlos.gerente@maiscapinhas.com.br
+                        user_active:
+                          type: boolean
+                          example: true
+                        role:
+                          type: string
+                          example: gerente
+                        created_at:
+                          type: string
+                          example: '2026-01-01T00:00:00Z'
+      tags:
+        - 'Administração - Vínculos Loja-Usuário'
+    post:
+      summary: 'Vincular usuário a loja'
+      operationId: vincularUsurioALoja
+      description: "Cria um novo vínculo entre um usuário existente e uma loja,\ndefinindo qual role esse usuário terá nessa loja.\n\n**Casos de uso:**\n- Adicionar novo vendedor à equipe de uma loja\n- Promover funcionário a gerente em determinada loja\n- Configurar vendedor \"volante\" para trabalhar temporariamente\n\n**Regras de Negócio:**\n- Um usuário só pode ter um vínculo por loja (unique: store_id + user_id)\n- Para alterar a role, use PUT\n- O usuário deve existir previamente (criar via POST /admin/users)\n\n**Quem pode usar:** Apenas administradores."
+      parameters: []
+      responses:
+        201:
+          description: 'Vínculo criado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    user_id: 8
+                    store_id: 1
+                    role: vendedor
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      user_id:
+                        type: integer
+                        example: 8
+                      store_id:
+                        type: integer
+                        example: 1
+                      role:
+                        type: string
+                        example: vendedor
+        422:
+          description: 'Usuário já vinculado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The given data was invalid.'
+                  errors:
+                    user_id:
+                      - 'Este usuário já está vinculado a esta loja.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The given data was invalid.'
+                  errors:
+                    type: object
+                    properties:
+                      user_id:
+                        type: array
+                        example:
+                          - 'Este usuário já está vinculado a esta loja.'
+                        items:
+                          type: string
+      tags:
+        - 'Administração - Vínculos Loja-Usuário'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+                  description: 'ID do usuário a vincular.'
+                  example: 8
+                role:
+                  type: string
+                  description: 'Role: admin, gerente, conferente ou vendedor.'
+                  example: vendedor
+              required:
+                - user_id
+                - role
+    parameters:
+      -
+        in: path
+        name: store_id
+        description: 'The ID of the store.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: store
+        description: 'ID da loja.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/stores/{store_id}/users/{id}':
+    put:
+      summary: 'Atualizar role do usuário na loja'
+      operationId: atualizarRoleDoUsurioNaLoja
+      description: "Altera a role de um usuário em uma loja específica.\n\n**Casos de uso:**\n- Promover vendedor a conferente\n- Rebaixar gerente a conferente\n- Dar acesso admin a um gerente\n\n**Quem pode usar:** Apenas administradores."
+      parameters: []
+      responses:
+        200:
+          description: 'Role atualizada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    user_id: 6
+                    store_id: 1
+                    role: gerente
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      user_id:
+                        type: integer
+                        example: 6
+                      store_id:
+                        type: integer
+                        example: 1
+                      role:
+                        type: string
+                        example: gerente
+        404:
+          description: 'Vínculo não existe'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Usuário não está vinculado a esta loja.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Usuário não está vinculado a esta loja.'
+      tags:
+        - 'Administração - Vínculos Loja-Usuário'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+                  description: 'This field is required when <code>role</code> is not present. The <code>id</code> of an existing record in the users table.'
+                  example: 16
+                role:
+                  type: string
+                  description: 'Nova role: admin, gerente, conferente ou vendedor.'
+                  example: gerente
+              required:
+                - role
+    delete:
+      summary: 'Remover vínculo'
+      operationId: removerVnculo
+      description: "Remove completamente o vínculo de um usuário com uma loja.\n\n**Atenção:**\n- O usuário perde todo acesso a esta loja\n- Dados históricos (vendas, fechamentos) são mantidos\n- Para desativar temporariamente, considere alterar a role\n\n**Regras de Negócio:**\n- Não é possível remover seu próprio vínculo (proteção)\n- Se o usuário só tinha vínculo com esta loja, ficará \"órfão\"\n\n**Quem pode usar:** Apenas administradores."
+      parameters: []
+      responses:
+        200:
+          description: 'Vínculo removido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    message: 'Vínculo removido com sucesso.'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: 'Vínculo removido com sucesso.'
+        403:
+          description: 'Tentativa de auto-remoção'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Você não pode remover seu próprio vínculo.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Você não pode remover seu próprio vínculo.'
+        404:
+          description: 'Vínculo não encontrado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Vínculo não encontrado.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Vínculo não encontrado.'
+      tags:
+        - 'Administração - Vínculos Loja-Usuário'
+    parameters:
+      -
+        in: path
+        name: store_id
+        description: 'The ID of the store.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: id
+        description: 'The ID of the user.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: store
+        description: 'ID da loja.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: user
+        description: 'ID do usuário no vínculo.'
+        example: 6
+        required: true
+        schema:
+          type: integer

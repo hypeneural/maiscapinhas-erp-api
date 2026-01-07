@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Domains\Finance\Engines;
 
 use App\Enums\CommissionStatus;
+use App\Models\CashClosing;
+use App\Models\CashShift;
 use App\Models\Sale;
 use App\Models\SellerMonthlyCommission;
 use App\Models\StoreMonthlyGoal;
@@ -130,13 +132,63 @@ class CommissionEngineService
     }
 
     /**
+     * Check if all closings for a store/month are approved.
+     * 
+     * Comissões só podem ser confirmadas após todos os caixas do mês
+     * estarem aprovados (regra de negócio).
+     */
+    public function canConfirmCommissions(int $storeId, string $month): array
+    {
+        $startDate = Carbon::parse($month . '-01')->startOfMonth();
+        $endDate = Carbon::parse($month . '-01')->endOfMonth();
+
+        // Get all shifts for this store/month
+        $totalShifts = CashShift::where('store_id', $storeId)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->count();
+
+        // Get approved closings count
+        $approvedClosings = CashClosing::whereHas('cashShift', function ($q) use ($storeId, $startDate, $endDate) {
+            $q->where('store_id', $storeId)
+                ->whereBetween('date', [$startDate, $endDate]);
+        })->where('status', CashClosing::STATUS_APPROVED)->count();
+
+        // Get pending closings (not approved)
+        $pendingClosings = CashClosing::whereHas('cashShift', function ($q) use ($storeId, $startDate, $endDate) {
+            $q->where('store_id', $storeId)
+                ->whereBetween('date', [$startDate, $endDate]);
+        })->where('status', '!=', CashClosing::STATUS_APPROVED)->count();
+
+        $canConfirm = $totalShifts > 0 && $pendingClosings === 0;
+
+        return [
+            'can_confirm' => $canConfirm,
+            'total_shifts' => $totalShifts,
+            'approved_closings' => $approvedClosings,
+            'pending_closings' => $pendingClosings,
+            'message' => $canConfirm
+                ? 'Todas as conferências do mês estão aprovadas.'
+                : "Existem {$pendingClosings} fechamentos pendentes de aprovação.",
+        ];
+    }
+
+    /**
      * Confirm commissions for a store/month (finalize for payment).
+     * 
+     * @throws \Exception if not all closings are approved
      */
     public function confirmCommissions(int $storeId, string $month): int
     {
+        $validation = $this->canConfirmCommissions($storeId, $month);
+
+        if (!$validation['can_confirm']) {
+            throw new \Exception($validation['message']);
+        }
+
         return SellerMonthlyCommission::forStore($storeId)
             ->forMonth($month)
             ->where('status', CommissionStatus::PROVISIONAL)
             ->update(['status' => CommissionStatus::CONFIRMED]);
     }
 }
+

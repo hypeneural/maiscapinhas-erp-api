@@ -314,6 +314,155 @@ GET {{baseUrl}}/dashboard/admin?month=2026-01
 Authorization: Bearer {{token}}
 
 ### ==============================================
+### ADMIN - USERS (admin only)
+### ==============================================
+
+### List All Users
+GET {{baseUrl}}/admin/users
+Authorization: Bearer {{token}}
+
+### Search Users
+GET {{baseUrl}}/admin/users?search=joao&active=true
+Authorization: Bearer {{token}}
+
+### Create User
+POST {{baseUrl}}/admin/users
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "name": "Novo Vendedor",
+    "email": "novo.vendedor@maiscapinhas.com.br",
+    "password": "senha123456",
+    "active": true,
+    "stores": [
+        {"store_id": 1, "role": "vendedor"}
+    ]
+}
+
+### Get User Details
+GET {{baseUrl}}/admin/users/6
+Authorization: Bearer {{token}}
+
+### Update User
+PUT {{baseUrl}}/admin/users/6
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "name": "João da Silva Atualizado"
+}
+
+### Deactivate User
+DELETE {{baseUrl}}/admin/users/6
+Authorization: Bearer {{token}}
+
+### ==============================================
+### ADMIN - STORES (admin only)
+### ==============================================
+
+### List All Stores
+GET {{baseUrl}}/admin/stores
+Authorization: Bearer {{token}}
+
+### Create Store
+POST {{baseUrl}}/admin/stores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "name": "Mais Capinhas Centro",
+    "city": "Florianópolis",
+    "active": true
+}
+
+### Get Store Details
+GET {{baseUrl}}/admin/stores/1
+Authorization: Bearer {{token}}
+
+### Update Store
+PUT {{baseUrl}}/admin/stores/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "name": "Mais Capinhas Tijucas - Centro"
+}
+
+### Deactivate Store
+DELETE {{baseUrl}}/admin/stores/4
+Authorization: Bearer {{token}}
+
+### ==============================================
+### ADMIN - STORE-USER BINDINGS (admin only)
+### ==============================================
+
+### List Users in Store
+GET {{baseUrl}}/admin/stores/1/users
+Authorization: Bearer {{token}}
+
+### Add User to Store
+POST {{baseUrl}}/admin/stores/1/users
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "user_id": 8,
+    "role": "vendedor"
+}
+
+### Update User Role in Store
+PUT {{baseUrl}}/admin/stores/1/users/6
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "role": "gerente"
+}
+
+### Remove User from Store
+DELETE {{baseUrl}}/admin/stores/1/users/8
+Authorization: Bearer {{token}}
+
+### ==============================================
+### SALES CRUD
+### ==============================================
+
+### List Sales
+GET {{baseUrl}}/sales?store_id=1&from=2026-01-01&to=2026-01-31
+Authorization: Bearer {{token}}
+
+### Create Sale (manual)
+POST {{baseUrl}}/sales
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "store_id": 1,
+    "seller_id": 6,
+    "sold_at": "2026-01-07T15:30:00",
+    "amount": 175.50,
+    "source": "manual"
+}
+
+### Get Sale Details
+GET {{baseUrl}}/sales/1
+Authorization: Bearer {{token}}
+
+### Update Sale
+PUT {{baseUrl}}/sales/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "amount": 180.00
+}
+
+### Delete Sale (admin only)
+DELETE {{baseUrl}}/sales/1
+Authorization: Bearer {{token}}
+
+### ==============================================
 ### ARTISAN COMMANDS (run in terminal)
 ### ==============================================
 
@@ -325,3 +474,7 @@ Authorization: Bearer {{token}}
 
 # Run queue worker for bonus/commission recalculation
 # php artisan queue:work --queue=finance
+
+# Generate Scribe documentation
+# php artisan scribe:generate
+

@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\V1\Admin\StoreController as AdminStoreController;
+use App\Http\Controllers\Api\V1\Admin\StoreUserController as AdminStoreUserController;
+use App\Http\Controllers\Api\V1\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BonusRuleController;
 use App\Http\Controllers\Api\V1\CashClosingController;
@@ -54,15 +57,19 @@ Route::middleware('auth:sanctum')->group(function () {
     // Me (current user profile)
     Route::get('/me', MeController::class)->name('me');
 
-    // Stores
+    // Stores (user's stores)
     Route::prefix('stores')->name('stores.')->group(function () {
         Route::get('/', [StoreController::class, 'index'])->name('index');
         Route::get('/{store}', [StoreController::class, 'show'])->name('show');
     });
 
-    // Sales
+    // Sales (CRUD)
     Route::prefix('sales')->name('sales.')->group(function () {
         Route::get('/', [SaleController::class, 'index'])->name('index');
+        Route::post('/', [SaleController::class, 'store'])->name('store');
+        Route::get('/{sale}', [SaleController::class, 'show'])->name('show');
+        Route::put('/{sale}', [SaleController::class, 'update'])->name('update');
+        Route::delete('/{sale}', [SaleController::class, 'destroy'])->name('destroy');
     });
 
     // Cash Management
@@ -126,6 +133,26 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/vendedor', [DashboardController::class, 'vendedor'])->name('vendedor');
         Route::get('/conferente', [DashboardController::class, 'conferente'])->name('conferente');
         Route::get('/admin', [DashboardController::class, 'admin'])->name('admin');
+    });
+
+    // ============================================
+    // Admin Routes (admin only)
+    // ============================================
+    Route::prefix('admin')->name('admin.')->group(function () {
+
+        // Users Management
+        Route::apiResource('users', AdminUserController::class);
+
+        // Stores Management
+        Route::apiResource('stores', AdminStoreController::class);
+
+        // Store-User Bindings
+        Route::prefix('stores/{store}/users')->name('stores.users.')->group(function () {
+            Route::get('/', [AdminStoreUserController::class, 'index'])->name('index');
+            Route::post('/', [AdminStoreUserController::class, 'store'])->name('store');
+            Route::put('/{user}', [AdminStoreUserController::class, 'update'])->name('update');
+            Route::delete('/{user}', [AdminStoreUserController::class, 'destroy'])->name('destroy');
+        });
     });
 
 });

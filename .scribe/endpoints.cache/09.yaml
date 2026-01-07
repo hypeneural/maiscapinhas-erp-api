@@ -47,8 +47,7 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: 'http://localhost:5173'
-          access-control-allow-credentials: 'true'
+          vary: Origin
         description: null
     responseFields: []
     auth:
@@ -197,8 +196,7 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: 'http://localhost:5173'
-          access-control-allow-credentials: 'true'
+          vary: Origin
         description: null
     responseFields: []
     auth:

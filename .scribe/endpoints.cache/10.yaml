@@ -49,7 +49,7 @@ endpoints:
         name: from
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-07T19:59:14'
+        example: '2026-01-07T20:48:56'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -60,7 +60,7 @@ endpoints:
         name: to
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-07T19:59:14'
+        example: '2026-01-07T20:48:56'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -79,8 +79,8 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      from: '2026-01-07T19:59:14'
-      to: '2026-01-07T19:59:14'
+      from: '2026-01-07T20:48:56'
+      to: '2026-01-07T20:48:56'
       per_page: 22
     fileParameters: []
     responses:
@@ -91,8 +91,7 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: 'http://localhost:5173'
-          access-control-allow-credentials: 'true'
+          vary: Origin
         description: null
     responseFields: []
     auth:
@@ -175,8 +174,7 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: 'http://localhost:5173'
-          access-control-allow-credentials: 'true'
+          vary: Origin
         description: null
     responseFields: []
     auth:

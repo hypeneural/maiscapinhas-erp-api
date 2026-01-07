@@ -1,8 +1,30 @@
 name: Vendas
 description: |-
 
-  Endpoints para consultar vendas registradas.
-  Vendas são registradas automaticamente via integração PDV ou manualmente.
+  Gerenciamento de vendas registradas no sistema MaisCapinhas ERP.
+
+  As vendas são o **coração do sistema financeiro**, pois a partir delas
+  são calculados:
+  - **Bônus diário** - baseado no total de vendas do dia
+  - **Comissão mensal** - baseado no atingimento de meta
+  - **KPIs de desempenho** - taxa de conversão, ticket médio
+
+  **Fontes de Vendas:**
+  | Origem | Descrição |
+  |--------|-----------|
+  | `pdv` | Importação automática do sistema de PDV |
+  | `manual` | Cadastro manual via esta API |
+  | `import` | Importação em lote (planilha CSV) |
+
+  **Regras de Negócio Importantes:**
+  - Cada venda pertence a uma **loja** (`store_id`) e um **vendedor** (`seller_id`)
+  - A venda conta para a meta da **loja** onde foi realizada
+  - A comissão vai para o **vendedor**, mesmo que seja "volante"
+  - Alterações em vendas disparam recálculo automático de bônus/comissão
+
+  **Impacto no Bônus:**
+  Quando uma venda é criada/alterada, o sistema automaticamente
+  recalcula o bônus diário do vendedor (via Job assíncrono).
 endpoints:
   -
     custom: []
@@ -14,23 +36,50 @@ endpoints:
       groupName: Vendas
       groupDescription: |-
 
-        Endpoints para consultar vendas registradas.
-        Vendas são registradas automaticamente via integração PDV ou manualmente.
+        Gerenciamento de vendas registradas no sistema MaisCapinhas ERP.
+
+        As vendas são o **coração do sistema financeiro**, pois a partir delas
+        são calculados:
+        - **Bônus diário** - baseado no total de vendas do dia
+        - **Comissão mensal** - baseado no atingimento de meta
+        - **KPIs de desempenho** - taxa de conversão, ticket médio
+
+        **Fontes de Vendas:**
+        | Origem | Descrição |
+        |--------|-----------|
+        | `pdv` | Importação automática do sistema de PDV |
+        | `manual` | Cadastro manual via esta API |
+        | `import` | Importação em lote (planilha CSV) |
+
+        **Regras de Negócio Importantes:**
+        - Cada venda pertence a uma **loja** (`store_id`) e um **vendedor** (`seller_id`)
+        - A venda conta para a meta da **loja** onde foi realizada
+        - A comissão vai para o **vendedor**, mesmo que seja "volante"
+        - Alterações em vendas disparam recálculo automático de bônus/comissão
+
+        **Impacto no Bônus:**
+        Quando uma venda é criada/alterada, o sistema automaticamente
+        recalcula o bônus diário do vendedor (via Job assíncrono).
       subgroup: ''
       subgroupDescription: ''
       title: 'Listar vendas'
       description: |-
-        Retorna a lista de vendas das lojas às quais o usuário tem acesso,
-        com filtros por loja, vendedor e período.
+        Retorna a lista paginada de vendas das lojas às quais o
+        usuário tem acesso, com diversos filtros disponíveis.
 
-        **Quem pode usar:** Qualquer usuário autenticado (vê apenas suas lojas).
+        **Visibilidade:**
+        - Vendedor: vê vendas de todas as lojas onde trabalha
+        - Gerente: vê todas as vendas das lojas que gerencia
+        - Admin: vê todas as vendas do sistema
 
         **Filtros disponíveis:**
         - `store_id` - Filtrar por loja específica
-        - `seller_id` - Filtrar por vendedor específico
-        - `from` / `to` - Período de datas (formato YYYY-MM-DD)
+        - `seller_id` - Filtrar por vendedor
+        - `from`/`to` - Período de datas
 
-        **Paginação:** Resultados paginados (padrão 25 por página, máx 100).
+        **Ordenação:** Por data de venda, mais recentes primeiro.
+
+        **Quem pode usar:** Qualquer usuário autenticado (vê apenas suas lojas).
       authenticated: true
       deprecated: false
     headers:
@@ -43,7 +92,7 @@ endpoints:
       store_id:
         custom: []
         name: store_id
-        description: 'ID da loja para filtrar.'
+        description: 'Filtrar por loja (deve ter acesso).'
         required: false
         example: 1
         type: integer
@@ -54,7 +103,7 @@ endpoints:
       seller_id:
         custom: []
         name: seller_id
-        description: 'ID do vendedor para filtrar.'
+        description: 'Filtrar por vendedor específico.'
         required: false
         example: 6
         type: integer
@@ -87,7 +136,7 @@ endpoints:
       per_page:
         custom: []
         name: per_page
-        description: 'Itens por página (1-100).'
+        description: 'Itens por página (1-100, default: 25).'
         required: false
         example: 25
         type: integer
@@ -129,7 +178,7 @@ endpoints:
         name: from
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-07T19:59:14'
+        example: '2026-01-07T20:48:56'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -140,7 +189,7 @@ endpoints:
         name: to
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-07T19:59:14'
+        example: '2026-01-07T20:48:56'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -160,8 +209,8 @@ endpoints:
     cleanBodyParameters:
       store_id: 16
       seller_id: 16
-      from: '2026-01-07T19:59:14'
-      to: '2026-01-07T19:59:14'
+      from: '2026-01-07T20:48:56'
+      to: '2026-01-07T20:48:56'
       per_page: 22
     fileParameters: []
     responses:
@@ -175,22 +224,584 @@ endpoints:
                 "id": 1,
                 "store_id": 1,
                 "seller_id": 6,
-                "sold_at": "2026-01-07T10:30:00+00:00",
-                "amount": "150.00",
+                "sold_at": "2026-01-07T10:30:00Z",
+                "amount": 150.00,
                 "source": "pdv",
                 "store": { "id": 1, "name": "Mais Capinhas Tijucas" },
                 "seller": { "id": 6, "name": "João Vendedor" }
               }
             ],
-            "meta": {
-              "current_page": 1,
-              "per_page": 25,
-              "total": 150,
-              "last_page": 6
-            }
+            "meta": { "current_page": 1, "per_page": 25, "total": 150, "last_page": 6 }
           }
         headers: []
         description: 'Lista de vendas'
+      -
+        custom: []
+        status: 403
+        content: |-
+          {
+            "message": "You do not have access to this store."
+          }
+        headers: []
+        description: 'Loja sem acesso'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/sales
+    metadata:
+      custom: []
+      groupName: Vendas
+      groupDescription: |-
+
+        Gerenciamento de vendas registradas no sistema MaisCapinhas ERP.
+
+        As vendas são o **coração do sistema financeiro**, pois a partir delas
+        são calculados:
+        - **Bônus diário** - baseado no total de vendas do dia
+        - **Comissão mensal** - baseado no atingimento de meta
+        - **KPIs de desempenho** - taxa de conversão, ticket médio
+
+        **Fontes de Vendas:**
+        | Origem | Descrição |
+        |--------|-----------|
+        | `pdv` | Importação automática do sistema de PDV |
+        | `manual` | Cadastro manual via esta API |
+        | `import` | Importação em lote (planilha CSV) |
+
+        **Regras de Negócio Importantes:**
+        - Cada venda pertence a uma **loja** (`store_id`) e um **vendedor** (`seller_id`)
+        - A venda conta para a meta da **loja** onde foi realizada
+        - A comissão vai para o **vendedor**, mesmo que seja "volante"
+        - Alterações em vendas disparam recálculo automático de bônus/comissão
+
+        **Impacto no Bônus:**
+        Quando uma venda é criada/alterada, o sistema automaticamente
+        recalcula o bônus diário do vendedor (via Job assíncrono).
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Criar venda manual'
+      description: |-
+        Registra uma nova venda no sistema de forma manual.
+
+        **Quando usar:**
+        - Vendas feitas fora do PDV (dinheiro em espécie direto)
+        - Correções de vendas não registradas
+        - Vendas de quiosques sem sistema
+
+        **Efeitos automáticos:**
+        Após criar a venda, o sistema automaticamente dispara:
+        1. `RecalculateSellerDailyBonusJob` - recalcula bônus do dia
+        2. `RecalculateSellerMonthlyCommissionJob` - recalcula comissão do mês
+
+        **Regras de Negócio:**
+        - `store_id` deve ser uma loja onde o usuário tem acesso
+        - `seller_id` default é o usuário logado
+        - `source` default é "manual"
+        - `amount` deve ser positivo
+
+        **Quem pode usar:**
+        - Vendedores (podem registrar próprias vendas)
+        - Gerentes/Admins (podem registrar para qualquer vendedor)
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'Loja onde a venda foi realizada.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      seller_id:
+        custom: []
+        name: seller_id
+        description: 'Vendedor que realizou (default: você).'
+        required: false
+        example: 6
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      sold_at:
+        custom: []
+        name: sold_at
+        description: 'Data/hora da venda (ISO 8601).'
+        required: true
+        example: '2026-01-07T15:30:00'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      amount:
+        custom: []
+        name: amount
+        description: 'Valor total da venda.'
+        required: true
+        example: 175.5
+        type: number
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      source:
+        custom: []
+        name: source
+        description: 'Origem: pdv, manual, import (default: manual).'
+        required: false
+        example: manual
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      store_id: 1
+      seller_id: 6
+      sold_at: '2026-01-07T15:30:00'
+      amount: 175.5
+      source: manual
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 201
+        content: |-
+          {
+            "data": {
+              "id": 501,
+              "store_id": 1,
+              "seller_id": 6,
+              "sold_at": "2026-01-07T15:30:00Z",
+              "amount": 175.50,
+              "source": "manual",
+              "store": { "id": 1, "name": "Mais Capinhas Tijucas" },
+              "seller": { "id": 6, "name": "João Vendedor" }
+            }
+          }
+        headers: []
+        description: 'Venda criada'
+      -
+        custom: []
+        status: 403
+        content: |-
+          {
+            "message": "Você não tem acesso a esta loja."
+          }
+        headers: []
+        description: 'Sem acesso à loja'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/sales/{id}'
+    metadata:
+      custom: []
+      groupName: Vendas
+      groupDescription: |-
+
+        Gerenciamento de vendas registradas no sistema MaisCapinhas ERP.
+
+        As vendas são o **coração do sistema financeiro**, pois a partir delas
+        são calculados:
+        - **Bônus diário** - baseado no total de vendas do dia
+        - **Comissão mensal** - baseado no atingimento de meta
+        - **KPIs de desempenho** - taxa de conversão, ticket médio
+
+        **Fontes de Vendas:**
+        | Origem | Descrição |
+        |--------|-----------|
+        | `pdv` | Importação automática do sistema de PDV |
+        | `manual` | Cadastro manual via esta API |
+        | `import` | Importação em lote (planilha CSV) |
+
+        **Regras de Negócio Importantes:**
+        - Cada venda pertence a uma **loja** (`store_id`) e um **vendedor** (`seller_id`)
+        - A venda conta para a meta da **loja** onde foi realizada
+        - A comissão vai para o **vendedor**, mesmo que seja "volante"
+        - Alterações em vendas disparam recálculo automático de bônus/comissão
+
+        **Impacto no Bônus:**
+        Quando uma venda é criada/alterada, o sistema automaticamente
+        recalcula o bônus diário do vendedor (via Job assíncrono).
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Ver detalhes da venda'
+      description: |-
+        Retorna informações completas de uma venda específica.
+
+        **Dados retornados:**
+        - Informações básicas: `id`, `store_id`, `seller_id`, `sold_at`, `amount`, `source`
+        - Loja: `store.id`, `store.name`
+        - Vendedor: `seller.id`, `seller.name`
+        - Timestamps: `created_at`, `updated_at`
+
+        **Quem pode usar:** Usuários com acesso à loja da venda.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the sale.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      sale:
+        custom: []
+        name: sale
+        description: 'ID da venda.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 1
+      sale: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "id": 1,
+              "store_id": 1,
+              "seller_id": 6,
+              "sold_at": "2026-01-07T10:30:00Z",
+              "amount": 150.00,
+              "source": "pdv",
+              "created_at": "2026-01-07T10:31:00Z",
+              "store": { "id": 1, "name": "Mais Capinhas Tijucas" },
+              "seller": { "id": 6, "name": "João Vendedor" }
+            }
+          }
+        headers: []
+        description: 'Detalhes da venda'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+    uri: 'api/v1/sales/{id}'
+    metadata:
+      custom: []
+      groupName: Vendas
+      groupDescription: |-
+
+        Gerenciamento de vendas registradas no sistema MaisCapinhas ERP.
+
+        As vendas são o **coração do sistema financeiro**, pois a partir delas
+        são calculados:
+        - **Bônus diário** - baseado no total de vendas do dia
+        - **Comissão mensal** - baseado no atingimento de meta
+        - **KPIs de desempenho** - taxa de conversão, ticket médio
+
+        **Fontes de Vendas:**
+        | Origem | Descrição |
+        |--------|-----------|
+        | `pdv` | Importação automática do sistema de PDV |
+        | `manual` | Cadastro manual via esta API |
+        | `import` | Importação em lote (planilha CSV) |
+
+        **Regras de Negócio Importantes:**
+        - Cada venda pertence a uma **loja** (`store_id`) e um **vendedor** (`seller_id`)
+        - A venda conta para a meta da **loja** onde foi realizada
+        - A comissão vai para o **vendedor**, mesmo que seja "volante"
+        - Alterações em vendas disparam recálculo automático de bônus/comissão
+
+        **Impacto no Bônus:**
+        Quando uma venda é criada/alterada, o sistema automaticamente
+        recalcula o bônus diário do vendedor (via Job assíncrono).
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Atualizar venda'
+      description: |-
+        Edita dados de uma venda existente.
+
+        **Importante:**
+        Alterações disparam recálculo automático de bônus e comissão
+        para o vendedor afetado.
+
+        **Casos de uso:**
+        - Corrigir valor digitado errado
+        - Ajustar data de venda
+        - Corrigir fonte da venda
+
+        **Regras de Negócio:**
+        - Não é possível alterar `store_id` ou `seller_id` após criação
+        - Apenas gerentes e admins podem editar vendas
+        - Histórico de alterações é registrado para auditoria
+
+        **Quem pode usar:** Gerentes e Admins da loja.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the sale.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      sale:
+        custom: []
+        name: sale
+        description: 'ID da venda.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 1
+      sale: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      sold_at:
+        custom: []
+        name: sold_at
+        description: 'Nova data/hora.'
+        required: false
+        example: '2026-01-07T16:00:00'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      amount:
+        custom: []
+        name: amount
+        description: 'Novo valor.'
+        required: false
+        example: 180.0
+        type: number
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      source:
+        custom: []
+        name: source
+        description: 'Nova origem: pdv, manual, import.'
+        required: false
+        example: pdv
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      sold_at: '2026-01-07T16:00:00'
+      amount: 180.0
+      source: pdv
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "id": 1,
+              "amount": 180.00,
+              "sold_at": "2026-01-07T16:00:00Z"
+            }
+          }
+        headers: []
+        description: 'Venda atualizada'
+      -
+        custom: []
+        status: 403
+        content: |-
+          {
+            "message": "Apenas gerentes e admins podem editar vendas."
+          }
+        headers: []
+        description: 'Sem permissão'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/v1/sales/{id}'
+    metadata:
+      custom: []
+      groupName: Vendas
+      groupDescription: |-
+
+        Gerenciamento de vendas registradas no sistema MaisCapinhas ERP.
+
+        As vendas são o **coração do sistema financeiro**, pois a partir delas
+        são calculados:
+        - **Bônus diário** - baseado no total de vendas do dia
+        - **Comissão mensal** - baseado no atingimento de meta
+        - **KPIs de desempenho** - taxa de conversão, ticket médio
+
+        **Fontes de Vendas:**
+        | Origem | Descrição |
+        |--------|-----------|
+        | `pdv` | Importação automática do sistema de PDV |
+        | `manual` | Cadastro manual via esta API |
+        | `import` | Importação em lote (planilha CSV) |
+
+        **Regras de Negócio Importantes:**
+        - Cada venda pertence a uma **loja** (`store_id`) e um **vendedor** (`seller_id`)
+        - A venda conta para a meta da **loja** onde foi realizada
+        - A comissão vai para o **vendedor**, mesmo que seja "volante"
+        - Alterações em vendas disparam recálculo automático de bônus/comissão
+
+        **Impacto no Bônus:**
+        Quando uma venda é criada/alterada, o sistema automaticamente
+        recalcula o bônus diário do vendedor (via Job assíncrono).
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Excluir venda'
+      description: |-
+        Remove permanentemente uma venda do sistema.
+
+        **Atenção:**
+        - Esta ação é **irreversível**
+        - O bônus/comissão do vendedor será recalculado automaticamente
+        - Recomendado documentar o motivo da exclusão
+
+        **Casos de uso:**
+        - Venda cadastrada em duplicidade
+        - Venda cancelada pelo cliente
+        - Teste registrado acidentalmente em produção
+
+        **Regras de Negócio:**
+        - Apenas administradores podem excluir vendas
+        - A exclusão é registrada no log de auditoria
+
+        **Quem pode usar:** Apenas Admins.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the sale.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      sale:
+        custom: []
+        name: sale
+        description: 'ID da venda.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 1
+      sale: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": { "message": "Venda excluída com sucesso." }
+          }
+        headers: []
+        description: 'Venda excluída'
+      -
+        custom: []
+        status: 403
+        content: |-
+          {
+            "message": "Apenas admins podem excluir vendas."
+          }
+        headers: []
+        description: 'Sem permissão'
     responseFields: []
     auth:
       - headers

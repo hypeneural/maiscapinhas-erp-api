@@ -10,7 +10,7 @@
     ],
     "info": {
         "name": "MaisCapinhas ERP API - Documenta\u00e7\u00e3o",
-        "_postman_id": "31c2cc80-509c-411e-867a-f29df8901736",
+        "_postman_id": "8760bd85-207e-4af3-adfb-2f6084037b62",
         "description": "API REST para gest\u00e3o de vendas, metas, fechamento de caixa, b\u00f4nus e comiss\u00f5es do ERP MaisCapinhas.",
         "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json",
         "version": "1.0.0"
@@ -379,7 +379,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T19:59:14\"}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T20:48:56\"}"
                         },
                         "description": "Retorna m\u00e9tricas do vendedor no dia, incluindo suas vendas pessoais\ncomparadas com o total da loja e status dos seus turnos.\n\n**Quem pode usar:** Vendedores e n\u00edveis superiores.\n\n**M\u00e9tricas retornadas:**\n- `my_sales` - Quantidade e valor total das vendas do vendedor no dia\n- `store_sales` - Quantidade e valor total de todas as vendas da loja no dia\n- `my_shifts` - Lista dos turnos do vendedor naquele dia com status do fechamento\n\n**Dica:** Compare `my_sales` com `store_sales` para ver sua participa\u00e7\u00e3o nas vendas da loja."
                     },
@@ -433,7 +433,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T19:59:14\"}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T20:48:56\"}"
                         },
                         "description": "Retorna m\u00e9tricas para confer\u00eancia de caixa, incluindo fechamentos\npendentes de aprova\u00e7\u00e3o e ranking de vendedores.\n\n**Quem pode usar:** Conferentes, Gerentes e Admins.\n\n**M\u00e9tricas retornadas:**\n- `pending_closings` - Lista de fechamentos aguardando aprova\u00e7\u00e3o\/rejei\u00e7\u00e3o\n- `pending_count` - Quantidade de fechamentos pendentes\n- `store_sales` - Total de vendas da loja no dia\n- `shifts_today` - Resumo de turnos por status (open, closed, pending)\n- `top_sellers` - Top 5 vendedores do dia por valor vendido"
                     },
@@ -492,7 +492,7 @@
         },
         {
             "name": "Vendas",
-            "description": "\nEndpoints para consultar vendas registradas.\nVendas s\u00e3o registradas automaticamente via integra\u00e7\u00e3o PDV ou manualmente.",
+            "description": "\nGerenciamento de vendas registradas no sistema MaisCapinhas ERP.\n\nAs vendas s\u00e3o o **cora\u00e7\u00e3o do sistema financeiro**, pois a partir delas\ns\u00e3o calculados:\n- **B\u00f4nus di\u00e1rio** - baseado no total de vendas do dia\n- **Comiss\u00e3o mensal** - baseado no atingimento de meta\n- **KPIs de desempenho** - taxa de convers\u00e3o, ticket m\u00e9dio\n\n**Fontes de Vendas:**\n| Origem | Descri\u00e7\u00e3o |\n|--------|-----------|\n| `pdv` | Importa\u00e7\u00e3o autom\u00e1tica do sistema de PDV |\n| `manual` | Cadastro manual via esta API |\n| `import` | Importa\u00e7\u00e3o em lote (planilha CSV) |\n\n**Regras de Neg\u00f3cio Importantes:**\n- Cada venda pertence a uma **loja** (`store_id`) e um **vendedor** (`seller_id`)\n- A venda conta para a meta da **loja** onde foi realizada\n- A comiss\u00e3o vai para o **vendedor**, mesmo que seja \"volante\"\n- Altera\u00e7\u00f5es em vendas disparam rec\u00e1lculo autom\u00e1tico de b\u00f4nus\/comiss\u00e3o\n\n**Impacto no B\u00f4nus:**\nQuando uma venda \u00e9 criada\/alterada, o sistema automaticamente\nrecalcula o b\u00f4nus di\u00e1rio do vendedor (via Job ass\u00edncrono).",
             "item": [
                 {
                     "name": "Listar vendas",
@@ -504,13 +504,13 @@
                                 {
                                     "key": "store_id",
                                     "value": "1",
-                                    "description": "ID da loja para filtrar.",
+                                    "description": "Filtrar por loja (deve ter acesso).",
                                     "disabled": false
                                 },
                                 {
                                     "key": "seller_id",
                                     "value": "6",
-                                    "description": "ID do vendedor para filtrar.",
+                                    "description": "Filtrar por vendedor espec\u00edfico.",
                                     "disabled": false
                                 },
                                 {
@@ -528,7 +528,7 @@
                                 {
                                     "key": "per_page",
                                     "value": "25",
-                                    "description": "Itens por p\u00e1gina (1-100).",
+                                    "description": "Itens por p\u00e1gina (1-100, default: 25).",
                                     "disabled": false
                                 }
                             ],
@@ -547,16 +547,216 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"seller_id\":16,\"from\":\"2026-01-07T19:59:14\",\"to\":\"2026-01-07T19:59:14\",\"per_page\":22}"
+                            "raw": "{\"store_id\":16,\"seller_id\":16,\"from\":\"2026-01-07T20:48:56\",\"to\":\"2026-01-07T20:48:56\",\"per_page\":22}"
                         },
-                        "description": "Retorna a lista de vendas das lojas \u00e0s quais o usu\u00e1rio tem acesso,\ncom filtros por loja, vendedor e per\u00edodo.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado (v\u00ea apenas suas lojas).\n\n**Filtros dispon\u00edveis:**\n- `store_id` - Filtrar por loja espec\u00edfica\n- `seller_id` - Filtrar por vendedor espec\u00edfico\n- `from` \/ `to` - Per\u00edodo de datas (formato YYYY-MM-DD)\n\n**Pagina\u00e7\u00e3o:** Resultados paginados (padr\u00e3o 25 por p\u00e1gina, m\u00e1x 100)."
+                        "description": "Retorna a lista paginada de vendas das lojas \u00e0s quais o\nusu\u00e1rio tem acesso, com diversos filtros dispon\u00edveis.\n\n**Visibilidade:**\n- Vendedor: v\u00ea vendas de todas as lojas onde trabalha\n- Gerente: v\u00ea todas as vendas das lojas que gerencia\n- Admin: v\u00ea todas as vendas do sistema\n\n**Filtros dispon\u00edveis:**\n- `store_id` - Filtrar por loja espec\u00edfica\n- `seller_id` - Filtrar por vendedor\n- `from`\/`to` - Per\u00edodo de datas\n\n**Ordena\u00e7\u00e3o:** Por data de venda, mais recentes primeiro.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado (v\u00ea apenas suas lojas)."
                     },
                     "response": [
                         {
                             "header": [],
                             "code": 200,
-                            "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"store_id\": 1,\n      \"seller_id\": 6,\n      \"sold_at\": \"2026-01-07T10:30:00+00:00\",\n      \"amount\": \"150.00\",\n      \"source\": \"pdv\",\n      \"store\": { \"id\": 1, \"name\": \"Mais Capinhas Tijucas\" },\n      \"seller\": { \"id\": 6, \"name\": \"Jo\u00e3o Vendedor\" }\n    }\n  ],\n  \"meta\": {\n    \"current_page\": 1,\n    \"per_page\": 25,\n    \"total\": 150,\n    \"last_page\": 6\n  }\n}",
+                            "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"store_id\": 1,\n      \"seller_id\": 6,\n      \"sold_at\": \"2026-01-07T10:30:00Z\",\n      \"amount\": 150.00,\n      \"source\": \"pdv\",\n      \"store\": { \"id\": 1, \"name\": \"Mais Capinhas Tijucas\" },\n      \"seller\": { \"id\": 6, \"name\": \"Jo\u00e3o Vendedor\" }\n    }\n  ],\n  \"meta\": { \"current_page\": 1, \"per_page\": 25, \"total\": 150, \"last_page\": 6 }\n}",
                             "name": "Lista de vendas"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\n  \"message\": \"You do not have access to this store.\"\n}",
+                            "name": "Loja sem acesso"
+                        }
+                    ]
+                },
+                {
+                    "name": "Criar venda manual",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/sales",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/sales"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"store_id\":1,\"seller_id\":6,\"sold_at\":\"2026-01-07T15:30:00\",\"amount\":175.5,\"source\":\"manual\"}"
+                        },
+                        "description": "Registra uma nova venda no sistema de forma manual.\n\n**Quando usar:**\n- Vendas feitas fora do PDV (dinheiro em esp\u00e9cie direto)\n- Corre\u00e7\u00f5es de vendas n\u00e3o registradas\n- Vendas de quiosques sem sistema\n\n**Efeitos autom\u00e1ticos:**\nAp\u00f3s criar a venda, o sistema automaticamente dispara:\n1. `RecalculateSellerDailyBonusJob` - recalcula b\u00f4nus do dia\n2. `RecalculateSellerMonthlyCommissionJob` - recalcula comiss\u00e3o do m\u00eas\n\n**Regras de Neg\u00f3cio:**\n- `store_id` deve ser uma loja onde o usu\u00e1rio tem acesso\n- `seller_id` default \u00e9 o usu\u00e1rio logado\n- `source` default \u00e9 \"manual\"\n- `amount` deve ser positivo\n\n**Quem pode usar:**\n- Vendedores (podem registrar pr\u00f3prias vendas)\n- Gerentes\/Admins (podem registrar para qualquer vendedor)"
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\n  \"data\": {\n    \"id\": 501,\n    \"store_id\": 1,\n    \"seller_id\": 6,\n    \"sold_at\": \"2026-01-07T15:30:00Z\",\n    \"amount\": 175.50,\n    \"source\": \"manual\",\n    \"store\": { \"id\": 1, \"name\": \"Mais Capinhas Tijucas\" },\n    \"seller\": { \"id\": 6, \"name\": \"Jo\u00e3o Vendedor\" }\n  }\n}",
+                            "name": "Venda criada"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\n  \"message\": \"Voc\u00ea n\u00e3o tem acesso a esta loja.\"\n}",
+                            "name": "Sem acesso \u00e0 loja"
+                        }
+                    ]
+                },
+                {
+                    "name": "Ver detalhes da venda",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/sales\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/sales\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "1",
+                                    "description": "The ID of the sale."
+                                },
+                                {
+                                    "id": "sale",
+                                    "key": "sale",
+                                    "value": "1",
+                                    "description": "ID da venda."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna informa\u00e7\u00f5es completas de uma venda espec\u00edfica.\n\n**Dados retornados:**\n- Informa\u00e7\u00f5es b\u00e1sicas: `id`, `store_id`, `seller_id`, `sold_at`, `amount`, `source`\n- Loja: `store.id`, `store.name`\n- Vendedor: `seller.id`, `seller.name`\n- Timestamps: `created_at`, `updated_at`\n\n**Quem pode usar:** Usu\u00e1rios com acesso \u00e0 loja da venda."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"store_id\": 1,\n    \"seller_id\": 6,\n    \"sold_at\": \"2026-01-07T10:30:00Z\",\n    \"amount\": 150.00,\n    \"source\": \"pdv\",\n    \"created_at\": \"2026-01-07T10:31:00Z\",\n    \"store\": { \"id\": 1, \"name\": \"Mais Capinhas Tijucas\" },\n    \"seller\": { \"id\": 6, \"name\": \"Jo\u00e3o Vendedor\" }\n  }\n}",
+                            "name": "Detalhes da venda"
+                        }
+                    ]
+                },
+                {
+                    "name": "Atualizar venda",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/sales\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/sales\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "1",
+                                    "description": "The ID of the sale."
+                                },
+                                {
+                                    "id": "sale",
+                                    "key": "sale",
+                                    "value": "1",
+                                    "description": "ID da venda."
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"sold_at\":\"2026-01-07T16:00:00\",\"amount\":180,\"source\":\"pdv\"}"
+                        },
+                        "description": "Edita dados de uma venda existente.\n\n**Importante:**\nAltera\u00e7\u00f5es disparam rec\u00e1lculo autom\u00e1tico de b\u00f4nus e comiss\u00e3o\npara o vendedor afetado.\n\n**Casos de uso:**\n- Corrigir valor digitado errado\n- Ajustar data de venda\n- Corrigir fonte da venda\n\n**Regras de Neg\u00f3cio:**\n- N\u00e3o \u00e9 poss\u00edvel alterar `store_id` ou `seller_id` ap\u00f3s cria\u00e7\u00e3o\n- Apenas gerentes e admins podem editar vendas\n- Hist\u00f3rico de altera\u00e7\u00f5es \u00e9 registrado para auditoria\n\n**Quem pode usar:** Gerentes e Admins da loja."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"amount\": 180.00,\n    \"sold_at\": \"2026-01-07T16:00:00Z\"\n  }\n}",
+                            "name": "Venda atualizada"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\n  \"message\": \"Apenas gerentes e admins podem editar vendas.\"\n}",
+                            "name": "Sem permiss\u00e3o"
+                        }
+                    ]
+                },
+                {
+                    "name": "Excluir venda",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/sales\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/sales\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "1",
+                                    "description": "The ID of the sale."
+                                },
+                                {
+                                    "id": "sale",
+                                    "key": "sale",
+                                    "value": "1",
+                                    "description": "ID da venda."
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Remove permanentemente uma venda do sistema.\n\n**Aten\u00e7\u00e3o:**\n- Esta a\u00e7\u00e3o \u00e9 **irrevers\u00edvel**\n- O b\u00f4nus\/comiss\u00e3o do vendedor ser\u00e1 recalculado automaticamente\n- Recomendado documentar o motivo da exclus\u00e3o\n\n**Casos de uso:**\n- Venda cadastrada em duplicidade\n- Venda cancelada pelo cliente\n- Teste registrado acidentalmente em produ\u00e7\u00e3o\n\n**Regras de Neg\u00f3cio:**\n- Apenas administradores podem excluir vendas\n- A exclus\u00e3o \u00e9 registrada no log de auditoria\n\n**Quem pode usar:** Apenas Admins."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": { \"message\": \"Venda exclu\u00edda com sucesso.\" }\n}",
+                            "name": "Venda exclu\u00edda"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\n  \"message\": \"Apenas admins podem excluir vendas.\"\n}",
+                            "name": "Sem permiss\u00e3o"
                         }
                     ]
                 }
@@ -613,7 +813,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T19:59:14\",\"status\":\"pending\",\"per_page\":22}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T20:48:56\",\"status\":\"pending\",\"per_page\":22}"
                         },
                         "description": "Retorna os turnos de caixa das lojas \u00e0s quais o usu\u00e1rio tem acesso,\ncom filtros por loja, data e status.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado.\n\n**Filtros dispon\u00edveis:**\n- `store_id` - Filtrar por loja espec\u00edfica\n- `date` - Filtrar por data espec\u00edfica (YYYY-MM-DD)\n- `status` - Filtrar por status (open, closed, pending)\n\n**C\u00f3digos de turno:**\n- `M` - Manh\u00e3\n- `T` - Tarde\n- `N` - Noite"
                     },
@@ -971,12 +1171,8 @@
                                     "value": "application\/json"
                                 },
                                 {
-                                    "key": "access-control-allow-origin",
-                                    "value": "http:\/\/localhost:5173"
-                                },
-                                {
-                                    "key": "access-control-allow-credentials",
-                                    "value": "true"
+                                    "key": "vary",
+                                    "value": "Origin"
                                 }
                             ],
                             "code": 401,
@@ -1007,7 +1203,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-07T19:59:14\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-07T20:48:56\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
                         },
                         "description": "POST \/api\/v1\/rules\/bonus"
                     },
@@ -1056,12 +1252,8 @@
                                     "value": "application\/json"
                                 },
                                 {
-                                    "key": "access-control-allow-origin",
-                                    "value": "http:\/\/localhost:5173"
-                                },
-                                {
-                                    "key": "access-control-allow-credentials",
-                                    "value": "true"
+                                    "key": "vary",
+                                    "value": "Origin"
                                 }
                             ],
                             "code": 401,
@@ -1100,7 +1292,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-07T19:59:14\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-07T20:48:56\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
                         },
                         "description": "PUT \/api\/v1\/rules\/bonus\/{rule}"
                     },
@@ -1180,12 +1372,8 @@
                                     "value": "application\/json"
                                 },
                                 {
-                                    "key": "access-control-allow-origin",
-                                    "value": "http:\/\/localhost:5173"
-                                },
-                                {
-                                    "key": "access-control-allow-credentials",
-                                    "value": "true"
+                                    "key": "vary",
+                                    "value": "Origin"
                                 }
                             ],
                             "code": 401,
@@ -1216,7 +1404,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-07T19:59:14\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-07T20:48:56\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
                         },
                         "description": "POST \/api\/v1\/rules\/commission"
                     },
@@ -1265,12 +1453,8 @@
                                     "value": "application\/json"
                                 },
                                 {
-                                    "key": "access-control-allow-origin",
-                                    "value": "http:\/\/localhost:5173"
-                                },
-                                {
-                                    "key": "access-control-allow-credentials",
-                                    "value": "true"
+                                    "key": "vary",
+                                    "value": "Origin"
                                 }
                             ],
                             "code": 401,
@@ -1309,7 +1493,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-07T19:59:14\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-07T20:48:56\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
                         },
                         "description": "PUT \/api\/v1\/rules\/commission\/{rule}"
                     },
@@ -1389,12 +1573,8 @@
                                     "value": "application\/json"
                                 },
                                 {
-                                    "key": "access-control-allow-origin",
-                                    "value": "http:\/\/localhost:5173"
-                                },
-                                {
-                                    "key": "access-control-allow-credentials",
-                                    "value": "true"
+                                    "key": "vary",
+                                    "value": "Origin"
                                 }
                             ],
                             "code": 401,
@@ -1474,12 +1654,8 @@
                                     "value": "application\/json"
                                 },
                                 {
-                                    "key": "access-control-allow-origin",
-                                    "value": "http:\/\/localhost:5173"
-                                },
-                                {
-                                    "key": "access-control-allow-credentials",
-                                    "value": "true"
+                                    "key": "vary",
+                                    "value": "Origin"
                                 }
                             ],
                             "code": 401,
@@ -1621,7 +1797,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"from\":\"2026-01-07T19:59:14\",\"to\":\"2026-01-07T19:59:14\",\"per_page\":22}"
+                            "raw": "{\"store_id\":16,\"from\":\"2026-01-07T20:48:56\",\"to\":\"2026-01-07T20:48:56\",\"per_page\":22}"
                         },
                         "description": "GET \/api\/v1\/finance\/bonus?store_id=&from=&to="
                     },
@@ -1637,12 +1813,8 @@
                                     "value": "application\/json"
                                 },
                                 {
-                                    "key": "access-control-allow-origin",
-                                    "value": "http:\/\/localhost:5173"
-                                },
-                                {
-                                    "key": "access-control-allow-credentials",
-                                    "value": "true"
+                                    "key": "vary",
+                                    "value": "Origin"
                                 }
                             ],
                             "code": 401,
@@ -1689,12 +1861,8 @@
                                     "value": "application\/json"
                                 },
                                 {
-                                    "key": "access-control-allow-origin",
-                                    "value": "http:\/\/localhost:5173"
-                                },
-                                {
-                                    "key": "access-control-allow-credentials",
-                                    "value": "true"
+                                    "key": "vary",
+                                    "value": "Origin"
                                 }
                             ],
                             "code": 401,
@@ -1731,7 +1899,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T19:59:14\"}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T20:48:56\"}"
                         },
                         "description": "GET \/api\/v1\/analytics\/people\/shift?store_id=&date="
                     },
@@ -1747,12 +1915,8 @@
                                     "value": "application\/json"
                                 },
                                 {
-                                    "key": "access-control-allow-origin",
-                                    "value": "http:\/\/localhost:5173"
-                                },
-                                {
-                                    "key": "access-control-allow-credentials",
-                                    "value": "true"
+                                    "key": "vary",
+                                    "value": "Origin"
                                 }
                             ],
                             "code": 401,
@@ -1783,11 +1947,751 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T19:59:14\",\"shift_code\":\"M\",\"in_count\":39,\"out_count\":84,\"staff_in\":12,\"staff_out\":77}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T20:48:56\",\"shift_code\":\"M\",\"in_count\":39,\"out_count\":84,\"staff_in\":12,\"staff_out\":77}"
                         },
                         "description": "POST \/api\/v1\/analytics\/people\/shift"
                     },
                     "response": []
+                }
+            ]
+        },
+        {
+            "name": "Administra\u00e7\u00e3o - Lojas",
+            "description": "\nGerenciamento das lojas (pontos de venda) do sistema MaisCapinhas ERP.\n\nCada loja representa uma unidade f\u00edsica de venda com:\n- Equipe pr\u00f3pria (vendedores, conferentes, gerentes)\n- Metas mensais individuais\n- Turnos de caixa e fechamentos\n- Regras de b\u00f4nus\/comiss\u00e3o (podem ser espec\u00edficas ou herdar as globais)\n\n**Hierarquia de Dados:**\n```\nLoja\n\u251c\u2500\u2500 Usu\u00e1rios (via store_users com roles)\n\u251c\u2500\u2500 Vendas (registradas por vendedores)\n\u251c\u2500\u2500 Turnos de Caixa (por data\/turno\/vendedor)\n\u251c\u2500\u2500 Metas Mensais (com splits por vendedor)\n\u2514\u2500\u2500 Regras de B\u00f4nus\/Comiss\u00e3o (opcionais, espec\u00edficas)\n```\n\n**Regras de Neg\u00f3cio:**\n- Uma loja desativada n\u00e3o aparece na lista de lojas do usu\u00e1rio comum\n- Dados hist\u00f3ricos s\u00e3o mantidos para auditoria\n- Lojas s\u00e3o identificadas por ID num\u00e9rico (n\u00e3o h\u00e1 c\u00f3digo de loja)\n\n**Auditoria:** Todas as opera\u00e7\u00f5es s\u00e3o registradas via Spatie ActivityLog.",
+            "item": [
+                {
+                    "name": "Listar todas as lojas",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/stores",
+                            "query": [
+                                {
+                                    "key": "search",
+                                    "value": "tijucas",
+                                    "description": "Busca por nome ou cidade da loja.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "active",
+                                    "value": "1",
+                                    "description": "Filtrar por status ativo\/inativo.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "per_page",
+                                    "value": "25",
+                                    "description": "Itens por p\u00e1gina (1-100, default: 25).",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/stores?search=tijucas&active=1&per_page=25"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna uma lista completa de todas as lojas cadastradas no sistema,\nincluindo lojas ativas e inativas (para administra\u00e7\u00e3o).\n\nEste endpoint difere do `\/stores` p\u00fablico que mostra apenas\nas lojas \u00e0s quais o usu\u00e1rio tem acesso.\n\n**M\u00e9tricas retornadas:**\n- `users_count` - quantidade de usu\u00e1rios vinculados\n\n**Filtros dispon\u00edveis:**\n- `search` - busca por nome ou cidade\n- `active` - filtrar por status\n\n**Quem pode usar:** Apenas administradores."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Mais Capinhas Tijucas\",\n      \"city\": \"Tijucas\",\n      \"active\": true,\n      \"users_count\": 5,\n      \"created_at\": \"2026-01-01T00:00:00Z\"\n    },\n    {\n      \"id\": 2,\n      \"name\": \"Mais Capinhas Itapema\",\n      \"city\": \"Itapema\",\n      \"active\": true,\n      \"users_count\": 3\n    }\n  ],\n  \"meta\": { \"current_page\": 1, \"per_page\": 25, \"total\": 3, \"last_page\": 1 }\n}",
+                            "name": "Lista de lojas"
+                        }
+                    ]
+                },
+                {
+                    "name": "Criar nova loja",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/stores",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/stores"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"name\":\"Mais Capinhas Shopping Center\",\"city\":\"Florian\u00f3polis\",\"active\":true}"
+                        },
+                        "description": "Cadastra uma nova loja (ponto de venda) no sistema.\n\nAp\u00f3s criar a loja, voc\u00ea deve:\n1. Vincular usu\u00e1rios \u00e0 loja (via endpoint de v\u00ednculos)\n2. Configurar metas mensais (via `\/goals\/monthly`)\n3. Opcionalmente criar regras espec\u00edficas de b\u00f4nus\/comiss\u00e3o\n\n**Quem pode usar:** Apenas administradores."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\n  \"data\": {\n    \"id\": 4,\n    \"name\": \"Mais Capinhas Shopping Center\",\n    \"city\": \"Florian\u00f3polis\",\n    \"active\": true,\n    \"created_at\": \"2026-01-07T17:00:00Z\"\n  }\n}",
+                            "name": "Loja criada"
+                        }
+                    ]
+                },
+                {
+                    "name": "Ver detalhes da loja",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/stores\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/stores\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "1",
+                                    "description": "The ID of the store."
+                                },
+                                {
+                                    "id": "store",
+                                    "key": "store",
+                                    "value": "1",
+                                    "description": "ID da loja."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna informa\u00e7\u00f5es completas de uma loja, incluindo\na lista de todos os usu\u00e1rios vinculados e suas roles.\n\n**Dados retornados:**\n- Informa\u00e7\u00f5es b\u00e1sicas: `id`, `name`, `city`, `active`\n- Lista de usu\u00e1rios com: `user_id`, `user_name`, `user_email`, `role`\n\n**Quem pode usar:** Apenas administradores."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Mais Capinhas Tijucas\",\n    \"city\": \"Tijucas\",\n    \"active\": true,\n    \"created_at\": \"2026-01-01T00:00:00Z\",\n    \"users\": [\n      { \"user_id\": 2, \"user_name\": \"Carlos Gerente\", \"user_email\": \"carlos@test.com\", \"role\": \"gerente\" },\n      { \"user_id\": 6, \"user_name\": \"Jo\u00e3o Vendedor\", \"user_email\": \"joao@test.com\", \"role\": \"vendedor\" }\n    ]\n  }\n}",
+                            "name": "Detalhes da loja"
+                        }
+                    ]
+                },
+                {
+                    "name": "Atualizar loja",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/stores\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/stores\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "1",
+                                    "description": "The ID of the store."
+                                },
+                                {
+                                    "id": "store",
+                                    "key": "store",
+                                    "value": "1",
+                                    "description": "ID da loja."
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"name\":\"Mais Capinhas Tijucas - Centro\",\"city\":\"Tijucas\",\"active\":true}"
+                        },
+                        "description": "Atualiza informa\u00e7\u00f5es de uma loja existente.\nApenas os campos informados ser\u00e3o alterados.\n\n**Quem pode usar:** Apenas administradores."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Mais Capinhas Tijucas - Centro\",\n    \"city\": \"Tijucas\",\n    \"active\": true\n  }\n}",
+                            "name": "Loja atualizada"
+                        }
+                    ]
+                },
+                {
+                    "name": "Desativar loja",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/stores\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/stores\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "1",
+                                    "description": "The ID of the store."
+                                },
+                                {
+                                    "id": "store",
+                                    "key": "store",
+                                    "value": "1",
+                                    "description": "ID da loja."
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Define a loja como inativa. Lojas desativadas n\u00e3o aparecem\nna listagem de lojas dos usu\u00e1rios comuns, mas todos os dados\nhist\u00f3ricos s\u00e3o mantidos para auditoria.\n\n**Importante:**\n- Vendas, turnos e fechamentos passados s\u00e3o mantidos\n- Metas e regras espec\u00edficas s\u00e3o preservadas\n- A loja pode ser reativada via PUT\n\n**Quem pode usar:** Apenas administradores."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": { \"message\": \"Loja desativada com sucesso.\" }\n}",
+                            "name": "Loja desativada"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Administra\u00e7\u00e3o - Usu\u00e1rios",
+            "description": "\nGerenciamento centralizado de usu\u00e1rios do sistema MaisCapinhas ERP.\n\nEste m\u00f3dulo permite criar, editar, listar e desativar usu\u00e1rios,\nal\u00e9m de vincular usu\u00e1rios a lojas com roles espec\u00edficas.\n\n**Modelo de Permiss\u00f5es:**\n- Cada usu\u00e1rio pode estar vinculado a m\u00faltiplas lojas\n- Em cada loja, o usu\u00e1rio tem uma role: `admin`, `gerente`, `conferente` ou `vendedor`\n- Usu\u00e1rios desativados perdem acesso a todos os endpoints protegidos\n\n**Regras de Neg\u00f3cio:**\n- Email deve ser \u00fanico no sistema\n- N\u00e3o \u00e9 poss\u00edvel desativar o pr\u00f3prio usu\u00e1rio\n- Ao desativar, todos os tokens de acesso s\u00e3o revogados\n\n**Auditoria:** Todas as opera\u00e7\u00f5es s\u00e3o registradas via Spatie ActivityLog.",
+            "item": [
+                {
+                    "name": "Listar todos os usu\u00e1rios",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/users",
+                            "query": [
+                                {
+                                    "key": "search",
+                                    "value": "joao",
+                                    "description": "Busca parcial por nome ou email (case insensitive).",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "active",
+                                    "value": "1",
+                                    "description": "Filtrar por status: true (ativos) ou false (inativos).",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "store_id",
+                                    "value": "1",
+                                    "description": "Filtrar apenas usu\u00e1rios vinculados a esta loja.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "per_page",
+                                    "value": "25",
+                                    "description": "Quantidade por p\u00e1gina (1-100, default: 25).",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/users?search=joao&active=1&store_id=1&per_page=25"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna uma lista paginada de todos os usu\u00e1rios cadastrados no sistema,\nincluindo suas lojas vinculadas e respectivas roles.\n\nEste endpoint \u00e9 \u00fatil para:\n- Vis\u00e3o geral da equipe\n- Buscar usu\u00e1rios por nome\/email\n- Filtrar por status ativo\/inativo\n- Ver quais usu\u00e1rios est\u00e3o em determinada loja\n\n**Quem pode usar:** Apenas administradores.\n\n**Dados retornados por usu\u00e1rio:**\n- `id`, `name`, `email`, `active` - dados b\u00e1sicos\n- `stores[]` - lista de lojas com `store_id`, `store_name`, `role`"
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Admin Master\",\n      \"email\": \"admin@maiscapinhas.com.br\",\n      \"active\": true,\n      \"created_at\": \"2026-01-01T00:00:00Z\",\n      \"stores\": [\n        { \"store_id\": 1, \"store_name\": \"Mais Capinhas Tijucas\", \"role\": \"admin\" },\n        { \"store_id\": 2, \"store_name\": \"Mais Capinhas Itapema\", \"role\": \"admin\" }\n      ]\n    }\n  ],\n  \"meta\": { \"current_page\": 1, \"per_page\": 25, \"total\": 10, \"last_page\": 1 }\n}",
+                            "name": "Lista de usu\u00e1rios"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\n  \"message\": \"Apenas administradores podem acessar este recurso.\"\n}",
+                            "name": "Sem permiss\u00e3o"
+                        }
+                    ]
+                },
+                {
+                    "name": "Criar novo usu\u00e1rio",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/users",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/users"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"name\":\"Jo\u00e3o Silva Santos\",\"email\":\"joao.silva@maiscapinhas.com.br\",\"password\":\"senha123456\",\"active\":true,\"stores\":[\"architecto\"]}"
+                        },
+                        "description": "Cadastra um novo usu\u00e1rio no sistema, opcionalmente j\u00e1 vinculando-o\na uma ou mais lojas com roles espec\u00edficas.\n\nEste endpoint \u00e9 utilizado para:\n- Onboarding de novos funcion\u00e1rios\n- Criar usu\u00e1rios administrativos\n- Configurar equipe de vendas\n\n**Fluxo recomendado:**\n1. Criar usu\u00e1rio com dados b\u00e1sicos + senha tempor\u00e1ria\n2. Vincular \u00e0s lojas onde ir\u00e1 trabalhar\n3. Compartilhar credenciais com o novo usu\u00e1rio\n\n**Regras de Neg\u00f3cio:**\n- Email deve ser \u00fanico (valida\u00e7\u00e3o 422 se duplicado)\n- Senha deve ter m\u00ednimo 8 caracteres\n- V\u00ednculos s\u00e3o opcionais na cria\u00e7\u00e3o (podem ser adicionados depois)\n- Se informar v\u00ednculos, `store_id` deve existir e `role` deve ser v\u00e1lida\n\n**Quem pode usar:** Apenas administradores."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\n  \"data\": {\n    \"id\": 11,\n    \"name\": \"Jo\u00e3o Silva Santos\",\n    \"email\": \"joao.silva@maiscapinhas.com.br\",\n    \"active\": true,\n    \"created_at\": \"2026-01-07T17:00:00Z\",\n    \"stores\": [\n      { \"store_id\": 1, \"store_name\": \"Mais Capinhas Tijucas\", \"role\": \"vendedor\" }\n    ]\n  }\n}",
+                            "name": "Usu\u00e1rio criado com v\u00ednculos"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n  \"message\": \"The given data was invalid.\",\n  \"errors\": { \"email\": [\"Este email j\u00e1 est\u00e1 em uso.\"] }\n}",
+                            "name": "Email duplicado"
+                        }
+                    ]
+                },
+                {
+                    "name": "Ver detalhes do usu\u00e1rio",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/users\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/users\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "1",
+                                    "description": "The ID of the user."
+                                },
+                                {
+                                    "id": "user",
+                                    "key": "user",
+                                    "value": "6",
+                                    "description": "ID do usu\u00e1rio."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna informa\u00e7\u00f5es completas de um usu\u00e1rio espec\u00edfico,\nincluindo todas as lojas vinculadas e suas respectivas roles.\n\n\u00datil para:\n- Verificar acessos do usu\u00e1rio\n- Editar informa\u00e7\u00f5es\n- Auditar permiss\u00f5es\n\n**Quem pode usar:** Apenas administradores.\n\n**Dados retornados:**\n- `id`, `name`, `email`, `active`, `created_at`, `updated_at`\n- `stores[]` - array de lojas com role em cada uma"
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"id\": 6,\n    \"name\": \"Jo\u00e3o Vendedor\",\n    \"email\": \"joao.vendedor@maiscapinhas.com.br\",\n    \"active\": true,\n    \"created_at\": \"2026-01-01T00:00:00Z\",\n    \"updated_at\": \"2026-01-07T12:00:00Z\",\n    \"stores\": [\n      { \"store_id\": 1, \"store_name\": \"Mais Capinhas Tijucas\", \"role\": \"vendedor\" }\n    ]\n  }\n}",
+                            "name": "Detalhes do usu\u00e1rio"
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\n  \"message\": \"No query results for model [App\\\\Models\\\\User] 999\"\n}",
+                            "name": "Usu\u00e1rio n\u00e3o encontrado"
+                        }
+                    ]
+                },
+                {
+                    "name": "Atualizar usu\u00e1rio",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/users\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/users\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "1",
+                                    "description": "The ID of the user."
+                                },
+                                {
+                                    "id": "user",
+                                    "key": "user",
+                                    "value": "6",
+                                    "description": "ID do usu\u00e1rio a atualizar."
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"name\":\"Jo\u00e3o da Silva Atualizado\",\"email\":\"joao.novo@maiscapinhas.com.br\",\"password\":\"novasenha123\",\"active\":true}"
+                        },
+                        "description": "Atualiza dados cadastrais de um usu\u00e1rio existente.\nApenas os campos informados ser\u00e3o alterados.\n\n**Casos de uso:**\n- Corrigir nome ou email\n- Alterar senha\n- Ativar\/desativar usu\u00e1rio\n\n**Regras de Neg\u00f3cio:**\n- Email deve continuar \u00fanico (valida\u00e7\u00e3o considera o pr\u00f3prio usu\u00e1rio)\n- Para gerenciar v\u00ednculos com lojas, use os endpoints de v\u00ednculos\n\n**Quem pode usar:** Apenas administradores."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"id\": 6,\n    \"name\": \"Jo\u00e3o da Silva Atualizado\",\n    \"email\": \"joao.vendedor@maiscapinhas.com.br\",\n    \"active\": true\n  }\n}",
+                            "name": "Usu\u00e1rio atualizado"
+                        }
+                    ]
+                },
+                {
+                    "name": "Desativar usu\u00e1rio",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/users\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/users\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "1",
+                                    "description": "The ID of the user."
+                                },
+                                {
+                                    "id": "user",
+                                    "key": "user",
+                                    "value": "6",
+                                    "description": "ID do usu\u00e1rio a desativar."
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Define o usu\u00e1rio como inativo (`active = false`) e revoga\ntodos os tokens de acesso, for\u00e7ando logout imediato.\n\n**Importante:**\n- N\u00e3o exclui o usu\u00e1rio do banco (soft disable)\n- Dados hist\u00f3ricos s\u00e3o mantidos para auditoria\n- Usu\u00e1rio pode ser reativado posteriormente via PUT\n\n**Regras de Neg\u00f3cio:**\n- N\u00e3o \u00e9 poss\u00edvel desativar seu pr\u00f3prio usu\u00e1rio (prote\u00e7\u00e3o)\n- Usu\u00e1rios desativados n\u00e3o conseguem fazer login\n- Tokens existentes s\u00e3o invalidados imediatamente\n\n**Quem pode usar:** Apenas administradores."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": { \"message\": \"Usu\u00e1rio desativado com sucesso.\" }\n}",
+                            "name": "Usu\u00e1rio desativado"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\n  \"message\": \"Voc\u00ea n\u00e3o pode desativar seu pr\u00f3prio usu\u00e1rio.\"\n}",
+                            "name": "Tentativa de auto-desativa\u00e7\u00e3o"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Administra\u00e7\u00e3o - V\u00ednculos Loja-Usu\u00e1rio",
+            "description": "\nGerenciamento dos v\u00ednculos entre lojas e usu\u00e1rios (tabela `store_users`).\n\nEste m\u00f3dulo controla **qual usu\u00e1rio trabalha em qual loja** e com\n**qual n\u00edvel de permiss\u00e3o (role)**.\n\n**Sistema de Roles:**\n| Role | Pode fazer |\n|------|------------|\n| `admin` | Tudo: gerenciar usu\u00e1rios, lojas, regras, confirmar comiss\u00f5es |\n| `gerente` | Gerenciar equipe da loja, aprovar fechamentos, ver dashboards |\n| `conferente` | Aprovar\/rejeitar fechamentos de caixa |\n| `vendedor` | Registrar vendas, submeter fechamento do pr\u00f3prio turno |\n\n**Regras de Neg\u00f3cio:**\n- Um usu\u00e1rio pode ter roles diferentes em lojas diferentes\n- A role `admin` em qualquer loja d\u00e1 acesso administrativo global\n- Vendedor \"volante\" pode trabalhar temporariamente em outra loja\n- N\u00e3o \u00e9 poss\u00edvel remover seu pr\u00f3prio v\u00ednculo (prote\u00e7\u00e3o)\n\n**V\u00ednculo \u00d7 Comiss\u00e3o:**\n- Vendas s\u00e3o sempre registradas na loja onde ocorreram (`store_id` da venda)\n- Comiss\u00e3o vai para o vendedor que realizou a venda (`seller_id`)\n- Meta \u00e9 calculada pela loja + split configurado",
+            "item": [
+                {
+                    "name": "Listar usu\u00e1rios de uma loja",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/stores\/:store_id\/users",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/stores\/:store_id\/users",
+                            "variable": [
+                                {
+                                    "id": "store_id",
+                                    "key": "store_id",
+                                    "value": "1",
+                                    "description": "The ID of the store."
+                                },
+                                {
+                                    "id": "store",
+                                    "key": "store",
+                                    "value": "1",
+                                    "description": "ID da loja."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna todos os usu\u00e1rios vinculados a uma loja espec\u00edfica,\ncom suas respectivas roles e status.\n\n**Dados retornados por v\u00ednculo:**\n- `user_id` - ID do usu\u00e1rio\n- `user_name` - Nome do usu\u00e1rio\n- `user_email` - Email do usu\u00e1rio\n- `user_active` - Se o usu\u00e1rio est\u00e1 ativo\n- `role` - Role do usu\u00e1rio nesta loja\n- `created_at` - Quando o v\u00ednculo foi criado\n\n**Quem pode usar:** Apenas administradores."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": [\n    {\n      \"user_id\": 2,\n      \"user_name\": \"Carlos Gerente\",\n      \"user_email\": \"carlos.gerente@maiscapinhas.com.br\",\n      \"user_active\": true,\n      \"role\": \"gerente\",\n      \"created_at\": \"2026-01-01T00:00:00Z\"\n    },\n    {\n      \"user_id\": 6,\n      \"user_name\": \"Jo\u00e3o Vendedor\",\n      \"user_email\": \"joao.vendedor@maiscapinhas.com.br\",\n      \"user_active\": true,\n      \"role\": \"vendedor\",\n      \"created_at\": \"2026-01-01T00:00:00Z\"\n    }\n  ]\n}",
+                            "name": "Usu\u00e1rios da loja"
+                        }
+                    ]
+                },
+                {
+                    "name": "Vincular usu\u00e1rio a loja",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/stores\/:store_id\/users",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/stores\/:store_id\/users",
+                            "variable": [
+                                {
+                                    "id": "store_id",
+                                    "key": "store_id",
+                                    "value": "1",
+                                    "description": "The ID of the store."
+                                },
+                                {
+                                    "id": "store",
+                                    "key": "store",
+                                    "value": "1",
+                                    "description": "ID da loja."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"user_id\":8,\"role\":\"vendedor\"}"
+                        },
+                        "description": "Cria um novo v\u00ednculo entre um usu\u00e1rio existente e uma loja,\ndefinindo qual role esse usu\u00e1rio ter\u00e1 nessa loja.\n\n**Casos de uso:**\n- Adicionar novo vendedor \u00e0 equipe de uma loja\n- Promover funcion\u00e1rio a gerente em determinada loja\n- Configurar vendedor \"volante\" para trabalhar temporariamente\n\n**Regras de Neg\u00f3cio:**\n- Um usu\u00e1rio s\u00f3 pode ter um v\u00ednculo por loja (unique: store_id + user_id)\n- Para alterar a role, use PUT\n- O usu\u00e1rio deve existir previamente (criar via POST \/admin\/users)\n\n**Quem pode usar:** Apenas administradores."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\n  \"data\": {\n    \"user_id\": 8,\n    \"store_id\": 1,\n    \"role\": \"vendedor\"\n  }\n}",
+                            "name": "V\u00ednculo criado"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n  \"message\": \"The given data was invalid.\",\n  \"errors\": { \"user_id\": [\"Este usu\u00e1rio j\u00e1 est\u00e1 vinculado a esta loja.\"] }\n}",
+                            "name": "Usu\u00e1rio j\u00e1 vinculado"
+                        }
+                    ]
+                },
+                {
+                    "name": "Atualizar role do usu\u00e1rio na loja",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/stores\/:store_id\/users\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/stores\/:store_id\/users\/:id",
+                            "variable": [
+                                {
+                                    "id": "store_id",
+                                    "key": "store_id",
+                                    "value": "1",
+                                    "description": "The ID of the store."
+                                },
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "1",
+                                    "description": "The ID of the user."
+                                },
+                                {
+                                    "id": "store",
+                                    "key": "store",
+                                    "value": "1",
+                                    "description": "ID da loja."
+                                },
+                                {
+                                    "id": "user",
+                                    "key": "user",
+                                    "value": "6",
+                                    "description": "ID do usu\u00e1rio no v\u00ednculo."
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"user_id\":16,\"role\":\"gerente\"}"
+                        },
+                        "description": "Altera a role de um usu\u00e1rio em uma loja espec\u00edfica.\n\n**Casos de uso:**\n- Promover vendedor a conferente\n- Rebaixar gerente a conferente\n- Dar acesso admin a um gerente\n\n**Quem pode usar:** Apenas administradores."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"user_id\": 6,\n    \"store_id\": 1,\n    \"role\": \"gerente\"\n  }\n}",
+                            "name": "Role atualizada"
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\n  \"message\": \"Usu\u00e1rio n\u00e3o est\u00e1 vinculado a esta loja.\"\n}",
+                            "name": "V\u00ednculo n\u00e3o existe"
+                        }
+                    ]
+                },
+                {
+                    "name": "Remover v\u00ednculo",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/stores\/:store_id\/users\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/stores\/:store_id\/users\/:id",
+                            "variable": [
+                                {
+                                    "id": "store_id",
+                                    "key": "store_id",
+                                    "value": "1",
+                                    "description": "The ID of the store."
+                                },
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "1",
+                                    "description": "The ID of the user."
+                                },
+                                {
+                                    "id": "store",
+                                    "key": "store",
+                                    "value": "1",
+                                    "description": "ID da loja."
+                                },
+                                {
+                                    "id": "user",
+                                    "key": "user",
+                                    "value": "8",
+                                    "description": "ID do usu\u00e1rio."
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Remove completamente o v\u00ednculo de um usu\u00e1rio com uma loja.\n\n**Aten\u00e7\u00e3o:**\n- O usu\u00e1rio perde todo acesso a esta loja\n- Dados hist\u00f3ricos (vendas, fechamentos) s\u00e3o mantidos\n- Para desativar temporariamente, considere alterar a role\n\n**Regras de Neg\u00f3cio:**\n- N\u00e3o \u00e9 poss\u00edvel remover seu pr\u00f3prio v\u00ednculo (prote\u00e7\u00e3o)\n- Se o usu\u00e1rio s\u00f3 tinha v\u00ednculo com esta loja, ficar\u00e1 \"\u00f3rf\u00e3o\"\n\n**Quem pode usar:** Apenas administradores."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": { \"message\": \"V\u00ednculo removido com sucesso.\" }\n}",
+                            "name": "V\u00ednculo removido"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\n  \"message\": \"Voc\u00ea n\u00e3o pode remover seu pr\u00f3prio v\u00ednculo.\"\n}",
+                            "name": "Tentativa de auto-remo\u00e7\u00e3o"
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\n  \"message\": \"V\u00ednculo n\u00e3o encontrado.\"\n}",
+                            "name": "V\u00ednculo n\u00e3o encontrado"
+                        }
+                    ]
                 }
             ]
         }
