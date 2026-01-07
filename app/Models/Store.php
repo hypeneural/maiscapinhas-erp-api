@@ -1,0 +1,92 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
+
+class Store extends Model
+{
+    use HasFactory, LogsActivity;
+
+    protected $fillable = [
+        'name',
+        'city',
+        'active',
+    ];
+
+    protected $casts = [
+        'active' => 'boolean',
+    ];
+
+    // ========================================
+    // Relationships
+    // ========================================
+
+    public function storeUsers(): HasMany
+    {
+        return $this->hasMany(StoreUser::class);
+    }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'store_users')
+            ->withPivot('role')
+            ->withTimestamps();
+    }
+
+    public function sales(): HasMany
+    {
+        return $this->hasMany(Sale::class);
+    }
+
+    public function cashShifts(): HasMany
+    {
+        return $this->hasMany(CashShift::class);
+    }
+
+    public function targetsDaily(): HasMany
+    {
+        return $this->hasMany(TargetDaily::class);
+    }
+
+    public function targetsMonthly(): HasMany
+    {
+        return $this->hasMany(TargetMonthly::class);
+    }
+
+    public function bonusRules(): HasMany
+    {
+        return $this->hasMany(BonusRule::class);
+    }
+
+    public function commissionRules(): HasMany
+    {
+        return $this->hasMany(CommissionRule::class);
+    }
+
+    // ========================================
+    // Scopes
+    // ========================================
+
+    public function scopeActive($query)
+    {
+        return $query->where('active', true);
+    }
+
+    // ========================================
+    // Activity Log
+    // ========================================
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'city', 'active'])
+            ->logOnlyDirty();
+    }
+}
