@@ -1,5 +1,17 @@
 <?php
 
+/**
+ * Scribe API Documentation Configuration
+ * 
+ * NOTA: Este arquivo só é usado quando o Scribe está instalado (composer require --dev).
+ * Em produção, o Scribe não está disponível e este arquivo não é carregado.
+ */
+
+// Só carrega as configurações se o Scribe estiver instalado
+if (!class_exists(\Knuckles\Scribe\Config\Defaults::class)) {
+    return [];
+}
+
 use Knuckles\Scribe\Extracting\Strategies;
 use Knuckles\Scribe\Config\Defaults;
 use Knuckles\Scribe\Config\AuthIn;
@@ -89,7 +101,6 @@ return [
             ],
             'include' => [],
             'exclude' => [
-                // Excluir rotas internas do Sanctum
                 'sanctum/*',
             ],
         ],
@@ -118,7 +129,6 @@ return [
     'try_it_out' => [
         'enabled' => true,
         'base_url' => null,
-        // Para modo SPA com cookies, habilite CSRF
         'use_csrf' => false,
         'csrf_url' => '/sanctum/csrf-cookie',
     ],
@@ -126,7 +136,7 @@ return [
     // Configuração de autenticação
     'auth' => [
         'enabled' => true,
-        'default' => true, // Todos endpoints autenticados por padrão
+        'default' => true,
         'in' => AuthIn::BEARER->value,
         'name' => 'Authorization',
         'use_value' => env('SCRIBE_AUTH_KEY'),
