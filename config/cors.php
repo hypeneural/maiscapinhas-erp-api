@@ -20,9 +20,13 @@ return [
 
     'allowed_origins' => [
         env('FRONTEND_URL', 'http://localhost:5173'),
+        'http://localhost:8000',  // Dev server
     ],
 
-    'allowed_origins_patterns' => [],
+    // Permite qualquer subdomínio de maiscapinhas.com.br (incluindo api.maiscapinhas.com.br)
+    'allowed_origins_patterns' => [
+        '#^https?://(.+\.)?maiscapinhas\.com\.br$#',
+    ],
 
     'allowed_headers' => [
         'Accept',
