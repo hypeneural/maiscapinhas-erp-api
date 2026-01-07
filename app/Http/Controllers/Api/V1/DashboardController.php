@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domains\Reports\Services\SellerGamificationService;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
 use App\Models\CashClosing;
@@ -16,45 +17,84 @@ use Illuminate\Http\Request;
 /**
  * @group Dashboards
  *
- * Endpoints de dashboard com métricas e KPIs por perfil de usuário.
- * Cada dashboard retorna informações personalizadas para o papel do usuário.
+ * Endpoints de dashboard com métricas e KPIs personalizados por perfil de usuário.
+ *
+ * Cada dashboard retorna informações otimizadas para o papel do usuário:
+ * - **Vendedor**: Foco em gamificação, bônus e comissão pessoal
+ * - **Conferente**: Foco em fechamentos pendentes e integridade de caixa
+ * - **Admin/Gerente**: Visão consolidada de todas as lojas
+ *
+ * **Regras de Acesso:**
+ * - Usuário só vê dados das lojas às quais tem acesso
+ * - Dashboard específico depende da role do usuário na loja
  */
 class DashboardController extends Controller
 {
     use ApiResponse;
 
+    public function __construct(
+        private SellerGamificationService $gamificationService
+    ) {
+    }
+
     /**
      * Dashboard do Vendedor
      *
-     * Retorna métricas do vendedor no dia, incluindo suas vendas pessoais
-     * comparadas com o total da loja e status dos seus turnos.
+     * Retorna métricas completas para o vendedor, incluindo:
+     * - Vendas pessoais do dia
+     * - **Gamificação de Bônus** - quanto falta para o próximo nível
+     * - **Projeção de Comissão** - tier atual e potencial
+     * - **Pace Diário** - ritmo comparado à média
+     *
+     * Este dashboard é projetado para **motivar** o vendedor mostrando
+     * metas tangíveis e progresso em tempo real.
      *
      * **Quem pode usar:** Vendedores e níveis superiores.
      *
      * **Métricas retornadas:**
-     * - `my_sales` - Quantidade e valor total das vendas do vendedor no dia
-     * - `store_sales` - Quantidade e valor total de todas as vendas da loja no dia
-     * - `my_shifts` - Lista dos turnos do vendedor naquele dia com status do fechamento
-     *
-     * **Dica:** Compare `my_sales` com `store_sales` para ver sua participação nas vendas da loja.
+     * | Métrica | Descrição |
+     * |---------|-----------|
+     * | `my_sales` | Quantidade e valor total das vendas do dia |
+     * | `store_sales` | Total de vendas da loja (para comparação) |
+     * | `bonus_gamification` | Gap para próximo bônus, bônus atual |
+     * | `monthly_commission` | Tier atual, projeção, potencial |
+     * | `daily_pace` | Ritmo vs média diária |
+     * | `my_shifts` | Turnos do dia com status |
      *
      * @queryParam store_id integer required ID da loja. Example: 1
-     * @queryParam date string Data no formato YYYY-MM-DD (padrão: hoje). Example: 2026-01-07
+     * @queryParam date string Data (YYYY-MM-DD), default: hoje. Example: 2026-01-07
      *
-     * @response 200 scenario="Vendas do dia" {
+     * @response 200 scenario="Dashboard completo" {
      *   "data": {
      *     "date": "2026-01-07",
-     *     "my_sales": { "count": 5, "total": 850.00 },
+     *     "my_sales": { "count": 5, "total": 450.00 },
      *     "store_sales": { "count": 23, "total": 3200.00 },
-     *     "my_shifts": [
-     *       { "id": 1, "date": "2026-01-07", "shift_code": "M", "status": "open", "cash_closing": null }
-     *     ]
+     *     "bonus_gamification": {
+     *       "current_amount": 450.00,
+     *       "next_bonus_goal": 500.00,
+     *       "gap_to_bonus": 50.00,
+     *       "next_bonus_value": 10.00,
+     *       "current_bonus_earned": 0,
+     *       "message": "Faltam R$ 50,00 para ganhar R$ 10,00 de bônus!"
+     *     },
+     *     "monthly_commission": {
+     *       "sales_mtd": 8500.00,
+     *       "goal_amount": 15000.00,
+     *       "achievement_rate": 56.67,
+     *       "current_tier": 2.0,
+     *       "current_commission_value": 170.00,
+     *       "next_tier": 3.0,
+     *       "potential_commission": 450.00
+     *     },
+     *     "daily_pace": {
+     *       "today_sales": 450.00,
+     *       "average_daily_sales": 566.67,
+     *       "today_vs_average": -116.67,
+     *       "status": "BEHIND"
+     *     },
+     *     "my_shifts": []
      *   },
      *   "meta": { "timestamp": "2026-01-07T12:00:00Z" }
-     * }
-     *
-     * @response 403 scenario="Sem acesso à loja" {
-     *   "error": { "code": 403, "message": "You do not have access to this store." }
      * }
      */
     public function vendedor(Request $request): JsonResponse
@@ -66,31 +106,56 @@ class DashboardController extends Controller
 
         $user = $request->user();
         $storeId = (int) $request->input('store_id');
-        $date = $request->input('date', Carbon::today()->format('Y-m-d'));
+        $date = Carbon::parse($request->input('date', Carbon::today()->format('Y-m-d')));
+        $month = $date->format('Y-m');
 
         if (!$user->hasAccessToStore($storeId)) {
             return $this->forbidden('You do not have access to this store.');
         }
 
+        // Vendas do vendedor no dia
         $mySales = Sale::where('store_id', $storeId)
             ->where('seller_id', $user->id)
             ->whereDate('sold_at', $date)
             ->selectRaw('COUNT(*) as count, COALESCE(SUM(amount), 0) as total')
             ->first();
 
+        // Vendas da loja no dia
         $storeSales = Sale::where('store_id', $storeId)
             ->whereDate('sold_at', $date)
             ->selectRaw('COUNT(*) as count, COALESCE(SUM(amount), 0) as total')
             ->first();
 
+        // Turnos do vendedor
         $myShifts = CashShift::where('store_id', $storeId)
             ->where('seller_id', $user->id)
-            ->where('date', $date)
+            ->where('date', $date->format('Y-m-d'))
             ->with('cashClosing:id,cash_shift_id,status')
             ->get();
 
+        // Gamificação de Bônus
+        $bonusGamification = $this->gamificationService->getBonusGamification(
+            $storeId,
+            $user->id,
+            $date
+        );
+
+        // Projeção de Comissão Mensal
+        $monthlyCommission = $this->gamificationService->getMonthlyCommissionProjection(
+            $storeId,
+            $user->id,
+            $month
+        );
+
+        // Pace Diário
+        $dailyPace = $this->gamificationService->getDailyPace(
+            $storeId,
+            $user->id,
+            $date
+        );
+
         return $this->success([
-            'date' => $date,
+            'date' => $date->format('Y-m-d'),
             'my_sales' => [
                 'count' => (int) $mySales->count,
                 'total' => (float) $mySales->total,
@@ -99,6 +164,9 @@ class DashboardController extends Controller
                 'count' => (int) $storeSales->count,
                 'total' => (float) $storeSales->total,
             ],
+            'bonus_gamification' => $bonusGamification,
+            'monthly_commission' => $monthlyCommission,
+            'daily_pace' => $dailyPace,
             'my_shifts' => $myShifts,
         ]);
     }
@@ -106,20 +174,24 @@ class DashboardController extends Controller
     /**
      * Dashboard do Conferente
      *
-     * Retorna métricas para conferência de caixa, incluindo fechamentos
-     * pendentes de aprovação e ranking de vendedores.
+     * Retorna métricas para conferência de caixa e auditoria,
+     * incluindo fechamentos pendentes e ranking de vendedores.
+     *
+     * **Foco:** Integridade de caixa e aprovação de fechamentos.
      *
      * **Quem pode usar:** Conferentes, Gerentes e Admins.
      *
      * **Métricas retornadas:**
-     * - `pending_closings` - Lista de fechamentos aguardando aprovação/rejeição
-     * - `pending_count` - Quantidade de fechamentos pendentes
-     * - `store_sales` - Total de vendas da loja no dia
-     * - `shifts_today` - Resumo de turnos por status (open, closed, pending)
-     * - `top_sellers` - Top 5 vendedores do dia por valor vendido
+     * | Métrica | Descrição |
+     * |---------|-----------|
+     * | `pending_closings` | Fechamentos aguardando aprovação |
+     * | `pending_count` | Quantidade de pendentes |
+     * | `store_sales` | Total de vendas da loja no dia |
+     * | `shifts_today` | Resumo por status (open/closed/pending) |
+     * | `top_sellers` | Top 5 vendedores do dia |
      *
      * @queryParam store_id integer required ID da loja. Example: 1
-     * @queryParam date string Data no formato YYYY-MM-DD (padrão: hoje). Example: 2026-01-07
+     * @queryParam date string Data (YYYY-MM-DD), default: hoje. Example: 2026-01-07
      *
      * @response 200 scenario="Dashboard do conferente" {
      *   "data": {
@@ -131,8 +203,7 @@ class DashboardController extends Controller
      *     "top_sellers": [
      *       { "seller_id": 6, "name": "João Vendedor", "total": 1500.00 }
      *     ]
-     *   },
-     *   "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+     *   }
      * }
      */
     public function conferente(Request $request): JsonResponse
@@ -198,18 +269,22 @@ class DashboardController extends Controller
     /**
      * Dashboard do Admin
      *
-     * Retorna visão consolidada de todas as lojas que o usuário administra,
+     * Retorna visão consolidada de todas as lojas administradas,
      * com métricas mensais agregadas.
+     *
+     * **Foco:** Visão estratégica e gerencial do negócio.
      *
      * **Quem pode usar:** Admins e Gerentes.
      *
      * **Métricas retornadas:**
-     * - `total_sales` - Soma de vendas de todas as lojas no mês
-     * - `sales_by_store` - Vendas detalhadas por loja
-     * - `closings_summary` - Contagem de fechamentos por status
-     * - `top_sellers` - Top 10 vendedores do mês (todas as lojas)
+     * | Métrica | Descrição |
+     * |---------|-----------|
+     * | `total_sales` | Soma de vendas de todas as lojas no mês |
+     * | `sales_by_store` | Vendas detalhadas por loja |
+     * | `closings_summary` | Contagem de fechamentos por status |
+     * | `top_sellers` | Top 10 vendedores do mês |
      *
-     * @queryParam month string Mês no formato YYYY-MM (padrão: mês atual). Example: 2026-01
+     * @queryParam month string Mês (YYYY-MM), default: mês atual. Example: 2026-01
      *
      * @response 200 scenario="Dashboard consolidado" {
      *   "data": {
@@ -222,8 +297,7 @@ class DashboardController extends Controller
      *     "top_sellers": [
      *       { "seller_id": 6, "name": "João Vendedor", "total": 12500.00, "count": 85 }
      *     ]
-     *   },
-     *   "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+     *   }
      * }
      */
     public function admin(Request $request): JsonResponse

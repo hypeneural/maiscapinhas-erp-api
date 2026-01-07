@@ -3,8 +3,16 @@
 name: Dashboards
 description: |-
 
-  Endpoints de dashboard com métricas e KPIs por perfil de usuário.
-  Cada dashboard retorna informações personalizadas para o papel do usuário.
+  Endpoints de dashboard com métricas e KPIs personalizados por perfil de usuário.
+
+  Cada dashboard retorna informações otimizadas para o papel do usuário:
+  - **Vendedor**: Foco em gamificação, bônus e comissão pessoal
+  - **Conferente**: Foco em fechamentos pendentes e integridade de caixa
+  - **Admin/Gerente**: Visão consolidada de todas as lojas
+
+  **Regras de Acesso:**
+  - Usuário só vê dados das lojas às quais tem acesso
+  - Dashboard específico depende da role do usuário na loja
 endpoints:
   -
     custom: []
@@ -16,23 +24,40 @@ endpoints:
       groupName: Dashboards
       groupDescription: |-
 
-        Endpoints de dashboard com métricas e KPIs por perfil de usuário.
-        Cada dashboard retorna informações personalizadas para o papel do usuário.
+        Endpoints de dashboard com métricas e KPIs personalizados por perfil de usuário.
+
+        Cada dashboard retorna informações otimizadas para o papel do usuário:
+        - **Vendedor**: Foco em gamificação, bônus e comissão pessoal
+        - **Conferente**: Foco em fechamentos pendentes e integridade de caixa
+        - **Admin/Gerente**: Visão consolidada de todas as lojas
+
+        **Regras de Acesso:**
+        - Usuário só vê dados das lojas às quais tem acesso
+        - Dashboard específico depende da role do usuário na loja
       subgroup: ''
       subgroupDescription: ''
       title: 'Dashboard do Vendedor'
       description: |-
-        Retorna métricas do vendedor no dia, incluindo suas vendas pessoais
-        comparadas com o total da loja e status dos seus turnos.
+        Retorna métricas completas para o vendedor, incluindo:
+        - Vendas pessoais do dia
+        - **Gamificação de Bônus** - quanto falta para o próximo nível
+        - **Projeção de Comissão** - tier atual e potencial
+        - **Pace Diário** - ritmo comparado à média
+
+        Este dashboard é projetado para **motivar** o vendedor mostrando
+        metas tangíveis e progresso em tempo real.
 
         **Quem pode usar:** Vendedores e níveis superiores.
 
         **Métricas retornadas:**
-        - `my_sales` - Quantidade e valor total das vendas do vendedor no dia
-        - `store_sales` - Quantidade e valor total de todas as vendas da loja no dia
-        - `my_shifts` - Lista dos turnos do vendedor naquele dia com status do fechamento
-
-        **Dica:** Compare `my_sales` com `store_sales` para ver sua participação nas vendas da loja.
+        | Métrica | Descrição |
+        |---------|-----------|
+        | `my_sales` | Quantidade e valor total das vendas do dia |
+        | `store_sales` | Total de vendas da loja (para comparação) |
+        | `bonus_gamification` | Gap para próximo bônus, bônus atual |
+        | `monthly_commission` | Tier atual, projeção, potencial |
+        | `daily_pace` | Ritmo vs média diária |
+        | `my_shifts` | Turnos do dia com status |
       authenticated: true
       deprecated: false
     headers:
@@ -56,7 +81,7 @@ endpoints:
       date:
         custom: []
         name: date
-        description: 'Data no formato YYYY-MM-DD (padrão: hoje).'
+        description: 'Data (YYYY-MM-DD), default: hoje.'
         required: false
         example: '2026-01-07'
         type: string
@@ -84,7 +109,7 @@ endpoints:
         name: date
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-07T20:48:56'
+        example: '2026-01-07T21:21:39'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -92,7 +117,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      date: '2026-01-07T20:48:56'
+      date: '2026-01-07T21:21:39'
     fileParameters: []
     responses:
       -
@@ -102,25 +127,37 @@ endpoints:
           {
             "data": {
               "date": "2026-01-07",
-              "my_sales": { "count": 5, "total": 850.00 },
+              "my_sales": { "count": 5, "total": 450.00 },
               "store_sales": { "count": 23, "total": 3200.00 },
-              "my_shifts": [
-                { "id": 1, "date": "2026-01-07", "shift_code": "M", "status": "open", "cash_closing": null }
-              ]
+              "bonus_gamification": {
+                "current_amount": 450.00,
+                "next_bonus_goal": 500.00,
+                "gap_to_bonus": 50.00,
+                "next_bonus_value": 10.00,
+                "current_bonus_earned": 0,
+                "message": "Faltam R$ 50,00 para ganhar R$ 10,00 de bônus!"
+              },
+              "monthly_commission": {
+                "sales_mtd": 8500.00,
+                "goal_amount": 15000.00,
+                "achievement_rate": 56.67,
+                "current_tier": 2.0,
+                "current_commission_value": 170.00,
+                "next_tier": 3.0,
+                "potential_commission": 450.00
+              },
+              "daily_pace": {
+                "today_sales": 450.00,
+                "average_daily_sales": 566.67,
+                "today_vs_average": -116.67,
+                "status": "BEHIND"
+              },
+              "my_shifts": []
             },
             "meta": { "timestamp": "2026-01-07T12:00:00Z" }
           }
         headers: []
-        description: 'Vendas do dia'
-      -
-        custom: []
-        status: 403
-        content: |-
-          {
-            "error": { "code": 403, "message": "You do not have access to this store." }
-          }
-        headers: []
-        description: 'Sem acesso à loja'
+        description: 'Dashboard completo'
     responseFields: []
     auth:
       - headers
@@ -139,23 +176,35 @@ endpoints:
       groupName: Dashboards
       groupDescription: |-
 
-        Endpoints de dashboard com métricas e KPIs por perfil de usuário.
-        Cada dashboard retorna informações personalizadas para o papel do usuário.
+        Endpoints de dashboard com métricas e KPIs personalizados por perfil de usuário.
+
+        Cada dashboard retorna informações otimizadas para o papel do usuário:
+        - **Vendedor**: Foco em gamificação, bônus e comissão pessoal
+        - **Conferente**: Foco em fechamentos pendentes e integridade de caixa
+        - **Admin/Gerente**: Visão consolidada de todas as lojas
+
+        **Regras de Acesso:**
+        - Usuário só vê dados das lojas às quais tem acesso
+        - Dashboard específico depende da role do usuário na loja
       subgroup: ''
       subgroupDescription: ''
       title: 'Dashboard do Conferente'
       description: |-
-        Retorna métricas para conferência de caixa, incluindo fechamentos
-        pendentes de aprovação e ranking de vendedores.
+        Retorna métricas para conferência de caixa e auditoria,
+        incluindo fechamentos pendentes e ranking de vendedores.
+
+        **Foco:** Integridade de caixa e aprovação de fechamentos.
 
         **Quem pode usar:** Conferentes, Gerentes e Admins.
 
         **Métricas retornadas:**
-        - `pending_closings` - Lista de fechamentos aguardando aprovação/rejeição
-        - `pending_count` - Quantidade de fechamentos pendentes
-        - `store_sales` - Total de vendas da loja no dia
-        - `shifts_today` - Resumo de turnos por status (open, closed, pending)
-        - `top_sellers` - Top 5 vendedores do dia por valor vendido
+        | Métrica | Descrição |
+        |---------|-----------|
+        | `pending_closings` | Fechamentos aguardando aprovação |
+        | `pending_count` | Quantidade de pendentes |
+        | `store_sales` | Total de vendas da loja no dia |
+        | `shifts_today` | Resumo por status (open/closed/pending) |
+        | `top_sellers` | Top 5 vendedores do dia |
       authenticated: true
       deprecated: false
     headers:
@@ -179,7 +228,7 @@ endpoints:
       date:
         custom: []
         name: date
-        description: 'Data no formato YYYY-MM-DD (padrão: hoje).'
+        description: 'Data (YYYY-MM-DD), default: hoje.'
         required: false
         example: '2026-01-07'
         type: string
@@ -207,7 +256,7 @@ endpoints:
         name: date
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-07T20:48:56'
+        example: '2026-01-07T21:21:39'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -215,7 +264,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      date: '2026-01-07T20:48:56'
+      date: '2026-01-07T21:21:39'
     fileParameters: []
     responses:
       -
@@ -232,8 +281,7 @@ endpoints:
               "top_sellers": [
                 { "seller_id": 6, "name": "João Vendedor", "total": 1500.00 }
               ]
-            },
-            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+            }
           }
         headers: []
         description: 'Dashboard do conferente'
@@ -255,22 +303,34 @@ endpoints:
       groupName: Dashboards
       groupDescription: |-
 
-        Endpoints de dashboard com métricas e KPIs por perfil de usuário.
-        Cada dashboard retorna informações personalizadas para o papel do usuário.
+        Endpoints de dashboard com métricas e KPIs personalizados por perfil de usuário.
+
+        Cada dashboard retorna informações otimizadas para o papel do usuário:
+        - **Vendedor**: Foco em gamificação, bônus e comissão pessoal
+        - **Conferente**: Foco em fechamentos pendentes e integridade de caixa
+        - **Admin/Gerente**: Visão consolidada de todas as lojas
+
+        **Regras de Acesso:**
+        - Usuário só vê dados das lojas às quais tem acesso
+        - Dashboard específico depende da role do usuário na loja
       subgroup: ''
       subgroupDescription: ''
       title: 'Dashboard do Admin'
       description: |-
-        Retorna visão consolidada de todas as lojas que o usuário administra,
+        Retorna visão consolidada de todas as lojas administradas,
         com métricas mensais agregadas.
+
+        **Foco:** Visão estratégica e gerencial do negócio.
 
         **Quem pode usar:** Admins e Gerentes.
 
         **Métricas retornadas:**
-        - `total_sales` - Soma de vendas de todas as lojas no mês
-        - `sales_by_store` - Vendas detalhadas por loja
-        - `closings_summary` - Contagem de fechamentos por status
-        - `top_sellers` - Top 10 vendedores do mês (todas as lojas)
+        | Métrica | Descrição |
+        |---------|-----------|
+        | `total_sales` | Soma de vendas de todas as lojas no mês |
+        | `sales_by_store` | Vendas detalhadas por loja |
+        | `closings_summary` | Contagem de fechamentos por status |
+        | `top_sellers` | Top 10 vendedores do mês |
       authenticated: true
       deprecated: false
     headers:
@@ -283,7 +343,7 @@ endpoints:
       month:
         custom: []
         name: month
-        description: 'Mês no formato YYYY-MM (padrão: mês atual).'
+        description: 'Mês (YYYY-MM), default: mês atual.'
         required: false
         example: 2026-01
         type: string
@@ -324,8 +384,7 @@ endpoints:
               "top_sellers": [
                 { "seller_id": 6, "name": "João Vendedor", "total": 12500.00, "count": 85 }
               ]
-            },
-            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+            }
           }
         headers: []
         description: 'Dashboard consolidado'

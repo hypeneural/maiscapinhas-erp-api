@@ -49,7 +49,7 @@ endpoints:
         name: from
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-07T20:48:56'
+        example: '2026-01-07T21:21:38'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -60,7 +60,7 @@ endpoints:
         name: to
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-07T20:48:56'
+        example: '2026-01-07T21:21:38'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -79,8 +79,8 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      from: '2026-01-07T20:48:56'
-      to: '2026-01-07T20:48:56'
+      from: '2026-01-07T21:21:38'
+      to: '2026-01-07T21:21:38'
       per_page: 22
     fileParameters: []
     responses:

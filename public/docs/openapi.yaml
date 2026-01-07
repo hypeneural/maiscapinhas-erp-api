@@ -12,7 +12,7 @@ tags:
     description: "\nEndpoints para verificação de saúde e status da API.\nEstes endpoints são públicos e não requerem autenticação."
   -
     name: Autenticação
-    description: "\nEndpoints para autenticação via Bearer Token (Sanctum).\nA API suporta dois modos de autenticação:\n\n1. **Bearer Token** (recomendado para desenvolvimento e integrações)\n2. **Cookie SPA** (para frontends React/Vue com `withCredentials`)"
+    description: "\nEndpoints para autenticação via Bearer Token (Sanctum).\nA API suporta dois modos de autenticação:\n\n1. **Bearer Token** (recomendado para desenvolvimento e integrações)\n2. **Cookie SPA** (para frontends React/Vue com `withCredentials`)\n\n**Auditoria:** Todas as ações de autenticação (login, logout) são\nregistradas no log de auditoria com IP e user-agent."
   -
     name: 'Perfil do Usuário'
     description: "\nEndpoint para obter informações do usuário autenticado."
@@ -21,7 +21,7 @@ tags:
     description: "\nEndpoints para consultar lojas às quais o usuário tem acesso.\nO usuário só pode visualizar lojas onde está vinculado via `store_users`."
   -
     name: Dashboards
-    description: "\nEndpoints de dashboard com métricas e KPIs por perfil de usuário.\nCada dashboard retorna informações personalizadas para o papel do usuário."
+    description: "\nEndpoints de dashboard com métricas e KPIs personalizados por perfil de usuário.\n\nCada dashboard retorna informações otimizadas para o papel do usuário:\n- **Vendedor**: Foco em gamificação, bônus e comissão pessoal\n- **Conferente**: Foco em fechamentos pendentes e integridade de caixa\n- **Admin/Gerente**: Visão consolidada de todas as lojas\n\n**Regras de Acesso:**\n- Usuário só vê dados das lojas às quais tem acesso\n- Dashboard específico depende da role do usuário na loja"
   -
     name: Vendas
     description: "\nGerenciamento de vendas registradas no sistema MaisCapinhas ERP.\n\nAs vendas são o **coração do sistema financeiro**, pois a partir delas\nsão calculados:\n- **Bônus diário** - baseado no total de vendas do dia\n- **Comissão mensal** - baseado no atingimento de meta\n- **KPIs de desempenho** - taxa de conversão, ticket médio\n\n**Fontes de Vendas:**\n| Origem | Descrição |\n|--------|-----------|\n| `pdv` | Importação automática do sistema de PDV |\n| `manual` | Cadastro manual via esta API |\n| `import` | Importação em lote (planilha CSV) |\n\n**Regras de Negócio Importantes:**\n- Cada venda pertence a uma **loja** (`store_id`) e um **vendedor** (`seller_id`)\n- A venda conta para a meta da **loja** onde foi realizada\n- A comissão vai para o **vendedor**, mesmo que seja \"volante\"\n- Alterações em vendas disparam recálculo automático de bônus/comissão\n\n**Impacto no Bônus:**\nQuando uma venda é criada/alterada, o sistema automaticamente\nrecalcula o bônus diário do vendedor (via Job assíncrono)."
@@ -47,6 +47,9 @@ tags:
     name: 'People Analytics'
     description: "\nEndpoints para consultar e inserir KPIs de fluxo de pessoas por turno.\nDados podem vir de sincronização com FastAPI ou inserção manual."
   -
+    name: 'Administração - Logs de Auditoria'
+    description: "\nConsulta de logs de auditoria do sistema.\n\nEste endpoint permite que administradores visualizem todas as\nações registradas no sistema para fins de auditoria e compliance.\n\n**Tipos de eventos registrados:**\n| Domínio | Eventos |\n|---------|---------|\n| `auth` | login, logout, login_failed |\n| `cash` | cash_closing.submit, approve, reject |\n| `rules` | bonus/commission create, update, delete |\n| `goals` | monthly.create, update, splits.set |\n| `sales` | create, update, delete |\n| `admin` | user/store create, update, delete |\n\n**Quem pode usar:** Apenas administradores."
+  -
     name: 'Administração - Lojas'
     description: "\nGerenciamento das lojas (pontos de venda) do sistema MaisCapinhas ERP.\n\nCada loja representa uma unidade física de venda com:\n- Equipe própria (vendedores, conferentes, gerentes)\n- Metas mensais individuais\n- Turnos de caixa e fechamentos\n- Regras de bônus/comissão (podem ser específicas ou herdar as globais)\n\n**Hierarquia de Dados:**\n```\nLoja\n├── Usuários (via store_users com roles)\n├── Vendas (registradas por vendedores)\n├── Turnos de Caixa (por data/turno/vendedor)\n├── Metas Mensais (com splits por vendedor)\n└── Regras de Bônus/Comissão (opcionais, específicas)\n```\n\n**Regras de Negócio:**\n- Uma loja desativada não aparece na lista de lojas do usuário comum\n- Dados históricos são mantidos para auditoria\n- Lojas são identificadas por ID numérico (não há código de loja)\n\n**Auditoria:** Todas as operações são registradas via Spatie ActivityLog."
   -
@@ -55,6 +58,9 @@ tags:
   -
     name: 'Administração - Vínculos Loja-Usuário'
     description: "\nGerenciamento dos vínculos entre lojas e usuários (tabela `store_users`).\n\nEste módulo controla **qual usuário trabalha em qual loja** e com\n**qual nível de permissão (role)**.\n\n**Sistema de Roles:**\n| Role | Pode fazer |\n|------|------------|\n| `admin` | Tudo: gerenciar usuários, lojas, regras, confirmar comissões |\n| `gerente` | Gerenciar equipe da loja, aprovar fechamentos, ver dashboards |\n| `conferente` | Aprovar/rejeitar fechamentos de caixa |\n| `vendedor` | Registrar vendas, submeter fechamento do próprio turno |\n\n**Regras de Negócio:**\n- Um usuário pode ter roles diferentes em lojas diferentes\n- A role `admin` em qualquer loja dá acesso administrativo global\n- Vendedor \"volante\" pode trabalhar temporariamente em outra loja\n- Não é possível remover seu próprio vínculo (proteção)\n\n**Vínculo × Comissão:**\n- Vendas são sempre registradas na loja onde ocorreram (`store_id` da venda)\n- Comissão vai para o vendedor que realizou a venda (`seller_id`)\n- Meta é calculada pela loja + split configurado"
+  -
+    name: 'Relatórios Gerenciais'
+    description: "\nEndpoints de relatórios avançados para gestão e auditoria.\n\nEste módulo fornece KPIs estratégicos para tomada de decisão:\n- **Performance de Loja** - Atingimento de meta, crescimento YoY, projeções\n- **Integridade de Caixa** - % de quebra, divergências, alertas\n\n**Público-alvo:**\n- Gerentes e Admins para visão estratégica\n- Conferentes para auditoria de caixa\n- Sócios para acompanhamento financeiro\n\n**Cache:** Dados históricos (ano passado) são cacheados para performance."
 components:
   securitySchemes:
     default:
@@ -137,7 +143,7 @@ paths:
     post:
       summary: 'Fazer login e obter token'
       operationId: fazerLoginEObterToken
-      description: "Autentica o usuário e retorna um Bearer Token para uso nas próximas requisições.\n\n**Quem pode usar:** Qualquer usuário ativo com email e senha válidos.\n\n**Regras de negócio:**\n- Usuários inativos (`active = false`) não podem fazer login\n- O token não expira automaticamente, mas pode ser revogado via logout\n- Cada login gera um novo token (múltiplos dispositivos são permitidos)\n\n**Erros possíveis:**\n- `422` - Credenciais inválidas ou conta desativada"
+      description: "Autentica o usuário e retorna um Bearer Token para uso nas próximas requisições.\n\n**Quem pode usar:** Qualquer usuário ativo com email e senha válidos.\n\n**Regras de negócio:**\n- Usuários inativos (`active = false`) não podem fazer login\n- O token não expira automaticamente, mas pode ser revogado via logout\n- Cada login gera um novo token (múltiplos dispositivos são permitidos)\n- Todas as tentativas de login são registradas para auditoria\n\n**Erros possíveis:**\n- `422` - Credenciais inválidas ou conta desativada"
       parameters: []
       responses:
         200:
@@ -155,6 +161,7 @@ paths:
                       name: 'Admin Sistema'
                       email: admin@maiscapinhas.com.br
                   meta:
+                    request_id: abc-123
                     timestamp: '2026-01-07T12:00:00Z'
                 properties:
                   data:
@@ -181,6 +188,9 @@ paths:
                   meta:
                     type: object
                     properties:
+                      request_id:
+                        type: string
+                        example: abc-123
                       timestamp:
                         type: string
                         example: '2026-01-07T12:00:00Z'
@@ -261,7 +271,7 @@ paths:
     post:
       summary: 'Fazer logout (revogar token atual)'
       operationId: fazerLogoutrevogarTokenAtual
-      description: "Revoga o token que foi usado para autenticar esta requisição.\nOs demais tokens do usuário (outros dispositivos) permanecem válidos.\n\n**Quem pode usar:** Qualquer usuário autenticado.\n\n**Casos de uso:**\n- Logout manual do usuário\n- Encerrar sessão em um dispositivo específico"
+      description: "Revoga o token que foi usado para autenticar esta requisição.\nOs demais tokens do usuário (outros dispositivos) permanecem válidos.\n\n**Quem pode usar:** Qualquer usuário autenticado.\n\n**Auditoria:** A ação de logout é registrada com IP e horário."
       parameters: []
       responses:
         200:
@@ -274,6 +284,7 @@ paths:
                   data:
                     message: 'Successfully logged out.'
                   meta:
+                    request_id: abc-123
                     timestamp: '2026-01-07T12:00:00Z'
                 properties:
                   data:
@@ -285,6 +296,9 @@ paths:
                   meta:
                     type: object
                     properties:
+                      request_id:
+                        type: string
+                        example: abc-123
                       timestamp:
                         type: string
                         example: '2026-01-07T12:00:00Z'
@@ -294,7 +308,7 @@ paths:
     post:
       summary: 'Revogar todos os tokens'
       operationId: revogarTodosOsTokens
-      description: "Revoga **todos** os tokens do usuário, desconectando-o de todos os dispositivos.\n\n**Quem pode usar:** Qualquer usuário autenticado.\n\n**Casos de uso:**\n- Suspeita de comprometimento de segurança\n- Forçar re-login em todos os dispositivos\n- Alteração de senha"
+      description: "Revoga **todos** os tokens do usuário, desconectando-o de todos os dispositivos.\n\n**Quem pode usar:** Qualquer usuário autenticado.\n\n**Auditoria:** A ação é registrada como logout_all."
       parameters: []
       responses:
         200:
@@ -307,6 +321,7 @@ paths:
                   data:
                     message: 'All tokens revoked.'
                   meta:
+                    request_id: abc-123
                     timestamp: '2026-01-07T12:00:00Z'
                 properties:
                   data:
@@ -318,6 +333,9 @@ paths:
                   meta:
                     type: object
                     properties:
+                      request_id:
+                        type: string
+                        example: abc-123
                       timestamp:
                         type: string
                         example: '2026-01-07T12:00:00Z'
@@ -573,7 +591,7 @@ paths:
     get:
       summary: 'Dashboard do Vendedor'
       operationId: dashboardDoVendedor
-      description: "Retorna métricas do vendedor no dia, incluindo suas vendas pessoais\ncomparadas com o total da loja e status dos seus turnos.\n\n**Quem pode usar:** Vendedores e níveis superiores.\n\n**Métricas retornadas:**\n- `my_sales` - Quantidade e valor total das vendas do vendedor no dia\n- `store_sales` - Quantidade e valor total de todas as vendas da loja no dia\n- `my_shifts` - Lista dos turnos do vendedor naquele dia com status do fechamento\n\n**Dica:** Compare `my_sales` com `store_sales` para ver sua participação nas vendas da loja."
+      description: "Retorna métricas completas para o vendedor, incluindo:\n- Vendas pessoais do dia\n- **Gamificação de Bônus** - quanto falta para o próximo nível\n- **Projeção de Comissão** - tier atual e potencial\n- **Pace Diário** - ritmo comparado à média\n\nEste dashboard é projetado para **motivar** o vendedor mostrando\nmetas tangíveis e progresso em tempo real.\n\n**Quem pode usar:** Vendedores e níveis superiores.\n\n**Métricas retornadas:**\n| Métrica | Descrição |\n|---------|-----------|\n| `my_sales` | Quantidade e valor total das vendas do dia |\n| `store_sales` | Total de vendas da loja (para comparação) |\n| `bonus_gamification` | Gap para próximo bônus, bônus atual |\n| `monthly_commission` | Tier atual, projeção, potencial |\n| `daily_pace` | Ritmo vs média diária |\n| `my_shifts` | Turnos do dia com status |"
       parameters:
         -
           in: query
@@ -588,16 +606,16 @@ paths:
         -
           in: query
           name: date
-          description: 'Data no formato YYYY-MM-DD (padrão: hoje).'
+          description: 'Data (YYYY-MM-DD), default: hoje.'
           example: '2026-01-07'
           required: false
           schema:
             type: string
-            description: 'Data no formato YYYY-MM-DD (padrão: hoje).'
+            description: 'Data (YYYY-MM-DD), default: hoje.'
             example: '2026-01-07'
       responses:
         200:
-          description: 'Vendas do dia'
+          description: 'Dashboard completo'
           content:
             application/json:
               schema:
@@ -607,17 +625,31 @@ paths:
                     date: '2026-01-07'
                     my_sales:
                       count: 5
-                      total: 850.0
+                      total: 450.0
                     store_sales:
                       count: 23
                       total: 3200.0
-                    my_shifts:
-                      -
-                        id: 1
-                        date: '2026-01-07'
-                        shift_code: M
-                        status: open
-                        cash_closing: null
+                    bonus_gamification:
+                      current_amount: 450.0
+                      next_bonus_goal: 500.0
+                      gap_to_bonus: 50.0
+                      next_bonus_value: 10.0
+                      current_bonus_earned: 0
+                      message: 'Faltam R$ 50,00 para ganhar R$ 10,00 de bônus!'
+                    monthly_commission:
+                      sales_mtd: 8500.0
+                      goal_amount: 15000.0
+                      achievement_rate: 56.67
+                      current_tier: 2.0
+                      current_commission_value: 170.0
+                      next_tier: 3.0
+                      potential_commission: 450.0
+                    daily_pace:
+                      today_sales: 450.0
+                      average_daily_sales: 566.67
+                      today_vs_average: -116.67
+                      status: BEHIND
+                    my_shifts: []
                   meta:
                     timestamp: '2026-01-07T12:00:00Z'
                 properties:
@@ -635,7 +667,7 @@ paths:
                             example: 5
                           total:
                             type: number
-                            example: 850.0
+                            example: 450.0
                       store_sales:
                         type: object
                         properties:
@@ -645,59 +677,75 @@ paths:
                           total:
                             type: number
                             example: 3200.0
+                      bonus_gamification:
+                        type: object
+                        properties:
+                          current_amount:
+                            type: number
+                            example: 450.0
+                          next_bonus_goal:
+                            type: number
+                            example: 500.0
+                          gap_to_bonus:
+                            type: number
+                            example: 50.0
+                          next_bonus_value:
+                            type: number
+                            example: 10.0
+                          current_bonus_earned:
+                            type: integer
+                            example: 0
+                          message:
+                            type: string
+                            example: 'Faltam R$ 50,00 para ganhar R$ 10,00 de bônus!'
+                      monthly_commission:
+                        type: object
+                        properties:
+                          sales_mtd:
+                            type: number
+                            example: 8500.0
+                          goal_amount:
+                            type: number
+                            example: 15000.0
+                          achievement_rate:
+                            type: number
+                            example: 56.67
+                          current_tier:
+                            type: number
+                            example: 2.0
+                          current_commission_value:
+                            type: number
+                            example: 170.0
+                          next_tier:
+                            type: number
+                            example: 3.0
+                          potential_commission:
+                            type: number
+                            example: 450.0
+                      daily_pace:
+                        type: object
+                        properties:
+                          today_sales:
+                            type: number
+                            example: 450.0
+                          average_daily_sales:
+                            type: number
+                            example: 566.67
+                          today_vs_average:
+                            type: number
+                            example: -116.67
+                          status:
+                            type: string
+                            example: BEHIND
                       my_shifts:
                         type: array
-                        example:
-                          -
-                            id: 1
-                            date: '2026-01-07'
-                            shift_code: M
-                            status: open
-                            cash_closing: null
-                        items:
-                          type: object
-                          properties:
-                            id:
-                              type: integer
-                              example: 1
-                            date:
-                              type: string
-                              example: '2026-01-07'
-                            shift_code:
-                              type: string
-                              example: M
-                            status:
-                              type: string
-                              example: open
-                            cash_closing:
-                              type: string
-                              example: null
+                        example: []
                   meta:
                     type: object
                     properties:
                       timestamp:
                         type: string
                         example: '2026-01-07T12:00:00Z'
-        403:
-          description: 'Sem acesso à loja'
-          content:
-            application/json:
-              schema:
-                type: object
-                example:
-                  error:
-                    code: 403
-                    message: 'You do not have access to this store.'
-                properties:
-                  error:
-                    type: object
-                    properties:
-                      code:
-                        type: integer
-                        example: 403
-                      message:
-                        type: string
-                        example: 'You do not have access to this store.'
       tags:
         - Dashboards
       requestBody:
@@ -714,14 +762,14 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T20:48:56'
+                  example: '2026-01-07T21:21:39'
               required:
                 - store_id
   /api/v1/dashboard/conferente:
     get:
       summary: 'Dashboard do Conferente'
       operationId: dashboardDoConferente
-      description: "Retorna métricas para conferência de caixa, incluindo fechamentos\npendentes de aprovação e ranking de vendedores.\n\n**Quem pode usar:** Conferentes, Gerentes e Admins.\n\n**Métricas retornadas:**\n- `pending_closings` - Lista de fechamentos aguardando aprovação/rejeição\n- `pending_count` - Quantidade de fechamentos pendentes\n- `store_sales` - Total de vendas da loja no dia\n- `shifts_today` - Resumo de turnos por status (open, closed, pending)\n- `top_sellers` - Top 5 vendedores do dia por valor vendido"
+      description: "Retorna métricas para conferência de caixa e auditoria,\nincluindo fechamentos pendentes e ranking de vendedores.\n\n**Foco:** Integridade de caixa e aprovação de fechamentos.\n\n**Quem pode usar:** Conferentes, Gerentes e Admins.\n\n**Métricas retornadas:**\n| Métrica | Descrição |\n|---------|-----------|\n| `pending_closings` | Fechamentos aguardando aprovação |\n| `pending_count` | Quantidade de pendentes |\n| `store_sales` | Total de vendas da loja no dia |\n| `shifts_today` | Resumo por status (open/closed/pending) |\n| `top_sellers` | Top 5 vendedores do dia |"
       parameters:
         -
           in: query
@@ -736,12 +784,12 @@ paths:
         -
           in: query
           name: date
-          description: 'Data no formato YYYY-MM-DD (padrão: hoje).'
+          description: 'Data (YYYY-MM-DD), default: hoje.'
           example: '2026-01-07'
           required: false
           schema:
             type: string
-            description: 'Data no formato YYYY-MM-DD (padrão: hoje).'
+            description: 'Data (YYYY-MM-DD), default: hoje.'
             example: '2026-01-07'
       responses:
         200:
@@ -766,8 +814,6 @@ paths:
                         seller_id: 6
                         name: 'João Vendedor'
                         total: 1500.0
-                  meta:
-                    timestamp: '2026-01-07T12:00:00Z'
                 properties:
                   data:
                     type: object
@@ -818,12 +864,6 @@ paths:
                             total:
                               type: number
                               example: 1500.0
-                  meta:
-                    type: object
-                    properties:
-                      timestamp:
-                        type: string
-                        example: '2026-01-07T12:00:00Z'
       tags:
         - Dashboards
       requestBody:
@@ -840,24 +880,24 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T20:48:56'
+                  example: '2026-01-07T21:21:39'
               required:
                 - store_id
   /api/v1/dashboard/admin:
     get:
       summary: 'Dashboard do Admin'
       operationId: dashboardDoAdmin
-      description: "Retorna visão consolidada de todas as lojas que o usuário administra,\ncom métricas mensais agregadas.\n\n**Quem pode usar:** Admins e Gerentes.\n\n**Métricas retornadas:**\n- `total_sales` - Soma de vendas de todas as lojas no mês\n- `sales_by_store` - Vendas detalhadas por loja\n- `closings_summary` - Contagem de fechamentos por status\n- `top_sellers` - Top 10 vendedores do mês (todas as lojas)"
+      description: "Retorna visão consolidada de todas as lojas administradas,\ncom métricas mensais agregadas.\n\n**Foco:** Visão estratégica e gerencial do negócio.\n\n**Quem pode usar:** Admins e Gerentes.\n\n**Métricas retornadas:**\n| Métrica | Descrição |\n|---------|-----------|\n| `total_sales` | Soma de vendas de todas as lojas no mês |\n| `sales_by_store` | Vendas detalhadas por loja |\n| `closings_summary` | Contagem de fechamentos por status |\n| `top_sellers` | Top 10 vendedores do mês |"
       parameters:
         -
           in: query
           name: month
-          description: 'Mês no formato YYYY-MM (padrão: mês atual).'
+          description: 'Mês (YYYY-MM), default: mês atual.'
           example: 2026-01
           required: false
           schema:
             type: string
-            description: 'Mês no formato YYYY-MM (padrão: mês atual).'
+            description: 'Mês (YYYY-MM), default: mês atual.'
             example: 2026-01
       responses:
         200:
@@ -888,8 +928,6 @@ paths:
                         name: 'João Vendedor'
                         total: 12500.0
                         count: 85
-                  meta:
-                    timestamp: '2026-01-07T12:00:00Z'
                 properties:
                   data:
                     type: object
@@ -964,12 +1002,6 @@ paths:
                             count:
                               type: integer
                               example: 85
-                  meta:
-                    type: object
-                    properties:
-                      timestamp:
-                        type: string
-                        example: '2026-01-07T12:00:00Z'
       tags:
         - Dashboards
       requestBody:
@@ -1169,11 +1201,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T20:48:56'
+                  example: '2026-01-07T21:21:38'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T20:48:56'
+                  example: '2026-01-07T21:21:38'
                 per_page:
                   type: integer
                   description: 'Must be at least 1. Must not be greater than 100.'
@@ -1639,7 +1671,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T20:48:56'
+                  example: '2026-01-07T21:21:38'
                 status:
                   type: string
                   description: ''
@@ -2325,7 +2357,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T20:48:56'
+                  example: '2026-01-07T21:21:38'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -2392,7 +2424,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T20:48:56'
+                  example: '2026-01-07T21:21:38'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -2476,7 +2508,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T20:48:56'
+                  example: '2026-01-07T21:21:38'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -2543,7 +2575,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T20:48:56'
+                  example: '2026-01-07T21:21:38'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -2682,7 +2714,7 @@ paths:
                 active:
                   type: boolean
                   description: ''
-                  example: true
+                  example: false
     delete:
       summary: 'Delete a monthly goal.'
       operationId: deleteAMonthlyGoal
@@ -2781,11 +2813,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T20:48:56'
+                  example: '2026-01-07T21:21:38'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T20:48:56'
+                  example: '2026-01-07T21:21:38'
                 per_page:
                   type: integer
                   description: 'Must be at least 1. Must not be greater than 100.'
@@ -2865,7 +2897,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T20:48:56'
+                  example: '2026-01-07T21:21:38'
               required:
                 - store_id
                 - date
@@ -2891,7 +2923,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T20:48:56'
+                  example: '2026-01-07T21:21:39'
                 shift_code:
                   type: string
                   description: ''
@@ -2922,6 +2954,526 @@ paths:
                 - shift_code
                 - in_count
                 - out_count
+  /api/v1/admin/audit-logs:
+    get:
+      summary: 'Listar logs de auditoria'
+      operationId: listarLogsDeAuditoria
+      description: "Retorna lista paginada de logs com suporte a diversos filtros.\n\n**Filtros disponíveis:**\n- `from`/`to` - Período de datas\n- `causer_id` - ID do usuário que executou a ação\n- `event` - Nome do evento (suporta wildcard: `auth.*`)\n- `log_name` - Domínio: auth, cash, rules, goals\n- `store_id` - Loja relacionada\n- `subject_type` - Tipo de entidade (CashClosing, BonusRule, etc)\n- `subject_id` - ID da entidade\n\n**Ordenação:** Por data de criação, mais recentes primeiro.\n\n**Quem pode usar:** Apenas administradores."
+      parameters:
+        -
+          in: query
+          name: from
+          description: 'Data inicial (YYYY-MM-DD).'
+          example: '2026-01-01'
+          required: false
+          schema:
+            type: string
+            description: 'Data inicial (YYYY-MM-DD).'
+            example: '2026-01-01'
+        -
+          in: query
+          name: to
+          description: 'Data final (YYYY-MM-DD).'
+          example: '2026-01-31'
+          required: false
+          schema:
+            type: string
+            description: 'Data final (YYYY-MM-DD).'
+            example: '2026-01-31'
+        -
+          in: query
+          name: causer_id
+          description: 'ID do usuário.'
+          example: 1
+          required: false
+          schema:
+            type: integer
+            description: 'ID do usuário.'
+            example: 1
+        -
+          in: query
+          name: event
+          description: 'Evento (suporta wildcards: auth.*).'
+          example: cash_closing.submit
+          required: false
+          schema:
+            type: string
+            description: 'Evento (suporta wildcards: auth.*).'
+            example: cash_closing.submit
+        -
+          in: query
+          name: log_name
+          description: 'Domínio: auth, cash, rules, goals.'
+          example: auth
+          required: false
+          schema:
+            type: string
+            description: 'Domínio: auth, cash, rules, goals.'
+            example: auth
+        -
+          in: query
+          name: store_id
+          description: 'ID da loja.'
+          example: 1
+          required: false
+          schema:
+            type: integer
+            description: 'ID da loja.'
+            example: 1
+        -
+          in: query
+          name: subject_type
+          description: 'Tipo de entidade.'
+          example: CashClosing
+          required: false
+          schema:
+            type: string
+            description: 'Tipo de entidade.'
+            example: CashClosing
+        -
+          in: query
+          name: subject_id
+          description: 'ID da entidade.'
+          example: 15
+          required: false
+          schema:
+            type: integer
+            description: 'ID da entidade.'
+            example: 15
+        -
+          in: query
+          name: per_page
+          description: 'Itens por página (1-100).'
+          example: 25
+          required: false
+          schema:
+            type: integer
+            description: 'Itens por página (1-100).'
+            example: 25
+      responses:
+        200:
+          description: 'Lista de logs'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    -
+                      id: 150
+                      event: auth.login
+                      action: login
+                      log_name: auth
+                      created_at: '2026-01-07T18:00:00Z'
+                      causer:
+                        id: 1
+                        name: Admin
+                        email: admin@test.com
+                      subject:
+                        type: User
+                        id: 1
+                      store: null
+                      context:
+                        request_id: abc-123
+                        ip: 192.168.1.1
+                      properties:
+                        auth_mode: bearer
+                        device_name: postman
+                  meta:
+                    current_page: 1
+                    per_page: 25
+                    total: 150
+                properties:
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 150
+                        event: auth.login
+                        action: login
+                        log_name: auth
+                        created_at: '2026-01-07T18:00:00Z'
+                        causer:
+                          id: 1
+                          name: Admin
+                          email: admin@test.com
+                        subject:
+                          type: User
+                          id: 1
+                        store: null
+                        context:
+                          request_id: abc-123
+                          ip: 192.168.1.1
+                        properties:
+                          auth_mode: bearer
+                          device_name: postman
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 150
+                        event:
+                          type: string
+                          example: auth.login
+                        action:
+                          type: string
+                          example: login
+                        log_name:
+                          type: string
+                          example: auth
+                        created_at:
+                          type: string
+                          example: '2026-01-07T18:00:00Z'
+                        causer:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            name:
+                              type: string
+                              example: Admin
+                            email:
+                              type: string
+                              example: admin@test.com
+                        subject:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              example: User
+                            id:
+                              type: integer
+                              example: 1
+                        store:
+                          type: string
+                          example: null
+                        context:
+                          type: object
+                          properties:
+                            request_id:
+                              type: string
+                              example: abc-123
+                            ip:
+                              type: string
+                              example: 192.168.1.1
+                        properties:
+                          type: object
+                          properties:
+                            auth_mode:
+                              type: string
+                              example: bearer
+                            device_name:
+                              type: string
+                              example: postman
+                  meta:
+                    type: object
+                    properties:
+                      current_page:
+                        type: integer
+                        example: 1
+                      per_page:
+                        type: integer
+                        example: 25
+                      total:
+                        type: integer
+                        example: 150
+        403:
+          description: 'Sem permissão'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Apenas administradores podem acessar este recurso.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Apenas administradores podem acessar este recurso.'
+      tags:
+        - 'Administração - Logs de Auditoria'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                from:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2026-01-07T21:21:39'
+                to:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2026-01-07T21:21:39'
+                causer_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the users table.'
+                  example: 16
+                event:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: 'n'
+                log_name:
+                  type: string
+                  description: 'Must not be greater than 50 characters.'
+                  example: g
+                store_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: 16
+                subject_type:
+                  type: string
+                  description: 'Must not be greater than 50 characters.'
+                  example: 'n'
+                subject_id:
+                  type: integer
+                  description: ''
+                  example: 16
+                per_page:
+                  type: integer
+                  description: 'Must be at least 1. Must not be greater than 100.'
+                  example: 22
+  /api/v1/admin/audit-logs/stats:
+    get:
+      summary: 'Estatísticas de logs'
+      operationId: estatsticasDeLogs
+      description: "Retorna estatísticas agregadas dos logs para overview.\n\n**Quem pode usar:** Apenas administradores."
+      parameters:
+        -
+          in: query
+          name: from
+          description: 'Data inicial.'
+          example: '2026-01-01'
+          required: false
+          schema:
+            type: string
+            description: 'Data inicial.'
+            example: '2026-01-01'
+        -
+          in: query
+          name: to
+          description: 'Data final.'
+          example: '2026-01-31'
+          required: false
+          schema:
+            type: string
+            description: 'Data final.'
+            example: '2026-01-31'
+      responses:
+        200:
+          description: Estatísticas
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    total_logs: 1500
+                    by_log_name:
+                      auth: 500
+                      cash: 800
+                      rules: 200
+                    by_action:
+                      login: 300
+                      submit: 500
+                      approve: 300
+                    unique_users: 15
+                    period:
+                      from: '2026-01-01'
+                      to: '2026-01-31'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      total_logs:
+                        type: integer
+                        example: 1500
+                      by_log_name:
+                        type: object
+                        properties:
+                          auth:
+                            type: integer
+                            example: 500
+                          cash:
+                            type: integer
+                            example: 800
+                          rules:
+                            type: integer
+                            example: 200
+                      by_action:
+                        type: object
+                        properties:
+                          login:
+                            type: integer
+                            example: 300
+                          submit:
+                            type: integer
+                            example: 500
+                          approve:
+                            type: integer
+                            example: 300
+                      unique_users:
+                        type: integer
+                        example: 15
+                      period:
+                        type: object
+                        properties:
+                          from:
+                            type: string
+                            example: '2026-01-01'
+                          to:
+                            type: string
+                            example: '2026-01-31'
+      tags:
+        - 'Administração - Logs de Auditoria'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                from:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2026-01-07T21:21:39'
+                to:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2026-01-07T21:21:39'
+  '/api/v1/admin/audit-logs/{auditLog_id}':
+    get:
+      summary: 'Ver detalhes do log'
+      operationId: verDetalhesDoLog
+      description: "Retorna informações completas de um log específico,\nincluindo todo o payload de properties.\n\n**Quem pode usar:** Apenas administradores."
+      parameters: []
+      responses:
+        200:
+          description: 'Detalhes do log'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 150
+                    event: cash_closing.submit
+                    action: submit
+                    log_name: cash
+                    created_at: '2026-01-07T18:00:00Z'
+                    causer:
+                      id: 6
+                      name: 'João Vendedor'
+                      email: joao@test.com
+                    subject:
+                      type: CashClosing
+                      id: 45
+                    store:
+                      id: 1
+                      name: 'Mais Capinhas Tijucas'
+                    context:
+                      request_id: abc-123-def-456
+                      ip: 192.168.1.100
+                      user_agent: Mozilla/5.0...
+                    properties:
+                      status_from: draft
+                      status_to: submitted
+                      divergence_total: 0.0
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 150
+                      event:
+                        type: string
+                        example: cash_closing.submit
+                      action:
+                        type: string
+                        example: submit
+                      log_name:
+                        type: string
+                        example: cash
+                      created_at:
+                        type: string
+                        example: '2026-01-07T18:00:00Z'
+                      causer:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 6
+                          name:
+                            type: string
+                            example: 'João Vendedor'
+                          email:
+                            type: string
+                            example: joao@test.com
+                      subject:
+                        type: object
+                        properties:
+                          type:
+                            type: string
+                            example: CashClosing
+                          id:
+                            type: integer
+                            example: 45
+                      store:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          name:
+                            type: string
+                            example: 'Mais Capinhas Tijucas'
+                      context:
+                        type: object
+                        properties:
+                          request_id:
+                            type: string
+                            example: abc-123-def-456
+                          ip:
+                            type: string
+                            example: 192.168.1.100
+                          user_agent:
+                            type: string
+                            example: Mozilla/5.0...
+                      properties:
+                        type: object
+                        properties:
+                          status_from:
+                            type: string
+                            example: draft
+                          status_to:
+                            type: string
+                            example: submitted
+                          divergence_total:
+                            type: number
+                            example: 0.0
+      tags:
+        - 'Administração - Logs de Auditoria'
+    parameters:
+      -
+        in: path
+        name: auditLog_id
+        description: 'The ID of the auditLog.'
+        example: 16
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: id
+        description: 'ID do log.'
+        example: 150
+        required: true
+        schema:
+          type: integer
   /api/v1/admin/stores:
     get:
       summary: 'Listar todas as lojas'
@@ -4061,3 +4613,383 @@ paths:
         required: true
         schema:
           type: integer
+  /api/v1/reports/store-performance:
+    get:
+      summary: 'Performance da Loja'
+      operationId: performanceDaLoja
+      description: "Retorna métricas completas de performance de uma loja,\nincluindo atingimento de meta, comparação YoY e projeções.\n\nEste relatório é equivalente à planilha de \"Desempenho de Lojas\"\nque o gestor mantinha manualmente.\n\n**Métricas retornadas:**\n| Grupo | Métricas |\n|-------|----------|\n| `sales` | Vendas atuais, meta, atingimento %, restante |\n| `comparison` | Mesmo período ano passado, total ano passado, crescimento YoY |\n| `forecast` | Projeção linear, projeção por tendência, status |\n\n**Status de projeção:**\n- `ON_TRACK` - Projeção >= 100% da meta\n- `AT_RISK` - Projeção entre 90-100% da meta\n- `BEHIND` - Projeção < 90% da meta\n\n**Quem pode usar:** Gerentes e Admins da loja."
+      parameters:
+        -
+          in: query
+          name: store_id
+          description: 'ID da loja.'
+          example: 1
+          required: true
+          schema:
+            type: integer
+            description: 'ID da loja.'
+            example: 1
+        -
+          in: query
+          name: month
+          description: 'Mês (YYYY-MM), default: mês atual.'
+          example: 2026-01
+          required: false
+          schema:
+            type: string
+            description: 'Mês (YYYY-MM), default: mês atual.'
+            example: 2026-01
+      responses:
+        200:
+          description: 'Performance da loja'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    store_id: 1
+                    period: 2026-01
+                    days_elapsed: 15
+                    days_total: 31
+                    sales:
+                      current_amount: 31981.29
+                      goal_amount: 52000.0
+                      achievement_rate: 61.5
+                      remaining_to_goal: 20018.71
+                    comparison:
+                      same_period_last_year: 26950.0
+                      total_last_year_month: 55835.0
+                      yoy_growth: 18.6
+                    forecast:
+                      linear_projection: 66100.0
+                      trend_projection: 66220.31
+                      status: ON_TRACK
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      store_id:
+                        type: integer
+                        example: 1
+                      period:
+                        type: string
+                        example: 2026-01
+                      days_elapsed:
+                        type: integer
+                        example: 15
+                      days_total:
+                        type: integer
+                        example: 31
+                      sales:
+                        type: object
+                        properties:
+                          current_amount:
+                            type: number
+                            example: 31981.29
+                          goal_amount:
+                            type: number
+                            example: 52000.0
+                          achievement_rate:
+                            type: number
+                            example: 61.5
+                          remaining_to_goal:
+                            type: number
+                            example: 20018.71
+                      comparison:
+                        type: object
+                        properties:
+                          same_period_last_year:
+                            type: number
+                            example: 26950.0
+                          total_last_year_month:
+                            type: number
+                            example: 55835.0
+                          yoy_growth:
+                            type: number
+                            example: 18.6
+                      forecast:
+                        type: object
+                        properties:
+                          linear_projection:
+                            type: number
+                            example: 66100.0
+                          trend_projection:
+                            type: number
+                            example: 66220.31
+                          status:
+                            type: string
+                            example: ON_TRACK
+      tags:
+        - 'Relatórios Gerenciais'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                store_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: 16
+                month:
+                  type: string
+                  description: 'Must match the regex /^\d{4}-\d{2}$/.'
+                  example: 6425-59
+              required:
+                - store_id
+  /api/v1/reports/consolidated:
+    get:
+      summary: 'Performance Consolidada (Multi-Loja)'
+      operationId: performanceConsolidadaMultiLoja
+      description: "Retorna performance de todas as lojas que o usuário administra,\ncom totais consolidados.\n\nIdeal para sócios e admins que gerenciam múltiplas unidades.\n\n**Quem pode usar:** Admins e Gerentes."
+      parameters:
+        -
+          in: query
+          name: month
+          description: 'Mês (YYYY-MM), default: mês atual.'
+          example: 2026-01
+          required: false
+          schema:
+            type: string
+            description: 'Mês (YYYY-MM), default: mês atual.'
+            example: 2026-01
+      responses:
+        200:
+          description: 'Performance multi-loja'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    period: 2026-01
+                    stores:
+                      -
+                        store_id: 1
+                        sales:
+                          current_amount: 31981.29
+                        forecast:
+                          status: ON_TRACK
+                    consolidated:
+                      total_sales: 95000.0
+                      total_goal: 156000.0
+                      total_achievement_rate: 60.9
+                      total_linear_projection: 198000.0
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      period:
+                        type: string
+                        example: 2026-01
+                      stores:
+                        type: array
+                        example:
+                          -
+                            store_id: 1
+                            sales:
+                              current_amount: 31981.29
+                            forecast:
+                              status: ON_TRACK
+                        items:
+                          type: object
+                          properties:
+                            store_id:
+                              type: integer
+                              example: 1
+                            sales:
+                              type: object
+                              properties:
+                                current_amount:
+                                  type: number
+                                  example: 31981.29
+                            forecast:
+                              type: object
+                              properties:
+                                status:
+                                  type: string
+                                  example: ON_TRACK
+                      consolidated:
+                        type: object
+                        properties:
+                          total_sales:
+                            type: number
+                            example: 95000.0
+                          total_goal:
+                            type: number
+                            example: 156000.0
+                          total_achievement_rate:
+                            type: number
+                            example: 60.9
+                          total_linear_projection:
+                            type: number
+                            example: 198000.0
+      tags:
+        - 'Relatórios Gerenciais'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                month:
+                  type: string
+                  description: 'Must match the regex /^\d{4}-\d{2}$/.'
+                  example: 6425-59
+  /api/v1/reports/cash-integrity:
+    get:
+      summary: 'Integridade de Caixa'
+      operationId: integridadeDeCaixa
+      description: "Retorna métricas de auditoria de caixa para uma loja,\nincluindo % de quebra, divergências e alertas.\n\nEste relatório é crítico para:\n- Identificar possíveis fraudes ou roubos\n- Monitorar qualidade operacional\n- Decidir pagamento de bônus\n\n**Métricas retornadas:**\n| Grupo | Métricas |\n|-------|----------|\n| `cash_integrity` | Valores sistema vs real, % quebra, status |\n| `divergence_analysis` | Justificadas vs não justificadas |\n| `workflow_status` | Turnos totais, fechados, pendentes |\n| `alerts` | Alertas automáticos baseados em thresholds |\n\n**Alertas gerados:**\n- `HIGH_CASH_BREAK` (CRITICAL) - Quebra > 5%\n- `ELEVATED_CASH_BREAK` (WARNING) - Quebra > 2%\n- `UNJUSTIFIED_DIVERGENCES` (WARNING) - Divergências sem justificativa\n- `PENDING_BACKLOG` (INFO) - Muitos fechamentos pendentes\n\n**Quem pode usar:** Conferentes, Gerentes e Admins."
+      parameters:
+        -
+          in: query
+          name: store_id
+          description: 'ID da loja.'
+          example: 1
+          required: true
+          schema:
+            type: integer
+            description: 'ID da loja.'
+            example: 1
+        -
+          in: query
+          name: month
+          description: 'Mês (YYYY-MM), default: mês atual.'
+          example: 2026-01
+          required: false
+          schema:
+            type: string
+            description: 'Mês (YYYY-MM), default: mês atual.'
+            example: 2026-01
+      responses:
+        200:
+          description: 'Integridade de caixa'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    store_id: 1
+                    period: 2026-01
+                    cash_integrity:
+                      total_system_value: 150000.0
+                      total_real_value: 146250.0
+                      total_divergence: -3750.0
+                      cash_break_percentage: 2.5
+                      status: YELLOW
+                    divergence_analysis:
+                      total_lines_with_divergence: 15
+                      justified_count: 12
+                      unjustified_count: 3
+                      justified_rate: 80.0
+                    workflow_status:
+                      total_shifts: 45
+                      closed_count: 40
+                      pending_approval: 3
+                      completion_rate: 88.89
+                    alerts:
+                      -
+                        type: WARNING
+                        code: ELEVATED_CASH_BREAK
+                        message: 'Quebra de 2.50% acima do limite'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      store_id:
+                        type: integer
+                        example: 1
+                      period:
+                        type: string
+                        example: 2026-01
+                      cash_integrity:
+                        type: object
+                        properties:
+                          total_system_value:
+                            type: number
+                            example: 150000.0
+                          total_real_value:
+                            type: number
+                            example: 146250.0
+                          total_divergence:
+                            type: number
+                            example: -3750.0
+                          cash_break_percentage:
+                            type: number
+                            example: 2.5
+                          status:
+                            type: string
+                            example: YELLOW
+                      divergence_analysis:
+                        type: object
+                        properties:
+                          total_lines_with_divergence:
+                            type: integer
+                            example: 15
+                          justified_count:
+                            type: integer
+                            example: 12
+                          unjustified_count:
+                            type: integer
+                            example: 3
+                          justified_rate:
+                            type: number
+                            example: 80.0
+                      workflow_status:
+                        type: object
+                        properties:
+                          total_shifts:
+                            type: integer
+                            example: 45
+                          closed_count:
+                            type: integer
+                            example: 40
+                          pending_approval:
+                            type: integer
+                            example: 3
+                          completion_rate:
+                            type: number
+                            example: 88.89
+                      alerts:
+                        type: array
+                        example:
+                          -
+                            type: WARNING
+                            code: ELEVATED_CASH_BREAK
+                            message: 'Quebra de 2.50% acima do limite'
+                        items:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              example: WARNING
+                            code:
+                              type: string
+                              example: ELEVATED_CASH_BREAK
+                            message:
+                              type: string
+                              example: 'Quebra de 2.50% acima do limite'
+      tags:
+        - 'Relatórios Gerenciais'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                store_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: 16
+                month:
+                  type: string
+                  description: 'Must match the regex /^\d{4}-\d{2}$/.'
+                  example: 6425-59
+              required:
+                - store_id

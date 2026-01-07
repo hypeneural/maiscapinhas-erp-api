@@ -10,7 +10,7 @@
     ],
     "info": {
         "name": "MaisCapinhas ERP API - Documenta\u00e7\u00e3o",
-        "_postman_id": "8760bd85-207e-4af3-adfb-2f6084037b62",
+        "_postman_id": "ddc6bcc8-ec09-4711-a6da-9516ad7edf8f",
         "description": "API REST para gest\u00e3o de vendas, metas, fechamento de caixa, b\u00f4nus e comiss\u00f5es do ERP MaisCapinhas.",
         "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json",
         "version": "1.0.0"
@@ -94,7 +94,7 @@
         },
         {
             "name": "Autentica\u00e7\u00e3o",
-            "description": "\nEndpoints para autentica\u00e7\u00e3o via Bearer Token (Sanctum).\nA API suporta dois modos de autentica\u00e7\u00e3o:\n\n1. **Bearer Token** (recomendado para desenvolvimento e integra\u00e7\u00f5es)\n2. **Cookie SPA** (para frontends React\/Vue com `withCredentials`)",
+            "description": "\nEndpoints para autentica\u00e7\u00e3o via Bearer Token (Sanctum).\nA API suporta dois modos de autentica\u00e7\u00e3o:\n\n1. **Bearer Token** (recomendado para desenvolvimento e integra\u00e7\u00f5es)\n2. **Cookie SPA** (para frontends React\/Vue com `withCredentials`)\n\n**Auditoria:** Todas as a\u00e7\u00f5es de autentica\u00e7\u00e3o (login, logout) s\u00e3o\nregistradas no log de auditoria com IP e user-agent.",
             "item": [
                 {
                     "name": "Fazer login e obter token",
@@ -120,7 +120,7 @@
                             "mode": "raw",
                             "raw": "{\"email\":\"admin@maiscapinhas.com.br\",\"password\":\"password\",\"device_name\":\"postman-dev\"}"
                         },
-                        "description": "Autentica o usu\u00e1rio e retorna um Bearer Token para uso nas pr\u00f3ximas requisi\u00e7\u00f5es.\n\n**Quem pode usar:** Qualquer usu\u00e1rio ativo com email e senha v\u00e1lidos.\n\n**Regras de neg\u00f3cio:**\n- Usu\u00e1rios inativos (`active = false`) n\u00e3o podem fazer login\n- O token n\u00e3o expira automaticamente, mas pode ser revogado via logout\n- Cada login gera um novo token (m\u00faltiplos dispositivos s\u00e3o permitidos)\n\n**Erros poss\u00edveis:**\n- `422` - Credenciais inv\u00e1lidas ou conta desativada",
+                        "description": "Autentica o usu\u00e1rio e retorna um Bearer Token para uso nas pr\u00f3ximas requisi\u00e7\u00f5es.\n\n**Quem pode usar:** Qualquer usu\u00e1rio ativo com email e senha v\u00e1lidos.\n\n**Regras de neg\u00f3cio:**\n- Usu\u00e1rios inativos (`active = false`) n\u00e3o podem fazer login\n- O token n\u00e3o expira automaticamente, mas pode ser revogado via logout\n- Cada login gera um novo token (m\u00faltiplos dispositivos s\u00e3o permitidos)\n- Todas as tentativas de login s\u00e3o registradas para auditoria\n\n**Erros poss\u00edveis:**\n- `422` - Credenciais inv\u00e1lidas ou conta desativada",
                         "auth": {
                             "type": "noauth"
                         }
@@ -129,7 +129,7 @@
                         {
                             "header": [],
                             "code": 200,
-                            "body": "{\n  \"data\": {\n    \"token\": \"1|abc123xyz...\",\n    \"token_type\": \"Bearer\",\n    \"user\": {\n      \"id\": 1,\n      \"name\": \"Admin Sistema\",\n      \"email\": \"admin@maiscapinhas.com.br\"\n    }\n  },\n  \"meta\": { \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
+                            "body": "{\n  \"data\": {\n    \"token\": \"1|abc123xyz...\",\n    \"token_type\": \"Bearer\",\n    \"user\": {\n      \"id\": 1,\n      \"name\": \"Admin Sistema\",\n      \"email\": \"admin@maiscapinhas.com.br\"\n    }\n  },\n  \"meta\": { \"request_id\": \"abc-123\", \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
                             "name": "Login bem-sucedido"
                         },
                         {
@@ -167,13 +167,13 @@
                             }
                         ],
                         "body": null,
-                        "description": "Revoga o token que foi usado para autenticar esta requisi\u00e7\u00e3o.\nOs demais tokens do usu\u00e1rio (outros dispositivos) permanecem v\u00e1lidos.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado.\n\n**Casos de uso:**\n- Logout manual do usu\u00e1rio\n- Encerrar sess\u00e3o em um dispositivo espec\u00edfico"
+                        "description": "Revoga o token que foi usado para autenticar esta requisi\u00e7\u00e3o.\nOs demais tokens do usu\u00e1rio (outros dispositivos) permanecem v\u00e1lidos.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado.\n\n**Auditoria:** A a\u00e7\u00e3o de logout \u00e9 registrada com IP e hor\u00e1rio."
                     },
                     "response": [
                         {
                             "header": [],
                             "code": 200,
-                            "body": "{\n  \"data\": { \"message\": \"Successfully logged out.\" },\n  \"meta\": { \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
+                            "body": "{\n  \"data\": { \"message\": \"Successfully logged out.\" },\n  \"meta\": { \"request_id\": \"abc-123\", \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
                             "name": "Logout bem-sucedido"
                         }
                     ]
@@ -199,13 +199,13 @@
                             }
                         ],
                         "body": null,
-                        "description": "Revoga **todos** os tokens do usu\u00e1rio, desconectando-o de todos os dispositivos.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado.\n\n**Casos de uso:**\n- Suspeita de comprometimento de seguran\u00e7a\n- For\u00e7ar re-login em todos os dispositivos\n- Altera\u00e7\u00e3o de senha"
+                        "description": "Revoga **todos** os tokens do usu\u00e1rio, desconectando-o de todos os dispositivos.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado.\n\n**Auditoria:** A a\u00e7\u00e3o \u00e9 registrada como logout_all."
                     },
                     "response": [
                         {
                             "header": [],
                             "code": 200,
-                            "body": "{\n  \"data\": { \"message\": \"All tokens revoked.\" },\n  \"meta\": { \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
+                            "body": "{\n  \"data\": { \"message\": \"All tokens revoked.\" },\n  \"meta\": { \"request_id\": \"abc-123\", \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
                             "name": "Todos tokens revogados"
                         }
                     ]
@@ -342,7 +342,7 @@
         },
         {
             "name": "Dashboards",
-            "description": "\nEndpoints de dashboard com m\u00e9tricas e KPIs por perfil de usu\u00e1rio.\nCada dashboard retorna informa\u00e7\u00f5es personalizadas para o papel do usu\u00e1rio.",
+            "description": "\nEndpoints de dashboard com m\u00e9tricas e KPIs personalizados por perfil de usu\u00e1rio.\n\nCada dashboard retorna informa\u00e7\u00f5es otimizadas para o papel do usu\u00e1rio:\n- **Vendedor**: Foco em gamifica\u00e7\u00e3o, b\u00f4nus e comiss\u00e3o pessoal\n- **Conferente**: Foco em fechamentos pendentes e integridade de caixa\n- **Admin\/Gerente**: Vis\u00e3o consolidada de todas as lojas\n\n**Regras de Acesso:**\n- Usu\u00e1rio s\u00f3 v\u00ea dados das lojas \u00e0s quais tem acesso\n- Dashboard espec\u00edfico depende da role do usu\u00e1rio na loja",
             "item": [
                 {
                     "name": "Dashboard do Vendedor",
@@ -360,7 +360,7 @@
                                 {
                                     "key": "date",
                                     "value": "2026-01-07",
-                                    "description": "Data no formato YYYY-MM-DD (padr\u00e3o: hoje).",
+                                    "description": "Data (YYYY-MM-DD), default: hoje.",
                                     "disabled": false
                                 }
                             ],
@@ -379,22 +379,16 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T20:48:56\"}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T21:21:39\"}"
                         },
-                        "description": "Retorna m\u00e9tricas do vendedor no dia, incluindo suas vendas pessoais\ncomparadas com o total da loja e status dos seus turnos.\n\n**Quem pode usar:** Vendedores e n\u00edveis superiores.\n\n**M\u00e9tricas retornadas:**\n- `my_sales` - Quantidade e valor total das vendas do vendedor no dia\n- `store_sales` - Quantidade e valor total de todas as vendas da loja no dia\n- `my_shifts` - Lista dos turnos do vendedor naquele dia com status do fechamento\n\n**Dica:** Compare `my_sales` com `store_sales` para ver sua participa\u00e7\u00e3o nas vendas da loja."
+                        "description": "Retorna m\u00e9tricas completas para o vendedor, incluindo:\n- Vendas pessoais do dia\n- **Gamifica\u00e7\u00e3o de B\u00f4nus** - quanto falta para o pr\u00f3ximo n\u00edvel\n- **Proje\u00e7\u00e3o de Comiss\u00e3o** - tier atual e potencial\n- **Pace Di\u00e1rio** - ritmo comparado \u00e0 m\u00e9dia\n\nEste dashboard \u00e9 projetado para **motivar** o vendedor mostrando\nmetas tang\u00edveis e progresso em tempo real.\n\n**Quem pode usar:** Vendedores e n\u00edveis superiores.\n\n**M\u00e9tricas retornadas:**\n| M\u00e9trica | Descri\u00e7\u00e3o |\n|---------|-----------|\n| `my_sales` | Quantidade e valor total das vendas do dia |\n| `store_sales` | Total de vendas da loja (para compara\u00e7\u00e3o) |\n| `bonus_gamification` | Gap para pr\u00f3ximo b\u00f4nus, b\u00f4nus atual |\n| `monthly_commission` | Tier atual, proje\u00e7\u00e3o, potencial |\n| `daily_pace` | Ritmo vs m\u00e9dia di\u00e1ria |\n| `my_shifts` | Turnos do dia com status |"
                     },
                     "response": [
                         {
                             "header": [],
                             "code": 200,
-                            "body": "{\n  \"data\": {\n    \"date\": \"2026-01-07\",\n    \"my_sales\": { \"count\": 5, \"total\": 850.00 },\n    \"store_sales\": { \"count\": 23, \"total\": 3200.00 },\n    \"my_shifts\": [\n      { \"id\": 1, \"date\": \"2026-01-07\", \"shift_code\": \"M\", \"status\": \"open\", \"cash_closing\": null }\n    ]\n  },\n  \"meta\": { \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
-                            "name": "Vendas do dia"
-                        },
-                        {
-                            "header": [],
-                            "code": 403,
-                            "body": "{\n  \"error\": { \"code\": 403, \"message\": \"You do not have access to this store.\" }\n}",
-                            "name": "Sem acesso \u00e0 loja"
+                            "body": "{\n  \"data\": {\n    \"date\": \"2026-01-07\",\n    \"my_sales\": { \"count\": 5, \"total\": 450.00 },\n    \"store_sales\": { \"count\": 23, \"total\": 3200.00 },\n    \"bonus_gamification\": {\n      \"current_amount\": 450.00,\n      \"next_bonus_goal\": 500.00,\n      \"gap_to_bonus\": 50.00,\n      \"next_bonus_value\": 10.00,\n      \"current_bonus_earned\": 0,\n      \"message\": \"Faltam R$ 50,00 para ganhar R$ 10,00 de b\u00f4nus!\"\n    },\n    \"monthly_commission\": {\n      \"sales_mtd\": 8500.00,\n      \"goal_amount\": 15000.00,\n      \"achievement_rate\": 56.67,\n      \"current_tier\": 2.0,\n      \"current_commission_value\": 170.00,\n      \"next_tier\": 3.0,\n      \"potential_commission\": 450.00\n    },\n    \"daily_pace\": {\n      \"today_sales\": 450.00,\n      \"average_daily_sales\": 566.67,\n      \"today_vs_average\": -116.67,\n      \"status\": \"BEHIND\"\n    },\n    \"my_shifts\": []\n  },\n  \"meta\": { \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
+                            "name": "Dashboard completo"
                         }
                     ]
                 },
@@ -414,7 +408,7 @@
                                 {
                                     "key": "date",
                                     "value": "2026-01-07",
-                                    "description": "Data no formato YYYY-MM-DD (padr\u00e3o: hoje).",
+                                    "description": "Data (YYYY-MM-DD), default: hoje.",
                                     "disabled": false
                                 }
                             ],
@@ -433,15 +427,15 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T20:48:56\"}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T21:21:39\"}"
                         },
-                        "description": "Retorna m\u00e9tricas para confer\u00eancia de caixa, incluindo fechamentos\npendentes de aprova\u00e7\u00e3o e ranking de vendedores.\n\n**Quem pode usar:** Conferentes, Gerentes e Admins.\n\n**M\u00e9tricas retornadas:**\n- `pending_closings` - Lista de fechamentos aguardando aprova\u00e7\u00e3o\/rejei\u00e7\u00e3o\n- `pending_count` - Quantidade de fechamentos pendentes\n- `store_sales` - Total de vendas da loja no dia\n- `shifts_today` - Resumo de turnos por status (open, closed, pending)\n- `top_sellers` - Top 5 vendedores do dia por valor vendido"
+                        "description": "Retorna m\u00e9tricas para confer\u00eancia de caixa e auditoria,\nincluindo fechamentos pendentes e ranking de vendedores.\n\n**Foco:** Integridade de caixa e aprova\u00e7\u00e3o de fechamentos.\n\n**Quem pode usar:** Conferentes, Gerentes e Admins.\n\n**M\u00e9tricas retornadas:**\n| M\u00e9trica | Descri\u00e7\u00e3o |\n|---------|-----------|\n| `pending_closings` | Fechamentos aguardando aprova\u00e7\u00e3o |\n| `pending_count` | Quantidade de pendentes |\n| `store_sales` | Total de vendas da loja no dia |\n| `shifts_today` | Resumo por status (open\/closed\/pending) |\n| `top_sellers` | Top 5 vendedores do dia |"
                     },
                     "response": [
                         {
                             "header": [],
                             "code": 200,
-                            "body": "{\n  \"data\": {\n    \"date\": \"2026-01-07\",\n    \"pending_closings\": [],\n    \"pending_count\": 0,\n    \"store_sales\": { \"count\": 23, \"total\": 3200.00 },\n    \"shifts_today\": { \"open\": 2, \"closed\": 4 },\n    \"top_sellers\": [\n      { \"seller_id\": 6, \"name\": \"Jo\u00e3o Vendedor\", \"total\": 1500.00 }\n    ]\n  },\n  \"meta\": { \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
+                            "body": "{\n  \"data\": {\n    \"date\": \"2026-01-07\",\n    \"pending_closings\": [],\n    \"pending_count\": 0,\n    \"store_sales\": { \"count\": 23, \"total\": 3200.00 },\n    \"shifts_today\": { \"open\": 2, \"closed\": 4 },\n    \"top_sellers\": [\n      { \"seller_id\": 6, \"name\": \"Jo\u00e3o Vendedor\", \"total\": 1500.00 }\n    ]\n  }\n}",
                             "name": "Dashboard do conferente"
                         }
                     ]
@@ -456,7 +450,7 @@
                                 {
                                     "key": "month",
                                     "value": "2026-01",
-                                    "description": "M\u00eas no formato YYYY-MM (padr\u00e3o: m\u00eas atual).",
+                                    "description": "M\u00eas (YYYY-MM), default: m\u00eas atual.",
                                     "disabled": false
                                 }
                             ],
@@ -477,13 +471,13 @@
                             "mode": "raw",
                             "raw": "{\"month\":\"6425-59\"}"
                         },
-                        "description": "Retorna vis\u00e3o consolidada de todas as lojas que o usu\u00e1rio administra,\ncom m\u00e9tricas mensais agregadas.\n\n**Quem pode usar:** Admins e Gerentes.\n\n**M\u00e9tricas retornadas:**\n- `total_sales` - Soma de vendas de todas as lojas no m\u00eas\n- `sales_by_store` - Vendas detalhadas por loja\n- `closings_summary` - Contagem de fechamentos por status\n- `top_sellers` - Top 10 vendedores do m\u00eas (todas as lojas)"
+                        "description": "Retorna vis\u00e3o consolidada de todas as lojas administradas,\ncom m\u00e9tricas mensais agregadas.\n\n**Foco:** Vis\u00e3o estrat\u00e9gica e gerencial do neg\u00f3cio.\n\n**Quem pode usar:** Admins e Gerentes.\n\n**M\u00e9tricas retornadas:**\n| M\u00e9trica | Descri\u00e7\u00e3o |\n|---------|-----------|\n| `total_sales` | Soma de vendas de todas as lojas no m\u00eas |\n| `sales_by_store` | Vendas detalhadas por loja |\n| `closings_summary` | Contagem de fechamentos por status |\n| `top_sellers` | Top 10 vendedores do m\u00eas |"
                     },
                     "response": [
                         {
                             "header": [],
                             "code": 200,
-                            "body": "{\n  \"data\": {\n    \"month\": \"2026-01\",\n    \"total_sales\": { \"count\": 450, \"total\": 67500.00 },\n    \"sales_by_store\": [\n      { \"store_id\": 1, \"store_name\": \"Mais Capinhas Tijucas\", \"count\": 180, \"total\": 28000.00 }\n    ],\n    \"closings_summary\": { \"approved\": 40, \"submitted\": 5, \"draft\": 3 },\n    \"top_sellers\": [\n      { \"seller_id\": 6, \"name\": \"Jo\u00e3o Vendedor\", \"total\": 12500.00, \"count\": 85 }\n    ]\n  },\n  \"meta\": { \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
+                            "body": "{\n  \"data\": {\n    \"month\": \"2026-01\",\n    \"total_sales\": { \"count\": 450, \"total\": 67500.00 },\n    \"sales_by_store\": [\n      { \"store_id\": 1, \"store_name\": \"Mais Capinhas Tijucas\", \"count\": 180, \"total\": 28000.00 }\n    ],\n    \"closings_summary\": { \"approved\": 40, \"submitted\": 5, \"draft\": 3 },\n    \"top_sellers\": [\n      { \"seller_id\": 6, \"name\": \"Jo\u00e3o Vendedor\", \"total\": 12500.00, \"count\": 85 }\n    ]\n  }\n}",
                             "name": "Dashboard consolidado"
                         }
                     ]
@@ -547,7 +541,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"seller_id\":16,\"from\":\"2026-01-07T20:48:56\",\"to\":\"2026-01-07T20:48:56\",\"per_page\":22}"
+                            "raw": "{\"store_id\":16,\"seller_id\":16,\"from\":\"2026-01-07T21:21:38\",\"to\":\"2026-01-07T21:21:38\",\"per_page\":22}"
                         },
                         "description": "Retorna a lista paginada de vendas das lojas \u00e0s quais o\nusu\u00e1rio tem acesso, com diversos filtros dispon\u00edveis.\n\n**Visibilidade:**\n- Vendedor: v\u00ea vendas de todas as lojas onde trabalha\n- Gerente: v\u00ea todas as vendas das lojas que gerencia\n- Admin: v\u00ea todas as vendas do sistema\n\n**Filtros dispon\u00edveis:**\n- `store_id` - Filtrar por loja espec\u00edfica\n- `seller_id` - Filtrar por vendedor\n- `from`\/`to` - Per\u00edodo de datas\n\n**Ordena\u00e7\u00e3o:** Por data de venda, mais recentes primeiro.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado (v\u00ea apenas suas lojas)."
                     },
@@ -813,7 +807,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T20:48:56\",\"status\":\"pending\",\"per_page\":22}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T21:21:38\",\"status\":\"pending\",\"per_page\":22}"
                         },
                         "description": "Retorna os turnos de caixa das lojas \u00e0s quais o usu\u00e1rio tem acesso,\ncom filtros por loja, data e status.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado.\n\n**Filtros dispon\u00edveis:**\n- `store_id` - Filtrar por loja espec\u00edfica\n- `date` - Filtrar por data espec\u00edfica (YYYY-MM-DD)\n- `status` - Filtrar por status (open, closed, pending)\n\n**C\u00f3digos de turno:**\n- `M` - Manh\u00e3\n- `T` - Tarde\n- `N` - Noite"
                     },
@@ -1203,7 +1197,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-07T20:48:56\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-07T21:21:38\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
                         },
                         "description": "POST \/api\/v1\/rules\/bonus"
                     },
@@ -1292,7 +1286,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-07T20:48:56\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-07T21:21:38\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
                         },
                         "description": "PUT \/api\/v1\/rules\/bonus\/{rule}"
                     },
@@ -1404,7 +1398,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-07T20:48:56\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-07T21:21:38\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
                         },
                         "description": "POST \/api\/v1\/rules\/commission"
                     },
@@ -1493,7 +1487,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-07T20:48:56\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-07T21:21:38\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
                         },
                         "description": "PUT \/api\/v1\/rules\/commission\/{rule}"
                     },
@@ -1694,7 +1688,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"goal_amount\":27,\"active\":true}"
+                            "raw": "{\"goal_amount\":27,\"active\":false}"
                         },
                         "description": "PUT \/api\/v1\/goals\/monthly\/{goal}"
                     },
@@ -1797,7 +1791,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"from\":\"2026-01-07T20:48:56\",\"to\":\"2026-01-07T20:48:56\",\"per_page\":22}"
+                            "raw": "{\"store_id\":16,\"from\":\"2026-01-07T21:21:38\",\"to\":\"2026-01-07T21:21:38\",\"per_page\":22}"
                         },
                         "description": "GET \/api\/v1\/finance\/bonus?store_id=&from=&to="
                     },
@@ -1899,7 +1893,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T20:48:56\"}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T21:21:38\"}"
                         },
                         "description": "GET \/api\/v1\/analytics\/people\/shift?store_id=&date="
                     },
@@ -1947,11 +1941,207 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T20:48:56\",\"shift_code\":\"M\",\"in_count\":39,\"out_count\":84,\"staff_in\":12,\"staff_out\":77}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T21:21:39\",\"shift_code\":\"M\",\"in_count\":39,\"out_count\":84,\"staff_in\":12,\"staff_out\":77}"
                         },
                         "description": "POST \/api\/v1\/analytics\/people\/shift"
                     },
                     "response": []
+                }
+            ]
+        },
+        {
+            "name": "Administra\u00e7\u00e3o - Logs de Auditoria",
+            "description": "\nConsulta de logs de auditoria do sistema.\n\nEste endpoint permite que administradores visualizem todas as\na\u00e7\u00f5es registradas no sistema para fins de auditoria e compliance.\n\n**Tipos de eventos registrados:**\n| Dom\u00ednio | Eventos |\n|---------|---------|\n| `auth` | login, logout, login_failed |\n| `cash` | cash_closing.submit, approve, reject |\n| `rules` | bonus\/commission create, update, delete |\n| `goals` | monthly.create, update, splits.set |\n| `sales` | create, update, delete |\n| `admin` | user\/store create, update, delete |\n\n**Quem pode usar:** Apenas administradores.",
+            "item": [
+                {
+                    "name": "Listar logs de auditoria",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/audit-logs",
+                            "query": [
+                                {
+                                    "key": "from",
+                                    "value": "2026-01-01",
+                                    "description": "Data inicial (YYYY-MM-DD).",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "to",
+                                    "value": "2026-01-31",
+                                    "description": "Data final (YYYY-MM-DD).",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "causer_id",
+                                    "value": "1",
+                                    "description": "ID do usu\u00e1rio.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "event",
+                                    "value": "cash_closing.submit",
+                                    "description": "Evento (suporta wildcards: auth.*).",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "log_name",
+                                    "value": "auth",
+                                    "description": "Dom\u00ednio: auth, cash, rules, goals.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "store_id",
+                                    "value": "1",
+                                    "description": "ID da loja.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "subject_type",
+                                    "value": "CashClosing",
+                                    "description": "Tipo de entidade.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "subject_id",
+                                    "value": "15",
+                                    "description": "ID da entidade.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "per_page",
+                                    "value": "25",
+                                    "description": "Itens por p\u00e1gina (1-100).",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/audit-logs?from=2026-01-01&to=2026-01-31&causer_id=1&event=cash_closing.submit&log_name=auth&store_id=1&subject_type=CashClosing&subject_id=15&per_page=25"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"from\":\"2026-01-07T21:21:39\",\"to\":\"2026-01-07T21:21:39\",\"causer_id\":16,\"event\":\"n\",\"log_name\":\"g\",\"store_id\":16,\"subject_type\":\"n\",\"subject_id\":16,\"per_page\":22}"
+                        },
+                        "description": "Retorna lista paginada de logs com suporte a diversos filtros.\n\n**Filtros dispon\u00edveis:**\n- `from`\/`to` - Per\u00edodo de datas\n- `causer_id` - ID do usu\u00e1rio que executou a a\u00e7\u00e3o\n- `event` - Nome do evento (suporta wildcard: `auth.*`)\n- `log_name` - Dom\u00ednio: auth, cash, rules, goals\n- `store_id` - Loja relacionada\n- `subject_type` - Tipo de entidade (CashClosing, BonusRule, etc)\n- `subject_id` - ID da entidade\n\n**Ordena\u00e7\u00e3o:** Por data de cria\u00e7\u00e3o, mais recentes primeiro.\n\n**Quem pode usar:** Apenas administradores."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": [\n    {\n      \"id\": 150,\n      \"event\": \"auth.login\",\n      \"action\": \"login\",\n      \"log_name\": \"auth\",\n      \"created_at\": \"2026-01-07T18:00:00Z\",\n      \"causer\": { \"id\": 1, \"name\": \"Admin\", \"email\": \"admin@test.com\" },\n      \"subject\": { \"type\": \"User\", \"id\": 1 },\n      \"store\": null,\n      \"context\": { \"request_id\": \"abc-123\", \"ip\": \"192.168.1.1\" },\n      \"properties\": { \"auth_mode\": \"bearer\", \"device_name\": \"postman\" }\n    }\n  ],\n  \"meta\": { \"current_page\": 1, \"per_page\": 25, \"total\": 150 }\n}",
+                            "name": "Lista de logs"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\n  \"message\": \"Apenas administradores podem acessar este recurso.\"\n}",
+                            "name": "Sem permiss\u00e3o"
+                        }
+                    ]
+                },
+                {
+                    "name": "Estat\u00edsticas de logs",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/audit-logs\/stats",
+                            "query": [
+                                {
+                                    "key": "from",
+                                    "value": "2026-01-01",
+                                    "description": "Data inicial.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "to",
+                                    "value": "2026-01-31",
+                                    "description": "Data final.",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/audit-logs\/stats?from=2026-01-01&to=2026-01-31"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"from\":\"2026-01-07T21:21:39\",\"to\":\"2026-01-07T21:21:39\"}"
+                        },
+                        "description": "Retorna estat\u00edsticas agregadas dos logs para overview.\n\n**Quem pode usar:** Apenas administradores."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"total_logs\": 1500,\n    \"by_log_name\": { \"auth\": 500, \"cash\": 800, \"rules\": 200 },\n    \"by_action\": { \"login\": 300, \"submit\": 500, \"approve\": 300 },\n    \"unique_users\": 15,\n    \"period\": { \"from\": \"2026-01-01\", \"to\": \"2026-01-31\" }\n  }\n}",
+                            "name": "Estat\u00edsticas"
+                        }
+                    ]
+                },
+                {
+                    "name": "Ver detalhes do log",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/audit-logs\/:auditLog_id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/audit-logs\/:auditLog_id",
+                            "variable": [
+                                {
+                                    "id": "auditLog_id",
+                                    "key": "auditLog_id",
+                                    "value": "16",
+                                    "description": "The ID of the auditLog."
+                                },
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "150",
+                                    "description": "ID do log."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna informa\u00e7\u00f5es completas de um log espec\u00edfico,\nincluindo todo o payload de properties.\n\n**Quem pode usar:** Apenas administradores."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"id\": 150,\n    \"event\": \"cash_closing.submit\",\n    \"action\": \"submit\",\n    \"log_name\": \"cash\",\n    \"created_at\": \"2026-01-07T18:00:00Z\",\n    \"causer\": { \"id\": 6, \"name\": \"Jo\u00e3o Vendedor\", \"email\": \"joao@test.com\" },\n    \"subject\": { \"type\": \"CashClosing\", \"id\": 45 },\n    \"store\": { \"id\": 1, \"name\": \"Mais Capinhas Tijucas\" },\n    \"context\": {\n      \"request_id\": \"abc-123-def-456\",\n      \"ip\": \"192.168.1.100\",\n      \"user_agent\": \"Mozilla\/5.0...\"\n    },\n    \"properties\": {\n      \"status_from\": \"draft\",\n      \"status_to\": \"submitted\",\n      \"divergence_total\": 0.00\n    }\n  }\n}",
+                            "name": "Detalhes do log"
+                        }
+                    ]
                 }
             ]
         },
@@ -2690,6 +2880,150 @@
                             "code": 404,
                             "body": "{\n  \"message\": \"V\u00ednculo n\u00e3o encontrado.\"\n}",
                             "name": "V\u00ednculo n\u00e3o encontrado"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Relat\u00f3rios Gerenciais",
+            "description": "\nEndpoints de relat\u00f3rios avan\u00e7ados para gest\u00e3o e auditoria.\n\nEste m\u00f3dulo fornece KPIs estrat\u00e9gicos para tomada de decis\u00e3o:\n- **Performance de Loja** - Atingimento de meta, crescimento YoY, proje\u00e7\u00f5es\n- **Integridade de Caixa** - % de quebra, diverg\u00eancias, alertas\n\n**P\u00fablico-alvo:**\n- Gerentes e Admins para vis\u00e3o estrat\u00e9gica\n- Conferentes para auditoria de caixa\n- S\u00f3cios para acompanhamento financeiro\n\n**Cache:** Dados hist\u00f3ricos (ano passado) s\u00e3o cacheados para performance.",
+            "item": [
+                {
+                    "name": "Performance da Loja",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/reports\/store-performance",
+                            "query": [
+                                {
+                                    "key": "store_id",
+                                    "value": "1",
+                                    "description": "ID da loja.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "month",
+                                    "value": "2026-01",
+                                    "description": "M\u00eas (YYYY-MM), default: m\u00eas atual.",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/reports\/store-performance?store_id=1&month=2026-01"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"store_id\":16,\"month\":\"6425-59\"}"
+                        },
+                        "description": "Retorna m\u00e9tricas completas de performance de uma loja,\nincluindo atingimento de meta, compara\u00e7\u00e3o YoY e proje\u00e7\u00f5es.\n\nEste relat\u00f3rio \u00e9 equivalente \u00e0 planilha de \"Desempenho de Lojas\"\nque o gestor mantinha manualmente.\n\n**M\u00e9tricas retornadas:**\n| Grupo | M\u00e9tricas |\n|-------|----------|\n| `sales` | Vendas atuais, meta, atingimento %, restante |\n| `comparison` | Mesmo per\u00edodo ano passado, total ano passado, crescimento YoY |\n| `forecast` | Proje\u00e7\u00e3o linear, proje\u00e7\u00e3o por tend\u00eancia, status |\n\n**Status de proje\u00e7\u00e3o:**\n- `ON_TRACK` - Proje\u00e7\u00e3o >= 100% da meta\n- `AT_RISK` - Proje\u00e7\u00e3o entre 90-100% da meta\n- `BEHIND` - Proje\u00e7\u00e3o < 90% da meta\n\n**Quem pode usar:** Gerentes e Admins da loja."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"store_id\": 1,\n    \"period\": \"2026-01\",\n    \"days_elapsed\": 15,\n    \"days_total\": 31,\n    \"sales\": {\n      \"current_amount\": 31981.29,\n      \"goal_amount\": 52000.00,\n      \"achievement_rate\": 61.50,\n      \"remaining_to_goal\": 20018.71\n    },\n    \"comparison\": {\n      \"same_period_last_year\": 26950.00,\n      \"total_last_year_month\": 55835.00,\n      \"yoy_growth\": 18.60\n    },\n    \"forecast\": {\n      \"linear_projection\": 66100.00,\n      \"trend_projection\": 66220.31,\n      \"status\": \"ON_TRACK\"\n    }\n  }\n}",
+                            "name": "Performance da loja"
+                        }
+                    ]
+                },
+                {
+                    "name": "Performance Consolidada (Multi-Loja)",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/reports\/consolidated",
+                            "query": [
+                                {
+                                    "key": "month",
+                                    "value": "2026-01",
+                                    "description": "M\u00eas (YYYY-MM), default: m\u00eas atual.",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/reports\/consolidated?month=2026-01"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"month\":\"6425-59\"}"
+                        },
+                        "description": "Retorna performance de todas as lojas que o usu\u00e1rio administra,\ncom totais consolidados.\n\nIdeal para s\u00f3cios e admins que gerenciam m\u00faltiplas unidades.\n\n**Quem pode usar:** Admins e Gerentes."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"period\": \"2026-01\",\n    \"stores\": [\n      { \"store_id\": 1, \"sales\": { \"current_amount\": 31981.29 }, \"forecast\": { \"status\": \"ON_TRACK\" } }\n    ],\n    \"consolidated\": {\n      \"total_sales\": 95000.00,\n      \"total_goal\": 156000.00,\n      \"total_achievement_rate\": 60.90,\n      \"total_linear_projection\": 198000.00\n    }\n  }\n}",
+                            "name": "Performance multi-loja"
+                        }
+                    ]
+                },
+                {
+                    "name": "Integridade de Caixa",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/reports\/cash-integrity",
+                            "query": [
+                                {
+                                    "key": "store_id",
+                                    "value": "1",
+                                    "description": "ID da loja.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "month",
+                                    "value": "2026-01",
+                                    "description": "M\u00eas (YYYY-MM), default: m\u00eas atual.",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/reports\/cash-integrity?store_id=1&month=2026-01"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"store_id\":16,\"month\":\"6425-59\"}"
+                        },
+                        "description": "Retorna m\u00e9tricas de auditoria de caixa para uma loja,\nincluindo % de quebra, diverg\u00eancias e alertas.\n\nEste relat\u00f3rio \u00e9 cr\u00edtico para:\n- Identificar poss\u00edveis fraudes ou roubos\n- Monitorar qualidade operacional\n- Decidir pagamento de b\u00f4nus\n\n**M\u00e9tricas retornadas:**\n| Grupo | M\u00e9tricas |\n|-------|----------|\n| `cash_integrity` | Valores sistema vs real, % quebra, status |\n| `divergence_analysis` | Justificadas vs n\u00e3o justificadas |\n| `workflow_status` | Turnos totais, fechados, pendentes |\n| `alerts` | Alertas autom\u00e1ticos baseados em thresholds |\n\n**Alertas gerados:**\n- `HIGH_CASH_BREAK` (CRITICAL) - Quebra > 5%\n- `ELEVATED_CASH_BREAK` (WARNING) - Quebra > 2%\n- `UNJUSTIFIED_DIVERGENCES` (WARNING) - Diverg\u00eancias sem justificativa\n- `PENDING_BACKLOG` (INFO) - Muitos fechamentos pendentes\n\n**Quem pode usar:** Conferentes, Gerentes e Admins."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"store_id\": 1,\n    \"period\": \"2026-01\",\n    \"cash_integrity\": {\n      \"total_system_value\": 150000.00,\n      \"total_real_value\": 146250.00,\n      \"total_divergence\": -3750.00,\n      \"cash_break_percentage\": 2.5,\n      \"status\": \"YELLOW\"\n    },\n    \"divergence_analysis\": {\n      \"total_lines_with_divergence\": 15,\n      \"justified_count\": 12,\n      \"unjustified_count\": 3,\n      \"justified_rate\": 80.00\n    },\n    \"workflow_status\": {\n      \"total_shifts\": 45,\n      \"closed_count\": 40,\n      \"pending_approval\": 3,\n      \"completion_rate\": 88.89\n    },\n    \"alerts\": [\n      { \"type\": \"WARNING\", \"code\": \"ELEVATED_CASH_BREAK\", \"message\": \"Quebra de 2.50% acima do limite\" }\n    ]\n  }\n}",
+                            "name": "Integridade de caixa"
                         }
                     ]
                 }

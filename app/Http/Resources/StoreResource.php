@@ -19,8 +19,35 @@ class StoreResource extends JsonResource
             'name' => $this->name,
             'city' => $this->city,
             'active' => $this->active,
+
+            // Image
+            'photo_url' => $this->photo_url,
+
+            // Address
+            'address' => $this->address,
+            'neighborhood' => $this->neighborhood,
+            'state' => $this->state,
+            'zip_code' => $this->zip_code,
+            'full_address' => $this->getFullAddress(),
+
+            // GPS
+            'latitude' => $this->latitude ? (float) $this->latitude : null,
+            'longitude' => $this->longitude ? (float) $this->longitude : null,
+
+            // Contact
+            'phone' => $this->phone,
+            'whatsapp' => $this->whatsapp,
+            'instagram' => $this->instagram,
+
+            // Hours
+            'opening_hours' => $this->opening_hours,
+
+            // Business info
+            'cnpj' => $this->cnpj,
+
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
+
             'users_count' => $this->whenCounted('storeUsers'),
             'users' => $this->whenLoaded('storeUsers', function () {
                 return $this->storeUsers->map(fn($su) => [
@@ -31,5 +58,21 @@ class StoreResource extends JsonResource
                 ]);
             }),
         ];
+    }
+
+    /**
+     * Formata endereço completo.
+     */
+    private function getFullAddress(): ?string
+    {
+        $parts = array_filter([
+            $this->address,
+            $this->neighborhood,
+            $this->city,
+            $this->state,
+            $this->zip_code,
+        ]);
+
+        return count($parts) > 0 ? implode(', ', $parts) : null;
     }
 }

@@ -20,6 +20,13 @@ class User extends Authenticatable
         'email',
         'password',
         'active',
+        'birth_date',
+        'hire_date',
+        'whatsapp',
+        'avatar_url',
+        'instagram',
+        'cpf',
+        'pix_key',
     ];
 
     protected $hidden = [
@@ -33,6 +40,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'active' => 'boolean',
+            'birth_date' => 'date',
+            'hire_date' => 'date',
         ];
     }
 

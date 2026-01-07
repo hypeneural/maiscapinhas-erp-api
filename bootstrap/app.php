@@ -22,6 +22,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         // Configure Sanctum stateful middleware for SPA authentication
         $middleware->statefulApi();
+
+        // Add RequestIdMiddleware to API routes for audit context
+        $middleware->appendToGroup('api', [
+            \App\Http\Middleware\RequestIdMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // Return JSON for unauthenticated API requests

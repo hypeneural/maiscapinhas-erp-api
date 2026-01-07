@@ -1,28 +1,20 @@
-name: 'Administração - Lojas'
+name: 'Administração - Usuários'
 description: |-
 
-  Gerenciamento das lojas (pontos de venda) do sistema MaisCapinhas ERP.
+  Gerenciamento centralizado de usuários do sistema MaisCapinhas ERP.
 
-  Cada loja representa uma unidade física de venda com:
-  - Equipe própria (vendedores, conferentes, gerentes)
-  - Metas mensais individuais
-  - Turnos de caixa e fechamentos
-  - Regras de bônus/comissão (podem ser específicas ou herdar as globais)
+  Este módulo permite criar, editar, listar e desativar usuários,
+  além de vincular usuários a lojas com roles específicas.
 
-  **Hierarquia de Dados:**
-  ```
-  Loja
-  ├── Usuários (via store_users com roles)
-  ├── Vendas (registradas por vendedores)
-  ├── Turnos de Caixa (por data/turno/vendedor)
-  ├── Metas Mensais (com splits por vendedor)
-  └── Regras de Bônus/Comissão (opcionais, específicas)
-  ```
+  **Modelo de Permissões:**
+  - Cada usuário pode estar vinculado a múltiplas lojas
+  - Em cada loja, o usuário tem uma role: `admin`, `gerente`, `conferente` ou `vendedor`
+  - Usuários desativados perdem acesso a todos os endpoints protegidos
 
   **Regras de Negócio:**
-  - Uma loja desativada não aparece na lista de lojas do usuário comum
-  - Dados históricos são mantidos para auditoria
-  - Lojas são identificadas por ID numérico (não há código de loja)
+  - Email deve ser único no sistema
+  - Não é possível desativar o próprio usuário
+  - Ao desativar, todos os tokens de acesso são revogados
 
   **Auditoria:** Todas as operações são registradas via Spatie ActivityLog.
 endpoints:
@@ -30,54 +22,46 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/admin/stores
+    uri: api/v1/admin/users
     metadata:
       custom: []
-      groupName: 'Administração - Lojas'
+      groupName: 'Administração - Usuários'
       groupDescription: |-
 
-        Gerenciamento das lojas (pontos de venda) do sistema MaisCapinhas ERP.
+        Gerenciamento centralizado de usuários do sistema MaisCapinhas ERP.
 
-        Cada loja representa uma unidade física de venda com:
-        - Equipe própria (vendedores, conferentes, gerentes)
-        - Metas mensais individuais
-        - Turnos de caixa e fechamentos
-        - Regras de bônus/comissão (podem ser específicas ou herdar as globais)
+        Este módulo permite criar, editar, listar e desativar usuários,
+        além de vincular usuários a lojas com roles específicas.
 
-        **Hierarquia de Dados:**
-        ```
-        Loja
-        ├── Usuários (via store_users com roles)
-        ├── Vendas (registradas por vendedores)
-        ├── Turnos de Caixa (por data/turno/vendedor)
-        ├── Metas Mensais (com splits por vendedor)
-        └── Regras de Bônus/Comissão (opcionais, específicas)
-        ```
+        **Modelo de Permissões:**
+        - Cada usuário pode estar vinculado a múltiplas lojas
+        - Em cada loja, o usuário tem uma role: `admin`, `gerente`, `conferente` ou `vendedor`
+        - Usuários desativados perdem acesso a todos os endpoints protegidos
 
         **Regras de Negócio:**
-        - Uma loja desativada não aparece na lista de lojas do usuário comum
-        - Dados históricos são mantidos para auditoria
-        - Lojas são identificadas por ID numérico (não há código de loja)
+        - Email deve ser único no sistema
+        - Não é possível desativar o próprio usuário
+        - Ao desativar, todos os tokens de acesso são revogados
 
         **Auditoria:** Todas as operações são registradas via Spatie ActivityLog.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Listar todas as lojas'
+      title: 'Listar todos os usuários'
       description: |-
-        Retorna uma lista completa de todas as lojas cadastradas no sistema,
-        incluindo lojas ativas e inativas (para administração).
+        Retorna uma lista paginada de todos os usuários cadastrados no sistema,
+        incluindo suas lojas vinculadas e respectivas roles.
 
-        Este endpoint difere do `/stores` público que mostra apenas
-        as lojas às quais o usuário tem acesso.
-
-        **Métricas retornadas:**
-        - `users_count` - quantidade de usuários vinculados
-
-        **Filtros disponíveis:**
-        - `search` - busca por nome ou cidade
-        - `active` - filtrar por status
+        Este endpoint é útil para:
+        - Visão geral da equipe
+        - Buscar usuários por nome/email
+        - Filtrar por status ativo/inativo
+        - Ver quais usuários estão em determinada loja
 
         **Quem pode usar:** Apenas administradores.
+
+        **Dados retornados por usuário:**
+        - `id`, `name`, `email`, `active` - dados básicos
+        - `stores[]` - lista de lojas com `store_id`, `store_name`, `role`
       authenticated: true
       deprecated: false
     headers:
@@ -90,9 +74,9 @@ endpoints:
       search:
         custom: []
         name: search
-        description: 'Busca por nome ou cidade da loja.'
+        description: 'Busca parcial por nome ou email (case insensitive).'
         required: false
-        example: tijucas
+        example: joao
         type: string
         enumValues: []
         exampleWasSpecified: true
@@ -101,7 +85,7 @@ endpoints:
       active:
         custom: []
         name: active
-        description: 'Filtrar por status ativo/inativo.'
+        description: 'Filtrar por status: true (ativos) ou false (inativos).'
         required: false
         example: true
         type: boolean
@@ -109,10 +93,21 @@ endpoints:
         exampleWasSpecified: true
         nullable: false
         deprecated: false
+      store_id:
+        custom: []
+        name: store_id
+        description: 'Filtrar apenas usuários vinculados a esta loja.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
       per_page:
         custom: []
         name: per_page
-        description: 'Itens por página (1-100, default: 25).'
+        description: 'Quantidade por página (1-100, default: 25).'
         required: false
         example: 25
         type: integer
@@ -121,8 +116,9 @@ endpoints:
         nullable: false
         deprecated: false
     cleanQueryParameters:
-      search: tijucas
+      search: joao
       active: true
+      store_id: 1
       per_page: 25
     bodyParameters: []
     cleanBodyParameters: []
@@ -136,24 +132,29 @@ endpoints:
             "data": [
               {
                 "id": 1,
-                "name": "Mais Capinhas Tijucas",
-                "city": "Tijucas",
+                "name": "Admin Master",
+                "email": "admin@maiscapinhas.com.br",
                 "active": true,
-                "users_count": 5,
-                "created_at": "2026-01-01T00:00:00Z"
-              },
-              {
-                "id": 2,
-                "name": "Mais Capinhas Itapema",
-                "city": "Itapema",
-                "active": true,
-                "users_count": 3
+                "created_at": "2026-01-01T00:00:00Z",
+                "stores": [
+                  { "store_id": 1, "store_name": "Mais Capinhas Tijucas", "role": "admin" },
+                  { "store_id": 2, "store_name": "Mais Capinhas Itapema", "role": "admin" }
+                ]
               }
             ],
-            "meta": { "current_page": 1, "per_page": 25, "total": 3, "last_page": 1 }
+            "meta": { "current_page": 1, "per_page": 25, "total": 10, "last_page": 1 }
           }
         headers: []
-        description: 'Lista de lojas'
+        description: 'Lista de usuários'
+      -
+        custom: []
+        status: 403
+        content: |-
+          {
+            "message": "Apenas administradores podem acessar este recurso."
+          }
+        headers: []
+        description: 'Sem permissão'
     responseFields: []
     auth:
       - headers
@@ -166,46 +167,50 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/v1/admin/stores
+    uri: api/v1/admin/users
     metadata:
       custom: []
-      groupName: 'Administração - Lojas'
+      groupName: 'Administração - Usuários'
       groupDescription: |-
 
-        Gerenciamento das lojas (pontos de venda) do sistema MaisCapinhas ERP.
+        Gerenciamento centralizado de usuários do sistema MaisCapinhas ERP.
 
-        Cada loja representa uma unidade física de venda com:
-        - Equipe própria (vendedores, conferentes, gerentes)
-        - Metas mensais individuais
-        - Turnos de caixa e fechamentos
-        - Regras de bônus/comissão (podem ser específicas ou herdar as globais)
+        Este módulo permite criar, editar, listar e desativar usuários,
+        além de vincular usuários a lojas com roles específicas.
 
-        **Hierarquia de Dados:**
-        ```
-        Loja
-        ├── Usuários (via store_users com roles)
-        ├── Vendas (registradas por vendedores)
-        ├── Turnos de Caixa (por data/turno/vendedor)
-        ├── Metas Mensais (com splits por vendedor)
-        └── Regras de Bônus/Comissão (opcionais, específicas)
-        ```
+        **Modelo de Permissões:**
+        - Cada usuário pode estar vinculado a múltiplas lojas
+        - Em cada loja, o usuário tem uma role: `admin`, `gerente`, `conferente` ou `vendedor`
+        - Usuários desativados perdem acesso a todos os endpoints protegidos
 
         **Regras de Negócio:**
-        - Uma loja desativada não aparece na lista de lojas do usuário comum
-        - Dados históricos são mantidos para auditoria
-        - Lojas são identificadas por ID numérico (não há código de loja)
+        - Email deve ser único no sistema
+        - Não é possível desativar o próprio usuário
+        - Ao desativar, todos os tokens de acesso são revogados
 
         **Auditoria:** Todas as operações são registradas via Spatie ActivityLog.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Criar nova loja'
+      title: 'Criar novo usuário'
       description: |-
-        Cadastra uma nova loja (ponto de venda) no sistema.
+        Cadastra um novo usuário no sistema, opcionalmente já vinculando-o
+        a uma ou mais lojas com roles específicas.
 
-        Após criar a loja, você deve:
-        1. Vincular usuários à loja (via endpoint de vínculos)
-        2. Configurar metas mensais (via `/goals/monthly`)
-        3. Opcionalmente criar regras específicas de bônus/comissão
+        Este endpoint é utilizado para:
+        - Onboarding de novos funcionários
+        - Criar usuários administrativos
+        - Configurar equipe de vendas
+
+        **Fluxo recomendado:**
+        1. Criar usuário com dados básicos + senha temporária
+        2. Vincular às lojas onde irá trabalhar
+        3. Compartilhar credenciais com o novo usuário
+
+        **Regras de Negócio:**
+        - Email deve ser único (validação 422 se duplicado)
+        - Senha deve ter mínimo 8 caracteres
+        - Vínculos são opcionais na criação (podem ser adicionados depois)
+        - Se informar vínculos, `store_id` deve existir e `role` deve ser válida
 
         **Quem pode usar:** Apenas administradores.
       authenticated: true
@@ -222,20 +227,31 @@ endpoints:
       name:
         custom: []
         name: name
-        description: 'Nome identificador da loja.'
+        description: 'Nome completo do usuário.'
         required: true
-        example: 'Mais Capinhas Shopping Center'
+        example: 'João Silva Santos'
         type: string
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-      city:
+      email:
         custom: []
-        name: city
-        description: 'Cidade onde a loja está localizada.'
+        name: email
+        description: 'Email único para login.'
         required: true
-        example: Florianópolis
+        example: joao.silva@maiscapinhas.com.br
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      password:
+        custom: []
+        name: password
+        description: 'Senha de acesso (mínimo 8 caracteres).'
+        required: true
+        example: senha123456
         type: string
         enumValues: []
         exampleWasSpecified: true
@@ -244,7 +260,7 @@ endpoints:
       active:
         custom: []
         name: active
-        description: 'Se a loja está ativa (default: true).'
+        description: 'Define se usuário está ativo (default: true).'
         required: false
         example: true
         type: boolean
@@ -252,10 +268,73 @@ endpoints:
         exampleWasSpecified: true
         nullable: false
         deprecated: false
+      stores:
+        custom: []
+        name: stores
+        description: 'Lista de lojas para vincular na criação.'
+        required: false
+        example:
+          - architecto
+        type: 'string[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'stores[].store_id':
+        custom: []
+        name: 'stores[].store_id'
+        description: 'This field is required when <code>stores</code> is present. The <code>id</code> of an existing record in the stores table.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'stores[].role':
+        custom: []
+        name: 'stores[].role'
+        description: 'This field is required when <code>stores</code> is present.'
+        required: false
+        example: architecto
+        type: string
+        enumValues:
+          - admin
+          - gerente
+          - conferente
+          - vendedor
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'stores.*.store_id':
+        custom: []
+        name: 'stores.*.store_id'
+        description: 'ID da loja existente.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      'stores.*.role':
+        custom: []
+        name: 'stores.*.role'
+        description: 'Role: admin, gerente, conferente ou vendedor.'
+        required: true
+        example: vendedor
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
     cleanBodyParameters:
-      name: 'Mais Capinhas Shopping Center'
-      city: Florianópolis
+      name: 'João Silva Santos'
+      email: joao.silva@maiscapinhas.com.br
+      password: senha123456
       active: true
+      stores:
+        - architecto
     fileParameters: []
     responses:
       -
@@ -264,15 +343,28 @@ endpoints:
         content: |-
           {
             "data": {
-              "id": 4,
-              "name": "Mais Capinhas Shopping Center",
-              "city": "Florianópolis",
+              "id": 11,
+              "name": "João Silva Santos",
+              "email": "joao.silva@maiscapinhas.com.br",
               "active": true,
-              "created_at": "2026-01-07T17:00:00Z"
+              "created_at": "2026-01-07T17:00:00Z",
+              "stores": [
+                { "store_id": 1, "store_name": "Mais Capinhas Tijucas", "role": "vendedor" }
+              ]
             }
           }
         headers: []
-        description: 'Loja criada'
+        description: 'Usuário criado com vínculos'
+      -
+        custom: []
+        status: 422
+        content: |-
+          {
+            "message": "The given data was invalid.",
+            "errors": { "email": ["Este email já está em uso."] }
+          }
+        headers: []
+        description: 'Email duplicado'
     responseFields: []
     auth:
       - headers
@@ -285,48 +377,45 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/admin/stores/{id}'
+    uri: 'api/v1/admin/users/{id}'
     metadata:
       custom: []
-      groupName: 'Administração - Lojas'
+      groupName: 'Administração - Usuários'
       groupDescription: |-
 
-        Gerenciamento das lojas (pontos de venda) do sistema MaisCapinhas ERP.
+        Gerenciamento centralizado de usuários do sistema MaisCapinhas ERP.
 
-        Cada loja representa uma unidade física de venda com:
-        - Equipe própria (vendedores, conferentes, gerentes)
-        - Metas mensais individuais
-        - Turnos de caixa e fechamentos
-        - Regras de bônus/comissão (podem ser específicas ou herdar as globais)
+        Este módulo permite criar, editar, listar e desativar usuários,
+        além de vincular usuários a lojas com roles específicas.
 
-        **Hierarquia de Dados:**
-        ```
-        Loja
-        ├── Usuários (via store_users com roles)
-        ├── Vendas (registradas por vendedores)
-        ├── Turnos de Caixa (por data/turno/vendedor)
-        ├── Metas Mensais (com splits por vendedor)
-        └── Regras de Bônus/Comissão (opcionais, específicas)
-        ```
+        **Modelo de Permissões:**
+        - Cada usuário pode estar vinculado a múltiplas lojas
+        - Em cada loja, o usuário tem uma role: `admin`, `gerente`, `conferente` ou `vendedor`
+        - Usuários desativados perdem acesso a todos os endpoints protegidos
 
         **Regras de Negócio:**
-        - Uma loja desativada não aparece na lista de lojas do usuário comum
-        - Dados históricos são mantidos para auditoria
-        - Lojas são identificadas por ID numérico (não há código de loja)
+        - Email deve ser único no sistema
+        - Não é possível desativar o próprio usuário
+        - Ao desativar, todos os tokens de acesso são revogados
 
         **Auditoria:** Todas as operações são registradas via Spatie ActivityLog.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Ver detalhes da loja'
+      title: 'Ver detalhes do usuário'
       description: |-
-        Retorna informações completas de uma loja, incluindo
-        a lista de todos os usuários vinculados e suas roles.
+        Retorna informações completas de um usuário específico,
+        incluindo todas as lojas vinculadas e suas respectivas roles.
 
-        **Dados retornados:**
-        - Informações básicas: `id`, `name`, `city`, `active`
-        - Lista de usuários com: `user_id`, `user_name`, `user_email`, `role`
+        Útil para:
+        - Verificar acessos do usuário
+        - Editar informações
+        - Auditar permissões
 
         **Quem pode usar:** Apenas administradores.
+
+        **Dados retornados:**
+        - `id`, `name`, `email`, `active`, `created_at`, `updated_at`
+        - `stores[]` - array de lojas com role em cada uma
       authenticated: true
       deprecated: false
     headers:
@@ -337,7 +426,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the store.'
+        description: 'The ID of the user.'
         required: true
         example: 1
         type: integer
@@ -345,12 +434,12 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      store:
+      user:
         custom: []
-        name: store
-        description: 'ID da loja.'
+        name: user
+        description: 'ID do usuário.'
         required: true
-        example: 1
+        example: 6
         type: integer
         enumValues: []
         exampleWasSpecified: true
@@ -358,7 +447,7 @@ endpoints:
         deprecated: false
     cleanUrlParameters:
       id: 1
-      store: 1
+      user: 6
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -371,19 +460,28 @@ endpoints:
         content: |-
           {
             "data": {
-              "id": 1,
-              "name": "Mais Capinhas Tijucas",
-              "city": "Tijucas",
+              "id": 6,
+              "name": "João Vendedor",
+              "email": "joao.vendedor@maiscapinhas.com.br",
               "active": true,
               "created_at": "2026-01-01T00:00:00Z",
-              "users": [
-                { "user_id": 2, "user_name": "Carlos Gerente", "user_email": "carlos@test.com", "role": "gerente" },
-                { "user_id": 6, "user_name": "João Vendedor", "user_email": "joao@test.com", "role": "vendedor" }
+              "updated_at": "2026-01-07T12:00:00Z",
+              "stores": [
+                { "store_id": 1, "store_name": "Mais Capinhas Tijucas", "role": "vendedor" }
               ]
             }
           }
         headers: []
-        description: 'Detalhes da loja'
+        description: 'Detalhes do usuário'
+      -
+        custom: []
+        status: 404
+        content: |-
+          {
+            "message": "No query results for model [App\\Models\\User] 999"
+          }
+        headers: []
+        description: 'Usuário não encontrado'
     responseFields: []
     auth:
       - headers
@@ -397,42 +495,43 @@ endpoints:
     httpMethods:
       - PUT
       - PATCH
-    uri: 'api/v1/admin/stores/{id}'
+    uri: 'api/v1/admin/users/{id}'
     metadata:
       custom: []
-      groupName: 'Administração - Lojas'
+      groupName: 'Administração - Usuários'
       groupDescription: |-
 
-        Gerenciamento das lojas (pontos de venda) do sistema MaisCapinhas ERP.
+        Gerenciamento centralizado de usuários do sistema MaisCapinhas ERP.
 
-        Cada loja representa uma unidade física de venda com:
-        - Equipe própria (vendedores, conferentes, gerentes)
-        - Metas mensais individuais
-        - Turnos de caixa e fechamentos
-        - Regras de bônus/comissão (podem ser específicas ou herdar as globais)
+        Este módulo permite criar, editar, listar e desativar usuários,
+        além de vincular usuários a lojas com roles específicas.
 
-        **Hierarquia de Dados:**
-        ```
-        Loja
-        ├── Usuários (via store_users com roles)
-        ├── Vendas (registradas por vendedores)
-        ├── Turnos de Caixa (por data/turno/vendedor)
-        ├── Metas Mensais (com splits por vendedor)
-        └── Regras de Bônus/Comissão (opcionais, específicas)
-        ```
+        **Modelo de Permissões:**
+        - Cada usuário pode estar vinculado a múltiplas lojas
+        - Em cada loja, o usuário tem uma role: `admin`, `gerente`, `conferente` ou `vendedor`
+        - Usuários desativados perdem acesso a todos os endpoints protegidos
 
         **Regras de Negócio:**
-        - Uma loja desativada não aparece na lista de lojas do usuário comum
-        - Dados históricos são mantidos para auditoria
-        - Lojas são identificadas por ID numérico (não há código de loja)
+        - Email deve ser único no sistema
+        - Não é possível desativar o próprio usuário
+        - Ao desativar, todos os tokens de acesso são revogados
 
         **Auditoria:** Todas as operações são registradas via Spatie ActivityLog.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Atualizar loja'
+      title: 'Atualizar usuário'
       description: |-
-        Atualiza informações de uma loja existente.
+        Atualiza dados cadastrais de um usuário existente.
         Apenas os campos informados serão alterados.
+
+        **Casos de uso:**
+        - Corrigir nome ou email
+        - Alterar senha
+        - Ativar/desativar usuário
+
+        **Regras de Negócio:**
+        - Email deve continuar único (validação considera o próprio usuário)
+        - Para gerenciar vínculos com lojas, use os endpoints de vínculos
 
         **Quem pode usar:** Apenas administradores.
       authenticated: true
@@ -445,7 +544,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the store.'
+        description: 'The ID of the user.'
         required: true
         example: 1
         type: integer
@@ -453,12 +552,12 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      store:
+      user:
         custom: []
-        name: store
-        description: 'ID da loja.'
+        name: user
+        description: 'ID do usuário a atualizar.'
         required: true
-        example: 1
+        example: 6
         type: integer
         enumValues: []
         exampleWasSpecified: true
@@ -466,27 +565,38 @@ endpoints:
         deprecated: false
     cleanUrlParameters:
       id: 1
-      store: 1
+      user: 6
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
       name:
         custom: []
         name: name
-        description: 'Novo nome da loja.'
+        description: 'Novo nome completo.'
         required: false
-        example: 'Mais Capinhas Tijucas - Centro'
+        example: 'João da Silva Atualizado'
         type: string
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-      city:
+      email:
         custom: []
-        name: city
-        description: 'Nova cidade.'
+        name: email
+        description: 'Novo email (deve ser único).'
         required: false
-        example: Tijucas
+        example: joao.novo@maiscapinhas.com.br
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      password:
+        custom: []
+        name: password
+        description: 'Nova senha (mínimo 8 caracteres).'
+        required: false
+        example: novasenha123
         type: string
         enumValues: []
         exampleWasSpecified: true
@@ -504,8 +614,9 @@ endpoints:
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      name: 'Mais Capinhas Tijucas - Centro'
-      city: Tijucas
+      name: 'João da Silva Atualizado'
+      email: joao.novo@maiscapinhas.com.br
+      password: novasenha123
       active: true
     fileParameters: []
     responses:
@@ -515,14 +626,14 @@ endpoints:
         content: |-
           {
             "data": {
-              "id": 1,
-              "name": "Mais Capinhas Tijucas - Centro",
-              "city": "Tijucas",
+              "id": 6,
+              "name": "João da Silva Atualizado",
+              "email": "joao.vendedor@maiscapinhas.com.br",
               "active": true
             }
           }
         headers: []
-        description: 'Loja atualizada'
+        description: 'Usuário atualizado'
     responseFields: []
     auth:
       - headers
@@ -535,48 +646,44 @@ endpoints:
     custom: []
     httpMethods:
       - DELETE
-    uri: 'api/v1/admin/stores/{id}'
+    uri: 'api/v1/admin/users/{id}'
     metadata:
       custom: []
-      groupName: 'Administração - Lojas'
+      groupName: 'Administração - Usuários'
       groupDescription: |-
 
-        Gerenciamento das lojas (pontos de venda) do sistema MaisCapinhas ERP.
+        Gerenciamento centralizado de usuários do sistema MaisCapinhas ERP.
 
-        Cada loja representa uma unidade física de venda com:
-        - Equipe própria (vendedores, conferentes, gerentes)
-        - Metas mensais individuais
-        - Turnos de caixa e fechamentos
-        - Regras de bônus/comissão (podem ser específicas ou herdar as globais)
+        Este módulo permite criar, editar, listar e desativar usuários,
+        além de vincular usuários a lojas com roles específicas.
 
-        **Hierarquia de Dados:**
-        ```
-        Loja
-        ├── Usuários (via store_users com roles)
-        ├── Vendas (registradas por vendedores)
-        ├── Turnos de Caixa (por data/turno/vendedor)
-        ├── Metas Mensais (com splits por vendedor)
-        └── Regras de Bônus/Comissão (opcionais, específicas)
-        ```
+        **Modelo de Permissões:**
+        - Cada usuário pode estar vinculado a múltiplas lojas
+        - Em cada loja, o usuário tem uma role: `admin`, `gerente`, `conferente` ou `vendedor`
+        - Usuários desativados perdem acesso a todos os endpoints protegidos
 
         **Regras de Negócio:**
-        - Uma loja desativada não aparece na lista de lojas do usuário comum
-        - Dados históricos são mantidos para auditoria
-        - Lojas são identificadas por ID numérico (não há código de loja)
+        - Email deve ser único no sistema
+        - Não é possível desativar o próprio usuário
+        - Ao desativar, todos os tokens de acesso são revogados
 
         **Auditoria:** Todas as operações são registradas via Spatie ActivityLog.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Desativar loja'
+      title: 'Desativar usuário'
       description: |-
-        Define a loja como inativa. Lojas desativadas não aparecem
-        na listagem de lojas dos usuários comuns, mas todos os dados
-        históricos são mantidos para auditoria.
+        Define o usuário como inativo (`active = false`) e revoga
+        todos os tokens de acesso, forçando logout imediato.
 
         **Importante:**
-        - Vendas, turnos e fechamentos passados são mantidos
-        - Metas e regras específicas são preservadas
-        - A loja pode ser reativada via PUT
+        - Não exclui o usuário do banco (soft disable)
+        - Dados históricos são mantidos para auditoria
+        - Usuário pode ser reativado posteriormente via PUT
+
+        **Regras de Negócio:**
+        - Não é possível desativar seu próprio usuário (proteção)
+        - Usuários desativados não conseguem fazer login
+        - Tokens existentes são invalidados imediatamente
 
         **Quem pode usar:** Apenas administradores.
       authenticated: true
@@ -589,7 +696,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the store.'
+        description: 'The ID of the user.'
         required: true
         example: 1
         type: integer
@@ -597,12 +704,12 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      store:
+      user:
         custom: []
-        name: store
-        description: 'ID da loja.'
+        name: user
+        description: 'ID do usuário a desativar.'
         required: true
-        example: 1
+        example: 6
         type: integer
         enumValues: []
         exampleWasSpecified: true
@@ -610,7 +717,7 @@ endpoints:
         deprecated: false
     cleanUrlParameters:
       id: 1
-      store: 1
+      user: 6
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -622,10 +729,19 @@ endpoints:
         status: 200
         content: |-
           {
-            "data": { "message": "Loja desativada com sucesso." }
+            "data": { "message": "Usuário desativado com sucesso." }
           }
         headers: []
-        description: 'Loja desativada'
+        description: 'Usuário desativado'
+      -
+        custom: []
+        status: 403
+        content: |-
+          {
+            "message": "Você não pode desativar seu próprio usuário."
+          }
+        headers: []
+        description: 'Tentativa de auto-desativação'
     responseFields: []
     auth:
       - headers

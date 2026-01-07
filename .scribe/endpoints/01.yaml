@@ -6,6 +6,9 @@ description: |-
 
   1. **Bearer Token** (recomendado para desenvolvimento e integrações)
   2. **Cookie SPA** (para frontends React/Vue com `withCredentials`)
+
+  **Auditoria:** Todas as ações de autenticação (login, logout) são
+  registradas no log de auditoria com IP e user-agent.
 endpoints:
   -
     custom: []
@@ -22,6 +25,9 @@ endpoints:
 
         1. **Bearer Token** (recomendado para desenvolvimento e integrações)
         2. **Cookie SPA** (para frontends React/Vue com `withCredentials`)
+
+        **Auditoria:** Todas as ações de autenticação (login, logout) são
+        registradas no log de auditoria com IP e user-agent.
       subgroup: ''
       subgroupDescription: ''
       title: 'Fazer login e obter token'
@@ -34,6 +40,7 @@ endpoints:
         - Usuários inativos (`active = false`) não podem fazer login
         - O token não expira automaticamente, mas pode ser revogado via logout
         - Cada login gera um novo token (múltiplos dispositivos são permitidos)
+        - Todas as tentativas de login são registradas para auditoria
 
         **Erros possíveis:**
         - `422` - Credenciais inválidas ou conta desativada
@@ -100,7 +107,7 @@ endpoints:
                 "email": "admin@maiscapinhas.com.br"
               }
             },
-            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+            "meta": { "request_id": "abc-123", "timestamp": "2026-01-07T12:00:00Z" }
           }
         headers: []
         description: 'Login bem-sucedido'
@@ -144,6 +151,9 @@ endpoints:
 
         1. **Bearer Token** (recomendado para desenvolvimento e integrações)
         2. **Cookie SPA** (para frontends React/Vue com `withCredentials`)
+
+        **Auditoria:** Todas as ações de autenticação (login, logout) são
+        registradas no log de auditoria com IP e user-agent.
       subgroup: ''
       subgroupDescription: ''
       title: 'Fazer logout (revogar token atual)'
@@ -153,9 +163,7 @@ endpoints:
 
         **Quem pode usar:** Qualquer usuário autenticado.
 
-        **Casos de uso:**
-        - Logout manual do usuário
-        - Encerrar sessão em um dispositivo específico
+        **Auditoria:** A ação de logout é registrada com IP e horário.
       authenticated: true
       deprecated: false
     headers:
@@ -176,7 +184,7 @@ endpoints:
         content: |-
           {
             "data": { "message": "Successfully logged out." },
-            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+            "meta": { "request_id": "abc-123", "timestamp": "2026-01-07T12:00:00Z" }
           }
         headers: []
         description: 'Logout bem-sucedido'
@@ -203,6 +211,9 @@ endpoints:
 
         1. **Bearer Token** (recomendado para desenvolvimento e integrações)
         2. **Cookie SPA** (para frontends React/Vue com `withCredentials`)
+
+        **Auditoria:** Todas as ações de autenticação (login, logout) são
+        registradas no log de auditoria com IP e user-agent.
       subgroup: ''
       subgroupDescription: ''
       title: 'Revogar todos os tokens'
@@ -211,10 +222,7 @@ endpoints:
 
         **Quem pode usar:** Qualquer usuário autenticado.
 
-        **Casos de uso:**
-        - Suspeita de comprometimento de segurança
-        - Forçar re-login em todos os dispositivos
-        - Alteração de senha
+        **Auditoria:** A ação é registrada como logout_all.
       authenticated: true
       deprecated: false
     headers:
@@ -235,7 +243,7 @@ endpoints:
         content: |-
           {
             "data": { "message": "All tokens revoked." },
-            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+            "meta": { "request_id": "abc-123", "timestamp": "2026-01-07T12:00:00Z" }
           }
         headers: []
         description: 'Todos tokens revogados'

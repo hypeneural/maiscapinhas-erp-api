@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\V1\Admin\AuditLogController;
 use App\Http\Controllers\Api\V1\Admin\StoreController as AdminStoreController;
 use App\Http\Controllers\Api\V1\Admin\StoreUserController as AdminStoreUserController;
 use App\Http\Controllers\Api\V1\Admin\UserController as AdminUserController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MonthlyGoalController;
 use App\Http\Controllers\Api\V1\PeopleAnalyticsController;
+use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\SaleController;
 use App\Http\Controllers\Api\V1\StoreController;
 use App\Http\Controllers\Api\V1\VersionController;
@@ -136,6 +138,16 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // ============================================
+    // Reports (gerencial)
+    // ============================================
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/store-performance', [ReportController::class, 'storePerformance'])->name('store-performance');
+        Route::get('/consolidated', [ReportController::class, 'consolidatedPerformance'])->name('consolidated');
+        Route::get('/cash-integrity', [ReportController::class, 'cashIntegrity'])->name('cash-integrity');
+    });
+
+
+    // ============================================
     // Admin Routes (admin only)
     // ============================================
     Route::prefix('admin')->name('admin.')->group(function () {
@@ -152,6 +164,13 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/', [AdminStoreUserController::class, 'store'])->name('store');
             Route::put('/{user}', [AdminStoreUserController::class, 'update'])->name('update');
             Route::delete('/{user}', [AdminStoreUserController::class, 'destroy'])->name('destroy');
+        });
+
+        // Audit Logs
+        Route::prefix('audit-logs')->name('audit-logs.')->group(function () {
+            Route::get('/', [AuditLogController::class, 'index'])->name('index');
+            Route::get('/stats', [AuditLogController::class, 'stats'])->name('stats');
+            Route::get('/{auditLog}', [AuditLogController::class, 'show'])->name('show');
         });
     });
 

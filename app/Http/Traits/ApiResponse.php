@@ -121,8 +121,17 @@ trait ApiResponse
      */
     private function getMeta(): array
     {
+        // Try to get request_id from AuditContext, fallback to generating new UUID
+        $requestId = null;
+        try {
+            $auditContext = app(\App\Support\Audit\AuditContext::class);
+            $requestId = $auditContext->getRequestId();
+        } catch (\Throwable $e) {
+            // Fallback if context not available
+        }
+
         return [
-            'request_id' => (string) Str::uuid(),
+            'request_id' => $requestId ?? (string) Str::uuid(),
             'timestamp' => now()->toIso8601String(),
         ];
     }

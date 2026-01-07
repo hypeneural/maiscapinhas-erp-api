@@ -18,10 +18,25 @@ class Store extends Model
         'name',
         'city',
         'active',
+        'photo_url',
+        'address',
+        'neighborhood',
+        'state',
+        'zip_code',
+        'latitude',
+        'longitude',
+        'phone',
+        'whatsapp',
+        'instagram',
+        'opening_hours',
+        'cnpj',
     ];
 
     protected $casts = [
         'active' => 'boolean',
+        'opening_hours' => 'array',
+        'latitude' => 'decimal:8',
+        'longitude' => 'decimal:8',
     ];
 
     // ========================================

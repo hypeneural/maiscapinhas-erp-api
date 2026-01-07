@@ -111,7 +111,7 @@ endpoints:
         name: effective_from
         description: 'Must be a valid date.'
         required: true
-        example: '2026-01-07T20:48:56'
+        example: '2026-01-07T21:21:38'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -153,7 +153,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      effective_from: '2026-01-07T20:48:56'
+      effective_from: '2026-01-07T21:21:38'
       config_json:
         -
           min_sales: 27
@@ -293,7 +293,7 @@ endpoints:
         name: effective_from
         description: 'Must be a valid date.'
         required: true
-        example: '2026-01-07T20:48:56'
+        example: '2026-01-07T21:21:38'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -335,7 +335,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      effective_from: '2026-01-07T20:48:56'
+      effective_from: '2026-01-07T21:21:38'
       config_json:
         -
           min_sales: 27
