@@ -1,265 +1,364 @@
-# Mais Capinhas ERP API
+# Mais Capinhas ERP - API Documentation
 
-O **Mais Capinhas ERP** é o sistema nervoso central das operações de varejo da rede. Esta API RESTful gerencia desde a autenticação de vendedores até o fechamento complexo de caixa, passando por metas, comissões e dashboards em tempo real.
+![Version](https://img.shields.io/badge/version-1.0.0-blue) ![PHP](https://img.shields.io/badge/php-8.3-777BB4) ![Laravel](https://img.shields.io/badge/laravel-12-FF2D20) ![Status](https://img.shields.io/badge/status-MVP-success)
 
-> **Desenvolvido por Anderson Marques (Hype Neural)** 
-> Empresa de tecnologia sediada em Tijucas/SC, focada em soluções neurais e de alta performance.
+## 1. Sobre o Projeto
 
----
+**O que é**: O ERP Mais Capinhas é uma API back-end robusta desenvolvida para gerenciar operações de varejo multi-loja, com foco crítico em autenticação segura, gestão de vendas e, principalmente, no **fechamento de caixa com auditoria rigora**.
 
-## 🚀 1. Stack Tecnológica & Arquitetura
+**Para quem é**: Redes de varejo que necessitam de controle granular sobre diferentes perfis de funcionários (vendedores, gerentes, conferentes) e múltiplas unidades físicas.
 
-O projeto segue uma arquitetura **Service-Oriented** sobre o **Laravel 12**, garantindo que a regra de negócio não "vaze" para os controladores.
-
-| Camada | Tecnologia | Detalhes |
-|:---|:---|:---|
-| **Linguagem** | PHP 8.2+ | Strict Types (`declare(strict_types=1)`) em tudo. |
-| **Framework** | Laravel 12 | Utilizando as últimas features do ecossistema. |
-| **Auth** | Sanctum | Tokens do tipo Bearer para autenticação Stateless. |
-| **Banco de Dados** | MySQL 8.0 | InnoDB, UTF8mb4. |
-| **Testes** | Pest PHP | Suíte de testes automatizados com sintaxe expressiva. |
-| **Docs** | Markdown | Documentação viva no repositório. |
-
-### Bibliotecas Principais
-- `spatie/laravel-permission`: Controle de acesso baseado em função (RBAC).
-- `spatie/laravel-activitylog`: Rastreamento de ações críticas (quem fez o quê).
-- `laravel/pint`: Padronização de código (PSR-12).
+**Problema que resolve**: Elimina a inconsistência financeira entre o "sistema" e a "gaveta do caixa", forçando um fluxo de aprovação auditável onde divergências devem ser justificadas antes que um turno seja encerrado.
 
 ---
 
-## 🔐 2. Autenticação e Segurança
+## 2. Status e Escopo
 
-### Fluxo de Login
-1. O cliente envia `email`, `password` e `device_name`.
-2. O sistema valida as credenciais (hash `bcrypt`).
-3. Se válido, retorna um **Token Sanctum** em texto plano.
-4. O cliente deve enviar este token no header `Authorization: Bearer <token>` em todas as requisições subsequentes.
+**Status Atual**: 🚀 **MVP (Em Desenvolvimento Avançado)**
 
-### Permissões (RBAC)
-O sistema possui 3 papéis principais:
-- **`admin`**: Acesso irrestrito a todas as lojas e configurações.
-- **`gerente` (Manager)**: Pode aprovar fechamentos e ver dados da sua loja.
-- **`vendedor` (Salesperson)**: Vende, abre turno e submete fechamentos.
+### ✅ O que está pronto
+- [x] **Autenticação Segura**: Login via Bearer Token (Device-based).
+- [x] **RBAC Granular**: Sistema de permissões por loja (ex: Um usuário pode ser Gerente na Loja A e Vendedor na Loja B ao mesmo tempo).
+- [x] **Gestão de Lojas**: Cadastro e vinculação de usuários.
+- [x] **Gestão de Vendas**: Registro e consulta com filtros avançados.
+- [x] **Módulo de Caixa (Core)**:
+    - Abertura de Turnos (Manhã/Tarde/Noite).
+    - Cálculo automático de divergências.
+    - Fluxo de Submissão -> Aprovação/Rejeição.
+- [x] **Dashboards**: Endpoints otimizados para KPIs de Vendedores, Conferentes e Admins.
 
-### Escopo de Loja (Tenant Isolation)
-A segurança de dados é garantida por `GlobalScopes` e `Policies`. Um vendedor da **Loja A** *nunca* conseguirá ver dados da **Loja B**, mesmo se tentar manipular IDs na URL.
+### 🚧 Roadmap Curto
+- [ ] Integração com sistema fiscal (NFC-e).
+- [ ] Módulo de Estoque (Entradas/Saídas).
+- [ ] Relatórios PDF exportáveis.
+- [ ] Webhook para notificações em tempo real.
 
 ---
 
-## 🔌 3. API Reference
+## 3. Tech Stack
 
-### 3.1. Auth
+- **Linguagem**: PHP 8.2+
+- **Framework**: Laravel 12.x
+- **Banco de Dados**: MySQL 8.0 / MariaDB
+- **Autenticação**: Laravel Sanctum
+- **Autorização**: Spatie Permissions (Customizada para multitenancy de loja)
+- **Logs**: Spatie Activity Log (Auditoria de tabelas críticas)
+- **Testes**: Pest PHP
 
-#### Login
-Rettorna o token de acesso e dados básicos do usuário.
+---
 
-- **POST** `/api/v1/auth/login`
+## 4. Quick Start (Windows / Laragon)
 
-**Request Body:**
-```json
-{
-  "email": "vendedor@maiscapinhas.com.br",
-  "password": "senha-secreta",
-  "device_name": "Tablet Loja 01"
-}
+Siga estes passos para rodar a API em menos de 5 minutos.
+
+### Pré-requisitos
+- PHP 8.2+
+- Composer
+- MySQL
+
+### Passo a Passo
+
+1. **Clone o repositório**
+   ```bash
+   git clone https://github.com/seu-org/maiscapinhas-erp-api.git
+   cd maiscapinhas-erp-api
+   ```
+
+2. **Instale as dependências**
+   ```bash
+   composer install
+   ```
+
+3. **Configure o Ambiente**
+   Copie o arquivo de exemplo:
+   ```bash
+   cp .env.example .env
+   ```
+   *No Windows (PowerShell):* `copy .env.example .env`
+
+4. **Banco de Dados**
+   Crie um banco de dados vazio (ex: `maiscapinhas_db`) no seu MySQL/HeidiSQL.
+   Edite o `.env`:
+   ```ini
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=maiscapinhas_db
+   DB_USERNAME=root
+   DB_PASSWORD=
+   ```
+
+5. **Gerar Chave e Migrar**
+   ```bash
+   php artisan key:generate
+   php artisan migrate:fresh --seed
+   ```
+   *(Isso criará o banco e populará com dados de teste)*.
+
+6. **Rodar o Servidor**
+   ```bash
+   php artisan serve
+   ```
+   A API estará rodando em: `http://localhost:8000`.
+
+---
+
+## 5. Configuração de Ambiente
+
+### .env Essencial
+
+```ini
+APP_NAME="Mais Capinhas ERP"
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost:8000
+
+# Sanctum (Permite autenticação via cookie para SPA no mesmo domínio principal)
+SANCTUM_STATEFUL_DOMAINS=localhost:3000,127.0.0.1:3000
+SESSION_DOMAIN=.localhost
+
+# CORS
+CORS_ALLOWED_ORIGINS="http://localhost:3000,http://localhost:8000"
 ```
 
-**Response (200 OK):**
-```json
-{
-  "success": true,
-  "data": {
-    "token": "10|abc123xyz...",
-    "token_type": "Bearer",
-    "user": {
-      "id": 15,
-      "name": "João Silva",
-      "email": "vendedor@maiscapinhas.com.br"
+### Filas (Opcional no Dev)
+Se for usar filas assíncronas:
+```ini
+QUEUE_CONNECTION=database
+```
+
+---
+
+## 6. Autenticação
+
+A API suporta dois modos de autenticação.
+
+### 1. Token Bearer (Mobile / Postman / Server-to-Server)
+Usado quando o cliente não compartilha sessão/cookies (apps nativos ou terceiros).
+
+*   **Header Obrigatório**: `Authorization: Bearer <seu_token>`
+*   **Obtenção**: Endpoint `/api/v1/auth/login` retorna o `token`.
+
+### 2. Cookie SPA (Front-end Web)
+Recomendado para o painel administrativo web (React/Vue) hospedado no mesmo domínio.
+
+1.  Requisitar `GET /sanctum/csrf-cookie`.
+2.  Fazer login em `/api/v1/auth/login`.
+3.  O browser gerencia o cookie `XSRF-TOKEN` e `maiscapinhas_session`.
+4.  **Importante**: Requests devem ter `credentials: include`.
+
+---
+
+## 7. Dados de Seed (Usuários de Teste)
+
+Ao rodar `migrate:fresh --seed`, os seguintes usuários são criados (Senha padrão para todos: `password`):
+
+| Perfil | Email | Permissões |
+| :--- | :--- | :--- |
+| **Admin Global** | `admin@maiscapinhas.com.br` | Acesso total a todas as lojas. |
+| **Gerente** | `carlos.gerente@maiscapinhas.com.br` | Gerente em Tijucas e Itapema. |
+| **Conferente** | `ana.conferente@maiscapinhas.com.br` | Conferente em Tijucas e Itapema (Aprova caixas). |
+| **Vendedor** | `joao.vendedor@maiscapinhas.com.br` | Vendedor em Tijucas (Abre turnos). |
+| **Vendedor** | `pedro.vendedor@maiscapinhas.com.br` | Vendedor em Bombinhas. |
+
+**Lojas Criadas**:
+1. Tijucas
+2. Itapema
+3. Bombinhas
+
+---
+
+## 8. RBAC e Multi-loja (Design Decisions)
+
+Uma das decisões de arquitetura mais importantes foi **desacoplar o usuário da loja**. Um usuário não "pertence" a uma loja; ele **tem um papel** em uma loja.
+
+**Tabela Pivot**: `store_users`
+- `user_id`
+- `store_id`
+- `role` (admin, gerente, conferente, vendedor)
+
+**Regras de Negócio**:
+- **Escopo**: Quase todos os endpoints exigem `store_id`. O middleware ou Service valida: "Este usuário tem acesso a ESTA loja?".
+- **Roles Específicas**:
+    - `vendedor`: Pode vender e abrir turnos, mas NÃO aprovar.
+    - `conferente`: Pode visualizar todos os caixas e aprovar/rejeitar, mas NÃO edita valores.
+    - `gerente`: Poderes de conferente + relatórios gerenciais.
+
+> [!NOTE]
+> Um usuário pode ser Gerente na Loja A e apenas Vendedor na Loja B. O sistema respeita o contexto da loja informada na requisição.
+
+---
+
+## 9. Fluxos e Diagramas
+
+### Fluxo de Fechamento de Caixa
+
+Este é o coração financeiro do ERP.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Open: Vendedor Abre Turno
+    Open --> Draft: Vendas acontecem...
+    
+    state "Fechamento (CashClosing)" as ClosingProcess {
+        Draft --> Submitted: Vendedor conta dinheiro\ne envia
+        Submitted --> Approved: Conferente valida\n(Sem divergências ou justificadas)
+        Submitted --> Rejected: Conferente encontra erro
+        Rejected --> Submitted: Vendedor corrige\ne reenvia
     }
-  },
-  "message": "Login successful"
-}
+
+    Approved --> Closed: Turno Encerrado
+    Closed --> [*]
+
+    note right of Rejected
+       Motivo da rejeição é OBRIGATÓRIO.
+       Turno volta a ficar editável para o vendedor.
+    end note
 ```
 
 ---
 
-### 3.2. Dashboards
-Endpoints otimizados que retornam **DTOs agregados** para montar telas inteiras com uma única requisição.
+## 10. Documentação de Endpoints
 
-#### Dashboard do Vendedor
-Resumo operacional do dia para o vendedor.
+### Endpoints Principais
 
-- **GET** `/api/v1/dashboard/vendedor?store_id=1`
+| Método | Endpoint | Descrição |
+| :--- | :--- | :--- |
+| `GET` | `/health` | Checagem de saúde da API. |
+| `POST` | `/auth/login` | Login e obtenção de token. |
+| `GET` | `/me` | Dados do usuário e suas lojas. |
+| `GET` | `/stores` | Lojas disponíveis para o usuário. |
+| `GET` | `/sales` | Listagem de vendas (filtros avançados). |
+| `POST` | `/cash/shifts` | Abertura de turno de caixa. |
+| `POST` | `/cash/closings/{id}/submit` | Submissão de fechamento. |
+| `POST` | `/cash/closings/{id}/approve` | Aprovação de fechamento (Gerente). |
 
-**Response (200 OK):**
+### Detalhamento Crítico
+
+#### 1. Abertura de Turno
+**POST** `/api/v1/cash/shifts`
+
+Valida se já não existe um turno aberto para aquele usuário naquela loja.
+
+**Body**:
 ```json
 {
-  "success": true,
-  "data": {
-    "date": "2026-01-07",
-    "my_sales": {
-      "count": 12,
-      "total": 1450.50
-    },
-    "store_sales": {
-      "count": 45,
-      "total": 5200.00
-    },
-    "my_shifts": [
-      {
-        "id": 102,
-        "date": "2026-01-07",
-        "status": "open",
-        "shift_code": "T1"
-      }
-    ]
-  }
+  "store_id": 1,
+  "date": "2024-03-10",
+  "shift_code": "T" // M=Manhã, T=Tarde, N=Noite
 }
 ```
 
-#### Dashboard do Conferente
-Focado em pendências que exigem atenção (fechamentos aguardando aprovação).
+#### 2. Visualizar Fechamento (Com Divergências)
+**GET** `/api/v1/cash/closings/{shift_id}`
 
-- **GET** `/api/v1/dashboard/conferente?store_id=1`
+O sistema calcula `diff_value` em tempo real na criação do draft.
 
-**Response (200 OK):**
+**Response (Parcial)**:
 ```json
 {
-  "success": true,
   "data": {
-    "pending_count": 2,
-    "pending_closings": [
-      {
-        "id": 505,
-        "status": "submitted",
-        "cash_shift": {
-            "seller": { "name": "Maria Cunha" }
-        }
-      }
-    ]
-  }
-}
-```
-
----
-
-### 3.3. Gestão de Caixa (Cash Management)
-O núcleo financeiro do ERP.
-
-#### Submeter Fechamento
-O vendedor envia os valores contados. O backend calcula a diferença automaticamente.
-
-- **POST** `/api/v1/cash/closings/{id}/submit`
-
-**Lógica:**
-1. Verifica se o status é `draft` ou `rejected`.
-2. Recalcula as diferenças (`real_value - system_value`).
-3. Bloqueia se houver diferenças **sem justificativa**.
-4. Muda status para `submitted`.
-
-**Response (200 OK):**
-```json
-{
-  "success": true,
-  "data": {
-    "id": 505,
-    "status": "submitted",
+    "status": "draft",
     "lines": [
       {
-        "label": "Dinheiro",
+        "label": "Dinheiro em Espécie",
         "system_value": 500.00,
-        "real_value": 450.00,
-        "diff_value": -50.00,
-        "justification": "Sangria não lançada"
+        "real_value": 480.00,
+        "diff_value": -20.00, // Falta R$20
+        "justification_text": null // Precisa preencher para submeter!
       }
     ]
   }
 }
 ```
 
-#### Aprovar Fechamento (Admin/Gerente)
-Finaliza o ciclo do dinheiro.
+---
 
-- **POST** `/api/v1/cash/closings/{id}/approve`
+## 11. Formato de Resposta e Erros
 
-**Response (200 OK):**
+Todas as respostas seguem o padrão JSON Envelope.
+
+### Sucesso
 ```json
 {
-  "success": true,
-  "message": "Closing approved successfully."
+  "data": { ... },
+  "meta": { "timestamp": "...", "page": 1 }
 }
 ```
 
----
+### Erros Comuns
 
-## 🏛️ 4. Estrutura do Banco de Dados
-
-### Diagrama ER (Simplificado)
-
-- **`stores`**: Unidades de negócio.
-- **`users`**: Colaboradores.
-- **`store_users`** (N:N): Quais lojas um usuário acessa.
-- **`sales`**: Vendas importadas do sistema PDV.
-  - `store_id` (FK), `seller_id` (FK), `amount`, `payment_method`.
-- **`cash_shifts`**: Turno de trabalho.
-  - `seller_id`, `start_time`, `end_time`, `status` (open/closed).
-- **`cash_closings`**: O documento de fechamento.
-  - `cash_shift_id`, `status` (draft/submitted/approved/rejected), `version`.
-- **`cash_closing_lines`**: Detalhe financeiro.
-  - `type` (money/card), `system_value`, `real_value`.
+*   **401 Unauthenticated**: Token inválido.
+*   **403 Forbidden**: "You do not have permission to approve closings in this store."
+*   **422 Validation Error**:
+    ```json
+    {
+      "message": "Validation failed.",
+      "errors": {
+         "real_value": ["O valor real deve ser numérico."]
+      }
+    }
+    ```
+*   **409 Conflict**: Tentar aprovar um caixa que não está em estado `submitted`.
 
 ---
 
-## �️ 5. Guia de Desenvolvimento
+## 12. Filas e Scheduler
 
-### Instalação Local
+Para ambientes de produção, certifique-se de rodar os workers.
 
 ```bash
-# 1. Clone
-git clone ...
+# Processar filas (envio de emails, logs pesados)
+php artisan queue:work
 
-# 2. Deps
-composer install
-
-# 3. Env
-cp .env.example .env
-# Configure DB credentials no .env
-
-# 4. Setup
-php artisan key:generate
-php artisan migrate --seed
-
-# 5. Run
-php artisan serve
+# Scheduler (limpeza de tokens, relatórios diários)
+php artisan schedule:work
 ```
 
-### Rodando Testes
-Use o Pest para garantir que nada quebrou.
+---
+
+## 13. Testes
+
+O projeto utiliza Pest PHP para testes automatizados.
 
 ```bash
-# Todos os testes
+# Rodar todos os testes
 php artisan test
 
-# Apenas testes de Caixa
-php artisan test --filter=Cash
+# Rodar apenas testes de Arquitetura
+php artisan test --filter=Arch
 ```
 
-### Como Adicionar uma Nova Feature
-
-1.  **Crie a Rota**: `routes/api_v1.php`.
-2.  **Controller**: `app/Http/Controllers/Api/V1`.
-3.  **Service**: Se tiver lógica de negócio, crie um Service em `app/Services`.
-4.  **Teste**: Crie um teste em `tests/Feature/SuaFeatureTest.php`.
+Cobertura atual foca em:
+1.  Fluxos de Login.
+2.  Cálculo de divergências de caixa.
+3.  Proteção de rotas (Store Policy).
 
 ---
 
-## 🔮 6. Roadmap & Manutenção
+## 14. Observabilidade e Manutenção
 
-- [ ] **Webhooks**: Notificar Slack/WhatsApp quando houver divergência de caixa > R$ 100,00.
-- [ ] **Relatórios PDF**: Gerar comprovante de fechamento em PDF.
-- [ ] **Cache Redis**: Otimizar dashboards de Admin para grandes volumes de dados.
-- [ ] **Auditoria Geográfica**: Salvar Lat/Long do device no momento do login.
+### Comandos Úteis
+*   `php artisan route:list`: Ver todas as rotas registradas.
+*   `php artisan model:show User`: Ver detalhes do Model User.
+*   `tail -f storage/logs/laravel.log`: Acompanhar logs de erro em tempo real.
+
+### Troubleshooting
+*   **Erro 500 no Login?**: Verifique se as chaves do Sanctum foram geradas ou se o `.env` está correto.
+*   **CORS Error?**: Verifique se `SANCTUM_STATEFUL_DOMAINS` bate com a porta do seu front-end.
 
 ---
 
-**© 2026 Mais Capinhas ERP**. Desenvolvido com ❤️ e PHP.
+## 15. Segurança
+
+> [!IMPORTANT]
+> **Nunca commite o arquivo `.env`**. Ele contém senhas de banco e chaves de criptografia.
+
+*   **Rate Limiting**: Configurado por padrão em 60 requests/minuto por IP nas rotas de API.
+*   **Auditoria**: Toda alteração de status em `CashClosings` gera um registro na tabela `audit_logs` (quem aprovou, quando, de qual IP).
+
+---
+
+## 16. Licença
+
+Este projeto é proprietário e desenvolvido exclusivamente para uso interno da rede **Mais Capinhas**. Todos os direitos reservados.
