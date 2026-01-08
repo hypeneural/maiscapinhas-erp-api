@@ -63,9 +63,9 @@ class RankingService
         // Buscar bônus acumulado
         $bonuses = SellerDailyBonus::whereIn('user_id', $sellerIds)
             ->whereBetween('date', [$startOfMonth->format('Y-m-d'), $endOfMonth->format('Y-m-d')])
-            ->where('status', 'approved')
+            ->where('status', 'confirmed')
+            ->selectRaw('user_id, SUM(bonus_amount) as total_bonus')
             ->groupBy('user_id')
-            ->select(['user_id', DB::raw('SUM(bonus_value) as total_bonus')])
             ->get()
             ->keyBy('user_id');
 
