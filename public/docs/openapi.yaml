@@ -1070,7 +1070,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-08T00:46:40'
+                  example: '2026-01-08T01:32:45'
               required:
                 - store_id
   /api/v1/dashboard/conferente:
@@ -1188,7 +1188,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-08T00:46:40'
+                  example: '2026-01-08T01:32:45'
               required:
                 - store_id
   /api/v1/dashboard/admin:
@@ -1509,11 +1509,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-08T00:46:40'
+                  example: '2026-01-08T01:32:43'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-08T00:46:40'
+                  example: '2026-01-08T01:32:43'
                 per_page:
                   type: integer
                   description: 'Must be at least 1. Must not be greater than 100.'
@@ -1979,7 +1979,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-08T00:46:40'
+                  example: '2026-01-08T01:32:43'
                 status:
                   type: string
                   description: ''
@@ -2859,7 +2859,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-08T00:46:40'
+                  example: '2026-01-08T01:32:43'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -2926,7 +2926,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-08T00:46:40'
+                  example: '2026-01-08T01:32:43'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -3010,7 +3010,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-08T00:46:40'
+                  example: '2026-01-08T01:32:44'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -3077,7 +3077,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-08T00:46:40'
+                  example: '2026-01-08T01:32:44'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -3168,7 +3168,7 @@ paths:
                 active:
                   type: boolean
                   description: ''
-                  example: true
+                  example: false
               required:
                 - store_id
                 - month
@@ -3315,11 +3315,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-08T00:46:40'
+                  example: '2026-01-08T01:32:44'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-08T00:46:40'
+                  example: '2026-01-08T01:32:44'
                 per_page:
                   type: integer
                   description: 'Must be at least 1. Must not be greater than 100.'
@@ -3552,11 +3552,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-08T00:46:40'
+                  example: '2026-01-08T01:32:44'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-08T00:46:40'
+                  example: '2026-01-08T01:32:44'
     parameters:
       -
         in: path
@@ -3855,7 +3855,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-08T00:46:40'
+                  example: '2026-01-08T01:32:45'
               required:
                 - store_id
                 - date
@@ -3881,11 +3881,11 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-08T00:46:40'
+                  example: '2026-01-08T01:32:45'
                 shift_code:
                   type: string
                   description: ''
-                  example: M
+                  example: 'N'
                   enum:
                     - M
                     - T
@@ -4161,11 +4161,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-08T00:46:40'
+                  example: '2026-01-08T01:32:45'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-08T00:46:40'
+                  example: '2026-01-08T01:32:45'
                 causer_id:
                   type: integer
                   description: 'The <code>id</code> of an existing record in the users table.'
@@ -4297,11 +4297,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-08T00:46:40'
+                  example: '2026-01-08T01:32:45'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-08T00:46:40'
+                  example: '2026-01-08T01:32:45'
   '/api/v1/admin/audit-logs/{auditLog_id}':
     get:
       summary: 'Ver detalhes do log'

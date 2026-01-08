@@ -47,7 +47,7 @@ endpoints:
         name: from
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-08T00:46:40'
+        example: '2026-01-08T01:32:44'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -58,7 +58,7 @@ endpoints:
         name: to
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-08T00:46:40'
+        example: '2026-01-08T01:32:44'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -77,8 +77,8 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      from: '2026-01-08T00:46:40'
-      to: '2026-01-08T00:46:40'
+      from: '2026-01-08T01:32:44'
+      to: '2026-01-08T01:32:44'
       per_page: 22
     fileParameters: []
     responses:
@@ -282,7 +282,7 @@ endpoints:
         name: from
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-08T00:46:40'
+        example: '2026-01-08T01:32:44'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -293,15 +293,15 @@ endpoints:
         name: to
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-08T00:46:40'
+        example: '2026-01-08T01:32:44'
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      from: '2026-01-08T00:46:40'
-      to: '2026-01-08T00:46:40'
+      from: '2026-01-08T01:32:44'
+      to: '2026-01-08T01:32:44'
     fileParameters: []
     responses:
       -

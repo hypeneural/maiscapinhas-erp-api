@@ -10,7 +10,7 @@
     ],
     "info": {
         "name": "MaisCapinhas ERP API - Documenta\u00e7\u00e3o",
-        "_postman_id": "5e854382-1db7-4d90-a3ae-9636574bc6c2",
+        "_postman_id": "63e87268-3aef-4db9-aa43-e8c9227e47dc",
         "description": "API REST para gest\u00e3o de vendas, metas, fechamento de caixa, b\u00f4nus e comiss\u00f5es do ERP MaisCapinhas.",
         "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json",
         "version": "1.0.0"
@@ -564,7 +564,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-08T00:46:40\"}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-08T01:32:45\"}"
                         },
                         "description": "Retorna m\u00e9tricas completas para o vendedor, incluindo:\n- Vendas pessoais do dia\n- **Gamifica\u00e7\u00e3o de B\u00f4nus** - quanto falta para o pr\u00f3ximo n\u00edvel\n- **Proje\u00e7\u00e3o de Comiss\u00e3o** - tier atual e potencial\n- **Pace Di\u00e1rio** - ritmo comparado \u00e0 m\u00e9dia\n\nEste dashboard \u00e9 projetado para **motivar** o vendedor mostrando\nmetas tang\u00edveis e progresso em tempo real.\n\n**Quem pode usar:** Vendedores e n\u00edveis superiores.\n\n**M\u00e9tricas retornadas:**\n| M\u00e9trica | Descri\u00e7\u00e3o |\n|---------|-----------|\n| `my_sales` | Quantidade e valor total das vendas do dia |\n| `store_sales` | Total de vendas da loja (para compara\u00e7\u00e3o) |\n| `bonus_gamification` | Gap para pr\u00f3ximo b\u00f4nus, b\u00f4nus atual |\n| `monthly_commission` | Tier atual, proje\u00e7\u00e3o, potencial |\n| `daily_pace` | Ritmo vs m\u00e9dia di\u00e1ria |\n| `my_shifts` | Turnos do dia com status |"
                     },
@@ -612,7 +612,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-08T00:46:40\"}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-08T01:32:45\"}"
                         },
                         "description": "Retorna m\u00e9tricas para confer\u00eancia de caixa e auditoria,\nincluindo fechamentos pendentes e ranking de vendedores.\n\n**Foco:** Integridade de caixa e aprova\u00e7\u00e3o de fechamentos.\n\n**Quem pode usar:** Conferentes, Gerentes e Admins.\n\n**M\u00e9tricas retornadas:**\n| M\u00e9trica | Descri\u00e7\u00e3o |\n|---------|-----------|\n| `pending_closings` | Fechamentos aguardando aprova\u00e7\u00e3o |\n| `pending_count` | Quantidade de pendentes |\n| `store_sales` | Total de vendas da loja no dia |\n| `shifts_today` | Resumo por status (open\/closed\/pending) |\n| `top_sellers` | Top 5 vendedores do dia |"
                     },
@@ -726,7 +726,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"seller_id\":16,\"from\":\"2026-01-08T00:46:40\",\"to\":\"2026-01-08T00:46:40\",\"per_page\":22}"
+                            "raw": "{\"store_id\":16,\"seller_id\":16,\"from\":\"2026-01-08T01:32:43\",\"to\":\"2026-01-08T01:32:43\",\"per_page\":22}"
                         },
                         "description": "Retorna a lista paginada de vendas das lojas \u00e0s quais o\nusu\u00e1rio tem acesso, com diversos filtros dispon\u00edveis.\n\n**Visibilidade:**\n- Vendedor: v\u00ea vendas de todas as lojas onde trabalha\n- Gerente: v\u00ea todas as vendas das lojas que gerencia\n- Admin: v\u00ea todas as vendas do sistema\n\n**Filtros dispon\u00edveis:**\n- `store_id` - Filtrar por loja espec\u00edfica\n- `seller_id` - Filtrar por vendedor\n- `from`\/`to` - Per\u00edodo de datas\n\n**Ordena\u00e7\u00e3o:** Por data de venda, mais recentes primeiro.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado (v\u00ea apenas suas lojas)."
                     },
@@ -992,7 +992,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-08T00:46:40\",\"status\":\"open\",\"per_page\":22}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-08T01:32:43\",\"status\":\"open\",\"per_page\":22}"
                         },
                         "description": "Retorna os turnos de caixa das lojas \u00e0s quais o usu\u00e1rio tem acesso,\ncom filtros por loja, data e status.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado.\n\n**Filtros dispon\u00edveis:**\n- `store_id` - Filtrar por loja espec\u00edfica\n- `date` - Filtrar por data espec\u00edfica (YYYY-MM-DD)\n- `status` - Filtrar por status (open, closed, pending)\n\n**C\u00f3digos de turno:**\n- `M` - Manh\u00e3\n- `T` - Tarde\n- `N` - Noite"
                     },
@@ -1466,7 +1466,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-08T00:46:40\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-08T01:32:43\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
                         },
                         "description": "POST \/api\/v1\/rules\/bonus"
                     },
@@ -1555,7 +1555,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-08T00:46:40\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-08T01:32:43\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
                         },
                         "description": "PUT \/api\/v1\/rules\/bonus\/{rule}"
                     },
@@ -1667,7 +1667,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-08T00:46:40\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-08T01:32:44\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
                         },
                         "description": "POST \/api\/v1\/rules\/commission"
                     },
@@ -1756,7 +1756,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-08T00:46:40\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-08T01:32:44\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
                         },
                         "description": "PUT \/api\/v1\/rules\/commission\/{rule}"
                     },
@@ -1868,7 +1868,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"month\":\"6425-59\",\"goal_amount\":9,\"active\":true}"
+                            "raw": "{\"store_id\":16,\"month\":\"6425-59\",\"goal_amount\":9,\"active\":false}"
                         },
                         "description": "POST \/api\/v1\/goals\/monthly"
                     },
@@ -2060,7 +2060,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"from\":\"2026-01-08T00:46:40\",\"to\":\"2026-01-08T00:46:40\",\"per_page\":22}"
+                            "raw": "{\"store_id\":16,\"from\":\"2026-01-08T01:32:44\",\"to\":\"2026-01-08T01:32:44\",\"per_page\":22}"
                         },
                         "description": "GET \/api\/v1\/finance\/bonus?store_id=&from=&to="
                     },
@@ -2183,7 +2183,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"from\":\"2026-01-08T00:46:40\",\"to\":\"2026-01-08T00:46:40\"}"
+                            "raw": "{\"from\":\"2026-01-08T01:32:44\",\"to\":\"2026-01-08T01:32:44\"}"
                         },
                         "description": "Retorna o hist\u00f3rico de b\u00f4nus de um vendedor espec\u00edfico com resumo.\n\n**Quem pode usar:** O pr\u00f3prio vendedor ou Gerentes\/Admins."
                     },
@@ -2397,7 +2397,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-08T00:46:40\"}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-08T01:32:45\"}"
                         },
                         "description": "GET \/api\/v1\/analytics\/people\/shift?store_id=&date="
                     },
@@ -2445,7 +2445,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-08T00:46:40\",\"shift_code\":\"M\",\"in_count\":39,\"out_count\":84,\"staff_in\":12,\"staff_out\":77}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-08T01:32:45\",\"shift_code\":\"N\",\"in_count\":39,\"out_count\":84,\"staff_in\":12,\"staff_out\":77}"
                         },
                         "description": "POST \/api\/v1\/analytics\/people\/shift"
                     },
@@ -2534,7 +2534,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"from\":\"2026-01-08T00:46:40\",\"to\":\"2026-01-08T00:46:40\",\"causer_id\":16,\"event\":\"n\",\"log_name\":\"g\",\"store_id\":16,\"subject_type\":\"n\",\"subject_id\":16,\"per_page\":22}"
+                            "raw": "{\"from\":\"2026-01-08T01:32:45\",\"to\":\"2026-01-08T01:32:45\",\"causer_id\":16,\"event\":\"n\",\"log_name\":\"g\",\"store_id\":16,\"subject_type\":\"n\",\"subject_id\":16,\"per_page\":22}"
                         },
                         "description": "Retorna lista paginada de logs com suporte a diversos filtros.\n\n**Filtros dispon\u00edveis:**\n- `from`\/`to` - Per\u00edodo de datas\n- `causer_id` - ID do usu\u00e1rio que executou a a\u00e7\u00e3o\n- `event` - Nome do evento (suporta wildcard: `auth.*`)\n- `log_name` - Dom\u00ednio: auth, cash, rules, goals\n- `store_id` - Loja relacionada\n- `subject_type` - Tipo de entidade (CashClosing, BonusRule, etc)\n- `subject_id` - ID da entidade\n\n**Ordena\u00e7\u00e3o:** Por data de cria\u00e7\u00e3o, mais recentes primeiro.\n\n**Quem pode usar:** Apenas administradores."
                     },
@@ -2588,7 +2588,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"from\":\"2026-01-08T00:46:40\",\"to\":\"2026-01-08T00:46:40\"}"
+                            "raw": "{\"from\":\"2026-01-08T01:32:45\",\"to\":\"2026-01-08T01:32:45\"}"
                         },
                         "description": "Retorna estat\u00edsticas agregadas dos logs para overview.\n\n**Quem pode usar:** Apenas administradores."
                     },

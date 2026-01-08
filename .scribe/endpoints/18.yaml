@@ -186,7 +186,7 @@ endpoints:
         name: from
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-08T00:46:40'
+        example: '2026-01-08T01:32:45'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -197,7 +197,7 @@ endpoints:
         name: to
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-08T00:46:40'
+        example: '2026-01-08T01:32:45'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -281,8 +281,8 @@ endpoints:
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      from: '2026-01-08T00:46:40'
-      to: '2026-01-08T00:46:40'
+      from: '2026-01-08T01:32:45'
+      to: '2026-01-08T01:32:45'
       causer_id: 16
       event: 'n'
       log_name: g
@@ -405,7 +405,7 @@ endpoints:
         name: from
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-08T00:46:40'
+        example: '2026-01-08T01:32:45'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -416,15 +416,15 @@ endpoints:
         name: to
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-08T00:46:40'
+        example: '2026-01-08T01:32:45'
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      from: '2026-01-08T00:46:40'
-      to: '2026-01-08T00:46:40'
+      from: '2026-01-08T01:32:45'
+      to: '2026-01-08T01:32:45'
     fileParameters: []
     responses:
       -
