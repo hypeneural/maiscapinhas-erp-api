@@ -36,6 +36,14 @@ class StoreGoalSplit extends Model
         return $this->belongsTo(StoreMonthlyGoal::class, 'store_monthly_goal_id');
     }
 
+    /**
+     * Alias for goal() - used by RankingService
+     */
+    public function storeMonthlyGoal(): BelongsTo
+    {
+        return $this->goal();
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -44,6 +52,14 @@ class StoreGoalSplit extends Model
     // ========================================
     // Helpers
     // ========================================
+
+    /**
+     * Accessor for goal_amount - returns the calculated individual goal
+     */
+    public function getGoalAmountAttribute(): float
+    {
+        return $this->getIndividualGoalAmount();
+    }
 
     public function getIndividualGoalAmount(): float
     {
