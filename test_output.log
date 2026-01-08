@@ -1,0 +1,71 @@
+API ENDPOINT TEST RESULTS
+=========================
+
+[OK]   GET /health
+[OK]   GET /version
+[OK]   GET /me
+[OK]   GET /stores
+[OK]   GET /stores/1
+[OK]   GET /stores/1/sellers
+[OK]   GET /sales
+[OK]   GET /sales/1
+[OK]   GET /cash/shifts
+[OK]   GET /cash/shifts/pending
+[OK]   GET /cash/shifts/divergent
+[OK]   GET /cash/shifts/1
+[FAIL] GET /cash/closings/1 - No closing found for this shift.
+[OK]   GET /rules/bonus
+[OK]   GET /rules/commission
+[OK]   GET /goals/monthly
+[OK]   GET /finance/bonus
+[FAIL] GET /finance/bonus/calculate?amount=1000 - SQLSTATE[42S22]: Column not found: 1054 Unknown column 'active' in 'WHERE' (Connection: mariadb, Host: 186.209.113.134, Port: 3306, Database: erp_maiscapinhas, SQL: select * from `bonus_rules` where `active` = 1 and (`store_id` is null) order by `store_id` desc limit 1)
+[OK]   GET /finance/bonus/seller/1
+[OK]   GET /finance/commission
+[OK]   GET /finance/commission/seller/1
+[OK]   GET /finance/commission/projection/1
+[FAIL] GET /analytics/people/shift - The store id field is required. (and 1 more error)
+[FAIL] GET /dashboard/seller - The route api/v1/dashboard/seller could not be found.
+[FAIL] GET /dashboard/store - The route api/v1/dashboard/store could not be found.
+[OK]   GET /dashboard/admin
+[FAIL] GET /reports/store-performance - The store id field is required.
+[OK]   GET /reports/consolidated
+[FAIL] GET /reports/cash-integrity - The store id field is required.
+[OK]   GET /reports/ranking
+[OK]   GET /users/birthdays
+[OK]   GET /admin/users
+[OK]   GET /admin/users/1
+[OK]   GET /admin/stores
+[OK]   GET /admin/stores/1
+[OK]   GET /admin/stores/1/users
+[OK]   GET /admin/audit-logs
+[OK]   GET /admin/audit-logs/stats
+
+=========================
+SUMMARY
+=========================
+Total: 38
+Passed: 31
+Failed: 7
+
+FAILED ENDPOINTS:
+  - /cash/closings/1
+    Code: 404
+    Message: No closing found for this shift.
+  - /finance/bonus/calculate?amount=1000
+    Code: 500
+    Message: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'active' in 'WHERE' (Connection: mariadb, Host: 186.209.113.134, Port: 3306, Database: erp_maiscapinhas, SQL: select * from `bonus_rules` where `active` = 1 and (`store_id` is null) order by `store_id` desc limit 1)
+  - /analytics/people/shift
+    Code: 422
+    Message: The store id field is required. (and 1 more error)
+  - /dashboard/seller
+    Code: 404
+    Message: The route api/v1/dashboard/seller could not be found.
+  - /dashboard/store
+    Code: 404
+    Message: The route api/v1/dashboard/store could not be found.
+  - /reports/store-performance
+    Code: 422
+    Message: The store id field is required.
+  - /reports/cash-integrity
+    Code: 422
+    Message: The store id field is required.
