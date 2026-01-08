@@ -131,4 +131,22 @@ class AuditContext
         $this->route = null;
         $this->method = null;
     }
+
+    /**
+     * Configura o contexto a partir de um Request.
+     */
+    public function setFromRequest(\Illuminate\Http\Request $request): self
+    {
+        $this->setRequestId($request->header('X-Request-Id') ?? \Illuminate\Support\Str::uuid()->toString());
+        $this->setIp($request->ip());
+        $this->setUserAgent($request->userAgent());
+        $this->setRoute($request->path());
+        $this->setMethod($request->method());
+
+        if ($request->user()) {
+            $this->setUserId($request->user()->id);
+        }
+
+        return $this;
+    }
 }
