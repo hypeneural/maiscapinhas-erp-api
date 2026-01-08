@@ -6,7 +6,7 @@ $app = require_once 'bootstrap/app.php';
 $app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
 
 $token = '2|yPNqTWnttSq6X9uKnWp6XhplfRLzzmI0yXhdr0Csf019bda1';
-$baseUrl = 'http://127.0.0.1:8001/api/v1';
+$baseUrl = 'http://127.0.0.1:8000/api/v1';
 
 $results = [];
 

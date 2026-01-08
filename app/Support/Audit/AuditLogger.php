@@ -191,9 +191,9 @@ class AuditLogger
     /**
      * Verifica se uma chave é sensível.
      */
-    private function isSensitiveKey(string $key): bool
+    private function isSensitiveKey(string|int $key): bool
     {
-        $lowercaseKey = strtolower($key);
+        $lowercaseKey = strtolower((string) $key);
 
         foreach (self::SENSITIVE_FIELDS as $sensitiveField) {
             if (str_contains($lowercaseKey, $sensitiveField)) {
