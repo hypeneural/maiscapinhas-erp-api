@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\Admin\StoreController as AdminStoreController;
 use App\Http\Controllers\Api\V1\Admin\StoreUserController as AdminStoreUserController;
 use App\Http\Controllers\Api\V1\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\AvatarController;
 use App\Http\Controllers\Api\V1\BonusRuleController;
 use App\Http\Controllers\Api\V1\CashClosingController;
 use App\Http\Controllers\Api\V1\CashShiftController;
@@ -16,7 +17,9 @@ use App\Http\Controllers\Api\V1\FinanceController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MonthlyGoalController;
+use App\Http\Controllers\Api\V1\PasswordResetController;
 use App\Http\Controllers\Api\V1\PeopleAnalyticsController;
+use App\Http\Controllers\Api\V1\RankingController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\SaleController;
 use App\Http\Controllers\Api\V1\StoreController;
@@ -39,9 +42,11 @@ use Illuminate\Support\Facades\Route;
 Route::get('/health', HealthController::class)->name('health');
 Route::get('/version', VersionController::class)->name('version');
 
-// Auth routes
+// Auth routes (public)
 Route::prefix('auth')->name('auth.')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login');
+    Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword'])->name('forgot-password');
+    Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('reset-password');
 });
 
 // ============================================
@@ -54,6 +59,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('auth')->name('auth.')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
         Route::post('/logout-all', [AuthController::class, 'logoutAll'])->name('logout-all');
+        Route::put('/password', [PasswordResetController::class, 'changePassword'])->name('change-password');
     });
 
     // Me (current user profile)
@@ -63,6 +69,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('stores')->name('stores.')->group(function () {
         Route::get('/', [StoreController::class, 'index'])->name('index');
         Route::get('/{store}', [StoreController::class, 'show'])->name('show');
+        Route::get('/{store}/sellers', [StoreController::class, 'sellers'])->name('sellers');
+        Route::put('/{store}/photo', [StoreController::class, 'updatePhoto'])->name('photo');
+    });
+
+    // Users (avatar upload)
+    Route::prefix('users')->name('users.')->group(function () {
+        Route::put('/{user}/avatar', [AvatarController::class, 'updateAvatar'])->name('avatar');
     });
 
     // Sales (CRUD)
@@ -79,6 +92,8 @@ Route::middleware('auth:sanctum')->group(function () {
         // Shifts
         Route::prefix('shifts')->name('shifts.')->group(function () {
             Route::get('/', [CashShiftController::class, 'index'])->name('index');
+            Route::get('/pending', [CashShiftController::class, 'pending'])->name('pending');
+            Route::get('/divergent', [CashShiftController::class, 'divergent'])->name('divergent');
             Route::post('/', [CashShiftController::class, 'store'])->name('store');
             Route::get('/{shift}', [CashShiftController::class, 'show'])->name('show');
         });
@@ -117,7 +132,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // ============================================
     Route::prefix('finance')->name('finance.')->group(function () {
         Route::get('/bonus', [FinanceController::class, 'bonus'])->name('bonus');
+        Route::get('/bonus/calculate', [FinanceController::class, 'calculateBonus'])->name('bonus.calculate');
+        Route::get('/bonus/seller/{seller}', [FinanceController::class, 'sellerBonus'])->name('bonus.seller');
         Route::get('/commission', [FinanceController::class, 'commission'])->name('commission');
+        Route::get('/commission/seller/{seller}', [FinanceController::class, 'sellerCommission'])->name('commission.seller');
+        Route::get('/commission/projection/{seller}', [FinanceController::class, 'commissionProjection'])->name('commission.projection');
     });
 
     // ============================================
@@ -144,6 +163,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/store-performance', [ReportController::class, 'storePerformance'])->name('store-performance');
         Route::get('/consolidated', [ReportController::class, 'consolidatedPerformance'])->name('consolidated');
         Route::get('/cash-integrity', [ReportController::class, 'cashIntegrity'])->name('cash-integrity');
+        Route::get('/ranking', [RankingController::class, 'index'])->name('ranking');
+    });
+
+    // ============================================
+    // Users (public endpoints)
+    // ============================================
+    Route::prefix('users')->name('users.')->group(function () {
+        Route::get('/birthdays', [RankingController::class, 'birthdays'])->name('birthdays');
     });
 
 

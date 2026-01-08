@@ -10,7 +10,7 @@
     ],
     "info": {
         "name": "MaisCapinhas ERP API - Documenta\u00e7\u00e3o",
-        "_postman_id": "ddc6bcc8-ec09-4711-a6da-9516ad7edf8f",
+        "_postman_id": "5e854382-1db7-4d90-a3ae-9636574bc6c2",
         "description": "API REST para gest\u00e3o de vendas, metas, fechamento de caixa, b\u00f4nus e comiss\u00f5es do ERP MaisCapinhas.",
         "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json",
         "version": "1.0.0"
@@ -147,6 +147,94 @@
                     ]
                 },
                 {
+                    "name": "Solicitar recupera\u00e7\u00e3o de senha",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/auth\/forgot-password",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/forgot-password"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"email\":\"joao@maiscapinhas.com.br\"}"
+                        },
+                        "description": "Envia um email com link para redefinir a senha.\nO link expira em 60 minutos.\n\n**Quem pode usar:** Qualquer usu\u00e1rio com email cadastrado.\n\n**Rate Limit:** 3 tentativas por minuto por IP.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": { \"message\": \"Email de recupera\u00e7\u00e3o enviado.\" },\n  \"meta\": { \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
+                            "name": "Email enviado"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n  \"message\": \"N\u00e3o encontramos um usu\u00e1rio com esse email.\"\n}",
+                            "name": "Email n\u00e3o encontrado"
+                        }
+                    ]
+                },
+                {
+                    "name": "Redefinir senha",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/auth\/reset-password",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/reset-password"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"token\":\"abc123...\",\"email\":\"joao@maiscapinhas.com.br\",\"password\":\"novaSenha123\",\"password_confirmation\":\"novaSenha123\"}"
+                        },
+                        "description": "Redefine a senha usando o token recebido por email.\n\n**Quem pode usar:** Qualquer usu\u00e1rio com token v\u00e1lido.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": { \"message\": \"Senha alterada com sucesso.\" },\n  \"meta\": { \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
+                            "name": "Senha alterada"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n  \"message\": \"Token de recupera\u00e7\u00e3o inv\u00e1lido ou expirado.\"\n}",
+                            "name": "Token inv\u00e1lido"
+                        }
+                    ]
+                },
+                {
                     "name": "Fazer logout (revogar token atual)",
                     "request": {
                         "url": {
@@ -207,6 +295,47 @@
                             "code": 200,
                             "body": "{\n  \"data\": { \"message\": \"All tokens revoked.\" },\n  \"meta\": { \"request_id\": \"abc-123\", \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
                             "name": "Todos tokens revogados"
+                        }
+                    ]
+                },
+                {
+                    "name": "Alterar pr\u00f3pria senha",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/auth\/password",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/password"
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"current_password\":\"senhaAtual123\",\"password\":\"novaSenha123\",\"password_confirmation\":\"novaSenha123\"}"
+                        },
+                        "description": "Permite ao usu\u00e1rio logado alterar sua pr\u00f3pria senha.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": { \"message\": \"Senha alterada com sucesso.\" },\n  \"meta\": { \"timestamp\": \"2026-01-07T12:00:00Z\" }\n}",
+                            "name": "Senha alterada"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n  \"message\": \"A senha atual est\u00e1 incorreta.\"\n}",
+                            "name": "Senha atual incorreta"
                         }
                     ]
                 }
@@ -337,6 +466,62 @@
                             "name": "Sem acesso"
                         }
                     ]
+                },
+                {
+                    "name": "Listar vendedores de uma loja",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/stores\/:store_id\/sellers",
+                            "query": [
+                                {
+                                    "key": "month",
+                                    "value": "2026-01",
+                                    "description": "M\u00eas para estat\u00edsticas (YYYY-MM).",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/stores\/:store_id\/sellers?month=2026-01",
+                            "variable": [
+                                {
+                                    "id": "store_id",
+                                    "key": "store_id",
+                                    "value": "1",
+                                    "description": "The ID of the store."
+                                },
+                                {
+                                    "id": "store",
+                                    "key": "store",
+                                    "value": "1",
+                                    "description": "ID da loja."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"month\":\"6425-59\"}"
+                        },
+                        "description": "Retorna todos os vendedores ativos vinculados a uma loja,\ncom estat\u00edsticas do m\u00eas atual.\n\n**Quem pode usar:** Gerentes e Admins da loja."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": [\n    {\n      \"id\": 5,\n      \"name\": \"Jo\u00e3o Silva\",\n      \"avatar_url\": \"https:\/\/...\",\n      \"role\": \"vendedor\",\n      \"total_sold_mtd\": 45000.00,\n      \"goal\": 50000.00,\n      \"achievement_rate\": 90.00,\n      \"ranking_position\": 2\n    }\n  ]\n}",
+                            "name": "Lista de vendedores"
+                        }
+                    ]
                 }
             ]
         },
@@ -379,7 +564,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T21:21:39\"}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-08T00:46:40\"}"
                         },
                         "description": "Retorna m\u00e9tricas completas para o vendedor, incluindo:\n- Vendas pessoais do dia\n- **Gamifica\u00e7\u00e3o de B\u00f4nus** - quanto falta para o pr\u00f3ximo n\u00edvel\n- **Proje\u00e7\u00e3o de Comiss\u00e3o** - tier atual e potencial\n- **Pace Di\u00e1rio** - ritmo comparado \u00e0 m\u00e9dia\n\nEste dashboard \u00e9 projetado para **motivar** o vendedor mostrando\nmetas tang\u00edveis e progresso em tempo real.\n\n**Quem pode usar:** Vendedores e n\u00edveis superiores.\n\n**M\u00e9tricas retornadas:**\n| M\u00e9trica | Descri\u00e7\u00e3o |\n|---------|-----------|\n| `my_sales` | Quantidade e valor total das vendas do dia |\n| `store_sales` | Total de vendas da loja (para compara\u00e7\u00e3o) |\n| `bonus_gamification` | Gap para pr\u00f3ximo b\u00f4nus, b\u00f4nus atual |\n| `monthly_commission` | Tier atual, proje\u00e7\u00e3o, potencial |\n| `daily_pace` | Ritmo vs m\u00e9dia di\u00e1ria |\n| `my_shifts` | Turnos do dia com status |"
                     },
@@ -427,7 +612,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T21:21:39\"}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-08T00:46:40\"}"
                         },
                         "description": "Retorna m\u00e9tricas para confer\u00eancia de caixa e auditoria,\nincluindo fechamentos pendentes e ranking de vendedores.\n\n**Foco:** Integridade de caixa e aprova\u00e7\u00e3o de fechamentos.\n\n**Quem pode usar:** Conferentes, Gerentes e Admins.\n\n**M\u00e9tricas retornadas:**\n| M\u00e9trica | Descri\u00e7\u00e3o |\n|---------|-----------|\n| `pending_closings` | Fechamentos aguardando aprova\u00e7\u00e3o |\n| `pending_count` | Quantidade de pendentes |\n| `store_sales` | Total de vendas da loja no dia |\n| `shifts_today` | Resumo por status (open\/closed\/pending) |\n| `top_sellers` | Top 5 vendedores do dia |"
                     },
@@ -541,7 +726,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"seller_id\":16,\"from\":\"2026-01-07T21:21:38\",\"to\":\"2026-01-07T21:21:38\",\"per_page\":22}"
+                            "raw": "{\"store_id\":16,\"seller_id\":16,\"from\":\"2026-01-08T00:46:40\",\"to\":\"2026-01-08T00:46:40\",\"per_page\":22}"
                         },
                         "description": "Retorna a lista paginada de vendas das lojas \u00e0s quais o\nusu\u00e1rio tem acesso, com diversos filtros dispon\u00edveis.\n\n**Visibilidade:**\n- Vendedor: v\u00ea vendas de todas as lojas onde trabalha\n- Gerente: v\u00ea todas as vendas das lojas que gerencia\n- Admin: v\u00ea todas as vendas do sistema\n\n**Filtros dispon\u00edveis:**\n- `store_id` - Filtrar por loja espec\u00edfica\n- `seller_id` - Filtrar por vendedor\n- `from`\/`to` - Per\u00edodo de datas\n\n**Ordena\u00e7\u00e3o:** Por data de venda, mais recentes primeiro.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado (v\u00ea apenas suas lojas)."
                     },
@@ -807,7 +992,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T21:21:38\",\"status\":\"pending\",\"per_page\":22}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-08T00:46:40\",\"status\":\"open\",\"per_page\":22}"
                         },
                         "description": "Retorna os turnos de caixa das lojas \u00e0s quais o usu\u00e1rio tem acesso,\ncom filtros por loja, data e status.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado.\n\n**Filtros dispon\u00edveis:**\n- `store_id` - Filtrar por loja espec\u00edfica\n- `date` - Filtrar por data espec\u00edfica (YYYY-MM-DD)\n- `status` - Filtrar por status (open, closed, pending)\n\n**C\u00f3digos de turno:**\n- `M` - Manh\u00e3\n- `T` - Tarde\n- `N` - Noite"
                     },
@@ -817,6 +1002,90 @@
                             "code": 200,
                             "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"store_id\": 1,\n      \"date\": \"2026-01-07\",\n      \"shift_code\": \"M\",\n      \"seller_id\": 6,\n      \"status\": \"open\",\n      \"store\": { \"id\": 1, \"name\": \"Mais Capinhas Tijucas\" },\n      \"seller\": { \"id\": 6, \"name\": \"Jo\u00e3o Vendedor\" },\n      \"cash_closing\": null\n    }\n  ],\n  \"meta\": { \"current_page\": 1, \"per_page\": 25, \"total\": 84 }\n}",
                             "name": "Lista de turnos"
+                        }
+                    ]
+                },
+                {
+                    "name": "Turnos pendentes de confer\u00eancia",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/cash\/shifts\/pending",
+                            "query": [
+                                {
+                                    "key": "store_id",
+                                    "value": "1",
+                                    "description": "Filtrar por loja.",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/cash\/shifts\/pending?store_id=1"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"store_id\":16}"
+                        },
+                        "description": "Lista turnos que ainda n\u00e3o foram aprovados, ordenados por prioridade\n(mais antigos primeiro).\n\n**Quem pode usar:** Conferentes, Gerentes e Admins."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"total_pending\": 12,\n    \"shifts\": [\n      {\n        \"id\": 5,\n        \"date\": \"2026-01-06\",\n        \"shift_code\": \"T\",\n        \"days_pending\": 2,\n        \"priority\": \"high\",\n        \"store_name\": \"Tijucas\",\n        \"seller_name\": \"Jo\u00e3o Silva\",\n        \"system_total\": 4500.00\n      }\n    ]\n  }\n}",
+                            "name": "Turnos pendentes"
+                        }
+                    ]
+                },
+                {
+                    "name": "Turnos com diverg\u00eancia",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/cash\/shifts\/divergent",
+                            "query": [
+                                {
+                                    "key": "store_id",
+                                    "value": "1",
+                                    "description": "Filtrar por loja.",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/cash\/shifts\/divergent?store_id=1"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"store_id\":16}"
+                        },
+                        "description": "Lista turnos que possuem diverg\u00eancia n\u00e3o justificada entre\nvalores do sistema e valores reais.\n\n**Quem pode usar:** Conferentes, Gerentes e Admins."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"total_divergent\": 3,\n    \"total_divergence_value\": -85.00,\n    \"shifts\": [\n      {\n        \"id\": 8,\n        \"date\": \"2026-01-05\",\n        \"shift_code\": \"N\",\n        \"store_name\": \"Bombinhas\",\n        \"seller_name\": \"Maria Santos\",\n        \"divergence\": -50.00,\n        \"has_justification\": false,\n        \"days_pending\": 3\n      }\n    ]\n  }\n}",
+                            "name": "Turnos divergentes"
                         }
                     ]
                 },
@@ -1197,7 +1466,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-07T21:21:38\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-08T00:46:40\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
                         },
                         "description": "POST \/api\/v1\/rules\/bonus"
                     },
@@ -1286,7 +1555,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-07T21:21:38\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-08T00:46:40\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
                         },
                         "description": "PUT \/api\/v1\/rules\/bonus\/{rule}"
                     },
@@ -1398,7 +1667,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-07T21:21:38\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-08T00:46:40\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
                         },
                         "description": "POST \/api\/v1\/rules\/commission"
                     },
@@ -1487,7 +1756,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-07T21:21:38\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-08T00:46:40\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
                         },
                         "description": "PUT \/api\/v1\/rules\/commission\/{rule}"
                     },
@@ -1599,7 +1868,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"month\":\"6425-59\",\"goal_amount\":9,\"active\":false}"
+                            "raw": "{\"store_id\":16,\"month\":\"6425-59\",\"goal_amount\":9,\"active\":true}"
                         },
                         "description": "POST \/api\/v1\/goals\/monthly"
                     },
@@ -1791,7 +2060,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"from\":\"2026-01-07T21:21:38\",\"to\":\"2026-01-07T21:21:38\",\"per_page\":22}"
+                            "raw": "{\"store_id\":16,\"from\":\"2026-01-08T00:46:40\",\"to\":\"2026-01-08T00:46:40\",\"per_page\":22}"
                         },
                         "description": "GET \/api\/v1\/finance\/bonus?store_id=&from=&to="
                     },
@@ -1814,6 +2083,116 @@
                             "code": 401,
                             "body": "{\"message\":\"Unauthenticated.\"}",
                             "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Simulador de b\u00f4nus",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/finance\/bonus\/calculate",
+                            "query": [
+                                {
+                                    "key": "amount",
+                                    "value": "1250",
+                                    "description": "Valor da venda.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "store_id",
+                                    "value": "1",
+                                    "description": "ID da loja (usa regra espec\u00edfica se houver).",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/finance\/bonus\/calculate?amount=1250&store_id=1"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"amount\":27,\"store_id\":16}"
+                        },
+                        "description": "Calcula o b\u00f4nus para um valor de venda (simula\u00e7\u00e3o)."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"amount\": 1250.00,\n    \"current_tier\": { \"min_sales\": 1000, \"bonus\": 50.00 },\n    \"bonus_value\": 50.00,\n    \"next_tier\": { \"min_sales\": 1500, \"bonus\": 75.00, \"gap\": 250.00 }\n  }\n}",
+                            "name": "Simula\u00e7\u00e3o"
+                        }
+                    ]
+                },
+                {
+                    "name": "Extrato de b\u00f4nus de um vendedor",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/finance\/bonus\/seller\/:seller_id",
+                            "query": [
+                                {
+                                    "key": "from",
+                                    "value": "2026-01-01",
+                                    "description": "Data inicial (YYYY-MM-DD).",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "to",
+                                    "value": "2026-01-31",
+                                    "description": "Data final (YYYY-MM-DD).",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/finance\/bonus\/seller\/:seller_id?from=2026-01-01&to=2026-01-31",
+                            "variable": [
+                                {
+                                    "id": "seller_id",
+                                    "key": "seller_id",
+                                    "value": "1",
+                                    "description": "The ID of the seller."
+                                },
+                                {
+                                    "id": "seller",
+                                    "key": "seller",
+                                    "value": "5",
+                                    "description": "ID do vendedor."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"from\":\"2026-01-08T00:46:40\",\"to\":\"2026-01-08T00:46:40\"}"
+                        },
+                        "description": "Retorna o hist\u00f3rico de b\u00f4nus de um vendedor espec\u00edfico com resumo.\n\n**Quem pode usar:** O pr\u00f3prio vendedor ou Gerentes\/Admins."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"seller\": { \"id\": 5, \"name\": \"Jo\u00e3o Silva\" },\n    \"period\": { \"from\": \"2026-01-01\", \"to\": \"2026-01-31\" },\n    \"summary\": { \"approved\": 350.00, \"pending\": 50.00, \"rejected\": 25.00, \"total_shifts\": 22 },\n    \"items\": [\n      { \"date\": \"2026-01-08\", \"shift_code\": \"M\", \"store_name\": \"Tijucas\", \"sales_total\": 1250.00, \"bonus\": 50.00, \"status\": \"approved\" }\n    ]\n  }\n}",
+                            "name": "Extrato de b\u00f4nus"
                         }
                     ]
                 },
@@ -1864,6 +2243,131 @@
                             "name": ""
                         }
                     ]
+                },
+                {
+                    "name": "Comiss\u00e3o de um vendedor",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/finance\/commission\/seller\/:seller_id",
+                            "query": [
+                                {
+                                    "key": "month",
+                                    "value": "2026-01",
+                                    "description": "M\u00eas (YYYY-MM).",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/finance\/commission\/seller\/:seller_id?month=2026-01",
+                            "variable": [
+                                {
+                                    "id": "seller_id",
+                                    "key": "seller_id",
+                                    "value": "1",
+                                    "description": "The ID of the seller."
+                                },
+                                {
+                                    "id": "seller",
+                                    "key": "seller",
+                                    "value": "5",
+                                    "description": "ID do vendedor."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"month\":\"6425-59\"}"
+                        },
+                        "description": "Retorna a comiss\u00e3o de um vendedor para um m\u00eas espec\u00edfico."
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "vary",
+                                    "value": "Origin"
+                                }
+                            ],
+                            "code": 401,
+                            "body": "{\"message\":\"Unauthenticated.\"}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Proje\u00e7\u00e3o de comiss\u00e3o",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/finance\/commission\/projection\/:seller_id",
+                            "query": [
+                                {
+                                    "key": "month",
+                                    "value": "2026-01",
+                                    "description": "M\u00eas (YYYY-MM).",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/finance\/commission\/projection\/:seller_id?month=2026-01",
+                            "variable": [
+                                {
+                                    "id": "seller_id",
+                                    "key": "seller_id",
+                                    "value": "1",
+                                    "description": "The ID of the seller."
+                                },
+                                {
+                                    "id": "seller",
+                                    "key": "seller",
+                                    "value": "5",
+                                    "description": "ID do vendedor."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"month\":\"6425-59\"}"
+                        },
+                        "description": "Projeta a comiss\u00e3o do vendedor baseada no ritmo atual de vendas."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"seller\": { \"id\": 5, \"name\": \"Jo\u00e3o\" },\n    \"current\": { \"sold\": 28000, \"goal\": 75000, \"achievement\": 37.33, \"daily_average\": 3500 },\n    \"projection\": { \"estimated_total\": 77000, \"estimated_achievement\": 102.67, \"estimated_commission\": 2310 },\n    \"scenarios\": [\n      { \"scenario\": \"pessimist\", \"achievement\": 85, \"commission\": 1275 },\n      { \"scenario\": \"realistic\", \"achievement\": 103, \"commission\": 2310 },\n      { \"scenario\": \"optimist\", \"achievement\": 125, \"commission\": 3750 }\n    ]\n  }\n}",
+                            "name": "Proje\u00e7\u00e3o"
+                        }
+                    ]
                 }
             ]
         },
@@ -1893,7 +2397,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T21:21:38\"}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-08T00:46:40\"}"
                         },
                         "description": "GET \/api\/v1\/analytics\/people\/shift?store_id=&date="
                     },
@@ -1941,7 +2445,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-07T21:21:39\",\"shift_code\":\"M\",\"in_count\":39,\"out_count\":84,\"staff_in\":12,\"staff_out\":77}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-08T00:46:40\",\"shift_code\":\"M\",\"in_count\":39,\"out_count\":84,\"staff_in\":12,\"staff_out\":77}"
                         },
                         "description": "POST \/api\/v1\/analytics\/people\/shift"
                     },
@@ -2030,7 +2534,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"from\":\"2026-01-07T21:21:39\",\"to\":\"2026-01-07T21:21:39\",\"causer_id\":16,\"event\":\"n\",\"log_name\":\"g\",\"store_id\":16,\"subject_type\":\"n\",\"subject_id\":16,\"per_page\":22}"
+                            "raw": "{\"from\":\"2026-01-08T00:46:40\",\"to\":\"2026-01-08T00:46:40\",\"causer_id\":16,\"event\":\"n\",\"log_name\":\"g\",\"store_id\":16,\"subject_type\":\"n\",\"subject_id\":16,\"per_page\":22}"
                         },
                         "description": "Retorna lista paginada de logs com suporte a diversos filtros.\n\n**Filtros dispon\u00edveis:**\n- `from`\/`to` - Per\u00edodo de datas\n- `causer_id` - ID do usu\u00e1rio que executou a a\u00e7\u00e3o\n- `event` - Nome do evento (suporta wildcard: `auth.*`)\n- `log_name` - Dom\u00ednio: auth, cash, rules, goals\n- `store_id` - Loja relacionada\n- `subject_type` - Tipo de entidade (CashClosing, BonusRule, etc)\n- `subject_id` - ID da entidade\n\n**Ordena\u00e7\u00e3o:** Por data de cria\u00e7\u00e3o, mais recentes primeiro.\n\n**Quem pode usar:** Apenas administradores."
                     },
@@ -2084,7 +2588,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"from\":\"2026-01-07T21:21:39\",\"to\":\"2026-01-07T21:21:39\"}"
+                            "raw": "{\"from\":\"2026-01-08T00:46:40\",\"to\":\"2026-01-08T00:46:40\"}"
                         },
                         "description": "Retorna estat\u00edsticas agregadas dos logs para overview.\n\n**Quem pode usar:** Apenas administradores."
                     },
@@ -2880,6 +3384,114 @@
                             "code": 404,
                             "body": "{\n  \"message\": \"V\u00ednculo n\u00e3o encontrado.\"\n}",
                             "name": "V\u00ednculo n\u00e3o encontrado"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Relat\u00f3rios - Ranking",
+            "description": "\nEndpoints para ranking de vendedores e consultas relacionadas.",
+            "item": [
+                {
+                    "name": "Ranking de Vendedores",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/reports\/ranking",
+                            "query": [
+                                {
+                                    "key": "month",
+                                    "value": "2026-01",
+                                    "description": "M\u00eas (YYYY-MM), default: m\u00eas atual.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "store_id",
+                                    "value": "1",
+                                    "description": "Filtrar por loja.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10",
+                                    "description": "Limite de resultados (default: 50).",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/reports\/ranking?month=2026-01&store_id=1&limit=10"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"month\":\"6425-59\",\"store_id\":16,\"limit\":22}"
+                        },
+                        "description": "Retorna ranking completo de vendedores ordenado por vendas no per\u00edodo.\n\n**Inclui:**\n- P\u00f3dio (top 3) em destaque\n- Ranking completo com estat\u00edsticas\n- Meta, atingimento e b\u00f4nus acumulado de cada vendedor\n\n**Quem pode usar:** Todos os usu\u00e1rios autenticados."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"period\": \"2026-01\",\n    \"podium\": [\n      {\n        \"position\": 1,\n        \"seller\": { \"id\": 5, \"name\": \"Jo\u00e3o Silva\", \"avatar_url\": \"...\", \"store_name\": \"Tijucas\" },\n        \"total_sold\": 85000.00,\n        \"goal\": 75000.00,\n        \"achievement_rate\": 113.33,\n        \"bonus_accumulated\": 450.00\n      }\n    ],\n    \"ranking\": [...],\n    \"stats\": { \"total_sellers\": 25, \"above_goal\": 12, \"average_achievement\": 92.5 }\n  }\n}",
+                            "name": "Ranking mensal"
+                        }
+                    ]
+                },
+                {
+                    "name": "Aniversariantes do M\u00eas",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/users\/birthdays",
+                            "query": [
+                                {
+                                    "key": "month",
+                                    "value": "1",
+                                    "description": "M\u00eas (1-12), default: m\u00eas atual.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "store_id",
+                                    "value": "1",
+                                    "description": "Filtrar por loja.",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/users\/birthdays?month=1&store_id=1"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"month\":4,\"store_id\":16}"
+                        },
+                        "description": "Lista vendedores que fazem anivers\u00e1rio no m\u00eas especificado.\n\n**Quem pode usar:** Gerentes e Admins."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": [\n    {\n      \"id\": 5,\n      \"name\": \"Jo\u00e3o Silva\",\n      \"birth_date\": \"1990-01-15\",\n      \"day\": 15,\n      \"age\": 36,\n      \"avatar_url\": \"https:\/\/...\"\n    }\n  ]\n}",
+                            "name": "Aniversariantes de janeiro"
                         }
                     ]
                 }

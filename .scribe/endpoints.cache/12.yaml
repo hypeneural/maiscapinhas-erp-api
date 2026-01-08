@@ -109,7 +109,7 @@ endpoints:
         name: date
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-07T21:21:39'
+        example: '2026-01-08T00:46:40'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -117,7 +117,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      date: '2026-01-07T21:21:39'
+      date: '2026-01-08T00:46:40'
     fileParameters: []
     responses:
       -
@@ -256,7 +256,7 @@ endpoints:
         name: date
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-07T21:21:39'
+        example: '2026-01-08T00:46:40'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -264,7 +264,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      date: '2026-01-07T21:21:39'
+      date: '2026-01-08T00:46:40'
     fileParameters: []
     responses:
       -

@@ -47,7 +47,7 @@ endpoints:
         name: from
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-07T21:21:38'
+        example: '2026-01-08T00:46:40'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -58,7 +58,7 @@ endpoints:
         name: to
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-07T21:21:38'
+        example: '2026-01-08T00:46:40'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -77,8 +77,8 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      from: '2026-01-07T21:21:38'
-      to: '2026-01-07T21:21:38'
+      from: '2026-01-08T00:46:40'
+      to: '2026-01-08T00:46:40'
       per_page: 22
     fileParameters: []
     responses:
@@ -91,6 +91,235 @@ endpoints:
           content-type: application/json
           vary: Origin
         description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/finance/bonus/calculate
+    metadata:
+      custom: []
+      groupName: 'Extrato Financeiro'
+      groupDescription: |-
+
+        Endpoints para consultar o extrato de bônus diário e comissão mensal.
+        Vendedores veem apenas seus próprios dados; gerentes/admins veem todos.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Simulador de bônus'
+      description: 'Calcula o bônus para um valor de venda (simulação).'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      amount:
+        custom: []
+        name: amount
+        description: 'Valor da venda.'
+        required: true
+        example: 1250.0
+        type: number
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      store_id:
+        custom: []
+        name: store_id
+        description: 'ID da loja (usa regra específica se houver).'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      amount: 1250.0
+      store_id: 1
+    bodyParameters:
+      amount:
+        custom: []
+        name: amount
+        description: 'Must be at least 0.'
+        required: true
+        example: 27
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      store_id:
+        custom: []
+        name: store_id
+        description: 'The <code>id</code> of an existing record in the stores table.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      amount: 27
+      store_id: 16
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "amount": 1250.00,
+              "current_tier": { "min_sales": 1000, "bonus": 50.00 },
+              "bonus_value": 50.00,
+              "next_tier": { "min_sales": 1500, "bonus": 75.00, "gap": 250.00 }
+            }
+          }
+        headers: []
+        description: Simulação
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/finance/bonus/seller/{seller_id}'
+    metadata:
+      custom: []
+      groupName: 'Extrato Financeiro'
+      groupDescription: |-
+
+        Endpoints para consultar o extrato de bônus diário e comissão mensal.
+        Vendedores veem apenas seus próprios dados; gerentes/admins veem todos.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Extrato de bônus de um vendedor'
+      description: |-
+        Retorna o histórico de bônus de um vendedor específico com resumo.
+
+        **Quem pode usar:** O próprio vendedor ou Gerentes/Admins.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      seller_id:
+        custom: []
+        name: seller_id
+        description: 'The ID of the seller.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      seller:
+        custom: []
+        name: seller
+        description: 'ID do vendedor.'
+        required: true
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      seller_id: 1
+      seller: 5
+    queryParameters:
+      from:
+        custom: []
+        name: from
+        description: 'Data inicial (YYYY-MM-DD).'
+        required: false
+        example: '2026-01-01'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      to:
+        custom: []
+        name: to
+        description: 'Data final (YYYY-MM-DD).'
+        required: false
+        example: '2026-01-31'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      from: '2026-01-01'
+      to: '2026-01-31'
+    bodyParameters:
+      from:
+        custom: []
+        name: from
+        description: 'Must be a valid date.'
+        required: false
+        example: '2026-01-08T00:46:40'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      to:
+        custom: []
+        name: to
+        description: 'Must be a valid date.'
+        required: false
+        example: '2026-01-08T00:46:40'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      from: '2026-01-08T00:46:40'
+      to: '2026-01-08T00:46:40'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "seller": { "id": 5, "name": "João Silva" },
+              "period": { "from": "2026-01-01", "to": "2026-01-31" },
+              "summary": { "approved": 350.00, "pending": 50.00, "rejected": 25.00, "total_shifts": 22 },
+              "items": [
+                { "date": "2026-01-08", "shift_code": "M", "store_name": "Tijucas", "sales_total": 1250.00, "bonus": 50.00, "status": "approved" }
+              ]
+            }
+          }
+        headers: []
+        description: 'Extrato de bônus'
     responseFields: []
     auth:
       - headers
@@ -174,6 +403,205 @@ endpoints:
           content-type: application/json
           vary: Origin
         description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/finance/commission/seller/{seller_id}'
+    metadata:
+      custom: []
+      groupName: 'Extrato Financeiro'
+      groupDescription: |-
+
+        Endpoints para consultar o extrato de bônus diário e comissão mensal.
+        Vendedores veem apenas seus próprios dados; gerentes/admins veem todos.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Comissão de um vendedor'
+      description: 'Retorna a comissão de um vendedor para um mês específico.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      seller_id:
+        custom: []
+        name: seller_id
+        description: 'The ID of the seller.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      seller:
+        custom: []
+        name: seller
+        description: 'ID do vendedor.'
+        required: true
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      seller_id: 1
+      seller: 5
+    queryParameters:
+      month:
+        custom: []
+        name: month
+        description: 'Mês (YYYY-MM).'
+        required: false
+        example: 2026-01
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      month: 2026-01
+    bodyParameters:
+      month:
+        custom: []
+        name: month
+        description: 'Must match the regex /^\d{4}-\d{2}$/.'
+        required: false
+        example: 6425-59
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      month: 6425-59
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/finance/commission/projection/{seller_id}'
+    metadata:
+      custom: []
+      groupName: 'Extrato Financeiro'
+      groupDescription: |-
+
+        Endpoints para consultar o extrato de bônus diário e comissão mensal.
+        Vendedores veem apenas seus próprios dados; gerentes/admins veem todos.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Projeção de comissão'
+      description: 'Projeta a comissão do vendedor baseada no ritmo atual de vendas.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      seller_id:
+        custom: []
+        name: seller_id
+        description: 'The ID of the seller.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      seller:
+        custom: []
+        name: seller
+        description: 'ID do vendedor.'
+        required: true
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      seller_id: 1
+      seller: 5
+    queryParameters:
+      month:
+        custom: []
+        name: month
+        description: 'Mês (YYYY-MM).'
+        required: false
+        example: 2026-01
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      month: 2026-01
+    bodyParameters:
+      month:
+        custom: []
+        name: month
+        description: 'Must match the regex /^\d{4}-\d{2}$/.'
+        required: false
+        example: 6425-59
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      month: 6425-59
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "seller": { "id": 5, "name": "João" },
+              "current": { "sold": 28000, "goal": 75000, "achievement": 37.33, "daily_average": 3500 },
+              "projection": { "estimated_total": 77000, "estimated_achievement": 102.67, "estimated_commission": 2310 },
+              "scenarios": [
+                { "scenario": "pessimist", "achievement": 85, "commission": 1275 },
+                { "scenario": "realistic", "achievement": 103, "commission": 2310 },
+                { "scenario": "optimist", "achievement": 125, "commission": 3750 }
+              ]
+            }
+          }
+        headers: []
+        description: Projeção
     responseFields: []
     auth:
       - headers

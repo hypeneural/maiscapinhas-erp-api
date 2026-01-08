@@ -111,7 +111,7 @@ endpoints:
         name: date
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-07T21:21:38'
+        example: '2026-01-08T00:46:40'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -122,7 +122,7 @@ endpoints:
         name: status
         description: ''
         required: false
-        example: pending
+        example: open
         type: string
         enumValues:
           - open
@@ -144,8 +144,8 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      date: '2026-01-07T21:21:38'
-      status: pending
+      date: '2026-01-08T00:46:40'
+      status: open
       per_page: 22
     fileParameters: []
     responses:
@@ -171,6 +171,185 @@ endpoints:
           }
         headers: []
         description: 'Lista de turnos'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/cash/shifts/pending
+    metadata:
+      custom: []
+      groupName: 'Turnos de Caixa'
+      groupDescription: |-
+
+        Endpoints para gerenciar turnos de caixa.
+        Cada turno representa um período de trabalho de um vendedor em uma loja.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Turnos pendentes de conferência'
+      description: |-
+        Lista turnos que ainda não foram aprovados, ordenados por prioridade
+        (mais antigos primeiro).
+
+        **Quem pode usar:** Conferentes, Gerentes e Admins.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'Filtrar por loja.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      store_id: 1
+    bodyParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'The <code>id</code> of an existing record in the stores table.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      store_id: 16
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "total_pending": 12,
+              "shifts": [
+                {
+                  "id": 5,
+                  "date": "2026-01-06",
+                  "shift_code": "T",
+                  "days_pending": 2,
+                  "priority": "high",
+                  "store_name": "Tijucas",
+                  "seller_name": "João Silva",
+                  "system_total": 4500.00
+                }
+              ]
+            }
+          }
+        headers: []
+        description: 'Turnos pendentes'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/cash/shifts/divergent
+    metadata:
+      custom: []
+      groupName: 'Turnos de Caixa'
+      groupDescription: |-
+
+        Endpoints para gerenciar turnos de caixa.
+        Cada turno representa um período de trabalho de um vendedor em uma loja.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Turnos com divergência'
+      description: |-
+        Lista turnos que possuem divergência não justificada entre
+        valores do sistema e valores reais.
+
+        **Quem pode usar:** Conferentes, Gerentes e Admins.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'Filtrar por loja.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      store_id: 1
+    bodyParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'The <code>id</code> of an existing record in the stores table.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      store_id: 16
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "total_divergent": 3,
+              "total_divergence_value": -85.00,
+              "shifts": [
+                {
+                  "id": 8,
+                  "date": "2026-01-05",
+                  "shift_code": "N",
+                  "store_name": "Bombinhas",
+                  "seller_name": "Maria Santos",
+                  "divergence": -50.00,
+                  "has_justification": false,
+                  "days_pending": 3
+                }
+              ]
+            }
+          }
+        headers: []
+        description: 'Turnos divergentes'
     responseFields: []
     auth:
       - headers

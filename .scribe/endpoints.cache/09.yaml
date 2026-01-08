@@ -124,7 +124,7 @@ endpoints:
         name: active
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -134,7 +134,7 @@ endpoints:
       store_id: 16
       month: 6425-59
       goal_amount: 9
-      active: false
+      active: true
     fileParameters: []
     responses: []
     responseFields: []

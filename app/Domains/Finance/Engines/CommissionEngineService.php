@@ -102,6 +102,23 @@ class CommissionEngineService
     }
 
     /**
+     * Calculate commission value for a given sales total and attainment.
+     * Used for projections and simulations.
+     */
+    public function calculateCommissionValue(float $salesTotal, float $attainmentPercent, ?int $storeId = null): float
+    {
+        $rule = $this->rulesService->getApplicableCommissionRule($storeId, now()->format('Y-m'));
+
+        if (!$rule) {
+            return 0;
+        }
+
+        $ratePercent = $this->rulesService->calculateCommissionRateFromRule($rule, $attainmentPercent);
+
+        return round($salesTotal * ($ratePercent / 100), 2);
+    }
+
+    /**
      * Recalculate commission for all sellers in a store for a month.
      */
     public function recalculateForStoreMonth(int $storeId, string $month): array

@@ -161,3 +161,113 @@ endpoints:
     controller: null
     method: null
     route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/stores/{store_id}/sellers'
+    metadata:
+      custom: []
+      groupName: Lojas
+      groupDescription: |-
+
+        Endpoints para consultar lojas às quais o usuário tem acesso.
+        O usuário só pode visualizar lojas onde está vinculado via `store_users`.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Listar vendedores de uma loja'
+      description: |-
+        Retorna todos os vendedores ativos vinculados a uma loja,
+        com estatísticas do mês atual.
+
+        **Quem pode usar:** Gerentes e Admins da loja.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'The ID of the store.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      store:
+        custom: []
+        name: store
+        description: 'ID da loja.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      store_id: 1
+      store: 1
+    queryParameters:
+      month:
+        custom: []
+        name: month
+        description: 'Mês para estatísticas (YYYY-MM).'
+        required: false
+        example: 2026-01
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      month: 2026-01
+    bodyParameters:
+      month:
+        custom: []
+        name: month
+        description: 'Must match the regex /^\d{4}-\d{2}$/.'
+        required: false
+        example: 6425-59
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      month: 6425-59
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": [
+              {
+                "id": 5,
+                "name": "João Silva",
+                "avatar_url": "https://...",
+                "role": "vendedor",
+                "total_sold_mtd": 45000.00,
+                "goal": 50000.00,
+                "achievement_rate": 90.00,
+                "ranking_position": 2
+              }
+            ]
+          }
+        headers: []
+        description: 'Lista de vendedores'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

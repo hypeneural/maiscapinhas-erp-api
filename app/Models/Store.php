@@ -16,6 +16,7 @@ class Store extends Model
 
     protected $fillable = [
         'name',
+        'codigo',
         'city',
         'active',
         'photo_url',
@@ -30,6 +31,7 @@ class Store extends Model
         'instagram',
         'opening_hours',
         'cnpj',
+        'troco_padrao',
     ];
 
     protected $casts = [
@@ -37,6 +39,7 @@ class Store extends Model
         'opening_hours' => 'array',
         'latitude' => 'decimal:8',
         'longitude' => 'decimal:8',
+        'troco_padrao' => 'decimal:2',
     ];
 
     // ========================================

@@ -59,6 +59,9 @@ tags:
     name: 'Administração - Vínculos Loja-Usuário'
     description: "\nGerenciamento dos vínculos entre lojas e usuários (tabela `store_users`).\n\nEste módulo controla **qual usuário trabalha em qual loja** e com\n**qual nível de permissão (role)**.\n\n**Sistema de Roles:**\n| Role | Pode fazer |\n|------|------------|\n| `admin` | Tudo: gerenciar usuários, lojas, regras, confirmar comissões |\n| `gerente` | Gerenciar equipe da loja, aprovar fechamentos, ver dashboards |\n| `conferente` | Aprovar/rejeitar fechamentos de caixa |\n| `vendedor` | Registrar vendas, submeter fechamento do próprio turno |\n\n**Regras de Negócio:**\n- Um usuário pode ter roles diferentes em lojas diferentes\n- A role `admin` em qualquer loja dá acesso administrativo global\n- Vendedor \"volante\" pode trabalhar temporariamente em outra loja\n- Não é possível remover seu próprio vínculo (proteção)\n\n**Vínculo × Comissão:**\n- Vendas são sempre registradas na loja onde ocorreram (`store_id` da venda)\n- Comissão vai para o vendedor que realizou a venda (`seller_id`)\n- Meta é calculada pela loja + split configurado"
   -
+    name: 'Relatórios - Ranking'
+    description: "\nEndpoints para ranking de vendedores e consultas relacionadas."
+  -
     name: 'Relatórios Gerenciais'
     description: "\nEndpoints de relatórios avançados para gestão e auditoria.\n\nEste módulo fornece KPIs estratégicos para tomada de decisão:\n- **Performance de Loja** - Atingimento de meta, crescimento YoY, projeções\n- **Integridade de Caixa** - % de quebra, divergências, alertas\n\n**Público-alvo:**\n- Gerentes e Admins para visão estratégica\n- Conferentes para auditoria de caixa\n- Sócios para acompanhamento financeiro\n\n**Cache:** Dados históricos (ano passado) são cacheados para performance."
 components:
@@ -267,6 +270,139 @@ paths:
                 - email
                 - password
       security: []
+  /api/v1/auth/forgot-password:
+    post:
+      summary: 'Solicitar recuperação de senha'
+      operationId: solicitarRecuperaoDeSenha
+      description: "Envia um email com link para redefinir a senha.\nO link expira em 60 minutos.\n\n**Quem pode usar:** Qualquer usuário com email cadastrado.\n\n**Rate Limit:** 3 tentativas por minuto por IP."
+      parameters: []
+      responses:
+        200:
+          description: 'Email enviado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    message: 'Email de recuperação enviado.'
+                  meta:
+                    timestamp: '2026-01-07T12:00:00Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: 'Email de recuperação enviado.'
+                  meta:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        example: '2026-01-07T12:00:00Z'
+        422:
+          description: 'Email não encontrado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Não encontramos um usuário com esse email.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Não encontramos um usuário com esse email.'
+      tags:
+        - Autenticação
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 'Email cadastrado.'
+                  example: joao@maiscapinhas.com.br
+              required:
+                - email
+      security: []
+  /api/v1/auth/reset-password:
+    post:
+      summary: 'Redefinir senha'
+      operationId: redefinirSenha
+      description: "Redefine a senha usando o token recebido por email.\n\n**Quem pode usar:** Qualquer usuário com token válido."
+      parameters: []
+      responses:
+        200:
+          description: 'Senha alterada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    message: 'Senha alterada com sucesso.'
+                  meta:
+                    timestamp: '2026-01-07T12:00:00Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: 'Senha alterada com sucesso.'
+                  meta:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        example: '2026-01-07T12:00:00Z'
+        422:
+          description: 'Token inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Token de recuperação inválido ou expirado.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Token de recuperação inválido ou expirado.'
+      tags:
+        - Autenticação
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: 'Token recebido por email.'
+                  example: abc123...
+                email:
+                  type: string
+                  description: 'Email do usuário.'
+                  example: joao@maiscapinhas.com.br
+                password:
+                  type: string
+                  description: 'Nova senha (mínimo 8 caracteres).'
+                  example: novaSenha123
+                password_confirmation:
+                  type: string
+                  description: 'Confirmação da nova senha.'
+                  example: novaSenha123
+              required:
+                - token
+                - email
+                - password
+                - password_confirmation
+      security: []
   /api/v1/auth/logout:
     post:
       summary: 'Fazer logout (revogar token atual)'
@@ -341,6 +477,74 @@ paths:
                         example: '2026-01-07T12:00:00Z'
       tags:
         - Autenticação
+  /api/v1/auth/password:
+    put:
+      summary: 'Alterar própria senha'
+      operationId: alterarPrpriaSenha
+      description: "Permite ao usuário logado alterar sua própria senha.\n\n**Quem pode usar:** Qualquer usuário autenticado."
+      parameters: []
+      responses:
+        200:
+          description: 'Senha alterada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    message: 'Senha alterada com sucesso.'
+                  meta:
+                    timestamp: '2026-01-07T12:00:00Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: 'Senha alterada com sucesso.'
+                  meta:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        example: '2026-01-07T12:00:00Z'
+        422:
+          description: 'Senha atual incorreta'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'A senha atual está incorreta.'
+                properties:
+                  message:
+                    type: string
+                    example: 'A senha atual está incorreta.'
+      tags:
+        - Autenticação
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                current_password:
+                  type: string
+                  description: 'Senha atual.'
+                  example: senhaAtual123
+                password:
+                  type: string
+                  description: 'Nova senha (mínimo 8 caracteres).'
+                  example: novaSenha123
+                password_confirmation:
+                  type: string
+                  description: 'Confirmação da nova senha.'
+                  example: novaSenha123
+              required:
+                - current_password
+                - password
+                - password_confirmation
   /api/v1/me:
     get:
       summary: 'Obter perfil do usuário atual'
@@ -587,6 +791,110 @@ paths:
         required: true
         schema:
           type: integer
+  '/api/v1/stores/{store_id}/sellers':
+    get:
+      summary: 'Listar vendedores de uma loja'
+      operationId: listarVendedoresDeUmaLoja
+      description: "Retorna todos os vendedores ativos vinculados a uma loja,\ncom estatísticas do mês atual.\n\n**Quem pode usar:** Gerentes e Admins da loja."
+      parameters:
+        -
+          in: query
+          name: month
+          description: 'Mês para estatísticas (YYYY-MM).'
+          example: 2026-01
+          required: false
+          schema:
+            type: string
+            description: 'Mês para estatísticas (YYYY-MM).'
+            example: 2026-01
+      responses:
+        200:
+          description: 'Lista de vendedores'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    -
+                      id: 5
+                      name: 'João Silva'
+                      avatar_url: 'https://...'
+                      role: vendedor
+                      total_sold_mtd: 45000.0
+                      goal: 50000.0
+                      achievement_rate: 90.0
+                      ranking_position: 2
+                properties:
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 5
+                        name: 'João Silva'
+                        avatar_url: 'https://...'
+                        role: vendedor
+                        total_sold_mtd: 45000
+                        goal: 50000
+                        achievement_rate: 90
+                        ranking_position: 2
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 5
+                        name:
+                          type: string
+                          example: 'João Silva'
+                        avatar_url:
+                          type: string
+                          example: 'https://...'
+                        role:
+                          type: string
+                          example: vendedor
+                        total_sold_mtd:
+                          type: number
+                          example: 45000.0
+                        goal:
+                          type: number
+                          example: 50000.0
+                        achievement_rate:
+                          type: number
+                          example: 90.0
+                        ranking_position:
+                          type: integer
+                          example: 2
+      tags:
+        - Lojas
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                month:
+                  type: string
+                  description: 'Must match the regex /^\d{4}-\d{2}$/.'
+                  example: 6425-59
+    parameters:
+      -
+        in: path
+        name: store_id
+        description: 'The ID of the store.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: store
+        description: 'ID da loja.'
+        example: 1
+        required: true
+        schema:
+          type: integer
   /api/v1/dashboard/vendedor:
     get:
       summary: 'Dashboard do Vendedor'
@@ -762,7 +1070,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T21:21:39'
+                  example: '2026-01-08T00:46:40'
               required:
                 - store_id
   /api/v1/dashboard/conferente:
@@ -880,7 +1188,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T21:21:39'
+                  example: '2026-01-08T00:46:40'
               required:
                 - store_id
   /api/v1/dashboard/admin:
@@ -1201,11 +1509,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T21:21:38'
+                  example: '2026-01-08T00:46:40'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T21:21:38'
+                  example: '2026-01-08T00:46:40'
                 per_page:
                   type: integer
                   description: 'Must be at least 1. Must not be greater than 100.'
@@ -1671,11 +1979,11 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T21:21:38'
+                  example: '2026-01-08T00:46:40'
                 status:
                   type: string
                   description: ''
-                  example: pending
+                  example: open
                   enum:
                     - open
                     - closed
@@ -1807,6 +2115,200 @@ paths:
                 - store_id
                 - date
                 - shift_code
+  /api/v1/cash/shifts/pending:
+    get:
+      summary: 'Turnos pendentes de conferência'
+      operationId: turnosPendentesDeConferncia
+      description: "Lista turnos que ainda não foram aprovados, ordenados por prioridade\n(mais antigos primeiro).\n\n**Quem pode usar:** Conferentes, Gerentes e Admins."
+      parameters:
+        -
+          in: query
+          name: store_id
+          description: 'Filtrar por loja.'
+          example: 1
+          required: false
+          schema:
+            type: integer
+            description: 'Filtrar por loja.'
+            example: 1
+      responses:
+        200:
+          description: 'Turnos pendentes'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    total_pending: 12
+                    shifts:
+                      -
+                        id: 5
+                        date: '2026-01-06'
+                        shift_code: T
+                        days_pending: 2
+                        priority: high
+                        store_name: Tijucas
+                        seller_name: 'João Silva'
+                        system_total: 4500.0
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      total_pending:
+                        type: integer
+                        example: 12
+                      shifts:
+                        type: array
+                        example:
+                          -
+                            id: 5
+                            date: '2026-01-06'
+                            shift_code: T
+                            days_pending: 2
+                            priority: high
+                            store_name: Tijucas
+                            seller_name: 'João Silva'
+                            system_total: 4500
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 5
+                            date:
+                              type: string
+                              example: '2026-01-06'
+                            shift_code:
+                              type: string
+                              example: T
+                            days_pending:
+                              type: integer
+                              example: 2
+                            priority:
+                              type: string
+                              example: high
+                            store_name:
+                              type: string
+                              example: Tijucas
+                            seller_name:
+                              type: string
+                              example: 'João Silva'
+                            system_total:
+                              type: number
+                              example: 4500.0
+      tags:
+        - 'Turnos de Caixa'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                store_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: 16
+  /api/v1/cash/shifts/divergent:
+    get:
+      summary: 'Turnos com divergência'
+      operationId: turnosComDivergncia
+      description: "Lista turnos que possuem divergência não justificada entre\nvalores do sistema e valores reais.\n\n**Quem pode usar:** Conferentes, Gerentes e Admins."
+      parameters:
+        -
+          in: query
+          name: store_id
+          description: 'Filtrar por loja.'
+          example: 1
+          required: false
+          schema:
+            type: integer
+            description: 'Filtrar por loja.'
+            example: 1
+      responses:
+        200:
+          description: 'Turnos divergentes'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    total_divergent: 3
+                    total_divergence_value: -85.0
+                    shifts:
+                      -
+                        id: 8
+                        date: '2026-01-05'
+                        shift_code: 'N'
+                        store_name: Bombinhas
+                        seller_name: 'Maria Santos'
+                        divergence: -50.0
+                        has_justification: false
+                        days_pending: 3
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      total_divergent:
+                        type: integer
+                        example: 3
+                      total_divergence_value:
+                        type: number
+                        example: -85.0
+                      shifts:
+                        type: array
+                        example:
+                          -
+                            id: 8
+                            date: '2026-01-05'
+                            shift_code: 'N'
+                            store_name: Bombinhas
+                            seller_name: 'Maria Santos'
+                            divergence: -50
+                            has_justification: false
+                            days_pending: 3
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 8
+                            date:
+                              type: string
+                              example: '2026-01-05'
+                            shift_code:
+                              type: string
+                              example: 'N'
+                            store_name:
+                              type: string
+                              example: Bombinhas
+                            seller_name:
+                              type: string
+                              example: 'Maria Santos'
+                            divergence:
+                              type: number
+                              example: -50.0
+                            has_justification:
+                              type: boolean
+                              example: false
+                            days_pending:
+                              type: integer
+                              example: 3
+      tags:
+        - 'Turnos de Caixa'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                store_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: 16
   '/api/v1/cash/shifts/{id}':
     get:
       summary: 'Obter detalhes de um turno'
@@ -2357,7 +2859,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T21:21:38'
+                  example: '2026-01-08T00:46:40'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -2424,7 +2926,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T21:21:38'
+                  example: '2026-01-08T00:46:40'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -2508,7 +3010,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T21:21:38'
+                  example: '2026-01-08T00:46:40'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -2575,7 +3077,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T21:21:38'
+                  example: '2026-01-08T00:46:40'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -2666,7 +3168,7 @@ paths:
                 active:
                   type: boolean
                   description: ''
-                  example: false
+                  example: true
               required:
                 - store_id
                 - month
@@ -2813,15 +3315,265 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T21:21:38'
+                  example: '2026-01-08T00:46:40'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T21:21:38'
+                  example: '2026-01-08T00:46:40'
                 per_page:
                   type: integer
                   description: 'Must be at least 1. Must not be greater than 100.'
                   example: 22
+  /api/v1/finance/bonus/calculate:
+    get:
+      summary: 'Simulador de bônus'
+      operationId: simuladorDeBnus
+      description: 'Calcula o bônus para um valor de venda (simulação).'
+      parameters:
+        -
+          in: query
+          name: amount
+          description: 'Valor da venda.'
+          example: 1250.0
+          required: true
+          schema:
+            type: number
+            description: 'Valor da venda.'
+            example: 1250.0
+        -
+          in: query
+          name: store_id
+          description: 'ID da loja (usa regra específica se houver).'
+          example: 1
+          required: false
+          schema:
+            type: integer
+            description: 'ID da loja (usa regra específica se houver).'
+            example: 1
+      responses:
+        200:
+          description: Simulação
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    amount: 1250.0
+                    current_tier:
+                      min_sales: 1000
+                      bonus: 50.0
+                    bonus_value: 50.0
+                    next_tier:
+                      min_sales: 1500
+                      bonus: 75.0
+                      gap: 250.0
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      amount:
+                        type: number
+                        example: 1250.0
+                      current_tier:
+                        type: object
+                        properties:
+                          min_sales:
+                            type: integer
+                            example: 1000
+                          bonus:
+                            type: number
+                            example: 50.0
+                      bonus_value:
+                        type: number
+                        example: 50.0
+                      next_tier:
+                        type: object
+                        properties:
+                          min_sales:
+                            type: integer
+                            example: 1500
+                          bonus:
+                            type: number
+                            example: 75.0
+                          gap:
+                            type: number
+                            example: 250.0
+      tags:
+        - 'Extrato Financeiro'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                  description: 'Must be at least 0.'
+                  example: 27
+                store_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: 16
+              required:
+                - amount
+  '/api/v1/finance/bonus/seller/{seller_id}':
+    get:
+      summary: 'Extrato de bônus de um vendedor'
+      operationId: extratoDeBnusDeUmVendedor
+      description: "Retorna o histórico de bônus de um vendedor específico com resumo.\n\n**Quem pode usar:** O próprio vendedor ou Gerentes/Admins."
+      parameters:
+        -
+          in: query
+          name: from
+          description: 'Data inicial (YYYY-MM-DD).'
+          example: '2026-01-01'
+          required: false
+          schema:
+            type: string
+            description: 'Data inicial (YYYY-MM-DD).'
+            example: '2026-01-01'
+        -
+          in: query
+          name: to
+          description: 'Data final (YYYY-MM-DD).'
+          example: '2026-01-31'
+          required: false
+          schema:
+            type: string
+            description: 'Data final (YYYY-MM-DD).'
+            example: '2026-01-31'
+      responses:
+        200:
+          description: 'Extrato de bônus'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    seller:
+                      id: 5
+                      name: 'João Silva'
+                    period:
+                      from: '2026-01-01'
+                      to: '2026-01-31'
+                    summary:
+                      approved: 350.0
+                      pending: 50.0
+                      rejected: 25.0
+                      total_shifts: 22
+                    items:
+                      -
+                        date: '2026-01-08'
+                        shift_code: M
+                        store_name: Tijucas
+                        sales_total: 1250.0
+                        bonus: 50.0
+                        status: approved
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      seller:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 5
+                          name:
+                            type: string
+                            example: 'João Silva'
+                      period:
+                        type: object
+                        properties:
+                          from:
+                            type: string
+                            example: '2026-01-01'
+                          to:
+                            type: string
+                            example: '2026-01-31'
+                      summary:
+                        type: object
+                        properties:
+                          approved:
+                            type: number
+                            example: 350.0
+                          pending:
+                            type: number
+                            example: 50.0
+                          rejected:
+                            type: number
+                            example: 25.0
+                          total_shifts:
+                            type: integer
+                            example: 22
+                      items:
+                        type: array
+                        example:
+                          -
+                            date: '2026-01-08'
+                            shift_code: M
+                            store_name: Tijucas
+                            sales_total: 1250
+                            bonus: 50
+                            status: approved
+                        items:
+                          type: object
+                          properties:
+                            date:
+                              type: string
+                              example: '2026-01-08'
+                            shift_code:
+                              type: string
+                              example: M
+                            store_name:
+                              type: string
+                              example: Tijucas
+                            sales_total:
+                              type: number
+                              example: 1250.0
+                            bonus:
+                              type: number
+                              example: 50.0
+                            status:
+                              type: string
+                              example: approved
+      tags:
+        - 'Extrato Financeiro'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                from:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2026-01-08T00:46:40'
+                to:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2026-01-08T00:46:40'
+    parameters:
+      -
+        in: path
+        name: seller_id
+        description: 'The ID of the seller.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: seller
+        description: 'ID do vendedor.'
+        example: 5
+        required: true
+        schema:
+          type: integer
   /api/v1/finance/commission:
     get:
       summary: 'Get commission ledger.'
@@ -2862,6 +3614,212 @@ paths:
                   type: integer
                   description: 'Must be at least 1. Must not be greater than 100.'
                   example: 19
+  '/api/v1/finance/commission/seller/{seller_id}':
+    get:
+      summary: 'Comissão de um vendedor'
+      operationId: comissoDeUmVendedor
+      description: 'Retorna a comissão de um vendedor para um mês específico.'
+      parameters:
+        -
+          in: query
+          name: month
+          description: 'Mês (YYYY-MM).'
+          example: 2026-01
+          required: false
+          schema:
+            type: string
+            description: 'Mês (YYYY-MM).'
+            example: 2026-01
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - 'Extrato Financeiro'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                month:
+                  type: string
+                  description: 'Must match the regex /^\d{4}-\d{2}$/.'
+                  example: 6425-59
+    parameters:
+      -
+        in: path
+        name: seller_id
+        description: 'The ID of the seller.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: seller
+        description: 'ID do vendedor.'
+        example: 5
+        required: true
+        schema:
+          type: integer
+  '/api/v1/finance/commission/projection/{seller_id}':
+    get:
+      summary: 'Projeção de comissão'
+      operationId: projeoDeComisso
+      description: 'Projeta a comissão do vendedor baseada no ritmo atual de vendas.'
+      parameters:
+        -
+          in: query
+          name: month
+          description: 'Mês (YYYY-MM).'
+          example: 2026-01
+          required: false
+          schema:
+            type: string
+            description: 'Mês (YYYY-MM).'
+            example: 2026-01
+      responses:
+        200:
+          description: Projeção
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    seller:
+                      id: 5
+                      name: João
+                    current:
+                      sold: 28000
+                      goal: 75000
+                      achievement: 37.33
+                      daily_average: 3500
+                    projection:
+                      estimated_total: 77000
+                      estimated_achievement: 102.67
+                      estimated_commission: 2310
+                    scenarios:
+                      -
+                        scenario: pessimist
+                        achievement: 85
+                        commission: 1275
+                      -
+                        scenario: realistic
+                        achievement: 103
+                        commission: 2310
+                      -
+                        scenario: optimist
+                        achievement: 125
+                        commission: 3750
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      seller:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 5
+                          name:
+                            type: string
+                            example: João
+                      current:
+                        type: object
+                        properties:
+                          sold:
+                            type: integer
+                            example: 28000
+                          goal:
+                            type: integer
+                            example: 75000
+                          achievement:
+                            type: number
+                            example: 37.33
+                          daily_average:
+                            type: integer
+                            example: 3500
+                      projection:
+                        type: object
+                        properties:
+                          estimated_total:
+                            type: integer
+                            example: 77000
+                          estimated_achievement:
+                            type: number
+                            example: 102.67
+                          estimated_commission:
+                            type: integer
+                            example: 2310
+                      scenarios:
+                        type: array
+                        example:
+                          -
+                            scenario: pessimist
+                            achievement: 85
+                            commission: 1275
+                          -
+                            scenario: realistic
+                            achievement: 103
+                            commission: 2310
+                          -
+                            scenario: optimist
+                            achievement: 125
+                            commission: 3750
+                        items:
+                          type: object
+                          properties:
+                            scenario:
+                              type: string
+                              example: pessimist
+                            achievement:
+                              type: integer
+                              example: 85
+                            commission:
+                              type: integer
+                              example: 1275
+      tags:
+        - 'Extrato Financeiro'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                month:
+                  type: string
+                  description: 'Must match the regex /^\d{4}-\d{2}$/.'
+                  example: 6425-59
+    parameters:
+      -
+        in: path
+        name: seller_id
+        description: 'The ID of the seller.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: seller
+        description: 'ID do vendedor.'
+        example: 5
+        required: true
+        schema:
+          type: integer
   /api/v1/analytics/people/shift:
     get:
       summary: 'Get People KPIs for a store and date.'
@@ -2897,7 +3855,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T21:21:38'
+                  example: '2026-01-08T00:46:40'
               required:
                 - store_id
                 - date
@@ -2923,7 +3881,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T21:21:39'
+                  example: '2026-01-08T00:46:40'
                 shift_code:
                   type: string
                   description: ''
@@ -3203,11 +4161,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T21:21:39'
+                  example: '2026-01-08T00:46:40'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T21:21:39'
+                  example: '2026-01-08T00:46:40'
                 causer_id:
                   type: integer
                   description: 'The <code>id</code> of an existing record in the users table.'
@@ -3339,11 +4297,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T21:21:39'
+                  example: '2026-01-08T00:46:40'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-07T21:21:39'
+                  example: '2026-01-08T00:46:40'
   '/api/v1/admin/audit-logs/{auditLog_id}':
     get:
       summary: 'Ver detalhes do log'
@@ -4613,6 +5571,162 @@ paths:
         required: true
         schema:
           type: integer
+  /api/v1/reports/ranking:
+    get:
+      summary: 'Ranking de Vendedores'
+      operationId: rankingDeVendedores
+      description: "Retorna ranking completo de vendedores ordenado por vendas no período.\n\n**Inclui:**\n- Pódio (top 3) em destaque\n- Ranking completo com estatísticas\n- Meta, atingimento e bônus acumulado de cada vendedor\n\n**Quem pode usar:** Todos os usuários autenticados."
+      parameters:
+        -
+          in: query
+          name: month
+          description: 'Mês (YYYY-MM), default: mês atual.'
+          example: 2026-01
+          required: false
+          schema:
+            type: string
+            description: 'Mês (YYYY-MM), default: mês atual.'
+            example: 2026-01
+        -
+          in: query
+          name: store_id
+          description: 'Filtrar por loja.'
+          example: 1
+          required: false
+          schema:
+            type: integer
+            description: 'Filtrar por loja.'
+            example: 1
+        -
+          in: query
+          name: limit
+          description: 'Limite de resultados (default: 50).'
+          example: 10
+          required: false
+          schema:
+            type: integer
+            description: 'Limite de resultados (default: 50).'
+            example: 10
+      responses:
+        200:
+          description: 'Ranking mensal'
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "{\n  \"data\": {\n    \"period\": \"2026-01\",\n    \"podium\": [\n      {\n        \"position\": 1,\n        \"seller\": { \"id\": 5, \"name\": \"João Silva\", \"avatar_url\": \"...\", \"store_name\": \"Tijucas\" },\n        \"total_sold\": 85000.00,\n        \"goal\": 75000.00,\n        \"achievement_rate\": 113.33,\n        \"bonus_accumulated\": 450.00\n      }\n    ],\n    \"ranking\": [...],\n    \"stats\": { \"total_sellers\": 25, \"above_goal\": 12, \"average_achievement\": 92.5 }\n  }\n}"
+      tags:
+        - 'Relatórios - Ranking'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                month:
+                  type: string
+                  description: 'Must match the regex /^\d{4}-\d{2}$/.'
+                  example: 6425-59
+                store_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: 16
+                limit:
+                  type: integer
+                  description: 'Must be at least 1. Must not be greater than 100.'
+                  example: 22
+  /api/v1/users/birthdays:
+    get:
+      summary: 'Aniversariantes do Mês'
+      operationId: aniversariantesDoMs
+      description: "Lista vendedores que fazem aniversário no mês especificado.\n\n**Quem pode usar:** Gerentes e Admins."
+      parameters:
+        -
+          in: query
+          name: month
+          description: 'Mês (1-12), default: mês atual.'
+          example: 1
+          required: false
+          schema:
+            type: integer
+            description: 'Mês (1-12), default: mês atual.'
+            example: 1
+        -
+          in: query
+          name: store_id
+          description: 'Filtrar por loja.'
+          example: 1
+          required: false
+          schema:
+            type: integer
+            description: 'Filtrar por loja.'
+            example: 1
+      responses:
+        200:
+          description: 'Aniversariantes de janeiro'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    -
+                      id: 5
+                      name: 'João Silva'
+                      birth_date: '1990-01-15'
+                      day: 15
+                      age: 36
+                      avatar_url: 'https://...'
+                properties:
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 5
+                        name: 'João Silva'
+                        birth_date: '1990-01-15'
+                        day: 15
+                        age: 36
+                        avatar_url: 'https://...'
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 5
+                        name:
+                          type: string
+                          example: 'João Silva'
+                        birth_date:
+                          type: string
+                          example: '1990-01-15'
+                        day:
+                          type: integer
+                          example: 15
+                        age:
+                          type: integer
+                          example: 36
+                        avatar_url:
+                          type: string
+                          example: 'https://...'
+      tags:
+        - 'Relatórios - Ranking'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                month:
+                  type: integer
+                  description: 'Must be at least 1. Must not be greater than 12.'
+                  example: 4
+                store_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: 16
   /api/v1/reports/store-performance:
     get:
       summary: 'Performance da Loja'

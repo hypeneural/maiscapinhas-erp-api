@@ -203,4 +203,175 @@ class CashShiftController extends Controller
             $shift->load(['store:id,name', 'seller:id,name', 'cashClosing.lines'])
         );
     }
+
+    /**
+     * Turnos pendentes de conferência
+     *
+     * Lista turnos que ainda não foram aprovados, ordenados por prioridade
+     * (mais antigos primeiro).
+     *
+     * **Quem pode usar:** Conferentes, Gerentes e Admins.
+     *
+     * @queryParam store_id integer Filtrar por loja. Example: 1
+     *
+     * @response 200 scenario="Turnos pendentes" {
+     *   "data": {
+     *     "total_pending": 12,
+     *     "shifts": [
+     *       {
+     *         "id": 5,
+     *         "date": "2026-01-06",
+     *         "shift_code": "T",
+     *         "days_pending": 2,
+     *         "priority": "high",
+     *         "store_name": "Tijucas",
+     *         "seller_name": "João Silva",
+     *         "system_total": 4500.00
+     *       }
+     *     ]
+     *   }
+     * }
+     */
+    public function pending(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $userStoreIds = $user->storeUsers()
+            ->whereIn('role', ['admin', 'gerente', 'conferente'])
+            ->pluck('store_id')
+            ->toArray();
+
+        if (empty($userStoreIds)) {
+            return $this->forbidden('Você não tem permissão para ver turnos pendentes.');
+        }
+
+        $request->validate([
+            'store_id' => ['sometimes', 'integer', 'exists:stores,id'],
+        ]);
+
+        $storeId = $request->input('store_id');
+        if ($storeId && !in_array($storeId, $userStoreIds)) {
+            return $this->forbidden('Você não tem acesso a esta loja.');
+        }
+
+        $query = CashShift::with(['store:id,name', 'seller:id,name'])
+            ->whereIn('store_id', $storeId ? [$storeId] : $userStoreIds)
+            ->where(function ($q) {
+                $q->whereDoesntHave('cashClosing')
+                    ->orWhereHas('cashClosing', fn($c) => $c->whereIn('status', ['draft', 'submitted']));
+            })
+            ->orderBy('date')
+            ->orderBy('shift_code');
+
+        $shifts = $query->get();
+
+        $today = now()->startOfDay();
+        $result = $shifts->map(function ($shift) use ($today) {
+            $shiftDate = \Carbon\Carbon::parse($shift->date);
+            $daysPending = $shiftDate->diffInDays($today);
+
+            return [
+                'id' => $shift->id,
+                'date' => $shift->date,
+                'shift_code' => $shift->shift_code,
+                'days_pending' => $daysPending,
+                'priority' => $daysPending > 2 ? 'high' : ($daysPending > 0 ? 'medium' : 'low'),
+                'store_name' => $shift->store->name,
+                'seller_name' => $shift->seller->name,
+                'status' => $shift->cashClosing?->status ?? 'not_started',
+            ];
+        });
+
+        return $this->success([
+            'total_pending' => $result->count(),
+            'shifts' => $result->values(),
+        ]);
+    }
+
+    /**
+     * Turnos com divergência
+     *
+     * Lista turnos que possuem divergência não justificada entre
+     * valores do sistema e valores reais.
+     *
+     * **Quem pode usar:** Conferentes, Gerentes e Admins.
+     *
+     * @queryParam store_id integer Filtrar por loja. Example: 1
+     *
+     * @response 200 scenario="Turnos divergentes" {
+     *   "data": {
+     *     "total_divergent": 3,
+     *     "total_divergence_value": -85.00,
+     *     "shifts": [
+     *       {
+     *         "id": 8,
+     *         "date": "2026-01-05",
+     *         "shift_code": "N",
+     *         "store_name": "Bombinhas",
+     *         "seller_name": "Maria Santos",
+     *         "divergence": -50.00,
+     *         "has_justification": false,
+     *         "days_pending": 3
+     *       }
+     *     ]
+     *   }
+     * }
+     */
+    public function divergent(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $userStoreIds = $user->storeUsers()
+            ->whereIn('role', ['admin', 'gerente', 'conferente'])
+            ->pluck('store_id')
+            ->toArray();
+
+        if (empty($userStoreIds)) {
+            return $this->forbidden('Você não tem permissão para ver divergências.');
+        }
+
+        $request->validate([
+            'store_id' => ['sometimes', 'integer', 'exists:stores,id'],
+        ]);
+
+        $storeId = $request->input('store_id');
+        if ($storeId && !in_array($storeId, $userStoreIds)) {
+            return $this->forbidden('Você não tem acesso a esta loja.');
+        }
+
+        $shifts = CashShift::with(['store:id,name', 'seller:id,name', 'cashClosing.lines'])
+            ->whereIn('store_id', $storeId ? [$storeId] : $userStoreIds)
+            ->whereHas('cashClosing.lines', fn($q) => $q->where('diff_value', '!=', 0))
+            ->orderByDesc('date')
+            ->get();
+
+        $today = now()->startOfDay();
+        $totalDivergence = 0;
+
+        $result = $shifts->map(function ($shift) use ($today, &$totalDivergence) {
+            $divergence = $shift->cashClosing?->lines->sum('diff_value') ?? 0;
+            $totalDivergence += $divergence;
+            $daysPending = \Carbon\Carbon::parse($shift->date)->diffInDays($today);
+
+            $hasJustification = $shift->cashClosing?->lines
+                ->where('diff_value', '!=', 0)
+                ->every(fn($line) => !empty($line->justification_text));
+
+            return [
+                'id' => $shift->id,
+                'date' => $shift->date,
+                'shift_code' => $shift->shift_code,
+                'store_name' => $shift->store->name,
+                'seller_name' => $shift->seller->name,
+                'divergence' => round($divergence, 2),
+                'has_justification' => $hasJustification,
+                'days_pending' => $daysPending,
+            ];
+        });
+
+        return $this->success([
+            'total_divergent' => $result->count(),
+            'total_divergence_value' => round($totalDivergence, 2),
+            'shifts' => $result->values(),
+        ]);
+    }
 }
+
