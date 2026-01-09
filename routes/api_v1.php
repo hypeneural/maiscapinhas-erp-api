@@ -71,6 +71,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/all', [StoreController::class, 'all'])->name('all');
         Route::get('/{store}', [StoreController::class, 'show'])->name('show');
         Route::get('/{store}/sellers', [StoreController::class, 'sellers'])->name('sellers');
+        Route::get('/{store}/users', [StoreController::class, 'users'])->name('users');
         Route::put('/{store}/photo', [StoreController::class, 'updatePhoto'])->name('photo');
     });
 

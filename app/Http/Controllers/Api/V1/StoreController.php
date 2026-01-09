@@ -246,6 +246,49 @@ class StoreController extends Controller
     }
 
     /**
+     * Listar todos os usuários de uma loja
+     *
+     * Retorna todos os usuários vinculados a uma loja específica.
+     *
+     * **Quem pode usar:** Qualquer usuário autenticado.
+     *
+     * @urlParam store integer required ID da loja. Example: 1
+     *
+     * @response 200 scenario="Lista de usuários" {
+     *   "data": [
+     *     {
+     *       "user_id": 2,
+     *       "user_name": "Carlos Gerente",
+     *       "user_email": "carlos.gerente@maiscapinhas.com.br",
+     *       "role": "gerente",
+     *       "active": true
+     *     }
+     *   ]
+     * }
+     */
+    public function users(Request $request, Store $store): JsonResponse
+    {
+        // "Liberar geral" conforme solicitado, dados públicos da loja.
+        // Não validamos hasAccessToStore para permitir que conferentes de outras lojas
+        // ou usuários sem vínculo direto possam listar (para selects, transferências, etc).
+
+        $users = $store->storeUsers()
+            ->with('user:id,name,email,active')
+            ->get()
+            ->map(fn($su) => [
+                'user_id' => $su->user_id,
+                'user_name' => $su->user->name,
+                'user_email' => $su->user->email,
+                'role' => $su->role,
+                'active' => $su->user->active,
+            ])
+            ->sortBy('user_name')
+            ->values();
+
+        return $this->success($users);
+    }
+
+    /**
      * Atualizar foto da loja (fachada)
      *
      * Permite atualizar a foto de fachada da loja.
