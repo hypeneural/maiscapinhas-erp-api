@@ -123,11 +123,11 @@ class BonusEngineService
             foreach ($closing->lines as $line) {
                 $diff = abs((float) $line->diff_value);
                 $divergenceTotal += $diff;
+            }
 
-                // Check for unjustified divergence
-                if ($diff > 0 && empty($line->justification_text)) {
-                    $hasUnjustifiedDivergence = true;
-                }
+            // Check for unjustified divergence using shift-level flag
+            if ($closing->hasUnjustifiedDivergence()) {
+                $hasUnjustifiedDivergence = true;
             }
         }
 

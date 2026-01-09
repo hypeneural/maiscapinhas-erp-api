@@ -21,11 +21,14 @@ class CashClosing extends Model
         'closed_by',
         'closed_at',
         'version',
+        'justification_text',
+        'justified',
     ];
 
     protected $casts = [
         'closed_at' => 'datetime',
         'version' => 'integer',
+        'justified' => 'boolean',
     ];
 
     public const STATUS_DRAFT = 'draft';
@@ -126,12 +129,21 @@ class CashClosing extends Model
     // Validation Helpers
     // ========================================
 
-    public function hasUnjustifiedDivergences(): bool
+    /**
+     * Check if there are divergences without justification.
+     * Now checks the shift-level justification (justified flag), not per-line.
+     */
+    public function hasDivergence(): bool
     {
-        return $this->lines()
-            ->where('diff_value', '!=', 0)
-            ->whereNull('justification_text')
-            ->exists();
+        return $this->getTotalDifference() != 0;
+    }
+
+    /**
+     * Check if divergence is unjustified (has divergence but not marked as justified).
+     */
+    public function hasUnjustifiedDivergence(): bool
+    {
+        return $this->hasDivergence() && !$this->justified;
     }
 
     public function getTotalDifference(): float
@@ -146,7 +158,7 @@ class CashClosing extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['status', 'closed_by', 'closed_at', 'version'])
+            ->logOnly(['status', 'closed_by', 'closed_at', 'version', 'justified', 'justification_text'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }

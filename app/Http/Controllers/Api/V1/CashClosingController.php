@@ -227,10 +227,150 @@ class CashClosingController extends Controller
     }
 
     /**
+     * Criar fechamento de caixa
+     *
+     * Cria um novo fechamento de caixa para um turno existente,
+     * incluindo os valores por meio de pagamento.
+     *
+     * **Quem pode usar:** Qualquer usuário com acesso à loja.
+     *
+     * **Regras de negócio:**
+     * - O turno não pode ter um fechamento existente
+     * - A justificativa é opcional e se aplica ao turno inteiro (não por linha)
+     * - O campo `justified` indica se a divergência foi justificada (usado para cálculo de bônus)
+     *
+     * @urlParam shift integer required ID do turno. Example: 1
+     * @bodyParam lines array required Lista de linhas (meios de pagamento). Example: [{"label": "Dinheiro", "system_value": 1000, "real_value": 950}]
+     * @bodyParam lines.*.label string required Nome do meio de pagamento. Example: Dinheiro
+     * @bodyParam lines.*.system_value number required Valor informado no sistema. Example: 1000.00
+     * @bodyParam lines.*.real_value number required Valor real contado. Example: 950.00
+     * @bodyParam justification_text string Justificativa geral para divergências (opcional). Example: Troco dado incorretamente
+     * @bodyParam justified boolean Se a divergência está justificada (usado para bônus). Example: true
+     *
+     * @response 201 scenario="Fechamento criado" {
+     *   "data": {
+     *     "id": 1,
+     *     "status": "draft",
+     *     "version": 1,
+     *     "justification_text": "Troco dado incorretamente",
+     *     "justified": true,
+     *     "lines": [
+     *       { "id": 1, "label": "Dinheiro", "system_value": 1000.00, "real_value": 950.00, "diff_value": -50.00 }
+     *     ]
+     *   },
+     *   "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+     * }
+     *
+     * @response 409 scenario="Fechamento já existe" {
+     *   "error": { "code": 409, "message": "Closing already exists for this shift." }
+     * }
+     */
+    public function store(Request $request, CashShift $shift): JsonResponse
+    {
+        $request->validate([
+            'lines' => ['required', 'array', 'min:1'],
+            'lines.*.label' => ['required', 'string'],
+            'lines.*.system_value' => ['required', 'numeric', 'min:0'],
+            'lines.*.real_value' => ['required', 'numeric', 'min:0'],
+            'justification_text' => ['nullable', 'string', 'max:1000'],
+            'justified' => ['nullable', 'boolean'],
+        ]);
+
+        $user = $request->user();
+
+        if (!$user->hasAccessToStore($shift->store_id)) {
+            return $this->forbidden('You do not have access to this store.');
+        }
+
+        // Check if closing already exists
+        if ($shift->cashClosing) {
+            return $this->conflict('Closing already exists for this shift. Use PUT to update.');
+        }
+
+        $closing = $this->cashClosingService->createWithLines(
+            $shift,
+            $request->input('lines'),
+            $request->input('justification_text'),
+            $request->boolean('justified', false)
+        );
+
+        return $this->created($closing->load(['cashShift.store', 'cashShift.seller']));
+    }
+
+    /**
+     * Atualizar fechamento de caixa
+     *
+     * Atualiza um fechamento de caixa existente (apenas em status draft ou rejected).
+     *
+     * **Quem pode usar:** Qualquer usuário com acesso à loja.
+     *
+     * **Regras de negócio:**
+     * - O fechamento deve estar em status `draft` ou `rejected`
+     * - A justificativa é opcional e se aplica ao turno inteiro
+     * - Todas as linhas são substituídas pelos novos valores
+     *
+     * @urlParam shift integer required ID do turno. Example: 1
+     * @bodyParam lines array required Lista de linhas (meios de pagamento). Example: [{"label": "Dinheiro", "system_value": 1000, "real_value": 1000}]
+     * @bodyParam justification_text string Justificativa geral para divergências (opcional). Example: null
+     * @bodyParam justified boolean Se a divergência está justificada. Example: false
+     *
+     * @response 200 scenario="Fechamento atualizado" {
+     *   "data": {
+     *     "id": 1,
+     *     "status": "draft",
+     *     "version": 2,
+     *     "justification_text": null,
+     *     "justified": false,
+     *     "lines": [...]
+     *   }
+     * }
+     *
+     * @response 409 scenario="Não pode atualizar" {
+     *   "error": { "code": 409, "message": "Cannot update closing with status 'approved'." }
+     * }
+     */
+    public function update(Request $request, CashShift $shift): JsonResponse
+    {
+        $request->validate([
+            'lines' => ['required', 'array', 'min:1'],
+            'lines.*.label' => ['required', 'string'],
+            'lines.*.system_value' => ['required', 'numeric', 'min:0'],
+            'lines.*.real_value' => ['required', 'numeric', 'min:0'],
+            'justification_text' => ['nullable', 'string', 'max:1000'],
+            'justified' => ['nullable', 'boolean'],
+        ]);
+
+        $user = $request->user();
+
+        if (!$user->hasAccessToStore($shift->store_id)) {
+            return $this->forbidden('You do not have access to this store.');
+        }
+
+        $closing = $shift->cashClosing;
+
+        if (!$closing) {
+            return $this->notFound('No closing found for this shift. Use POST to create.');
+        }
+
+        try {
+            $closing = $this->cashClosingService->updateWithLines(
+                $closing,
+                $request->input('lines'),
+                $request->input('justification_text'),
+                $request->boolean('justified', false)
+            );
+
+            return $this->success($closing->load(['cashShift.store', 'cashShift.seller']));
+        } catch (ConflictHttpException $e) {
+            return $this->conflict($e->getMessage());
+        }
+    }
+
+    /**
      * Obter detalhes do fechamento
      *
      * Retorna os detalhes completos de um fechamento de caixa,
-     * incluindo todas as linhas e divergências.
+     * incluindo todas as linhas e a justificativa geral.
      *
      * **Quem pode usar:** Qualquer usuário com acesso à loja.
      *
@@ -241,9 +381,11 @@ class CashClosingController extends Controller
      *     "id": 1,
      *     "status": "approved",
      *     "version": 2,
+     *     "justification_text": "Troco incorreto no início do turno",
+     *     "justified": true,
      *     "closed_at": "2026-01-07T12:00:00+00:00",
      *     "lines": [
-     *       { "id": 1, "label": "Dinheiro", "system_value": 500.00, "real_value": 495.00, "diff_value": -5.00, "justification_text": "Troco incorreto" }
+     *       { "id": 1, "label": "Dinheiro", "system_value": 500.00, "real_value": 495.00, "diff_value": -5.00 }
      *     ],
      *     "cash_shift": { "id": 1, "date": "2026-01-07", "shift_code": "M" },
      *     "closed_by_user": { "id": 3, "name": "Ana Conferente" }
@@ -265,6 +407,6 @@ class CashClosingController extends Controller
             return $this->notFound('No closing found for this shift.');
         }
 
-        return $this->success($closing->load(['lines.divergence', 'cashShift.store', 'cashShift.seller', 'closedByUser']));
+        return $this->success($closing->load(['lines', 'cashShift.store', 'cashShift.seller', 'closedByUser']));
     }
 }

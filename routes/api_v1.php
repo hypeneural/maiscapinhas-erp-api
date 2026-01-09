@@ -103,6 +103,8 @@ Route::middleware('auth:sanctum')->group(function () {
         // Closings (actions on shifts)
         Route::prefix('closings')->name('closings.')->group(function () {
             Route::get('/{shift}', [CashClosingController::class, 'show'])->name('show');
+            Route::post('/{shift}', [CashClosingController::class, 'store'])->name('store');
+            Route::put('/{shift}', [CashClosingController::class, 'update'])->name('update');
             Route::post('/{shift}/submit', [CashClosingController::class, 'submit'])->name('submit');
             Route::post('/{shift}/approve', [CashClosingController::class, 'approve'])->name('approve');
             Route::post('/{shift}/reject', [CashClosingController::class, 'reject'])->name('reject');

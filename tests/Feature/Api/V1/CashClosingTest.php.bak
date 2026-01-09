@@ -61,10 +61,11 @@ beforeEach(function () {
 });
 
 // ================================================
-// Submit Tests - Justificativa agora é opcional
+// Submit Tests
 // ================================================
 
 test('submit closing succeeds even with divergence (justification now optional)', function () {
+    // Create line with divergence but no justification - this should now be allowed
     CashClosingLine::create([
         'cash_closing_id' => $this->closing->id,
         'label' => 'Dinheiro',
@@ -76,6 +77,7 @@ test('submit closing succeeds even with divergence (justification now optional)'
     $response = actingAs($this->vendedor)
         ->postJson("/api/v1/cash/closings/{$this->shift->id}/submit");
 
+    // Now succeeds because justification is optional at shift level
     $response->assertStatus(200)
         ->assertJsonPath('data.status', 'submitted');
 
@@ -84,6 +86,7 @@ test('submit closing succeeds even with divergence (justification now optional)'
 });
 
 test('submit closing succeeds with no divergences', function () {
+    // Create line with NO divergence
     CashClosingLine::create([
         'cash_closing_id' => $this->closing->id,
         'label' => 'Dinheiro',
@@ -177,10 +180,11 @@ test('cannot submit already submitted closing', function () {
 });
 
 // ================================================
-// Create/Update Closing Tests (NOVOS ENDPOINTS)
+// Create/Update Closing Tests (NEW)
 // ================================================
 
 test('can create closing with POST', function () {
+    // Create a new shift without closing
     $newShift = CashShift::create([
         'store_id' => $this->store->id,
         'date' => now()->format('Y-m-d'),
@@ -261,7 +265,7 @@ test('cannot update approved closing', function () {
 });
 
 // ================================================
-// Shift-Level Justification Tests (REGRA DE BÔNUS)
+// Shift-Level Justification Tests (NEW)
 // ================================================
 
 test('justified flag affects bonus calculation logic', function () {
@@ -273,40 +277,13 @@ test('justified flag affects bonus calculation logic', function () {
         'diff_value' => -50.00,
     ]);
 
-    // Não justificado - deve afetar bônus
+    // Not justified - should affect bonus
     $this->closing->update(['justified' => false]);
     expect($this->closing->fresh()->hasDivergence())->toBeTrue();
     expect($this->closing->fresh()->hasUnjustifiedDivergence())->toBeTrue();
 
-    // Justificado - não deve afetar bônus
+    // Justified - should not affect bonus
     $this->closing->update(['justified' => true]);
     expect($this->closing->fresh()->hasDivergence())->toBeTrue();
     expect($this->closing->fresh()->hasUnjustifiedDivergence())->toBeFalse();
-});
-
-// ================================================
-// GET Closing Details Test
-// ================================================
-
-test('can get closing details', function () {
-    CashClosingLine::create([
-        'cash_closing_id' => $this->closing->id,
-        'label' => 'Dinheiro',
-        'system_value' => 1000.00,
-        'real_value' => 950.00,
-        'diff_value' => -50.00,
-    ]);
-
-    $this->closing->update([
-        'justification_text' => 'Erro de troco',
-        'justified' => true,
-    ]);
-
-    $response = actingAs($this->vendedor)
-        ->getJson("/api/v1/cash/closings/{$this->shift->id}");
-
-    $response->assertStatus(200)
-        ->assertJsonPath('data.justification_text', 'Erro de troco')
-        ->assertJsonPath('data.justified', true)
-        ->assertJsonCount(1, 'data.lines');
 });

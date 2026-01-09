@@ -37,12 +37,8 @@ class CashClosingService
             // Recalculate diff values
             $this->recalculateDiffs($closing);
 
-            // Validate all divergences have justification
-            if ($closing->hasUnjustifiedDivergences()) {
-                throw ValidationException::withMessages([
-                    'lines' => ['All divergences must have a justification before submitting.'],
-                ]);
-            }
+            // Note: Justification is now optional at shift level
+            // The 'justified' flag is used for bonus calculation
 
             // Update status
             $beforeStatus = $closing->status;
@@ -139,32 +135,85 @@ class CashClosingService
 
     /**
      * Create a new cash closing with lines.
+     *
+     * @param CashShift $shift The shift to create closing for
+     * @param array $lines Array of line data (label, system_value, real_value)
+     * @param string|null $justificationText Optional justification text for the entire shift
+     * @param bool $justified Whether the divergence (if any) is justified
      */
-    public function createWithLines(CashShift $shift, array $lines): CashClosing
-    {
-        return DB::transaction(function () use ($shift, $lines) {
+    public function createWithLines(
+        CashShift $shift,
+        array $lines,
+        ?string $justificationText = null,
+        bool $justified = false
+    ): CashClosing {
+        return DB::transaction(function () use ($shift, $lines, $justificationText, $justified) {
             $closing = CashClosing::create([
                 'cash_shift_id' => $shift->id,
                 'status' => CashClosing::STATUS_DRAFT,
                 'version' => 1,
+                'justification_text' => $justificationText,
+                'justified' => $justified,
             ]);
 
-            foreach ($lines as $lineData) {
-                $systemValue = $lineData['system_value'] ?? 0;
-                $realValue = $lineData['real_value'] ?? 0;
-
-                CashClosingLine::create([
-                    'cash_closing_id' => $closing->id,
-                    'label' => $lineData['label'],
-                    'system_value' => $systemValue,
-                    'real_value' => $realValue,
-                    'diff_value' => bcsub((string) $realValue, (string) $systemValue, 2),
-                    'justification_text' => $lineData['justification_text'] ?? null,
-                ]);
-            }
+            $this->createLines($closing, $lines);
 
             return $closing->fresh(['lines']);
         });
+    }
+
+    /**
+     * Update an existing cash closing with lines.
+     *
+     * @throws ConflictHttpException
+     */
+    public function updateWithLines(
+        CashClosing $closing,
+        array $lines,
+        ?string $justificationText = null,
+        bool $justified = false
+    ): CashClosing {
+        return DB::transaction(function () use ($closing, $lines, $justificationText, $justified) {
+            $closing = CashClosing::lockForUpdate()->find($closing->id);
+
+            // Can only update if draft or rejected
+            if (!$closing->canBeSubmitted()) {
+                throw new ConflictHttpException(
+                    "Cannot update closing with status '{$closing->status}'. Must be 'draft' or 'rejected'."
+                );
+            }
+
+            // Update closing fields
+            $closing->justification_text = $justificationText;
+            $closing->justified = $justified;
+            $closing->version++;
+            $closing->save();
+
+            // Delete existing lines and recreate
+            $closing->lines()->delete();
+            $this->createLines($closing, $lines);
+
+            return $closing->fresh(['lines']);
+        });
+    }
+
+    /**
+     * Create lines for a closing.
+     */
+    private function createLines(CashClosing $closing, array $lines): void
+    {
+        foreach ($lines as $lineData) {
+            $systemValue = $lineData['system_value'] ?? 0;
+            $realValue = $lineData['real_value'] ?? 0;
+
+            CashClosingLine::create([
+                'cash_closing_id' => $closing->id,
+                'label' => $lineData['label'],
+                'system_value' => $systemValue,
+                'real_value' => $realValue,
+                'diff_value' => bcsub((string) $realValue, (string) $systemValue, 2),
+            ]);
+        }
     }
 
     /**
