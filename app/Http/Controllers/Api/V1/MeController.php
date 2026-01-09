@@ -28,6 +28,8 @@ class MeController extends Controller
      *
      * **Informações retornadas:**
      * - Dados básicos do usuário (id, nome, email, status ativo)
+     * - Dados de perfil (whatsapp, avatar_url, instagram)
+     * - Datas para celebração (birth_date, hire_date)
      * - Lista de lojas com o papel do usuário em cada uma
      *
      * **Papéis possíveis:**
@@ -43,6 +45,11 @@ class MeController extends Controller
      *       "name": "Admin Sistema",
      *       "email": "admin@maiscapinhas.com.br",
      *       "active": true,
+     *       "whatsapp": "47999999999",
+     *       "avatar_url": "https://example.com/avatar.jpg",
+     *       "instagram": "@maiscapinhas",
+     *       "birth_date": "1990-05-15",
+     *       "hire_date": "2022-01-09",
      *       "created_at": "2026-01-01T00:00:00+00:00"
      *     },
      *     "stores": [
@@ -63,6 +70,11 @@ class MeController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'active' => $user->active,
+                'whatsapp' => $user->whatsapp,
+                'avatar_url' => $user->avatar_url,
+                'instagram' => $user->instagram,
+                'birth_date' => $user->birth_date?->format('Y-m-d'),
+                'hire_date' => $user->hire_date?->format('Y-m-d'),
                 'created_at' => $user->created_at->toIso8601String(),
             ],
             'stores' => $user->getStoresWithRoles(),

@@ -271,12 +271,8 @@ class StoreController extends Controller
                 'required',
                 \Illuminate\Validation\Rules\File::image()
                     ->types(['jpg', 'jpeg', 'png', 'webp'])
-                    ->max(5 * 1024) // 5MB
-                    ->dimensions(
-                        \Illuminate\Validation\Rules\Dimensions::create()
-                            ->minWidth(800)
-                            ->minHeight(600)
-                    ),
+                    ->max(5 * 1024), // 5MB
+                'dimensions:min_width=800,min_height=600',
             ],
         ]);
 
