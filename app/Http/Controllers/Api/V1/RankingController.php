@@ -68,8 +68,8 @@ class RankingController extends Controller
         ]);
 
         $month = $request->input('month', Carbon::now()->format('Y-m'));
-        $storeId = $request->input('store_id');
-        $limit = $request->input('limit', 50);
+        $storeId = $request->input('store_id') ? (int) $request->input('store_id') : null;
+        $limit = (int) $request->input('limit', 50);
 
         // Verificar acesso à loja se informada
         if ($storeId && !$request->user()->hasAccessToStore($storeId)) {

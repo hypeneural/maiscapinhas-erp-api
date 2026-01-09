@@ -12,6 +12,7 @@ use App\Support\Audit\AuditLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\File;
 
 /**
@@ -99,12 +100,8 @@ class AvatarController extends Controller
                 'required',
                 File::image()
                     ->types(['jpg', 'jpeg', 'png', 'webp'])
-                    ->max(2 * 1024) // 2MB
-                    ->dimensions(
-                        \Illuminate\Validation\Rules\Dimensions::create()
-                            ->minWidth(200)
-                            ->minHeight(200)
-                    ),
+                    ->max(2 * 1024), // 2MB
+                'dimensions:min_width=200,min_height=200',
             ],
         ]);
 
