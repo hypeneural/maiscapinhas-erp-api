@@ -34,9 +34,9 @@ class CashShiftController extends Controller
      * - `status` - Filtrar por status (open, closed, pending)
      *
      * **Códigos de turno:**
-     * - `M` - Manhã
-     * - `T` - Tarde
-     * - `N` - Noite
+     * - `1` ou `M` - Manhã
+     * - `2` ou `T` - Tarde
+     * - `3` ou `N` - Noite
      *
      * @queryParam store_id integer ID da loja para filtrar. Example: 1
      * @queryParam date string Data específica (YYYY-MM-DD). Example: 2026-01-07
@@ -110,13 +110,13 @@ class CashShiftController extends Controller
      * - Se `seller_id` não for informado, assume o usuário atual
      *
      * **Códigos de turno:**
-     * - `M` - Manhã (08h-14h)
-     * - `T` - Tarde (14h-20h)
-     * - `N` - Noite (20h-00h)
+     * - `1` ou `M` - Manhã (08h-14h)
+     * - `2` ou `T` - Tarde (14h-20h)
+     * - `3` ou `N` - Noite (20h-00h)
      *
      * @bodyParam store_id integer required ID da loja. Example: 1
      * @bodyParam date string required Data do turno (YYYY-MM-DD). Example: 2026-01-07
-     * @bodyParam shift_code string required Código do turno (M, T ou N). Example: M
+     * @bodyParam shift_code string required Código do turno (1, 2, 3 ou M, T, N). Example: 1
      * @bodyParam seller_id integer ID do vendedor (padrão: usuário atual). Example: 6
      *
      * @response 201 scenario="Turno criado" {
@@ -142,7 +142,7 @@ class CashShiftController extends Controller
         $request->validate([
             'store_id' => ['required', 'integer', 'exists:stores,id'],
             'date' => ['required', 'date'],
-            'shift_code' => ['required', 'string', 'in:M,T,N'],
+            'shift_code' => ['required', 'string', 'in:1,2,3,M,T,N'],
             'seller_id' => ['sometimes', 'integer', 'exists:users,id'],
         ]);
 
