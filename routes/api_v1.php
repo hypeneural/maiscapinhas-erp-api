@@ -68,6 +68,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Stores (user's stores)
     Route::prefix('stores')->name('stores.')->group(function () {
         Route::get('/', [StoreController::class, 'index'])->name('index');
+        Route::get('/all', [StoreController::class, 'all'])->name('all');
         Route::get('/{store}', [StoreController::class, 'show'])->name('show');
         Route::get('/{store}/sellers', [StoreController::class, 'sellers'])->name('sellers');
         Route::put('/{store}/photo', [StoreController::class, 'updatePhoto'])->name('photo');

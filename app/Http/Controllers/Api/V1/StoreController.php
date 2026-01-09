@@ -58,6 +58,51 @@ class StoreController extends Controller
     }
 
     /**
+     * Listar todas as lojas ativas
+     *
+     * Retorna todas as lojas ativas do sistema (sem verificação de vínculo).
+     * Útil para selects de filtro por cidade/loja.
+     *
+     * **Quem pode usar:** Qualquer usuário autenticado.
+     *
+     * @queryParam per_page integer Itens por página (1-100, default: 100). Example: 100
+     * @queryParam city string Filtrar por cidade. Example: Tijucas
+     *
+     * @response 200 scenario="Lista de lojas" {
+     *   "data": [
+     *     { "id": 1, "name": "Mais Capinhas Tijucas", "city": "Tijucas" },
+     *     { "id": 2, "name": "Mais Capinhas Itapema", "city": "Itapema" }
+     *   ],
+     *   "meta": { "current_page": 1, "per_page": 100, "total": 3, "last_page": 1 }
+     * }
+     */
+    public function all(Request $request): JsonResponse
+    {
+        $query = Store::where('active', true);
+
+        if ($request->filled('city')) {
+            $query->where('city', 'like', '%' . $request->input('city') . '%');
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('city', 'like', "%{$search}%");
+            });
+        }
+
+        $perPage = min($request->input('per_page', 100), 100);
+        $stores = $query->orderBy('name')->paginate($perPage);
+
+        return $this->paginated($stores->through(fn(Store $store) => [
+            'id' => $store->id,
+            'name' => $store->name,
+            'city' => $store->city,
+        ]));
+    }
+
+    /**
      * Obter detalhes de uma loja
      *
      * Retorna os detalhes de uma loja específica, se o usuário tiver acesso.
