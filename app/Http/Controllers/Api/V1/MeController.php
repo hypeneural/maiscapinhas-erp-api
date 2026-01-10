@@ -70,6 +70,7 @@ class MeController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'active' => $user->active,
+                'is_super_admin' => $user->is_super_admin ?? false,
                 'whatsapp' => $user->whatsapp,
                 'avatar_url' => $user->avatar_url,
                 'instagram' => $user->instagram,

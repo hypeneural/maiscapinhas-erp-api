@@ -20,6 +20,7 @@ class User extends Authenticatable
         'email',
         'password',
         'active',
+        'is_super_admin',
         'birth_date',
         'hire_date',
         'whatsapp',
@@ -40,6 +41,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'active' => 'boolean',
+            'is_super_admin' => 'boolean',
             'birth_date' => 'date',
             'hire_date' => 'date',
         ];
@@ -81,11 +83,23 @@ class User extends Authenticatable
     }
 
     // ========================================
+    // Super Admin
+    // ========================================
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->is_super_admin === true;
+    }
+
+    // ========================================
     // Store Access Helpers
     // ========================================
 
     public function hasAccessToStore(int $storeId): bool
     {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
         return $this->storeUsers()->where('store_id', $storeId)->exists();
     }
 
@@ -102,6 +116,9 @@ class User extends Authenticatable
 
     public function canApproveInStore(int $storeId): bool
     {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
         $storeUser = $this->storeUserFor($storeId);
         return $storeUser?->canApproveClosings() ?? false;
     }
@@ -113,6 +130,9 @@ class User extends Authenticatable
 
     public function isGlobalAdmin(): bool
     {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
         return $this->storeUsers()
             ->where('role', StoreUser::ROLE_ADMIN)
             ->exists();

@@ -35,6 +35,9 @@ class AuditLogPolicy
      */
     private function isAdmin(User $user): bool
     {
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
         return $user->storeUsers()->where('role', 'admin')->exists();
     }
 }

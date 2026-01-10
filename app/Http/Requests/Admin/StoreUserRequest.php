@@ -36,6 +36,7 @@ class StoreUserRequest extends FormRequest
             ],
             'password' => ['required', 'string', Password::defaults()],
             'active' => ['sometimes', 'boolean'],
+            'is_super_admin' => ['sometimes', 'boolean'],
 
             // Optional: assign to stores on creation
             'stores' => ['sometimes', 'array'],

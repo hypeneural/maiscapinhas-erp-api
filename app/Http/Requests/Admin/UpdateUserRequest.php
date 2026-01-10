@@ -37,6 +37,7 @@ class UpdateUserRequest extends FormRequest
             ],
             'password' => ['sometimes', 'string', Password::defaults()],
             'active' => ['sometimes', 'boolean'],
+            'is_super_admin' => ['sometimes', 'boolean'],
         ];
     }
 }

@@ -30,6 +30,9 @@ class StorePolicy
      */
     public function manage(User $user, Store $store): bool
     {
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
         $role = $user->roleInStore($store->id);
         return in_array($role, ['admin', 'gerente']);
     }

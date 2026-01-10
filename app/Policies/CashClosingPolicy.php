@@ -91,6 +91,10 @@ class CashClosingPolicy
             return false;
         }
 
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
         $role = $user->roleInStore($closing->cashShift->store_id);
         return $role === 'admin';
     }

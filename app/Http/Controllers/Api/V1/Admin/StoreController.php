@@ -248,6 +248,11 @@ class StoreController extends Controller
     private function authorizeAdmin(Request $request): void
     {
         $user = $request->user();
+
+        if ($user->isSuperAdmin()) {
+            return;
+        }
+
         $isAdmin = $user->storeUsers()->where('role', 'admin')->exists();
 
         if (!$isAdmin) {

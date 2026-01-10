@@ -173,6 +173,7 @@ class UserController extends Controller
                 'email' => $request->input('email'),
                 'password' => Hash::make($request->input('password')),
                 'active' => $request->input('active', true),
+                'is_super_admin' => $request->input('is_super_admin', false),
             ]);
 
             // Attach to stores if provided
@@ -272,7 +273,7 @@ class UserController extends Controller
     {
         $this->authorizeAdmin($request);
 
-        $data = $request->only(['name', 'email', 'active']);
+        $data = $request->only(['name', 'email', 'active', 'is_super_admin']);
 
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->input('password'));
@@ -334,6 +335,11 @@ class UserController extends Controller
     private function authorizeAdmin(Request $request): void
     {
         $user = $request->user();
+
+        if ($user->isSuperAdmin()) {
+            return;
+        }
+
         $isAdmin = $user->storeUsers()->where('role', 'admin')->exists();
 
         if (!$isAdmin) {

@@ -62,6 +62,9 @@ class CommissionRulePolicy
 
     private function isAnyManager(User $user): bool
     {
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
         return $user->storeUsers()
             ->whereIn('role', [StoreUserRole::ADMIN->value, StoreUserRole::GERENTE->value])
             ->exists();
@@ -69,6 +72,9 @@ class CommissionRulePolicy
 
     private function isManagerOfStore(User $user, int $storeId): bool
     {
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
         return $user->storeUsers()
             ->where('store_id', $storeId)
             ->whereIn('role', [StoreUserRole::ADMIN->value, StoreUserRole::GERENTE->value])
@@ -77,6 +83,9 @@ class CommissionRulePolicy
 
     private function isGlobalAdmin(User $user): bool
     {
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
         return $user->storeUsers()
             ->where('role', StoreUserRole::ADMIN->value)
             ->exists();

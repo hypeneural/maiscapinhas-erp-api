@@ -19,6 +19,7 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'active' => $this->active,
+            'is_super_admin' => $this->is_super_admin ?? false,
 
             // Profile data
             'birth_date' => $this->birth_date?->format('Y-m-d'),
@@ -55,6 +56,11 @@ class UserResource extends JsonResource
 
         // Próprio usuário pode ver
         if ($authUser->id === $this->id) {
+            return true;
+        }
+
+        // Super admin pode ver
+        if ($authUser->isSuperAdmin()) {
             return true;
         }
 

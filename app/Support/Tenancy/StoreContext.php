@@ -16,6 +16,7 @@ class StoreContext
 {
     private ?Store $currentStore = null;
     private ?StoreUser $currentStoreUser = null;
+    private bool $isSuperAdmin = false;
 
     /**
      * Resolve store from request and validate user access.
@@ -24,6 +25,11 @@ class StoreContext
     {
         $user = $user ?? $request->user();
         $storeId = $this->extractStoreId($request);
+
+        // Check if user is super admin
+        if ($user->isSuperAdmin()) {
+            $this->isSuperAdmin = true;
+        }
 
         if ($storeId === null) {
             return $this;
@@ -37,6 +43,15 @@ class StoreContext
 
         if (!$store->active) {
             throw new AccessDeniedHttpException('Store is inactive.');
+        }
+
+        // Super admin can access any store without store_users record
+        if ($this->isSuperAdmin) {
+            $this->currentStore = $store;
+            $this->currentStoreUser = StoreUser::where('store_id', $storeId)
+                ->where('user_id', $user->id)
+                ->first(); // May be null for super admin
+            return $this;
         }
 
         $storeUser = StoreUser::where('store_id', $storeId)
@@ -64,6 +79,16 @@ class StoreContext
             throw new NotFoundHttpException('Store not found.');
         }
 
+        // Super admin can access any store
+        if ($user->isSuperAdmin()) {
+            $this->isSuperAdmin = true;
+            $this->currentStore = $store;
+            $this->currentStoreUser = StoreUser::where('store_id', $storeId)
+                ->where('user_id', $user->id)
+                ->first(); // May be null for super admin
+            return $this;
+        }
+
         $storeUser = StoreUser::where('store_id', $storeId)
             ->where('user_id', $user->id)
             ->first();
@@ -83,6 +108,11 @@ class StoreContext
      */
     public function requireRole(array $allowedRoles): self
     {
+        // Super admin bypasses all role requirements
+        if ($this->isSuperAdmin) {
+            return $this;
+        }
+
         if (!$this->currentStoreUser) {
             throw new AccessDeniedHttpException('No store context.');
         }
@@ -141,12 +171,23 @@ class StoreContext
 
     public function isManager(): bool
     {
+        if ($this->isSuperAdmin) {
+            return true;
+        }
         return $this->getRole()?->isManager() ?? false;
     }
 
     public function canApproveClosings(): bool
     {
+        if ($this->isSuperAdmin) {
+            return true;
+        }
         return $this->getRole()?->canApproveClosings() ?? false;
+    }
+
+    public function isSuperAdminContext(): bool
+    {
+        return $this->isSuperAdmin;
     }
 
     private function extractStoreId(Request $request): ?int
