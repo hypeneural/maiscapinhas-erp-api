@@ -19,11 +19,17 @@ class RankingService
 {
     /**
      * Gera ranking de vendedores para um período.
+     *
+     * @param int|null $storeId ID da loja (null = todas)
+     * @param string $month Mês no formato YYYY-MM
+     * @param int $limit Limite de resultados
+     * @param string $order Ordenação: 'desc' para melhores, 'asc' para piores
      */
     public function getRanking(
         ?int $storeId,
         string $month,
-        int $limit = 50
+        int $limit = 50,
+        string $order = 'desc'
     ): array {
         $startOfMonth = Carbon::parse($month . '-01')->startOfMonth();
         $endOfMonth = Carbon::parse($month . '-01')->endOfMonth();
@@ -36,14 +42,21 @@ class RankingService
                 DB::raw('COUNT(*) as sale_count'),
             ])
             ->whereBetween('sold_at', [$startOfMonth, $endOfMonth->endOfDay()])
-            ->groupBy('seller_id')
-            ->orderByDesc('total_sold');
+            ->groupBy('seller_id');
+
+        // Ordenação: desc para melhores, asc para piores
+        if ($order === 'asc') {
+            $salesQuery->orderBy('total_sold', 'asc');
+        } else {
+            $salesQuery->orderByDesc('total_sold');
+        }
 
         if ($storeId) {
             $salesQuery->where('store_id', $storeId);
         }
 
         $salesData = $salesQuery->limit($limit)->get();
+
 
         // Buscar dados complementares dos vendedores
         $sellerIds = $salesData->pluck('seller_id')->toArray();

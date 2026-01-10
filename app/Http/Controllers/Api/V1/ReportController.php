@@ -151,14 +151,20 @@ class ReportController extends Controller
         $user = $request->user();
         $month = $request->input('month', Carbon::now()->format('Y-m'));
 
-        $userStoreIds = $user->storeUsers()
-            ->whereIn('role', ['admin', 'gerente'])
-            ->pluck('store_id')
-            ->toArray();
+        // Super admin vê todas as lojas
+        if ($user->isSuperAdmin()) {
+            $userStoreIds = \App\Models\Store::where('active', true)->pluck('id')->toArray();
+        } else {
+            $userStoreIds = $user->storeUsers()
+                ->whereIn('role', ['admin', 'gerente'])
+                ->pluck('store_id')
+                ->toArray();
+        }
 
         if (empty($userStoreIds)) {
             return $this->forbidden('Você não tem acesso administrativo a nenhuma loja.');
         }
+
 
         $performance = $this->performanceService->getMultiStorePerformance($userStoreIds, $month);
 

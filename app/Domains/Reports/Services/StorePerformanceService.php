@@ -73,6 +73,29 @@ class StorePerformanceService
             ? round((($currentSales / $samePeriodLastYear) - 1) * 100, 2)
             : ($currentSales > 0 ? 100 : 0);
 
+        // ========== Comparação MoM (Mês anterior) ==========
+        $lastMonthDate = Carbon::parse($month . '-01')->subMonth();
+        $lastMonthStart = $lastMonthDate->copy()->startOfMonth();
+        $lastMonthEnd = $lastMonthDate->copy()->endOfMonth();
+
+        // Mesmo período do mês passado (até o mesmo dia)
+        $lastMonthSameDay = min($daysElapsed, $lastMonthEnd->day);
+        $lastMonthSamePeriodEnd = $lastMonthStart->copy()->addDays($lastMonthSameDay - 1);
+
+        $samePeriodLastMonth = (float) Sale::where('store_id', $storeId)
+            ->whereBetween('sold_at', [$lastMonthStart, $lastMonthSamePeriodEnd->endOfDay()])
+            ->sum('amount');
+
+        $totalLastMonth = (float) Sale::where('store_id', $storeId)
+            ->whereBetween('sold_at', [$lastMonthStart, $lastMonthEnd->endOfDay()])
+            ->sum('amount');
+
+        // Crescimento MoM
+        $momGrowth = $samePeriodLastMonth > 0
+            ? round((($currentSales / $samePeriodLastMonth) - 1) * 100, 2)
+            : ($currentSales > 0 ? 100 : 0);
+
+
         // ========== Projeções ==========
         // 1. Projeção Linear (Run Rate)
         $linearProjection = $daysElapsed > 0
@@ -114,7 +137,11 @@ class StorePerformanceService
                 'same_period_last_year' => $samePeriodLastYear,
                 'total_last_year_month' => $totalLastYear,
                 'yoy_growth' => $yoyGrowth,
+                'same_period_last_month' => $samePeriodLastMonth,
+                'total_last_month' => $totalLastMonth,
+                'mom_growth' => $momGrowth,
             ],
+
 
             'forecast' => [
                 'linear_projection' => $linearProjection,

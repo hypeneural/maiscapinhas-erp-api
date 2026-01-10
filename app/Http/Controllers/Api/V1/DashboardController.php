@@ -309,14 +309,20 @@ class DashboardController extends Controller
         $user = $request->user();
         $month = $request->input('month', Carbon::now()->format('Y-m'));
 
-        $userStoreIds = $user->storeUsers()
-            ->whereIn('role', ['admin', 'gerente'])
-            ->pluck('store_id')
-            ->toArray();
+        // Super admin vê todas as lojas
+        if ($user->isSuperAdmin()) {
+            $userStoreIds = \App\Models\Store::where('active', true)->pluck('id')->toArray();
+        } else {
+            $userStoreIds = $user->storeUsers()
+                ->whereIn('role', ['admin', 'gerente'])
+                ->pluck('store_id')
+                ->toArray();
+        }
 
         if (empty($userStoreIds)) {
             return $this->forbidden('You do not have admin access to any store.');
         }
+
 
         $startOfMonth = Carbon::parse($month . '-01')->startOfMonth();
         $endOfMonth = Carbon::parse($month . '-01')->endOfMonth();

@@ -40,6 +40,7 @@ class RankingController extends Controller
      * @queryParam month string Mês (YYYY-MM), default: mês atual. Example: 2026-01
      * @queryParam store_id integer Filtrar por loja. Example: 1
      * @queryParam limit integer Limite de resultados (default: 50). Example: 10
+     * @queryParam order string Ordenação: 'desc' (melhores) ou 'asc' (piores). Default: desc. Example: asc
      *
      * @response 200 scenario="Ranking mensal" {
      *   "data": {
@@ -65,21 +66,24 @@ class RankingController extends Controller
             'month' => ['sometimes', 'string', 'regex:/^\d{4}-\d{2}$/'],
             'store_id' => ['sometimes', 'integer', 'exists:stores,id'],
             'limit' => ['sometimes', 'integer', 'min:1', 'max:100'],
+            'order' => ['sometimes', 'string', 'in:asc,desc'],
         ]);
 
         $month = $request->input('month', Carbon::now()->format('Y-m'));
         $storeId = $request->input('store_id') ? (int) $request->input('store_id') : null;
         $limit = (int) $request->input('limit', 50);
+        $order = $request->input('order', 'desc');
 
         // Verificar acesso à loja se informada
         if ($storeId && !$request->user()->hasAccessToStore($storeId)) {
             return $this->forbidden('Você não tem acesso a esta loja.');
         }
 
-        $ranking = $this->rankingService->getRanking($storeId, $month, $limit);
+        $ranking = $this->rankingService->getRanking($storeId, $month, $limit, $order);
 
         return $this->success($ranking);
     }
+
 
     /**
      * Aniversariantes do Mês
