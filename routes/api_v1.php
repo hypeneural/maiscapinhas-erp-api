@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\V1\RankingController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\SaleController;
 use App\Http\Controllers\Api\V1\StoreController;
+use App\Http\Controllers\Api\V1\UserKpiController;
 use App\Http\Controllers\Api\V1\VersionController;
 use Illuminate\Support\Facades\Route;
 
@@ -181,10 +182,11 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // ============================================
-    // Users (public endpoints)
+    // Users (protected endpoints)
     // ============================================
     Route::prefix('users')->name('users.')->group(function () {
         Route::get('/birthdays', [RankingController::class, 'birthdays'])->name('birthdays');
+        Route::get('/kpis', UserKpiController::class)->name('kpis');
     });
 
 
