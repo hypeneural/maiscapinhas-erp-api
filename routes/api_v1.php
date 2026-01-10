@@ -74,11 +74,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{store}/sellers', [StoreController::class, 'sellers'])->name('sellers');
         Route::get('/{store}/users', [StoreController::class, 'users'])->name('users');
         Route::put('/{store}/photo', [StoreController::class, 'updatePhoto'])->name('photo');
+        Route::post('/{store}/photo', [StoreController::class, 'updatePhoto'])->name('photo.post');
     });
 
     // Users (avatar upload)
     Route::prefix('users')->name('users.')->group(function () {
         Route::put('/{user}/avatar', [AvatarController::class, 'updateAvatar'])->name('avatar');
+        Route::post('/{user}/avatar', [AvatarController::class, 'updateAvatar'])->name('avatar.post');
     });
 
     // Sales (CRUD)

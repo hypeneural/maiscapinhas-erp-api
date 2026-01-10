@@ -64,13 +64,14 @@ class AvatarController extends Controller
     {
         $authUser = $request->user();
 
-        // Authorization: own user or admin
+        // Authorization: own user, admin, or super admin
         $isOwnUser = $authUser->id === $user->id;
+        $isSuperAdmin = $authUser->isSuperAdmin();
         $isAdmin = $authUser->storeUsers()
             ->where('role', StoreUserRole::ADMIN->value)
             ->exists();
 
-        if (!$isOwnUser && !$isAdmin) {
+        if (!$isOwnUser && !$isAdmin && !$isSuperAdmin) {
             return $this->forbidden('Você não tem permissão para atualizar este avatar.');
         }
 

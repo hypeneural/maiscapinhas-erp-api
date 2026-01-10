@@ -322,7 +322,8 @@ class StoreController extends Controller
     {
         $user = $request->user();
 
-        // Authorization: admin or gerente of this store
+        // Authorization: super admin, admin, or gerente of this store
+        $isSuperAdmin = $user->isSuperAdmin();
         $isAdmin = $user->storeUsers()
             ->where('role', \App\Enums\StoreUserRole::ADMIN->value)
             ->exists();
@@ -332,7 +333,7 @@ class StoreController extends Controller
             ->where('role', \App\Enums\StoreUserRole::GERENTE->value)
             ->exists();
 
-        if (!$isAdmin && !$isGerenteOfStore) {
+        if (!$isSuperAdmin && !$isAdmin && !$isGerenteOfStore) {
             return $this->forbidden('Você não tem permissão para atualizar esta foto.');
         }
 
