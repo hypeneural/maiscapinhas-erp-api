@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\Admin\StoreUserController as AdminStoreUserContr
 use App\Http\Controllers\Api\V1\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\AvatarController;
+use App\Http\Controllers\Api\V1\BioController;
 use App\Http\Controllers\Api\V1\BonusRuleController;
 use App\Http\Controllers\Api\V1\CashClosingController;
 use App\Http\Controllers\Api\V1\CashShiftController;
@@ -47,6 +48,12 @@ Route::prefix('auth')->name('auth.')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login');
     Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword'])->name('forgot-password');
     Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('reset-password');
+});
+
+// Bio routes (public - for Instagram Bio page)
+Route::prefix('bio')->name('bio.')->group(function () {
+    Route::get('/stores', [BioController::class, 'index'])->name('stores');
+    Route::get('/stores/{store}', [BioController::class, 'show'])->name('stores.show');
 });
 
 // ============================================

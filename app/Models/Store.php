@@ -29,6 +29,7 @@ class Store extends Model
         'phone',
         'whatsapp',
         'instagram',
+        'bio_enabled',
         'opening_hours',
         'cnpj',
         'troco_padrao',
@@ -36,6 +37,7 @@ class Store extends Model
 
     protected $casts = [
         'active' => 'boolean',
+        'bio_enabled' => 'boolean',
         'opening_hours' => 'array',
         'latitude' => 'decimal:8',
         'longitude' => 'decimal:8',
@@ -95,6 +97,11 @@ class Store extends Model
     public function scopeActive($query)
     {
         return $query->where('active', true);
+    }
+
+    public function scopeBioEnabled($query)
+    {
+        return $query->where('bio_enabled', true);
     }
 
     // ========================================
