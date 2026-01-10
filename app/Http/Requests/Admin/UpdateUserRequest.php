@@ -39,6 +39,15 @@ class UpdateUserRequest extends FormRequest
             'active' => ['sometimes', 'boolean'],
             'is_super_admin' => ['sometimes', 'boolean'],
 
+            // Address fields
+            'zip_code' => ['sometimes', 'nullable', 'string', 'max:8'],
+            'street' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'number' => ['sometimes', 'nullable', 'string', 'max:20'],
+            'complement' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'neighborhood' => ['sometimes', 'nullable', 'string', 'max:100'],
+            'city' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'state' => ['sometimes', 'nullable', 'string', 'size:2'],
+
             // Profile fields
             'birth_date' => ['sometimes', 'nullable', 'date', 'before:today'],
             'hire_date' => ['sometimes', 'nullable', 'date', 'before_or_equal:today'],

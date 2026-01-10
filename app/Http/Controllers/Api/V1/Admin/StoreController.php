@@ -10,6 +10,7 @@ use App\Http\Requests\Admin\UpdateStoreRequest;
 use App\Http\Resources\StoreResource;
 use App\Http\Traits\ApiResponse;
 use App\Models\Store;
+use App\Services\OpeningHoursService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -239,6 +240,54 @@ class StoreController extends Controller
         $store->update(['active' => false]);
 
         return $this->success(['message' => 'Loja desativada com sucesso.']);
+    }
+
+    /**
+     * Validar horários de funcionamento
+     *
+     * Valida a estrutura de opening_hours sem salvar.
+     * Útil para o frontend validar/previsualizar antes de enviar o form completo.
+     *
+     * **Quem pode usar:** Administradores.
+     *
+     * @bodyParam opening_hours object required Estrutura de horários a validar.
+     *
+     * @response 200 scenario="Válido" {
+     *   "data": {
+     *     "valid": true,
+     *     "hours_human": {
+     *       "is_open_now": true,
+     *       "status_label": "Aberto agora • Fecha às 20:30",
+     *       "weekly_label": "Seg–Sáb 08:30–20:30 | Dom Fechado"
+     *     }
+     *   }
+     * }
+     *
+     * @response 422 scenario="Inválido" {
+     *   "message": "Validation failed.",
+     *   "errors": {
+     *     "opening_hours": ["Campo \"weekly\" é obrigatório"]
+     *   }
+     * }
+     */
+    public function validateOpeningHours(Request $request, OpeningHoursService $service): JsonResponse
+    {
+        $this->authorizeAdmin($request);
+
+        $request->validate([
+            'opening_hours' => ['required', 'array'],
+        ]);
+
+        $errors = $service->validate($request->input('opening_hours'));
+
+        if (count($errors) > 0) {
+            return $this->validationError(['opening_hours' => $errors]);
+        }
+
+        return $this->success([
+            'valid' => true,
+            'hours_human' => $service->calculate($request->input('opening_hours')),
+        ]);
     }
 
     private function authorizeAdmin(Request $request): void

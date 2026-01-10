@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Services\OpeningHoursService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -14,12 +15,15 @@ class StoreResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $openingHoursService = app(OpeningHoursService::class);
+
         return [
             'id' => $this->id,
             'name' => $this->name,
             'codigo' => $this->codigo,
             'city' => $this->city,
             'active' => $this->active,
+            'bio_enabled' => $this->bio_enabled,
             'troco_padrao' => $this->troco_padrao ? (float) $this->troco_padrao : null,
 
             // Image
@@ -43,6 +47,7 @@ class StoreResource extends JsonResource
 
             // Hours
             'opening_hours' => $this->opening_hours,
+            'hours_human' => $openingHoursService->calculate($this->opening_hours),
 
             // Business info
             'cnpj' => $this->cnpj,

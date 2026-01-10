@@ -174,6 +174,14 @@ class UserController extends Controller
                 'password' => Hash::make($request->input('password')),
                 'active' => $request->input('active', true),
                 'is_super_admin' => $request->input('is_super_admin', false),
+                // Address fields
+                'zip_code' => $request->input('zip_code'),
+                'street' => $request->input('street'),
+                'number' => $request->input('number'),
+                'complement' => $request->input('complement'),
+                'neighborhood' => $request->input('neighborhood'),
+                'city' => $request->input('city'),
+                'state' => $request->input('state'),
                 // Profile fields
                 'birth_date' => $request->input('birth_date'),
                 'hire_date' => $request->input('hire_date'),
@@ -286,6 +294,15 @@ class UserController extends Controller
             'email',
             'active',
             'is_super_admin',
+            // Address fields
+            'zip_code',
+            'street',
+            'number',
+            'complement',
+            'neighborhood',
+            'city',
+            'state',
+            // Profile fields
             'birth_date',
             'hire_date',
             'whatsapp',

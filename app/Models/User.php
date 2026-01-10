@@ -21,6 +21,15 @@ class User extends Authenticatable
         'password',
         'active',
         'is_super_admin',
+        // Address fields
+        'zip_code',
+        'street',
+        'number',
+        'complement',
+        'neighborhood',
+        'city',
+        'state',
+        // Profile fields
         'birth_date',
         'hire_date',
         'whatsapp',

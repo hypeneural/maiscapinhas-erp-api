@@ -198,6 +198,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Stores Management
         Route::apiResource('stores', AdminStoreController::class);
+        Route::post('/stores/validate-hours', [AdminStoreController::class, 'validateOpeningHours'])
+            ->name('stores.validate-hours');
 
         // Store-User Bindings
         Route::prefix('stores/{store}/users')->name('stores.users.')->group(function () {

@@ -21,6 +21,15 @@ class UserResource extends JsonResource
             'active' => $this->active,
             'is_super_admin' => $this->is_super_admin ?? false,
 
+            // Address data
+            'zip_code' => $this->zip_code,
+            'street' => $this->street,
+            'number' => $this->number,
+            'complement' => $this->complement,
+            'neighborhood' => $this->neighborhood,
+            'city' => $this->city,
+            'state' => $this->state,
+
             // Profile data
             'birth_date' => $this->birth_date?->format('Y-m-d'),
             'hire_date' => $this->hire_date?->format('Y-m-d'),
