@@ -104,10 +104,12 @@ class ReportController extends Controller
             return $this->forbidden('Você não tem acesso a esta loja.');
         }
 
-        // Verificar se é gerente ou admin
-        $role = $user->roleInStore($storeId);
-        if (!in_array($role, ['admin', 'gerente'])) {
-            return $this->forbidden('Apenas gerentes e admins podem acessar este relatório.');
+        // Verificar se é gerente ou admin (Super Admin bypasses this check)
+        if (!$user->isSuperAdmin()) {
+            $role = $user->roleInStore($storeId);
+            if (!in_array($role, ['admin', 'gerente'])) {
+                return $this->forbidden('Apenas gerentes e admins podem acessar este relatório.');
+            }
         }
 
         $performance = $this->performanceService->getPerformance($storeId, $month);
@@ -245,10 +247,12 @@ class ReportController extends Controller
             return $this->forbidden('Você não tem acesso a esta loja.');
         }
 
-        // Verificar se pode ver integridade (conferente+)
-        $role = $user->roleInStore($storeId);
-        if (!in_array($role, ['admin', 'gerente', 'conferente'])) {
-            return $this->forbidden('Apenas conferentes, gerentes e admins podem acessar este relatório.');
+        // Verificar se pode ver integridade (conferente+) - Super Admin bypasses this check
+        if (!$user->isSuperAdmin()) {
+            $role = $user->roleInStore($storeId);
+            if (!in_array($role, ['admin', 'gerente', 'conferente'])) {
+                return $this->forbidden('Apenas conferentes, gerentes e admins podem acessar este relatório.');
+            }
         }
 
         $integrity = $this->integrityService->getIntegrityReport($storeId, $month);

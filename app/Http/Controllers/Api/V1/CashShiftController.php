@@ -70,14 +70,20 @@ class CashShiftController extends Controller
         ]);
 
         $user = $request->user();
-        $userStoreIds = $user->storeUsers()->pluck('store_id')->toArray();
+
+        // Super admin sees all stores
+        if ($user->isSuperAdmin()) {
+            $userStoreIds = \App\Models\Store::where('active', true)->pluck('id')->toArray();
+        } else {
+            $userStoreIds = $user->storeUsers()->pluck('store_id')->toArray();
+        }
 
         $query = CashShift::with(['store:id,name', 'seller:id,name', 'cashClosing:id,cash_shift_id,status'])
             ->whereIn('store_id', $userStoreIds);
 
         if ($request->filled('store_id')) {
             $storeId = (int) $request->input('store_id');
-            if (!in_array($storeId, $userStoreIds)) {
+            if (!$user->isSuperAdmin() && !in_array($storeId, $userStoreIds)) {
                 return $this->forbidden('You do not have access to this store.');
             }
             $query->where('store_id', $storeId);
@@ -235,13 +241,19 @@ class CashShiftController extends Controller
     public function pending(Request $request): JsonResponse
     {
         $user = $request->user();
-        $userStoreIds = $user->storeUsers()
-            ->whereIn('role', ['admin', 'gerente', 'conferente'])
-            ->pluck('store_id')
-            ->toArray();
 
-        if (empty($userStoreIds)) {
-            return $this->forbidden('Você não tem permissão para ver turnos pendentes.');
+        // Super admin sees all stores
+        if ($user->isSuperAdmin()) {
+            $userStoreIds = \App\Models\Store::where('active', true)->pluck('id')->toArray();
+        } else {
+            $userStoreIds = $user->storeUsers()
+                ->whereIn('role', ['admin', 'gerente', 'conferente'])
+                ->pluck('store_id')
+                ->toArray();
+
+            if (empty($userStoreIds)) {
+                return $this->forbidden('Você não tem permissão para ver turnos pendentes.');
+            }
         }
 
         $request->validate([
@@ -249,7 +261,7 @@ class CashShiftController extends Controller
         ]);
 
         $storeId = $request->input('store_id');
-        if ($storeId && !in_array($storeId, $userStoreIds)) {
+        if ($storeId && !$user->isSuperAdmin() && !in_array($storeId, $userStoreIds)) {
             return $this->forbidden('Você não tem acesso a esta loja.');
         }
 
@@ -319,13 +331,19 @@ class CashShiftController extends Controller
     public function divergent(Request $request): JsonResponse
     {
         $user = $request->user();
-        $userStoreIds = $user->storeUsers()
-            ->whereIn('role', ['admin', 'gerente', 'conferente'])
-            ->pluck('store_id')
-            ->toArray();
 
-        if (empty($userStoreIds)) {
-            return $this->forbidden('Você não tem permissão para ver divergências.');
+        // Super admin sees all stores
+        if ($user->isSuperAdmin()) {
+            $userStoreIds = \App\Models\Store::where('active', true)->pluck('id')->toArray();
+        } else {
+            $userStoreIds = $user->storeUsers()
+                ->whereIn('role', ['admin', 'gerente', 'conferente'])
+                ->pluck('store_id')
+                ->toArray();
+
+            if (empty($userStoreIds)) {
+                return $this->forbidden('Você não tem permissão para ver divergências.');
+            }
         }
 
         $request->validate([
@@ -333,7 +351,7 @@ class CashShiftController extends Controller
         ]);
 
         $storeId = $request->input('store_id');
-        if ($storeId && !in_array($storeId, $userStoreIds)) {
+        if ($storeId && !$user->isSuperAdmin() && !in_array($storeId, $userStoreIds)) {
             return $this->forbidden('Você não tem acesso a esta loja.');
         }
 

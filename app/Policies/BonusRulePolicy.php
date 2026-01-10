@@ -15,6 +15,9 @@ class BonusRulePolicy
      */
     public function viewAny(User $user): bool
     {
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
         return $user->storeUsers()
             ->whereIn('role', [StoreUserRole::ADMIN->value, StoreUserRole::GERENTE->value])
             ->exists();

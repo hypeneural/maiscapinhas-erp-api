@@ -42,15 +42,19 @@ class CommissionRuleController extends Controller
         $this->authorize('viewAny', CommissionRule::class);
 
         $user = $request->user();
-        $storeIds = $user->storeUsers()->pluck('store_id')->toArray();
 
         $query = CommissionRule::with('store:id,name')
-            ->where(function ($q) use ($storeIds) {
-                $q->whereIn('store_id', $storeIds)
-                    ->orWhereNull('store_id');
-            })
             ->orderByDesc('effective_from')
             ->orderByDesc('version');
+
+        // Super admin sees all rules; other users filter by their stores
+        if (!$user->isSuperAdmin()) {
+            $storeIds = $user->storeUsers()->pluck('store_id')->toArray();
+            $query->where(function ($q) use ($storeIds) {
+                $q->whereIn('store_id', $storeIds)
+                    ->orWhereNull('store_id');
+            });
+        }
 
         if ($request->filled('store_id')) {
             $query->where('store_id', $request->input('store_id'));
