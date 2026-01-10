@@ -141,11 +141,7 @@ class StoreController extends Controller
     {
         $this->authorizeAdmin($request);
 
-        $store = Store::create([
-            'name' => $request->input('name'),
-            'city' => $request->input('city'),
-            'active' => $request->input('active', true),
-        ]);
+        $store = Store::create($request->validated());
 
         return $this->created(new StoreResource($store));
     }
@@ -211,7 +207,7 @@ class StoreController extends Controller
     {
         $this->authorizeAdmin($request);
 
-        $store->update($request->only(['name', 'city', 'active']));
+        $store->update($request->validated());
 
         return $this->success(new StoreResource($store));
     }

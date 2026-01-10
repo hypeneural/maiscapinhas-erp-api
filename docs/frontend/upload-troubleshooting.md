@@ -1,215 +1,188 @@
-# Troubleshooting: Upload de Fotos
+# ⚠️ Problema de Upload de Avatar - RESOLVIDO NO BACKEND
 
-Guia para resolver os erros de upload de avatar e foto de loja.
+## Status: Backend Funcionando ✅
 
----
-
-## Correções Aplicadas no Backend
-
-> [!IMPORTANT]
-> As seguintes correções foram feitas. Faça deploy do backend antes de testar.
-
-### 1. Super Admin agora tem acesso total
-- ✅ `PUT /api/v1/users/{id}/avatar` - Super Admin pode atualizar avatar de qualquer usuário
-- ✅ `PUT /api/v1/stores/{id}/photo` - Super Admin pode atualizar foto de qualquer loja
-
-### 2. Rotas POST adicionadas (method spoofing)
-- ✅ `POST /api/v1/users/{id}/avatar` - Alternativa ao PUT
-- ✅ `POST /api/v1/stores/{id}/photo` - Alternativa ao PUT
+O backend foi testado e está **funcionando corretamente**. O problema está na forma como o frontend está enviando a requisição.
 
 ---
 
-## Problema 1: PUT /api/v1/me retornando 405
+---
 
-### Causa
-O erro **"The avatar field is required"** com status **405** indica que a requisição está indo para a rota errada (provavelmente `/api/v1/users/...` em vez de `/api/v1/me`).
+## O Que o Frontend Está Fazendo de Errado
 
-### Solução
-Verifique se está usando a URL correta:
+### Problema 1: O arquivo não está chegando no servidor
 
-```javascript
-// ✅ CORRETO - Atualizar email/whatsapp
-const response = await fetch('/api/v1/me', {
-  method: 'PUT',
-  headers: {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'  // Obrigatório para JSON
-  },
-  body: JSON.stringify({
-    email: 'novoemail@example.com',
-    whatsapp: '47988887777'
-  })
-});
-```
+O erro `"The avatar field is required"` significa que o servidor **não recebe nenhum arquivo** na requisição.
 
-> [!WARNING]
-> Não confunda `/me` com `/users/{id}`. São endpoints diferentes!
+**Causas mais comuns:**
+
+1. **Content-Type definido manualmente** - NUNCA faça isso com FormData!
+2. **Nome do campo incorreto** - deve ser exatamente `avatar`
+3. **File input vazio** - verificar se o arquivo foi realmente selecionado
+4. **Middleware removendo o arquivo** - possível problema de interceptors
 
 ---
 
-## Problema 2: Avatar upload retornando 422
+## Como Fazer Corretamente
 
-### Causa
-O Laravel não recebe o arquivo corretamente. Isso geralmente ocorre por:
-1. Nome do campo incorreto
-2. Content-Type definido manualmente
-3. PUT + multipart não funciona em alguns servidores
-
-### Solução: Use POST com method spoofing
-
-```javascript
-// ✅ CORRETO - Upload de avatar
-const formData = new FormData();
-formData.append('avatar', arquivoSelecionado);  // Campo DEVE ser "avatar"
-
-const response = await fetch(`/api/v1/users/${userId}/avatar`, {
-  method: 'POST',  // Use POST, não PUT
-  headers: {
-    'Authorization': `Bearer ${token}`
-    // ❌ NÃO defina Content-Type! O browser define automaticamente
-  },
-  body: formData
-});
-```
-
-> [!CAUTION]
-> **NUNCA** defina `Content-Type: multipart/form-data` manualmente! O browser precisa definir o boundary automaticamente.
-
-### Alternativa: PUT direto (se o servidor suportar)
-
-```javascript
-const formData = new FormData();
-formData.append('avatar', arquivoSelecionado);
-
-const response = await fetch(`/api/v1/users/${userId}/avatar`, {
-  method: 'PUT',
-  headers: {
-    'Authorization': `Bearer ${token}`
-  },
-  body: formData
-});
-```
-
----
-
-## Problema 3: Store photo upload
-
-### Solução
-
-```javascript
-// ✅ CORRETO - Upload de foto da loja
-const formData = new FormData();
-formData.append('photo', arquivoSelecionado);  // Campo DEVE ser "photo"
-
-const response = await fetch(`/api/v1/stores/${storeId}/photo`, {
-  method: 'POST',  // Use POST
-  headers: {
-    'Authorization': `Bearer ${token}`
-    // ❌ NÃO defina Content-Type!
-  },
-  body: formData
-});
-```
-
----
-
-## Resumo: Nomes dos Campos
-
-| Endpoint | Nome do Campo | Método Recomendado |
-|----------|---------------|-------------------|
-| `PUT /api/v1/me` | `email`, `whatsapp` (JSON) | PUT |
-| `/api/v1/users/{id}/avatar` | `avatar` | POST |
-| `/api/v1/stores/{id}/photo` | `photo` | POST |
-
----
-
-## Código de Referência Completo
-
-### Hook de Upload
+### ✅ Código Correto (React/TypeScript)
 
 ```typescript
-// hooks/useUpload.ts
-export function useUpload() {
-  const uploadAvatar = async (userId: number, file: File) => {
-    const formData = new FormData();
-    formData.append('avatar', file);
-    
+// Em um componente React
+const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const file = event.target.files?.[0];
+  if (!file) {
+    console.error('Nenhum arquivo selecionado');
+    return;
+  }
+
+  console.log('Arquivo selecionado:', {
+    name: file.name,
+    type: file.type,
+    size: file.size
+  });
+
+  const formData = new FormData();
+  formData.append('avatar', file);  // ← Campo DEVE ser "avatar"
+
+  // Debug: verificar o conteúdo do FormData
+  for (const [key, value] of formData.entries()) {
+    console.log('FormData entry:', key, value);
+  }
+
+  try {
     const response = await fetch(`/api/v1/users/${userId}/avatar`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${getToken()}`
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+        // ❌❌❌ NÃO ADICIONE Content-Type ❌❌❌
       },
       body: formData
     });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || error.error?.message);
-    }
-    
-    return response.json();
-  };
 
-  const uploadStorePhoto = async (storeId: number, file: File) => {
-    const formData = new FormData();
-    formData.append('photo', file);
-    
-    const response = await fetch(`/api/v1/stores/${storeId}/photo`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${getToken()}`
-      },
-      body: formData
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || error.error?.message);
-    }
-    
-    return response.json();
-  };
+    const data = await response.json();
+    console.log('Response:', response.status, data);
 
-  const updateProfile = async (data: { email?: string; whatsapp?: string }) => {
-    const response = await fetch('/api/v1/me', {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${getToken()}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
-    });
-    
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message);
+      throw new Error(data.message || 'Erro no upload');
     }
-    
-    return response.json();
-  };
 
-  return { uploadAvatar, uploadStorePhoto, updateProfile };
-}
+    return data;
+  } catch (error) {
+    console.error('Upload failed:', error);
+    throw error;
+  }
+};
+```
+
+### ❌ Código Incorreto (NÃO FAÇA ISSO)
+
+```typescript
+// ❌ ERRADO - Content-Type manual
+const response = await fetch(url, {
+  headers: {
+    'Content-Type': 'multipart/form-data',  // ❌ NUNCA FAÇA ISSO!
+  },
+  body: formData
+});
+
+// ❌ ERRADO - Nome do campo incorreto
+formData.append('file', file);        // Errado
+formData.append('image', file);       // Errado
+formData.append('photo', file);       // Errado para avatar (correto para loja)
+formData.append('avatar', file);      // ✅ Correto para avatar de usuário
 ```
 
 ---
 
-## Checklist de Verificação
+## Verificar com Axios
 
-- [ ] Usar `POST` para uploads de arquivo
-- [ ] **Não** definir `Content-Type` manualmente para FormData
-- [ ] Usar nome de campo correto: `avatar` ou `photo`
-- [ ] Usar `PUT` com `Content-Type: application/json` para `/me`
-- [ ] Verificar se o token está correto
-- [ ] Verificar dimensões mínimas: avatar (200x200), store photo (800x600)
+Se estiver usando Axios, certifique-se de:
+
+```typescript
+// ✅ Correto com Axios
+const formData = new FormData();
+formData.append('avatar', file);
+
+const response = await axios.post(`/api/v1/users/${userId}/avatar`, formData, {
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    // NÃO defina Content-Type!
+  },
+});
+```
+
+### Problema Comum com Axios: Interceptors
+
+Se você tem um interceptor que adiciona `Content-Type: application/json`, ele pode estar sobrescrevendo o Content-Type correto:
+
+```typescript
+// ❌ Interceptor problemático
+axios.interceptors.request.use((config) => {
+  config.headers['Content-Type'] = 'application/json'; // ❌ Problema!
+  return config;
+});
+
+// ✅ Interceptor correto
+axios.interceptors.request.use((config) => {
+  // Só adiciona Content-Type se não for FormData
+  if (!(config.data instanceof FormData)) {
+    config.headers['Content-Type'] = 'application/json';
+  }
+  return config;
+});
+```
 
 ---
 
-## Permissões por Role
+## Checklist de Debug
 
-| Ação | Vendedor | Gerente | Admin | Super Admin |
-|------|----------|---------|-------|-------------|
-| Atualizar próprio avatar | ✅ | ✅ | ✅ | ✅ |
-| Atualizar avatar de outros | ❌ | ❌ | ✅ | ✅ |
-| Atualizar foto da própria loja | ❌ | ✅ | ✅ | ✅ |
-| Atualizar foto de qualquer loja | ❌ | ❌ | ✅ | ✅ |
+Execute no console do browser:
+
+```javascript
+// 1. Verificar se o arquivo foi selecionado
+const fileInput = document.querySelector('input[type="file"]');
+console.log('Files:', fileInput.files);
+
+// 2. Verificar FormData
+const formData = new FormData();
+formData.append('avatar', fileInput.files[0]);
+for (const [key, value] of formData.entries()) {
+  console.log(key, value);
+}
+// Deve mostrar: "avatar" File {...}
+
+// 3. Fazer requisição de teste
+fetch('/api/v1/users/1/avatar', {
+  method: 'POST',
+  headers: { 'Authorization': 'Bearer SEU_TOKEN' },
+  body: formData
+})
+.then(r => r.json())
+.then(console.log)
+.catch(console.error);
+```
+
+---
+
+## Endpoints e Nomes de Campos
+
+| Endpoint | Campo FormData | Método |
+|----------|----------------|--------|
+| `/api/v1/users/{id}/avatar` | `avatar` | POST |
+| `/api/v1/stores/{id}/photo` | `photo` | POST |
+| `/api/v1/me` | JSON body | PUT |
+
+---
+
+## Se Ainda Não Funcionar
+
+1. Abra o DevTools (F12) → Network
+2. Faça o upload
+3. Clique na requisição que falhou
+4. Verifique:
+   - **Request Headers**: Content-Type deve ser `multipart/form-data; boundary=...`
+   - **Request Payload**: Deve mostrar a parte do arquivo
+
+Se o Content-Type for `application/json` ou não tiver `boundary=`, o problema está no código do frontend.

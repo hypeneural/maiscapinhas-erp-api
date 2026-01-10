@@ -120,7 +120,8 @@ class AvatarController extends Controller
         $filename = 'avatar.' . $extension;
         $path = $file->storeAs("users/{$user->id}", $filename, 'public');
 
-        $avatarUrl = Storage::disk('public')->url($path);
+        // Generate URL properly without duplicating protocol
+        $avatarUrl = url('storage/' . $path);
 
         $user->update(['avatar_url' => $avatarUrl]);
 

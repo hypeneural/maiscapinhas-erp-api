@@ -379,7 +379,8 @@ class StoreController extends Controller
         $filename = 'photo.' . $extension;
         $path = $file->storeAs("stores/{$store->id}", $filename, 'public');
 
-        $photoUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($path);
+        // Generate URL properly without duplicating protocol
+        $photoUrl = url('storage/' . $path);
 
         $store->update(['photo_url' => $photoUrl]);
 

@@ -17,8 +17,10 @@ class StoreResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'codigo' => $this->codigo,
             'city' => $this->city,
             'active' => $this->active,
+            'troco_padrao' => $this->troco_padrao ? (float) $this->troco_padrao : null,
 
             // Image
             'photo_url' => $this->photo_url,

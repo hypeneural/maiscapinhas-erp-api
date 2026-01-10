@@ -174,6 +174,14 @@ class UserController extends Controller
                 'password' => Hash::make($request->input('password')),
                 'active' => $request->input('active', true),
                 'is_super_admin' => $request->input('is_super_admin', false),
+                // Profile fields
+                'birth_date' => $request->input('birth_date'),
+                'hire_date' => $request->input('hire_date'),
+                'whatsapp' => $request->input('whatsapp'),
+                'instagram' => $request->input('instagram'),
+                // Financial/Document fields
+                'cpf' => $request->input('cpf'),
+                'pix_key' => $request->input('pix_key'),
             ]);
 
             // Attach to stores if provided
@@ -273,7 +281,18 @@ class UserController extends Controller
     {
         $this->authorizeAdmin($request);
 
-        $data = $request->only(['name', 'email', 'active', 'is_super_admin']);
+        $data = $request->only([
+            'name',
+            'email',
+            'active',
+            'is_super_admin',
+            'birth_date',
+            'hire_date',
+            'whatsapp',
+            'instagram',
+            'cpf',
+            'pix_key',
+        ]);
 
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->input('password'));
