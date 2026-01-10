@@ -64,6 +64,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Me (current user profile)
     Route::get('/me', MeController::class)->name('me');
+    Route::put('/me', [MeController::class, 'update'])->name('me.update');
 
     // Stores (user's stores)
     Route::prefix('stores')->name('stores.')->group(function () {
