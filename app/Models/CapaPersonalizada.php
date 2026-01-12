@@ -25,6 +25,8 @@ class CapaPersonalizada extends Model
         'product_reference',
         'obs',
         'photo_path',
+        'upload_token',
+        'upload_token_expires_at',
         'qty',
         'price',
         'payed',
@@ -42,6 +44,7 @@ class CapaPersonalizada extends Model
         'payed' => 'boolean',
         'payday' => 'date',
         'sended_to_production_at' => 'date',
+        'upload_token_expires_at' => 'datetime',
         'status' => CapaPersonalizadaStatus::class,
     ];
 
@@ -213,5 +216,33 @@ class CapaPersonalizada extends Model
             return null;
         }
         return (float) $this->price * $this->qty;
+    }
+
+    // ========================================
+    // Upload Token Methods
+    // ========================================
+
+    /**
+     * Check if the provided token is valid and not expired.
+     */
+    public function hasValidUploadToken(string $token): bool
+    {
+        if (!$this->upload_token || !$this->upload_token_expires_at) {
+            return false;
+        }
+
+        return $this->upload_token === $token
+            && $this->upload_token_expires_at->isFuture();
+    }
+
+    /**
+     * Clear the upload token after successful upload.
+     */
+    public function clearUploadToken(): void
+    {
+        $this->update([
+            'upload_token' => null,
+            'upload_token_expires_at' => null,
+        ]);
     }
 }

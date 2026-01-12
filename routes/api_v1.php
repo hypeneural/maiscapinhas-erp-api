@@ -62,6 +62,10 @@ Route::prefix('bio')->name('bio.')->group(function () {
     Route::get('/stores/{store}', [BioController::class, 'show'])->name('stores.show');
 });
 
+// Public upload for Capas Personalizadas (token-based authentication)
+Route::post('/capas-personalizadas/{capa}/upload-publico', [CapaPersonalizadaController::class, 'uploadPublico'])
+    ->name('capas-personalizadas.upload-publico');
+
 // ============================================
 // Protected Routes (authentication required)
 // ============================================
@@ -246,6 +250,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/{capas_personalizada}/payment', [CapaPersonalizadaController::class, 'payment'])->name('payment');
         Route::post('/{capas_personalizada}/photo', [CapaPersonalizadaController::class, 'uploadPhoto'])->name('photo');
         Route::delete('/{capas_personalizada}/photo', [CapaPersonalizadaController::class, 'deletePhoto'])->name('photo.delete');
+        Route::post('/{capas_personalizada}/gerar-token-upload', [CapaPersonalizadaController::class, 'gerarTokenUpload'])->name('gerar-token-upload');
     });
 
     // ============================================

@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class CapaPersonalizadaService
 {
@@ -145,7 +146,7 @@ class CapaPersonalizadaService
     }
 
     /**
-     * Upload photo for a capa.
+     * Upload photo for a capa (authenticated).
      */
     public function uploadPhoto(CapaPersonalizada $capa, UploadedFile $file): array
     {
@@ -181,4 +182,63 @@ class CapaPersonalizadaService
 
         return true;
     }
+
+    // ========================================
+    // Public Upload Token Methods
+    // ========================================
+
+    /**
+     * Generate a temporary upload token for a capa.
+     * Token expires in 5 minutes.
+     */
+    public function generateUploadToken(CapaPersonalizada $capa): array
+    {
+        $token = Str::random(64);
+        $expiresAt = now()->addMinutes(5);
+
+        $capa->update([
+            'upload_token' => $token,
+            'upload_token_expires_at' => $expiresAt,
+        ]);
+
+        return [
+            'token' => $token,
+            'expires_at' => $expiresAt->toIso8601String(),
+            'upload_url' => url("/api/v1/capas-personalizadas/{$capa->id}/upload-publico"),
+        ];
+    }
+
+    /**
+     * Upload photo via public endpoint with token validation.
+     *
+     * @throws \Exception
+     */
+    public function uploadPhotoPublic(CapaPersonalizada $capa, UploadedFile $file, string $token): array
+    {
+        // Validate token
+        if (!$capa->hasValidUploadToken($token)) {
+            throw new \Exception('Token inválido ou expirado.', 401);
+        }
+
+        // Check if already has photo
+        if ($capa->photo_path) {
+            throw new \Exception('Esta capa já possui uma foto.', 409);
+        }
+
+        // Store new photo
+        $path = $file->store('capas-personalizadas', 'public');
+
+        $capa->update(['photo_path' => $path]);
+
+        // Clear token after successful upload
+        $capa->clearUploadToken();
+
+        return [
+            'photo_path' => $path,
+            'photo_url' => asset('storage/' . $path),
+            'size' => $file->getSize(),
+            'mime' => $file->getMimeType(),
+        ];
+    }
 }
+

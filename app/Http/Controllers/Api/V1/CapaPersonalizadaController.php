@@ -11,6 +11,7 @@ use App\Http\Requests\CapasPersonalizadas\SendToProductionRequest;
 use App\Http\Requests\CapasPersonalizadas\StoreCapaPersonalizadaRequest;
 use App\Http\Requests\CapasPersonalizadas\UpdateCapaPersonalizadaRequest;
 use App\Http\Requests\CapasPersonalizadas\UpdateStatusCapaRequest;
+use App\Http\Requests\CapasPersonalizadas\UploadPublicoRequest;
 use App\Http\Resources\CapaPersonalizadaResource;
 use App\Models\CapaPersonalizada;
 use App\Services\CapaPersonalizadaService;
@@ -332,6 +333,58 @@ class CapaPersonalizadaController extends Controller
     }
 
     // ========================================
+    // Public Upload Endpoints
+    // ========================================
+
+    /**
+     * Generate temporary upload token.
+     * Requires authentication.
+     */
+    public function gerarTokenUpload(Request $request, CapaPersonalizada $capasPersonalizada): JsonResponse
+    {
+        $this->authorizeAccess($request, $capasPersonalizada);
+
+        $result = $this->capaService->generateUploadToken($capasPersonalizada);
+
+        return response()->json([
+            'message' => 'Token gerado com sucesso.',
+            'data' => $result,
+        ]);
+    }
+
+    /**
+     * Public photo upload with token validation.
+     * No authentication required.
+     */
+    public function uploadPublico(UploadPublicoRequest $request, int $id): JsonResponse
+    {
+        $capa = CapaPersonalizada::find($id);
+
+        if (!$capa) {
+            return response()->json([
+                'message' => 'Capa personalizada não encontrada.',
+            ], 404);
+        }
+
+        try {
+            $result = $this->capaService->uploadPhotoPublic(
+                $capa,
+                $request->file('photo'),
+                $request->input('token')
+            );
+
+            return response()->json([
+                'message' => 'Foto enviada com sucesso.',
+                'data' => $result,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], $e->getCode() ?: 400);
+        }
+    }
+
+    // ========================================
     // Authorization Helpers
     // ========================================
 
@@ -352,3 +405,4 @@ class CapaPersonalizadaController extends Controller
         }
     }
 }
+
