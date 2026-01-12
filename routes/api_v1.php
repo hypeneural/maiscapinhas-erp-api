@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\V1\PhoneBrandController;
 use App\Http\Controllers\Api\V1\PhoneModelController;
 use App\Http\Controllers\Api\V1\PedidoController;
 use App\Http\Controllers\Api\V1\CapaPersonalizadaController;
+use App\Http\Controllers\Api\V1\AnnouncementController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -82,6 +83,30 @@ Route::middleware('auth:sanctum')->group(function () {
     // Me (current user profile)
     Route::get('/me', MeController::class)->name('me');
     Route::put('/me', [MeController::class, 'update'])->name('me.update');
+
+    // ============================================
+    // Announcements (internal communication)
+    // ============================================
+
+    // User-facing announcement routes
+    Route::prefix('me/announcements')->name('me.announcements.')->group(function () {
+        Route::get('/active', [AnnouncementController::class, 'activeForCurrentUser'])->name('active');
+        Route::get('/', [AnnouncementController::class, 'userHistory'])->name('index');
+    });
+
+    // Announcement CRUD and actions
+    Route::prefix('announcements')->name('announcements.')->group(function () {
+        Route::get('/', [AnnouncementController::class, 'adminIndex'])->name('index');
+        Route::post('/', [AnnouncementController::class, 'store'])->name('store');
+        Route::get('/{announcement}', [AnnouncementController::class, 'show'])->name('show');
+        Route::put('/{announcement}', [AnnouncementController::class, 'update'])->name('update');
+        Route::delete('/{announcement}', [AnnouncementController::class, 'destroy'])->name('destroy');
+        Route::post('/{announcement}/seen', [AnnouncementController::class, 'seen'])->name('seen');
+        Route::post('/{announcement}/ack', [AnnouncementController::class, 'ack'])->name('ack');
+        Route::post('/{announcement}/dismiss', [AnnouncementController::class, 'dismiss'])->name('dismiss');
+        Route::post('/{announcement}/publish', [AnnouncementController::class, 'publish'])->name('publish');
+        Route::post('/{announcement}/archive', [AnnouncementController::class, 'archive'])->name('archive');
+    });
 
     // Stores (user's stores)
     Route::prefix('stores')->name('stores.')->group(function () {

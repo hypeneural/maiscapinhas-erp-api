@@ -82,6 +82,11 @@ class User extends Authenticatable
         return $this->hasMany(CashShift::class, 'seller_id');
     }
 
+    public function announcementReceipts(): HasMany
+    {
+        return $this->hasMany(AnnouncementReceipt::class);
+    }
+
     // ========================================
     // Scopes
     // ========================================
