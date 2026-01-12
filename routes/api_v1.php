@@ -26,6 +26,11 @@ use App\Http\Controllers\Api\V1\SaleController;
 use App\Http\Controllers\Api\V1\StoreController;
 use App\Http\Controllers\Api\V1\UserKpiController;
 use App\Http\Controllers\Api\V1\VersionController;
+use App\Http\Controllers\Api\V1\CustomerController;
+use App\Http\Controllers\Api\V1\PhoneBrandController;
+use App\Http\Controllers\Api\V1\PhoneModelController;
+use App\Http\Controllers\Api\V1\PedidoController;
+use App\Http\Controllers\Api\V1\CapaPersonalizadaController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -189,6 +194,59 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/kpis', UserKpiController::class)->name('kpis');
     });
 
+
+    // ============================================
+    // Customers (CRUD + devices)
+    // ============================================
+    Route::prefix('customers')->name('customers.')->group(function () {
+        Route::get('/', [CustomerController::class, 'index'])->name('index');
+        Route::post('/', [CustomerController::class, 'store'])->name('store');
+        Route::get('/{customer}', [CustomerController::class, 'show'])->name('show');
+        Route::patch('/{customer}', [CustomerController::class, 'update'])->name('update');
+        Route::delete('/{customer}', [CustomerController::class, 'destroy'])->name('destroy');
+
+        // Customer Devices
+        Route::get('/{customer}/devices', [CustomerController::class, 'devices'])->name('devices.index');
+        Route::post('/{customer}/devices', [CustomerController::class, 'storeDevice'])->name('devices.store');
+        Route::patch('/{customer}/devices/{device}', [CustomerController::class, 'updateDevice'])->name('devices.update');
+        Route::delete('/{customer}/devices/{device}', [CustomerController::class, 'destroyDevice'])->name('devices.destroy');
+    });
+
+    // ============================================
+    // Phone Catalog (Brands & Models)
+    // ============================================
+    Route::apiResource('phone-brands', PhoneBrandController::class);
+    Route::apiResource('phone-models', PhoneModelController::class);
+
+    // ============================================
+    // Pedidos (CRUD + status management)
+    // ============================================
+    Route::prefix('pedidos')->name('pedidos.')->group(function () {
+        Route::get('/', [PedidoController::class, 'index'])->name('index');
+        Route::post('/', [PedidoController::class, 'store'])->name('store');
+        Route::get('/{pedido}', [PedidoController::class, 'show'])->name('show');
+        Route::patch('/{pedido}', [PedidoController::class, 'update'])->name('update');
+        Route::delete('/{pedido}', [PedidoController::class, 'destroy'])->name('destroy');
+        Route::patch('/{pedido}/status', [PedidoController::class, 'updateStatus'])->name('status');
+        Route::post('/bulk-status', [PedidoController::class, 'bulkStatus'])->name('bulk-status');
+    });
+
+    // ============================================
+    // Capas Personalizadas (CRUD + status + production + payment + photo)
+    // ============================================
+    Route::prefix('capas-personalizadas')->name('capas-personalizadas.')->group(function () {
+        Route::get('/', [CapaPersonalizadaController::class, 'index'])->name('index');
+        Route::post('/', [CapaPersonalizadaController::class, 'store'])->name('store');
+        Route::get('/{capas_personalizada}', [CapaPersonalizadaController::class, 'show'])->name('show');
+        Route::patch('/{capas_personalizada}', [CapaPersonalizadaController::class, 'update'])->name('update');
+        Route::delete('/{capas_personalizada}', [CapaPersonalizadaController::class, 'destroy'])->name('destroy');
+        Route::patch('/{capas_personalizada}/status', [CapaPersonalizadaController::class, 'updateStatus'])->name('status');
+        Route::post('/bulk-status', [CapaPersonalizadaController::class, 'bulkStatus'])->name('bulk-status');
+        Route::post('/send-to-production', [CapaPersonalizadaController::class, 'sendToProduction'])->name('send-to-production');
+        Route::patch('/{capas_personalizada}/payment', [CapaPersonalizadaController::class, 'payment'])->name('payment');
+        Route::post('/{capas_personalizada}/photo', [CapaPersonalizadaController::class, 'uploadPhoto'])->name('photo');
+        Route::delete('/{capas_personalizada}/photo', [CapaPersonalizadaController::class, 'deletePhoto'])->name('photo.delete');
+    });
 
     // ============================================
     // Admin Routes (admin only)
