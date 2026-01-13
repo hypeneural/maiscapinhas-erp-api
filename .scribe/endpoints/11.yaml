@@ -151,7 +151,7 @@ endpoints:
         name: active
         description: ''
         required: false
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -159,7 +159,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       goal_amount: 27
-      active: true
+      active: false
     fileParameters: []
     responses: []
     responseFields: []

@@ -275,7 +275,7 @@ endpoints:
         name: is_super_admin
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -502,7 +502,7 @@ endpoints:
       email: joao.silva@maiscapinhas.com.br
       password: senha123456
       active: true
-      is_super_admin: false
+      is_super_admin: true
       zip_code: vdljnikh
       street: w
       number: aykcmyuwpwlvqwrs
@@ -1305,7 +1305,7 @@ endpoints:
         name: 'stores[].role'
         description: ''
         required: true
-        example: vendedor
+        example: admin
         type: string
         enumValues:
           - admin
@@ -1319,7 +1319,7 @@ endpoints:
       stores:
         -
           store_id: 16
-          role: vendedor
+          role: admin
     fileParameters: []
     responses: []
     responseFields: []
@@ -1404,7 +1404,7 @@ endpoints:
         description: 'The <code>id</code> of an existing record in the stores table.'
         required: false
         example:
-          - 18
+          - 16
         type: 'integer[]'
         enumValues: []
         exampleWasSpecified: false
@@ -1413,7 +1413,7 @@ endpoints:
     cleanBodyParameters:
       role: admin
       store_ids:
-        - 18
+        - 16
     fileParameters: []
     responses: []
     responseFields: []

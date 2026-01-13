@@ -533,7 +533,7 @@ endpoints:
         name: 'opening_hours.weekly[].*.start'
         description: 'Must be a valid date in the format <code>H:i</code>.'
         required: true
-        example: '19:06'
+        example: '19:21'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -544,7 +544,7 @@ endpoints:
         name: 'opening_hours.weekly[].*.end'
         description: 'Must be a valid date in the format <code>H:i</code>.'
         required: true
-        example: '19:06'
+        example: '19:21'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -566,7 +566,7 @@ endpoints:
         name: 'opening_hours.exceptions[].closed'
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -606,7 +606,7 @@ endpoints:
         exceptions:
           -
             date: '2026-01-13'
-            closed: false
+            closed: true
             reason: o
       cnpj: tnnoqitpxntltcvi
       troco_padrao: 15
@@ -1138,7 +1138,7 @@ endpoints:
         name: 'opening_hours.weekly[].*.start'
         description: 'Must be a valid date in the format <code>H:i</code>.'
         required: true
-        example: '19:06'
+        example: '19:21'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1149,7 +1149,7 @@ endpoints:
         name: 'opening_hours.weekly[].*.end'
         description: 'Must be a valid date in the format <code>H:i</code>.'
         required: true
-        example: '19:06'
+        example: '19:21'
         type: string
         enumValues: []
         exampleWasSpecified: false

@@ -431,7 +431,7 @@ endpoints:
         name: payday
         description: 'This field is required when <code>payed</code> is <code>true</code> or <code>1</code>. Must be a valid date.'
         required: false
-        example: '2026-01-13T19:06:34'
+        example: '2026-01-13T19:21:11'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -453,7 +453,7 @@ endpoints:
         name: status
         description: ''
         required: false
-        example: '7'
+        example: '6'
         type: integer
         enumValues:
           - '1'
@@ -488,9 +488,9 @@ endpoints:
       qty: 1
       price: 49.9
       payed: false
-      payday: '2026-01-13T19:06:34'
+      payday: '2026-01-13T19:21:11'
       received_by_id: 16
-      status: '7'
+      status: '6'
       observation: 'Cliente quer borda preta'
     fileParameters: []
     responses:
@@ -762,7 +762,7 @@ endpoints:
         name: status
         description: ''
         required: false
-        example: '6'
+        example: '1'
         type: integer
         enumValues:
           - '1'
@@ -794,7 +794,7 @@ endpoints:
       obs: z
       qty: 27
       price: 59.9
-      status: '6'
+      status: '1'
       observation: 'Cliente alterou modelo'
     fileParameters: []
     responses:

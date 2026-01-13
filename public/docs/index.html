@@ -26,7 +26,7 @@
             </style>
 
     <script>
-        var tryItOutBaseUrl = "http://localhost:8000";
+        var tryItOutBaseUrl = "https://api.maiscapinhas.com.br";
         var useCsrf = Boolean();
         var csrfUrl = "/sanctum/csrf-cookie";
     </script>
@@ -739,36 +739,56 @@
         <h1 id="introduction">Introduction</h1>
 <p>API REST para gestão de vendas, metas, fechamento de caixa, bônus e comissões do ERP MaisCapinhas.</p>
 <aside>
-    <strong>Base URL</strong>: <code>http://localhost:8000</code>
+    <strong>Base URL</strong>: <code>https://api.maiscapinhas.com.br</code>
 </aside>
 <pre><code>Bem-vindo à documentação da **MaisCapinhas ERP API**! 🎉
 
+Esta API foi desenvolvida por **Anderson M. Vieira** ([Hype Neural](https://hypeneural.com.br)) para a rede de lojas **Mais Capinhas**.
+
+---
+
+## 📞 Suporte
+
+Dúvidas ou problemas? Entre em contato:
+
+- **WhatsApp:** [(48) 99655-3954](https://wa.me/5548996553954)
+- **Desenvolvedor:** Anderson M. Vieira (Hype Neural)
+
+---
+
+## 🚀 Recursos da API
+
 Esta API permite gerenciar todo o fluxo operacional das lojas de capinhas, incluindo:
-- **Autenticação** via Bearer Token (desenvolvimento) ou Cookie SPA (produção com frontend React)
-- **Vendas** e metas por loja/vendedor
+
+- **Autenticação** via Bearer Token ou Cookie SPA
+- **Clientes** e dispositivos
+- **Capas personalizadas** com upload de fotos
+- **Pedidos** e vendas por loja/vendedor
+- **Fluxo de produção** (carrinho → pedido → fábrica)
 - **Fechamento de caixa** com workflow de aprovação
 - **Bônus diário** e **comissão mensal** baseados em regras configuráveis
-- **People Analytics** para KPIs de fluxo de pessoas
+- **Avisos internos** para comunicação com a equipe
+- **Catálogo** de marcas e modelos de telefone
 
 ---
 
 ## 🔐 Autenticação
 
-### Modo Bearer Token (recomendado para desenvolvimento/Postman)
+### Modo Bearer Token (recomendado para integração)
 ```bash
-curl -X POST /api/v1/auth/login \
+curl -X POST https://api.maiscapinhas.com.br/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@maiscapinhas.com.br", "password":"password"}'
+  -d '{"email":"seu@email.com", "password":"sua_senha"}'
 ```
 Use o token retornado no header: `Authorization: Bearer {token}`
 
 ### Modo Cookie SPA (para frontend React/Vue)
 ```javascript
 // 1. Obter CSRF token
-await fetch('/sanctum/csrf-cookie', { credentials: 'include' });
+await fetch('https://api.maiscapinhas.com.br/sanctum/csrf-cookie', { credentials: 'include' });
 
 // 2. Login
-await fetch('/api/v1/auth/login', {
+await fetch('https://api.maiscapinhas.com.br/api/v1/auth/login', {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
@@ -784,18 +804,15 @@ await fetch('/api/v1/auth/login', {
 ```json
 {
     "data": { ... },
-    "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+    "message": "Operação realizada com sucesso."
 }
 ```
 
 **Erro:**
 ```json
 {
-    "error": {
-        "code": 422,
-        "message": "Validation failed",
-        "errors": { "email": ["O campo email é obrigatório."] }
-    }
+    "message": "Validation failed",
+    "errors": { "email": ["O campo email é obrigatório."] }
 }
 ```
 
@@ -846,14 +863,14 @@ verificar se a API está online e respondendo corretamente.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/health" \
+    --get "https://api.maiscapinhas.com.br/api/v1/health" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/health"
+    "https://api.maiscapinhas.com.br/api/v1/health"
 );
 
 const headers = {
@@ -982,14 +999,14 @@ versões do PHP e Laravel utilizadas.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/version" \
+    --get "https://api.maiscapinhas.com.br/api/v1/version" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/version"
+    "https://api.maiscapinhas.com.br/api/v1/version"
 );
 
 const headers = {
@@ -1129,7 +1146,7 @@ registradas no log de auditoria com IP e user-agent.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/auth/login" \
+    "https://api.maiscapinhas.com.br/api/v1/auth/login" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -1142,7 +1159,7 @@ registradas no log de auditoria com IP e user-agent.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/auth/login"
+    "https://api.maiscapinhas.com.br/api/v1/auth/login"
 );
 
 const headers = {
@@ -1341,7 +1358,7 @@ O link expira em 60 minutos.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/auth/forgot-password" \
+    "https://api.maiscapinhas.com.br/api/v1/auth/forgot-password" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -1352,7 +1369,7 @@ O link expira em 60 minutos.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/auth/forgot-password"
+    "https://api.maiscapinhas.com.br/api/v1/auth/forgot-password"
 );
 
 const headers = {
@@ -1497,7 +1514,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/auth/reset-password" \
+    "https://api.maiscapinhas.com.br/api/v1/auth/reset-password" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -1511,7 +1528,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/auth/reset-password"
+    "https://api.maiscapinhas.com.br/api/v1/auth/reset-password"
 );
 
 const headers = {
@@ -1698,7 +1715,7 @@ Os demais tokens do usuário (outros dispositivos) permanecem válidos.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/auth/logout" \
+    "https://api.maiscapinhas.com.br/api/v1/auth/logout" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -1706,7 +1723,7 @@ Os demais tokens do usuário (outros dispositivos) permanecem válidos.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/auth/logout"
+    "https://api.maiscapinhas.com.br/api/v1/auth/logout"
 );
 
 const headers = {
@@ -1840,7 +1857,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/auth/logout-all" \
+    "https://api.maiscapinhas.com.br/api/v1/auth/logout-all" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -1848,7 +1865,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/auth/logout-all"
+    "https://api.maiscapinhas.com.br/api/v1/auth/logout-all"
 );
 
 const headers = {
@@ -1981,7 +1998,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PUT \
-    "http://localhost:8000/api/v1/auth/password" \
+    "https://api.maiscapinhas.com.br/api/v1/auth/password" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -1995,7 +2012,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/auth/password"
+    "https://api.maiscapinhas.com.br/api/v1/auth/password"
 );
 
 const headers = {
@@ -2199,7 +2216,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/me" \
+    --get "https://api.maiscapinhas.com.br/api/v1/me" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -2207,7 +2224,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/me"
+    "https://api.maiscapinhas.com.br/api/v1/me"
 );
 
 const headers = {
@@ -2369,7 +2386,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PUT \
-    "http://localhost:8000/api/v1/me" \
+    "https://api.maiscapinhas.com.br/api/v1/me" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -2382,7 +2399,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/me"
+    "https://api.maiscapinhas.com.br/api/v1/me"
 );
 
 const headers = {
@@ -2589,7 +2606,7 @@ Cada loja inclui o papel (role) do usuário naquela loja.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/stores" \
+    --get "https://api.maiscapinhas.com.br/api/v1/stores" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -2597,7 +2614,7 @@ Cada loja inclui o papel (role) do usuário naquela loja.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/stores"
+    "https://api.maiscapinhas.com.br/api/v1/stores"
 );
 
 const headers = {
@@ -2741,7 +2758,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/stores/all?per_page=100&amp;city=Tijucas" \
+    --get "https://api.maiscapinhas.com.br/api/v1/stores/all?per_page=100&amp;city=Tijucas" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -2749,7 +2766,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/stores/all"
+    "https://api.maiscapinhas.com.br/api/v1/stores/all"
 );
 
 const params = {
@@ -2930,7 +2947,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/stores/16" \
+    --get "https://api.maiscapinhas.com.br/api/v1/stores/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -2938,7 +2955,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/stores/16"
+    "https://api.maiscapinhas.com.br/api/v1/stores/16"
 );
 
 const headers = {
@@ -3113,7 +3130,7 @@ com estatísticas do mês atual.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/stores/16/sellers?month=2026-01" \
+    --get "https://api.maiscapinhas.com.br/api/v1/stores/16/sellers?month=2026-01" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -3125,7 +3142,7 @@ com estatísticas do mês atual.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/stores/16/sellers"
+    "https://api.maiscapinhas.com.br/api/v1/stores/16/sellers"
 );
 
 const params = {
@@ -3325,7 +3342,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/stores/16/users" \
+    --get "https://api.maiscapinhas.com.br/api/v1/stores/16/users" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -3333,7 +3350,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/stores/16/users"
+    "https://api.maiscapinhas.com.br/api/v1/stores/16/users"
 );
 
 const headers = {
@@ -3551,20 +3568,20 @@ metas tangíveis e progresso em tempo real.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/dashboard/vendedor?store_id=1&amp;date=2026-01-07" \
+    --get "https://api.maiscapinhas.com.br/api/v1/dashboard/vendedor?store_id=1&amp;date=2026-01-07" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
     \"store_id\": 16,
-    \"date\": \"2026-01-13T19:06:34\"
+    \"date\": \"2026-01-13T19:21:11\"
 }"
 </code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/dashboard/vendedor"
+    "https://api.maiscapinhas.com.br/api/v1/dashboard/vendedor"
 );
 
 const params = {
@@ -3582,7 +3599,7 @@ const headers = {
 
 let body = {
     "store_id": 16,
-    "date": "2026-01-13T19:06:34"
+    "date": "2026-01-13T19:21:11"
 };
 
 fetch(url, {
@@ -3769,10 +3786,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="date"                data-endpoint="GETapi-v1-dashboard-vendedor"
-               value="2026-01-13T19:06:34"
+               value="2026-01-13T19:21:11"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-01-13T19:06:34</code></p>
+<p>Must be a valid date. Example: <code>2026-01-13T19:21:11</code></p>
         </div>
         </form>
 
@@ -3824,20 +3841,20 @@ incluindo fechamentos pendentes e ranking de vendedores.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/dashboard/conferente?store_id=1&amp;date=2026-01-07" \
+    --get "https://api.maiscapinhas.com.br/api/v1/dashboard/conferente?store_id=1&amp;date=2026-01-07" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
     \"store_id\": 16,
-    \"date\": \"2026-01-13T19:06:34\"
+    \"date\": \"2026-01-13T19:21:11\"
 }"
 </code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/dashboard/conferente"
+    "https://api.maiscapinhas.com.br/api/v1/dashboard/conferente"
 );
 
 const params = {
@@ -3855,7 +3872,7 @@ const headers = {
 
 let body = {
     "store_id": 16,
-    "date": "2026-01-13T19:06:34"
+    "date": "2026-01-13T19:21:11"
 };
 
 fetch(url, {
@@ -4024,10 +4041,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="date"                data-endpoint="GETapi-v1-dashboard-conferente"
-               value="2026-01-13T19:06:34"
+               value="2026-01-13T19:21:11"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-01-13T19:06:34</code></p>
+<p>Must be a valid date. Example: <code>2026-01-13T19:21:11</code></p>
         </div>
         </form>
 
@@ -4075,7 +4092,7 @@ com métricas mensais agregadas.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/dashboard/admin?month=2026-01" \
+    --get "https://api.maiscapinhas.com.br/api/v1/dashboard/admin?month=2026-01" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -4087,7 +4104,7 @@ com métricas mensais agregadas.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/dashboard/admin"
+    "https://api.maiscapinhas.com.br/api/v1/dashboard/admin"
 );
 
 const params = {
@@ -4336,15 +4353,15 @@ usuário tem acesso, com diversos filtros disponíveis.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/sales?store_id=1&amp;seller_id=6&amp;from=2026-01-01&amp;to=2026-01-31&amp;per_page=25" \
+    --get "https://api.maiscapinhas.com.br/api/v1/sales?store_id=1&amp;seller_id=6&amp;from=2026-01-01&amp;to=2026-01-31&amp;per_page=25" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
     \"store_id\": 16,
     \"seller_id\": 16,
-    \"from\": \"2026-01-13T19:06:34\",
-    \"to\": \"2026-01-13T19:06:34\",
+    \"from\": \"2026-01-13T19:21:10\",
+    \"to\": \"2026-01-13T19:21:10\",
     \"per_page\": 22
 }"
 </code></pre></div>
@@ -4352,7 +4369,7 @@ usuário tem acesso, com diversos filtros disponíveis.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/sales"
+    "https://api.maiscapinhas.com.br/api/v1/sales"
 );
 
 const params = {
@@ -4374,8 +4391,8 @@ const headers = {
 let body = {
     "store_id": 16,
     "seller_id": 16,
-    "from": "2026-01-13T19:06:34",
-    "to": "2026-01-13T19:06:34",
+    "from": "2026-01-13T19:21:10",
+    "to": "2026-01-13T19:21:10",
     "per_page": 22
 };
 
@@ -4606,10 +4623,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="from"                data-endpoint="GETapi-v1-sales"
-               value="2026-01-13T19:06:34"
+               value="2026-01-13T19:21:10"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-01-13T19:06:34</code></p>
+<p>Must be a valid date. Example: <code>2026-01-13T19:21:10</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>to</code></b>&nbsp;&nbsp;
@@ -4618,10 +4635,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="to"                data-endpoint="GETapi-v1-sales"
-               value="2026-01-13T19:06:34"
+               value="2026-01-13T19:21:10"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-01-13T19:06:34</code></p>
+<p>Must be a valid date. Example: <code>2026-01-13T19:21:10</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>per_page</code></b>&nbsp;&nbsp;
@@ -4675,7 +4692,7 @@ Após criar a venda, o sistema automaticamente dispara:</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/sales" \
+    "https://api.maiscapinhas.com.br/api/v1/sales" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -4691,7 +4708,7 @@ Após criar a venda, o sistema automaticamente dispara:</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/sales"
+    "https://api.maiscapinhas.com.br/api/v1/sales"
 );
 
 const headers = {
@@ -4919,7 +4936,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/sales/16" \
+    --get "https://api.maiscapinhas.com.br/api/v1/sales/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -4927,7 +4944,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/sales/16"
+    "https://api.maiscapinhas.com.br/api/v1/sales/16"
 );
 
 const headers = {
@@ -5110,7 +5127,7 @@ para o vendedor afetado.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PUT \
-    "http://localhost:8000/api/v1/sales/16" \
+    "https://api.maiscapinhas.com.br/api/v1/sales/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -5124,7 +5141,7 @@ para o vendedor afetado.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/sales/16"
+    "https://api.maiscapinhas.com.br/api/v1/sales/16"
 );
 
 const headers = {
@@ -5350,7 +5367,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
-    "http://localhost:8000/api/v1/sales/16" \
+    "https://api.maiscapinhas.com.br/api/v1/sales/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -5358,7 +5375,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/sales/16"
+    "https://api.maiscapinhas.com.br/api/v1/sales/16"
 );
 
 const headers = {
@@ -5539,14 +5556,14 @@ com filtros por loja, data e status.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/cash/shifts?store_id=1&amp;date=2026-01-07&amp;status=open&amp;per_page=25" \
+    --get "https://api.maiscapinhas.com.br/api/v1/cash/shifts?store_id=1&amp;date=2026-01-07&amp;status=open&amp;per_page=25" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
     \"store_id\": 16,
-    \"date\": \"2026-01-13T19:06:34\",
-    \"status\": \"open\",
+    \"date\": \"2026-01-13T19:21:10\",
+    \"status\": \"pending\",
     \"per_page\": 22
 }"
 </code></pre></div>
@@ -5554,7 +5571,7 @@ com filtros por loja, data e status.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/cash/shifts"
+    "https://api.maiscapinhas.com.br/api/v1/cash/shifts"
 );
 
 const params = {
@@ -5574,8 +5591,8 @@ const headers = {
 
 let body = {
     "store_id": 16,
-    "date": "2026-01-13T19:06:34",
-    "status": "open",
+    "date": "2026-01-13T19:21:10",
+    "status": "pending",
     "per_page": 22
 };
 
@@ -5773,10 +5790,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="date"                data-endpoint="GETapi-v1-cash-shifts"
-               value="2026-01-13T19:06:34"
+               value="2026-01-13T19:21:10"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-01-13T19:06:34</code></p>
+<p>Must be a valid date. Example: <code>2026-01-13T19:21:10</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>status</code></b>&nbsp;&nbsp;
@@ -5785,10 +5802,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="status"                data-endpoint="GETapi-v1-cash-shifts"
-               value="open"
+               value="pending"
                data-component="body">
     <br>
-<p>Example: <code>open</code></p>
+<p>Example: <code>pending</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>open</code></li> <li><code>closed</code></li> <li><code>pending</code></li></ul>
         </div>
@@ -5822,7 +5839,7 @@ Must be one of:
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/cash/shifts/pending?store_id=1" \
+    --get "https://api.maiscapinhas.com.br/api/v1/cash/shifts/pending?store_id=1" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -5834,7 +5851,7 @@ Must be one of:
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/cash/shifts/pending"
+    "https://api.maiscapinhas.com.br/api/v1/cash/shifts/pending"
 );
 
 const params = {
@@ -6013,7 +6030,7 @@ valores do sistema e valores reais.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/cash/shifts/divergent?store_id=1" \
+    --get "https://api.maiscapinhas.com.br/api/v1/cash/shifts/divergent?store_id=1" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -6025,7 +6042,7 @@ valores do sistema e valores reais.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/cash/shifts/divergent"
+    "https://api.maiscapinhas.com.br/api/v1/cash/shifts/divergent"
 );
 
 const params = {
@@ -6216,7 +6233,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/cash/shifts" \
+    "https://api.maiscapinhas.com.br/api/v1/cash/shifts" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -6231,7 +6248,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/cash/shifts"
+    "https://api.maiscapinhas.com.br/api/v1/cash/shifts"
 );
 
 const headers = {
@@ -6445,7 +6462,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/cash/shifts/16" \
+    --get "https://api.maiscapinhas.com.br/api/v1/cash/shifts/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -6453,7 +6470,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/cash/shifts/16"
+    "https://api.maiscapinhas.com.br/api/v1/cash/shifts/16"
 );
 
 const headers = {
@@ -6633,7 +6650,7 @@ incluindo todas as linhas e a justificativa geral.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/cash/closings/16" \
+    --get "https://api.maiscapinhas.com.br/api/v1/cash/closings/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -6641,7 +6658,7 @@ incluindo todas as linhas e a justificativa geral.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/cash/closings/16"
+    "https://api.maiscapinhas.com.br/api/v1/cash/closings/16"
 );
 
 const headers = {
@@ -6828,7 +6845,7 @@ incluindo os valores por meio de pagamento.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/cash/closings/16" \
+    "https://api.maiscapinhas.com.br/api/v1/cash/closings/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -6848,7 +6865,7 @@ incluindo os valores por meio de pagamento.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/cash/closings/16"
+    "https://api.maiscapinhas.com.br/api/v1/cash/closings/16"
 );
 
 const headers = {
@@ -7180,7 +7197,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PUT \
-    "http://localhost:8000/api/v1/cash/closings/16" \
+    "https://api.maiscapinhas.com.br/api/v1/cash/closings/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -7200,7 +7217,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/cash/closings/16"
+    "https://api.maiscapinhas.com.br/api/v1/cash/closings/16"
 );
 
 const headers = {
@@ -7480,7 +7497,7 @@ O fechamento deve estar em status <code>draft</code> ou <code>rejected</code> pa
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/cash/closings/16/submit" \
+    "https://api.maiscapinhas.com.br/api/v1/cash/closings/16/submit" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -7488,7 +7505,7 @@ O fechamento deve estar em status <code>draft</code> ou <code>rejected</code> pa
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/cash/closings/16/submit"
+    "https://api.maiscapinhas.com.br/api/v1/cash/closings/16/submit"
 );
 
 const headers = {
@@ -7691,7 +7708,7 @@ Esta ação é <strong>irreversível</strong> - fechamentos aprovados não podem
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/cash/closings/16/approve" \
+    "https://api.maiscapinhas.com.br/api/v1/cash/closings/16/approve" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -7699,7 +7716,7 @@ Esta ação é <strong>irreversível</strong> - fechamentos aprovados não podem
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/cash/closings/16/approve"
+    "https://api.maiscapinhas.com.br/api/v1/cash/closings/16/approve"
 );
 
 const headers = {
@@ -7884,7 +7901,7 @@ para que o vendedor possa corrigir os problemas apontados.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/cash/closings/16/reject" \
+    "https://api.maiscapinhas.com.br/api/v1/cash/closings/16/reject" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -7896,7 +7913,7 @@ para que o vendedor possa corrigir os problemas apontados.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/cash/closings/16/reject"
+    "https://api.maiscapinhas.com.br/api/v1/cash/closings/16/reject"
 );
 
 const headers = {
@@ -8096,13 +8113,13 @@ Regras definem faixas de vendas mínimas e valores de bônus correspondentes.</p
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/rules/bonus" \
+    "https://api.maiscapinhas.com.br/api/v1/rules/bonus" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
     \"store_id\": 16,
-    \"effective_from\": \"2026-01-13T19:06:34\",
+    \"effective_from\": \"2026-01-13T19:21:10\",
     \"config_json\": [
         {
             \"min_sales\": 27,
@@ -8115,7 +8132,7 @@ Regras definem faixas de vendas mínimas e valores de bônus correspondentes.</p
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/rules/bonus"
+    "https://api.maiscapinhas.com.br/api/v1/rules/bonus"
 );
 
 const headers = {
@@ -8126,7 +8143,7 @@ const headers = {
 
 let body = {
     "store_id": 16,
-    "effective_from": "2026-01-13T19:06:34",
+    "effective_from": "2026-01-13T19:21:10",
     "config_json": [
         {
             "min_sales": 27,
@@ -8248,10 +8265,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="effective_from"                data-endpoint="POSTapi-v1-rules-bonus"
-               value="2026-01-13T19:06:34"
+               value="2026-01-13T19:21:10"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-01-13T19:06:34</code></p>
+<p>Must be a valid date. Example: <code>2026-01-13T19:21:10</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
         <details>
@@ -8305,13 +8322,13 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PUT \
-    "http://localhost:8000/api/v1/rules/bonus/16" \
+    "https://api.maiscapinhas.com.br/api/v1/rules/bonus/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
     \"store_id\": 16,
-    \"effective_from\": \"2026-01-13T19:06:34\",
+    \"effective_from\": \"2026-01-13T19:21:11\",
     \"config_json\": [
         {
             \"min_sales\": 27,
@@ -8324,7 +8341,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/rules/bonus/16"
+    "https://api.maiscapinhas.com.br/api/v1/rules/bonus/16"
 );
 
 const headers = {
@@ -8335,7 +8352,7 @@ const headers = {
 
 let body = {
     "store_id": 16,
-    "effective_from": "2026-01-13T19:06:34",
+    "effective_from": "2026-01-13T19:21:11",
     "config_json": [
         {
             "min_sales": 27,
@@ -8474,10 +8491,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="effective_from"                data-endpoint="PUTapi-v1-rules-bonus--rule_id-"
-               value="2026-01-13T19:06:34"
+               value="2026-01-13T19:21:11"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-01-13T19:06:34</code></p>
+<p>Must be a valid date. Example: <code>2026-01-13T19:21:11</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
         <details>
@@ -8531,7 +8548,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
-    "http://localhost:8000/api/v1/rules/bonus/16" \
+    "https://api.maiscapinhas.com.br/api/v1/rules/bonus/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -8539,7 +8556,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/rules/bonus/16"
+    "https://api.maiscapinhas.com.br/api/v1/rules/bonus/16"
 );
 
 const headers = {
@@ -8679,13 +8696,13 @@ Regras definem faixas de atingimento de meta e taxas de comissão.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/rules/commission" \
+    "https://api.maiscapinhas.com.br/api/v1/rules/commission" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
     \"store_id\": 16,
-    \"effective_from\": \"2026-01-13T19:06:34\",
+    \"effective_from\": \"2026-01-13T19:21:11\",
     \"config_json\": [
         {
             \"min_attainment\": 27,
@@ -8698,7 +8715,7 @@ Regras definem faixas de atingimento de meta e taxas de comissão.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/rules/commission"
+    "https://api.maiscapinhas.com.br/api/v1/rules/commission"
 );
 
 const headers = {
@@ -8709,7 +8726,7 @@ const headers = {
 
 let body = {
     "store_id": 16,
-    "effective_from": "2026-01-13T19:06:34",
+    "effective_from": "2026-01-13T19:21:11",
     "config_json": [
         {
             "min_attainment": 27,
@@ -8831,10 +8848,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="effective_from"                data-endpoint="POSTapi-v1-rules-commission"
-               value="2026-01-13T19:06:34"
+               value="2026-01-13T19:21:11"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-01-13T19:06:34</code></p>
+<p>Must be a valid date. Example: <code>2026-01-13T19:21:11</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
         <details>
@@ -8888,13 +8905,13 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PUT \
-    "http://localhost:8000/api/v1/rules/commission/16" \
+    "https://api.maiscapinhas.com.br/api/v1/rules/commission/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
     \"store_id\": 16,
-    \"effective_from\": \"2026-01-13T19:06:34\",
+    \"effective_from\": \"2026-01-13T19:21:11\",
     \"config_json\": [
         {
             \"min_attainment\": 27,
@@ -8907,7 +8924,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/rules/commission/16"
+    "https://api.maiscapinhas.com.br/api/v1/rules/commission/16"
 );
 
 const headers = {
@@ -8918,7 +8935,7 @@ const headers = {
 
 let body = {
     "store_id": 16,
-    "effective_from": "2026-01-13T19:06:34",
+    "effective_from": "2026-01-13T19:21:11",
     "config_json": [
         {
             "min_attainment": 27,
@@ -9057,10 +9074,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="effective_from"                data-endpoint="PUTapi-v1-rules-commission--rule_id-"
-               value="2026-01-13T19:06:34"
+               value="2026-01-13T19:21:11"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-01-13T19:06:34</code></p>
+<p>Must be a valid date. Example: <code>2026-01-13T19:21:11</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
         <details>
@@ -9114,7 +9131,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
-    "http://localhost:8000/api/v1/rules/commission/16" \
+    "https://api.maiscapinhas.com.br/api/v1/rules/commission/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -9122,7 +9139,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/rules/commission/16"
+    "https://api.maiscapinhas.com.br/api/v1/rules/commission/16"
 );
 
 const headers = {
@@ -9258,7 +9275,7 @@ Cada split define a porcentagem da meta que cada vendedor deve atingir.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/goals/monthly" \
+    "https://api.maiscapinhas.com.br/api/v1/goals/monthly" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -9273,7 +9290,7 @@ Cada split define a porcentagem da meta que cada vendedor deve atingir.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/goals/monthly"
+    "https://api.maiscapinhas.com.br/api/v1/goals/monthly"
 );
 
 const headers = {
@@ -9457,20 +9474,20 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PUT \
-    "http://localhost:8000/api/v1/goals/monthly/16" \
+    "https://api.maiscapinhas.com.br/api/v1/goals/monthly/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
     \"goal_amount\": 27,
-    \"active\": true
+    \"active\": false
 }"
 </code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/goals/monthly/16"
+    "https://api.maiscapinhas.com.br/api/v1/goals/monthly/16"
 );
 
 const headers = {
@@ -9481,7 +9498,7 @@ const headers = {
 
 let body = {
     "goal_amount": 27,
-    "active": true
+    "active": false
 };
 
 fetch(url, {
@@ -9623,7 +9640,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>true</code></p>
+<p>Example: <code>false</code></p>
         </div>
         </form>
 
@@ -9641,7 +9658,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
-    "http://localhost:8000/api/v1/goals/monthly/16" \
+    "https://api.maiscapinhas.com.br/api/v1/goals/monthly/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -9649,7 +9666,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/goals/monthly/16"
+    "https://api.maiscapinhas.com.br/api/v1/goals/monthly/16"
 );
 
 const headers = {
@@ -9779,7 +9796,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PUT \
-    "http://localhost:8000/api/v1/goals/monthly/16/splits" \
+    "https://api.maiscapinhas.com.br/api/v1/goals/monthly/16/splits" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -9796,7 +9813,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/goals/monthly/16/splits"
+    "https://api.maiscapinhas.com.br/api/v1/goals/monthly/16/splits"
 );
 
 const headers = {
@@ -9978,7 +9995,7 @@ Vendedores veem apenas seus próprios dados; gerentes/admins veem todos.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/finance/bonus/calculate?amount=1250&amp;store_id=1" \
+    --get "https://api.maiscapinhas.com.br/api/v1/finance/bonus/calculate?amount=1250&amp;store_id=1" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -9991,7 +10008,7 @@ Vendedores veem apenas seus próprios dados; gerentes/admins veem todos.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/finance/bonus/calculate"
+    "https://api.maiscapinhas.com.br/api/v1/finance/bonus/calculate"
 );
 
 const params = {
@@ -10193,20 +10210,20 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/finance/bonus/seller/16?from=2026-01-01&amp;to=2026-01-31" \
+    --get "https://api.maiscapinhas.com.br/api/v1/finance/bonus/seller/16?from=2026-01-01&amp;to=2026-01-31" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
-    \"from\": \"2026-01-13T19:06:34\",
-    \"to\": \"2026-01-13T19:06:34\"
+    \"from\": \"2026-01-13T19:21:11\",
+    \"to\": \"2026-01-13T19:21:11\"
 }"
 </code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/finance/bonus/seller/16"
+    "https://api.maiscapinhas.com.br/api/v1/finance/bonus/seller/16"
 );
 
 const params = {
@@ -10223,8 +10240,8 @@ const headers = {
 };
 
 let body = {
-    "from": "2026-01-13T19:06:34",
-    "to": "2026-01-13T19:06:34"
+    "from": "2026-01-13T19:21:11",
+    "to": "2026-01-13T19:21:11"
 };
 
 fetch(url, {
@@ -10412,10 +10429,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="from"                data-endpoint="GETapi-v1-finance-bonus-seller--seller_id-"
-               value="2026-01-13T19:06:34"
+               value="2026-01-13T19:21:11"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-01-13T19:06:34</code></p>
+<p>Must be a valid date. Example: <code>2026-01-13T19:21:11</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>to</code></b>&nbsp;&nbsp;
@@ -10424,10 +10441,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="to"                data-endpoint="GETapi-v1-finance-bonus-seller--seller_id-"
-               value="2026-01-13T19:06:34"
+               value="2026-01-13T19:21:11"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-01-13T19:06:34</code></p>
+<p>Must be a valid date. Example: <code>2026-01-13T19:21:11</code></p>
         </div>
         </form>
 
@@ -10445,7 +10462,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/finance/commission/projection/16?month=2026-01" \
+    --get "https://api.maiscapinhas.com.br/api/v1/finance/commission/projection/16?month=2026-01" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -10457,7 +10474,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/finance/commission/projection/16"
+    "https://api.maiscapinhas.com.br/api/v1/finance/commission/projection/16"
 );
 
 const params = {
@@ -10683,14 +10700,14 @@ Dados podem vir de sincronização com FastAPI ou inserção manual.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/analytics/people/shift" \
+    "https://api.maiscapinhas.com.br/api/v1/analytics/people/shift" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
     \"store_id\": 16,
-    \"date\": \"2026-01-13T19:06:34\",
-    \"shift_code\": \"1\",
+    \"date\": \"2026-01-13T19:21:11\",
+    \"shift_code\": \"2\",
     \"in_count\": 39,
     \"out_count\": 84,
     \"staff_in\": 12,
@@ -10701,7 +10718,7 @@ Dados podem vir de sincronização com FastAPI ou inserção manual.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/analytics/people/shift"
+    "https://api.maiscapinhas.com.br/api/v1/analytics/people/shift"
 );
 
 const headers = {
@@ -10712,8 +10729,8 @@ const headers = {
 
 let body = {
     "store_id": 16,
-    "date": "2026-01-13T19:06:34",
-    "shift_code": "1",
+    "date": "2026-01-13T19:21:11",
+    "shift_code": "2",
     "in_count": 39,
     "out_count": 84,
     "staff_in": 12,
@@ -10833,10 +10850,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="date"                data-endpoint="POSTapi-v1-analytics-people-shift"
-               value="2026-01-13T19:06:34"
+               value="2026-01-13T19:21:11"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-01-13T19:06:34</code></p>
+<p>Must be a valid date. Example: <code>2026-01-13T19:21:11</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>shift_code</code></b>&nbsp;&nbsp;
@@ -10845,10 +10862,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="shift_code"                data-endpoint="POSTapi-v1-analytics-people-shift"
-               value="1"
+               value="2"
                data-component="body">
     <br>
-<p>Example: <code>1</code></p>
+<p>Example: <code>2</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>1</code></li> <li><code>2</code></li> <li><code>3</code></li> <li><code>M</code></li> <li><code>T</code></li> <li><code>N</code></li></ul>
         </div>
@@ -10970,13 +10987,13 @@ ações registradas no sistema para fins de auditoria e compliance.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/admin/audit-logs?from=2026-01-01&amp;to=2026-01-31&amp;causer_id=1&amp;event=cash_closing.submit&amp;log_name=auth&amp;store_id=1&amp;subject_type=CashClosing&amp;subject_id=15&amp;per_page=25" \
+    --get "https://api.maiscapinhas.com.br/api/v1/admin/audit-logs?from=2026-01-01&amp;to=2026-01-31&amp;causer_id=1&amp;event=cash_closing.submit&amp;log_name=auth&amp;store_id=1&amp;subject_type=CashClosing&amp;subject_id=15&amp;per_page=25" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
-    \"from\": \"2026-01-13T19:06:35\",
-    \"to\": \"2026-01-13T19:06:35\",
+    \"from\": \"2026-01-13T19:21:11\",
+    \"to\": \"2026-01-13T19:21:11\",
     \"causer_id\": 16,
     \"event\": \"n\",
     \"log_name\": \"g\",
@@ -10990,7 +11007,7 @@ ações registradas no sistema para fins de auditoria e compliance.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/admin/audit-logs"
+    "https://api.maiscapinhas.com.br/api/v1/admin/audit-logs"
 );
 
 const params = {
@@ -11014,8 +11031,8 @@ const headers = {
 };
 
 let body = {
-    "from": "2026-01-13T19:06:35",
-    "to": "2026-01-13T19:06:35",
+    "from": "2026-01-13T19:21:11",
+    "to": "2026-01-13T19:21:11",
     "causer_id": 16,
     "event": "n",
     "log_name": "g",
@@ -11284,10 +11301,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="from"                data-endpoint="GETapi-v1-admin-audit-logs"
-               value="2026-01-13T19:06:35"
+               value="2026-01-13T19:21:11"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-01-13T19:06:35</code></p>
+<p>Must be a valid date. Example: <code>2026-01-13T19:21:11</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>to</code></b>&nbsp;&nbsp;
@@ -11296,10 +11313,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="to"                data-endpoint="GETapi-v1-admin-audit-logs"
-               value="2026-01-13T19:06:35"
+               value="2026-01-13T19:21:11"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-01-13T19:06:35</code></p>
+<p>Must be a valid date. Example: <code>2026-01-13T19:21:11</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>causer_id</code></b>&nbsp;&nbsp;
@@ -11402,20 +11419,20 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/admin/audit-logs/stats?from=2026-01-01&amp;to=2026-01-31" \
+    --get "https://api.maiscapinhas.com.br/api/v1/admin/audit-logs/stats?from=2026-01-01&amp;to=2026-01-31" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
-    \"from\": \"2026-01-13T19:06:35\",
-    \"to\": \"2026-01-13T19:06:35\"
+    \"from\": \"2026-01-13T19:21:11\",
+    \"to\": \"2026-01-13T19:21:11\"
 }"
 </code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/admin/audit-logs/stats"
+    "https://api.maiscapinhas.com.br/api/v1/admin/audit-logs/stats"
 );
 
 const params = {
@@ -11432,8 +11449,8 @@ const headers = {
 };
 
 let body = {
-    "from": "2026-01-13T19:06:35",
-    "to": "2026-01-13T19:06:35"
+    "from": "2026-01-13T19:21:11",
+    "to": "2026-01-13T19:21:11"
 };
 
 fetch(url, {
@@ -11588,10 +11605,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="from"                data-endpoint="GETapi-v1-admin-audit-logs-stats"
-               value="2026-01-13T19:06:35"
+               value="2026-01-13T19:21:11"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-01-13T19:06:35</code></p>
+<p>Must be a valid date. Example: <code>2026-01-13T19:21:11</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>to</code></b>&nbsp;&nbsp;
@@ -11600,10 +11617,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="to"                data-endpoint="GETapi-v1-admin-audit-logs-stats"
-               value="2026-01-13T19:06:35"
+               value="2026-01-13T19:21:11"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-01-13T19:06:35</code></p>
+<p>Must be a valid date. Example: <code>2026-01-13T19:21:11</code></p>
         </div>
         </form>
 
@@ -11623,7 +11640,7 @@ incluindo todo o payload de properties.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/admin/audit-logs/16" \
+    --get "https://api.maiscapinhas.com.br/api/v1/admin/audit-logs/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -11631,7 +11648,7 @@ incluindo todo o payload de properties.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/admin/audit-logs/16"
+    "https://api.maiscapinhas.com.br/api/v1/admin/audit-logs/16"
 );
 
 const headers = {
@@ -11849,7 +11866,7 @@ as lojas às quais o usuário tem acesso.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/admin/stores?search=tijucas&amp;active=1&amp;per_page=25" \
+    --get "https://api.maiscapinhas.com.br/api/v1/admin/stores?search=tijucas&amp;active=1&amp;per_page=25" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -11857,7 +11874,7 @@ as lojas às quais o usuário tem acesso.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/admin/stores"
+    "https://api.maiscapinhas.com.br/api/v1/admin/stores"
 );
 
 const params = {
@@ -12067,7 +12084,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/admin/stores" \
+    "https://api.maiscapinhas.com.br/api/v1/admin/stores" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -12096,7 +12113,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
         \"exceptions\": [
             {
                 \"date\": \"2026-01-13\",
-                \"closed\": false,
+                \"closed\": true,
                 \"reason\": \"o\"
             }
         ]
@@ -12109,7 +12126,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/admin/stores"
+    "https://api.maiscapinhas.com.br/api/v1/admin/stores"
 );
 
 const headers = {
@@ -12143,7 +12160,7 @@ let body = {
         "exceptions": [
             {
                 "date": "2026-01-13",
-                "closed": false,
+                "closed": true,
                 "reason": "o"
             }
         ]
@@ -12582,10 +12599,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="opening_hours.weekly.0.*.start"                data-endpoint="POSTapi-v1-admin-stores"
-               value="19:06"
+               value="19:21"
                data-component="body">
     <br>
-<p>Must be a valid date in the format <code>H:i</code>. Example: <code>19:06</code></p>
+<p>Must be a valid date in the format <code>H:i</code>. Example: <code>19:21</code></p>
                     </div>
                                                                 <div style="margin-left: 42px; clear: unset;">
                         <b style="line-height: 2;"><code>end</code></b>&nbsp;&nbsp;
@@ -12594,10 +12611,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="opening_hours.weekly.0.*.end"                data-endpoint="POSTapi-v1-admin-stores"
-               value="19:06"
+               value="19:21"
                data-component="body">
     <br>
-<p>Must be a valid date in the format <code>H:i</code>. Example: <code>19:06</code></p>
+<p>Must be a valid date in the format <code>H:i</code>. Example: <code>19:21</code></p>
                     </div>
                                     </details>
         </div>
@@ -12645,7 +12662,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>false</code></p>
+<p>Example: <code>true</code></p>
                     </div>
                                                                 <div style="margin-left: 28px; clear: unset;">
                         <b style="line-height: 2;"><code>reason</code></b>&nbsp;&nbsp;
@@ -12710,7 +12727,7 @@ a lista de todos os usuários vinculados e suas roles.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/admin/stores/16" \
+    --get "https://api.maiscapinhas.com.br/api/v1/admin/stores/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -12718,7 +12735,7 @@ a lista de todos os usuários vinculados e suas roles.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/admin/stores/16"
+    "https://api.maiscapinhas.com.br/api/v1/admin/stores/16"
 );
 
 const headers = {
@@ -12891,7 +12908,7 @@ Apenas os campos informados serão alterados.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PUT \
-    "http://localhost:8000/api/v1/admin/stores/16" \
+    "https://api.maiscapinhas.com.br/api/v1/admin/stores/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -12933,7 +12950,7 @@ Apenas os campos informados serão alterados.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/admin/stores/16"
+    "https://api.maiscapinhas.com.br/api/v1/admin/stores/16"
 );
 
 const headers = {
@@ -13434,10 +13451,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="opening_hours.weekly.0.*.start"                data-endpoint="PUTapi-v1-admin-stores--id-"
-               value="19:06"
+               value="19:21"
                data-component="body">
     <br>
-<p>Must be a valid date in the format <code>H:i</code>. Example: <code>19:06</code></p>
+<p>Must be a valid date in the format <code>H:i</code>. Example: <code>19:21</code></p>
                     </div>
                                                                 <div style="margin-left: 42px; clear: unset;">
                         <b style="line-height: 2;"><code>end</code></b>&nbsp;&nbsp;
@@ -13446,10 +13463,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="opening_hours.weekly.0.*.end"                data-endpoint="PUTapi-v1-admin-stores--id-"
-               value="19:06"
+               value="19:21"
                data-component="body">
     <br>
-<p>Must be a valid date in the format <code>H:i</code>. Example: <code>19:06</code></p>
+<p>Must be a valid date in the format <code>H:i</code>. Example: <code>19:21</code></p>
                     </div>
                                     </details>
         </div>
@@ -13564,7 +13581,7 @@ históricos são mantidos para auditoria.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
-    "http://localhost:8000/api/v1/admin/stores/16" \
+    "https://api.maiscapinhas.com.br/api/v1/admin/stores/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -13572,7 +13589,7 @@ históricos são mantidos para auditoria.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/admin/stores/16"
+    "https://api.maiscapinhas.com.br/api/v1/admin/stores/16"
 );
 
 const headers = {
@@ -13727,7 +13744,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/admin/stores/validate-hours" \
+    "https://api.maiscapinhas.com.br/api/v1/admin/stores/validate-hours" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -13739,7 +13756,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/admin/stores/validate-hours"
+    "https://api.maiscapinhas.com.br/api/v1/admin/stores/validate-hours"
 );
 
 const headers = {
@@ -13937,7 +13954,7 @@ incluindo suas lojas vinculadas e respectivas roles.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/admin/users?search=joao&amp;active=1&amp;store_id=1&amp;per_page=25" \
+    --get "https://api.maiscapinhas.com.br/api/v1/admin/users?search=joao&amp;active=1&amp;store_id=1&amp;per_page=25" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -13945,7 +13962,7 @@ incluindo suas lojas vinculadas e respectivas roles.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/admin/users"
+    "https://api.maiscapinhas.com.br/api/v1/admin/users"
 );
 
 const params = {
@@ -14195,7 +14212,7 @@ a uma ou mais lojas com roles específicas.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/admin/users" \
+    "https://api.maiscapinhas.com.br/api/v1/admin/users" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -14204,7 +14221,7 @@ a uma ou mais lojas com roles específicas.</p>
     \"email\": \"joao.silva@maiscapinhas.com.br\",
     \"password\": \"senha123456\",
     \"active\": true,
-    \"is_super_admin\": false,
+    \"is_super_admin\": true,
     \"zip_code\": \"vdljnikh\",
     \"street\": \"w\",
     \"number\": \"aykcmyuwpwlvqwrs\",
@@ -14230,7 +14247,7 @@ a uma ou mais lojas com roles específicas.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/admin/users"
+    "https://api.maiscapinhas.com.br/api/v1/admin/users"
 );
 
 const headers = {
@@ -14244,7 +14261,7 @@ let body = {
     "email": "joao.silva@maiscapinhas.com.br",
     "password": "senha123456",
     "active": true,
-    "is_super_admin": false,
+    "is_super_admin": true,
     "zip_code": "vdljnikh",
     "street": "w",
     "number": "aykcmyuwpwlvqwrs",
@@ -14474,7 +14491,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>false</code></p>
+<p>Example: <code>true</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>zip_code</code></b>&nbsp;&nbsp;
@@ -14751,7 +14768,7 @@ incluindo todas as lojas vinculadas e suas respectivas roles.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/admin/users/16" \
+    --get "https://api.maiscapinhas.com.br/api/v1/admin/users/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -14759,7 +14776,7 @@ incluindo todas as lojas vinculadas e suas respectivas roles.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/admin/users/16"
+    "https://api.maiscapinhas.com.br/api/v1/admin/users/16"
 );
 
 const headers = {
@@ -14946,7 +14963,7 @@ Apenas os campos informados serão alterados.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PUT \
-    "http://localhost:8000/api/v1/admin/users/16" \
+    "https://api.maiscapinhas.com.br/api/v1/admin/users/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -14978,7 +14995,7 @@ Apenas os campos informados serão alterados.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/admin/users/16"
+    "https://api.maiscapinhas.com.br/api/v1/admin/users/16"
 );
 
 const headers = {
@@ -15430,7 +15447,7 @@ todos os tokens de acesso, forçando logout imediato.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
-    "http://localhost:8000/api/v1/admin/users/16" \
+    "https://api.maiscapinhas.com.br/api/v1/admin/users/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -15438,7 +15455,7 @@ todos os tokens de acesso, forçando logout imediato.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/admin/users/16"
+    "https://api.maiscapinhas.com.br/api/v1/admin/users/16"
 );
 
 const headers = {
@@ -15600,7 +15617,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PUT \
-    "http://localhost:8000/api/v1/admin/users/16/stores" \
+    "https://api.maiscapinhas.com.br/api/v1/admin/users/16/stores" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -15617,7 +15634,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/admin/users/16/stores"
+    "https://api.maiscapinhas.com.br/api/v1/admin/users/16/stores"
 );
 
 const headers = {
@@ -15796,7 +15813,7 @@ Must be one of:
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/admin/users/16/stores/bulk" \
+    "https://api.maiscapinhas.com.br/api/v1/admin/users/16/stores/bulk" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -15804,7 +15821,7 @@ Must be one of:
     \"stores\": [
         {
             \"store_id\": 16,
-            \"role\": \"vendedor\"
+            \"role\": \"admin\"
         }
     ]
 }"
@@ -15813,7 +15830,7 @@ Must be one of:
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/admin/users/16/stores/bulk"
+    "https://api.maiscapinhas.com.br/api/v1/admin/users/16/stores/bulk"
 );
 
 const headers = {
@@ -15826,7 +15843,7 @@ let body = {
     "stores": [
         {
             "store_id": 16,
-            "role": "vendedor"
+            "role": "admin"
         }
     ]
 };
@@ -15967,10 +15984,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="stores.0.role"                data-endpoint="POSTapi-v1-admin-users--user_id--stores-bulk"
-               value="vendedor"
+               value="admin"
                data-component="body">
     <br>
-<p>Example: <code>vendedor</code></p>
+<p>Example: <code>admin</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>admin</code></li> <li><code>gerente</code></li> <li><code>conferente</code></li> <li><code>vendedor</code></li></ul>
                     </div>
@@ -15992,14 +16009,14 @@ Must be one of:
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PATCH \
-    "http://localhost:8000/api/v1/admin/users/16/stores/bulk" \
+    "https://api.maiscapinhas.com.br/api/v1/admin/users/16/stores/bulk" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
     \"role\": \"admin\",
     \"store_ids\": [
-        18
+        16
     ]
 }"
 </code></pre></div>
@@ -16007,7 +16024,7 @@ Must be one of:
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/admin/users/16/stores/bulk"
+    "https://api.maiscapinhas.com.br/api/v1/admin/users/16/stores/bulk"
 );
 
 const headers = {
@@ -16019,7 +16036,7 @@ const headers = {
 let body = {
     "role": "admin",
     "store_ids": [
-        18
+        16
     ]
 };
 
@@ -16174,7 +16191,7 @@ Must be one of:
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
-    "http://localhost:8000/api/v1/admin/users/16/stores/bulk" \
+    "https://api.maiscapinhas.com.br/api/v1/admin/users/16/stores/bulk" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -16188,7 +16205,7 @@ Must be one of:
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/admin/users/16/stores/bulk"
+    "https://api.maiscapinhas.com.br/api/v1/admin/users/16/stores/bulk"
 );
 
 const headers = {
@@ -16397,7 +16414,7 @@ com suas respectivas roles e status.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/admin/stores/16/users" \
+    --get "https://api.maiscapinhas.com.br/api/v1/admin/stores/16/users" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -16405,7 +16422,7 @@ com suas respectivas roles e status.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/admin/stores/16/users"
+    "https://api.maiscapinhas.com.br/api/v1/admin/stores/16/users"
 );
 
 const headers = {
@@ -16587,7 +16604,7 @@ definindo qual role esse usuário terá nessa loja.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/admin/stores/16/users" \
+    "https://api.maiscapinhas.com.br/api/v1/admin/stores/16/users" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -16600,7 +16617,7 @@ definindo qual role esse usuário terá nessa loja.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/admin/stores/16/users"
+    "https://api.maiscapinhas.com.br/api/v1/admin/stores/16/users"
 );
 
 const headers = {
@@ -16807,7 +16824,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PUT \
-    "http://localhost:8000/api/v1/admin/stores/16/users/16" \
+    "https://api.maiscapinhas.com.br/api/v1/admin/stores/16/users/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -16820,7 +16837,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/admin/stores/16/users/16"
+    "https://api.maiscapinhas.com.br/api/v1/admin/stores/16/users/16"
 );
 
 const headers = {
@@ -17051,7 +17068,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
-    "http://localhost:8000/api/v1/admin/stores/16/users/16" \
+    "https://api.maiscapinhas.com.br/api/v1/admin/stores/16/users/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -17059,7 +17076,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/admin/stores/16/users/16"
+    "https://api.maiscapinhas.com.br/api/v1/admin/stores/16/users/16"
 );
 
 const headers = {
@@ -17260,7 +17277,7 @@ Este endpoint é público e não requer autenticação.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/bio/stores?city=Tijucas" \
+    --get "https://api.maiscapinhas.com.br/api/v1/bio/stores?city=Tijucas" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -17268,7 +17285,7 @@ Este endpoint é público e não requer autenticação.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/bio/stores"
+    "https://api.maiscapinhas.com.br/api/v1/bio/stores"
 );
 
 const params = {
@@ -17428,7 +17445,7 @@ Retorna 404 se a loja não existir ou não estiver habilitada para Bio.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/bio/stores/architecto" \
+    --get "https://api.maiscapinhas.com.br/api/v1/bio/stores/architecto" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -17436,7 +17453,7 @@ Retorna 404 se a loja não existir ou não estiver habilitada para Bio.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/bio/stores/architecto"
+    "https://api.maiscapinhas.com.br/api/v1/bio/stores/architecto"
 );
 
 const headers = {
@@ -17635,7 +17652,7 @@ Capas são produtos criados sob demanda com fotos enviadas pelos clientes.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/capas-personalizadas?store_id=1&amp;user_id=1&amp;status=2&amp;customer_id=1&amp;initial_date=2026-01-01&amp;final_date=2026-12-31&amp;brand_id=1&amp;model_id=5&amp;keyword=Jo%C3%A3o&amp;payed=1&amp;payday=2026-01-13&amp;received_by_id=1&amp;sort=created_at&amp;direction=desc&amp;per_page=15" \
+    --get "https://api.maiscapinhas.com.br/api/v1/capas-personalizadas?store_id=1&amp;user_id=1&amp;status=2&amp;customer_id=1&amp;initial_date=2026-01-01&amp;final_date=2026-12-31&amp;brand_id=1&amp;model_id=5&amp;keyword=Jo%C3%A3o&amp;payed=1&amp;payday=2026-01-13&amp;received_by_id=1&amp;sort=created_at&amp;direction=desc&amp;per_page=15" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -17643,7 +17660,7 @@ Capas são produtos criados sob demanda com fotos enviadas pelos clientes.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/capas-personalizadas"
+    "https://api.maiscapinhas.com.br/api/v1/capas-personalizadas"
 );
 
 const params = {
@@ -17997,7 +18014,7 @@ A capa iniciará no status &quot;Aguardando Foto&quot; até o upload.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/capas-personalizadas" \
+    "https://api.maiscapinhas.com.br/api/v1/capas-personalizadas" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -18012,9 +18029,9 @@ A capa iniciará no status &quot;Aguardando Foto&quot; até o upload.</p>
     \"qty\": 1,
     \"price\": 49.9,
     \"payed\": false,
-    \"payday\": \"2026-01-13T19:06:34\",
+    \"payday\": \"2026-01-13T19:21:11\",
     \"received_by_id\": 16,
-    \"status\": \"7\",
+    \"status\": \"6\",
     \"observation\": \"Cliente quer borda preta\"
 }"
 </code></pre></div>
@@ -18022,7 +18039,7 @@ A capa iniciará no status &quot;Aguardando Foto&quot; até o upload.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/capas-personalizadas"
+    "https://api.maiscapinhas.com.br/api/v1/capas-personalizadas"
 );
 
 const headers = {
@@ -18042,9 +18059,9 @@ let body = {
     "qty": 1,
     "price": 49.9,
     "payed": false,
-    "payday": "2026-01-13T19:06:34",
+    "payday": "2026-01-13T19:21:11",
     "received_by_id": 16,
-    "status": "7",
+    "status": "6",
     "observation": "Cliente quer borda preta"
 };
 
@@ -18304,10 +18321,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="payday"                data-endpoint="POSTapi-v1-capas-personalizadas"
-               value="2026-01-13T19:06:34"
+               value="2026-01-13T19:21:11"
                data-component="body">
     <br>
-<p>This field is required when <code>payed</code> is <code>true</code> or <code>1</code>. Must be a valid date. Example: <code>2026-01-13T19:06:34</code></p>
+<p>This field is required when <code>payed</code> is <code>true</code> or <code>1</code>. Must be a valid date. Example: <code>2026-01-13T19:21:11</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>received_by_id</code></b>&nbsp;&nbsp;
@@ -18328,10 +18345,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="number" style="display: none"
                step="any"               name="status"                data-endpoint="POSTapi-v1-capas-personalizadas"
-               value="7"
+               value="6"
                data-component="body">
     <br>
-<p>Example: <code>7</code></p>
+<p>Example: <code>6</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>1</code></li> <li><code>2</code></li> <li><code>3</code></li> <li><code>4</code></li> <li><code>5</code></li> <li><code>6</code></li> <li><code>7</code></li></ul>
         </div>
@@ -18364,7 +18381,7 @@ Must be one of:
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/capas-personalizadas/16" \
+    --get "https://api.maiscapinhas.com.br/api/v1/capas-personalizadas/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -18372,7 +18389,7 @@ Must be one of:
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/capas-personalizadas/16"
+    "https://api.maiscapinhas.com.br/api/v1/capas-personalizadas/16"
 );
 
 const headers = {
@@ -18532,7 +18549,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PATCH \
-    "http://localhost:8000/api/v1/capas-personalizadas/16" \
+    "https://api.maiscapinhas.com.br/api/v1/capas-personalizadas/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -18544,7 +18561,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"obs\": \"z\",
     \"qty\": 27,
     \"price\": 59.9,
-    \"status\": \"6\",
+    \"status\": \"1\",
     \"observation\": \"Cliente alterou modelo\"
 }"
 </code></pre></div>
@@ -18552,7 +18569,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/capas-personalizadas/16"
+    "https://api.maiscapinhas.com.br/api/v1/capas-personalizadas/16"
 );
 
 const headers = {
@@ -18569,7 +18586,7 @@ let body = {
     "obs": "z",
     "qty": 27,
     "price": 59.9,
-    "status": "6",
+    "status": "1",
     "observation": "Cliente alterou modelo"
 };
 
@@ -18796,10 +18813,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="number" style="display: none"
                step="any"               name="status"                data-endpoint="PATCHapi-v1-capas-personalizadas--id-"
-               value="6"
+               value="1"
                data-component="body">
     <br>
-<p>Example: <code>6</code></p>
+<p>Example: <code>1</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>1</code></li> <li><code>2</code></li> <li><code>3</code></li> <li><code>4</code></li> <li><code>5</code></li> <li><code>6</code></li> <li><code>7</code></li></ul>
         </div>
@@ -18832,7 +18849,7 @@ Must be one of:
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
-    "http://localhost:8000/api/v1/capas-personalizadas/16" \
+    "https://api.maiscapinhas.com.br/api/v1/capas-personalizadas/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -18840,7 +18857,7 @@ Must be one of:
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/capas-personalizadas/16"
+    "https://api.maiscapinhas.com.br/api/v1/capas-personalizadas/16"
 );
 
 const headers = {
@@ -18992,7 +19009,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PATCH \
-    "http://localhost:8000/api/v1/capas-personalizadas/architecto/status" \
+    "https://api.maiscapinhas.com.br/api/v1/capas-personalizadas/architecto/status" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -19004,7 +19021,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/capas-personalizadas/architecto/status"
+    "https://api.maiscapinhas.com.br/api/v1/capas-personalizadas/architecto/status"
 );
 
 const headers = {
@@ -19178,7 +19195,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/capas-personalizadas/bulk-status" \
+    "https://api.maiscapinhas.com.br/api/v1/capas-personalizadas/bulk-status" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -19195,7 +19212,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/capas-personalizadas/bulk-status"
+    "https://api.maiscapinhas.com.br/api/v1/capas-personalizadas/bulk-status"
 );
 
 const headers = {
@@ -19382,7 +19399,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/capas-personalizadas/send-to-production" \
+    "https://api.maiscapinhas.com.br/api/v1/capas-personalizadas/send-to-production" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -19399,7 +19416,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/capas-personalizadas/send-to-production"
+    "https://api.maiscapinhas.com.br/api/v1/capas-personalizadas/send-to-production"
 );
 
 const headers = {
@@ -19585,7 +19602,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PATCH \
-    "http://localhost:8000/api/v1/capas-personalizadas/architecto/payment" \
+    "https://api.maiscapinhas.com.br/api/v1/capas-personalizadas/architecto/payment" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -19599,7 +19616,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/capas-personalizadas/architecto/payment"
+    "https://api.maiscapinhas.com.br/api/v1/capas-personalizadas/architecto/payment"
 );
 
 const headers = {
@@ -19810,7 +19827,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
-    "http://localhost:8000/api/v1/capas-personalizadas/architecto/photo" \
+    "https://api.maiscapinhas.com.br/api/v1/capas-personalizadas/architecto/photo" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -19818,7 +19835,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/capas-personalizadas/architecto/photo"
+    "https://api.maiscapinhas.com.br/api/v1/capas-personalizadas/architecto/photo"
 );
 
 const headers = {
@@ -19981,7 +19998,7 @@ enviem fotos sem autenticação.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/capas-personalizadas/architecto/gerar-token-upload" \
+    "https://api.maiscapinhas.com.br/api/v1/capas-personalizadas/architecto/gerar-token-upload" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -19989,7 +20006,7 @@ enviem fotos sem autenticação.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/capas-personalizadas/architecto/gerar-token-upload"
+    "https://api.maiscapinhas.com.br/api/v1/capas-personalizadas/architecto/gerar-token-upload"
 );
 
 const headers = {
@@ -20153,7 +20170,7 @@ Marcas são usadas para categorizar modelos de telefone.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/phone-brands?search=Apple&amp;slug=apple&amp;sort=brand_name&amp;direction=asc&amp;per_page=50" \
+    --get "https://api.maiscapinhas.com.br/api/v1/phone-brands?search=Apple&amp;slug=apple&amp;sort=brand_name&amp;direction=asc&amp;per_page=50" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -20161,7 +20178,7 @@ Marcas são usadas para categorizar modelos de telefone.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/phone-brands"
+    "https://api.maiscapinhas.com.br/api/v1/phone-brands"
 );
 
 const params = {
@@ -20376,7 +20393,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/phone-brands" \
+    "https://api.maiscapinhas.com.br/api/v1/phone-brands" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -20390,7 +20407,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/phone-brands"
+    "https://api.maiscapinhas.com.br/api/v1/phone-brands"
 );
 
 const headers = {
@@ -20575,7 +20592,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/phone-brands/16" \
+    --get "https://api.maiscapinhas.com.br/api/v1/phone-brands/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -20583,7 +20600,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/phone-brands/16"
+    "https://api.maiscapinhas.com.br/api/v1/phone-brands/16"
 );
 
 const headers = {
@@ -20740,7 +20757,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PUT \
-    "http://localhost:8000/api/v1/phone-brands/16" \
+    "https://api.maiscapinhas.com.br/api/v1/phone-brands/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -20754,7 +20771,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/phone-brands/16"
+    "https://api.maiscapinhas.com.br/api/v1/phone-brands/16"
 );
 
 const headers = {
@@ -20962,7 +20979,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
-    "http://localhost:8000/api/v1/phone-brands/16" \
+    "https://api.maiscapinhas.com.br/api/v1/phone-brands/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -20970,7 +20987,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/phone-brands/16"
+    "https://api.maiscapinhas.com.br/api/v1/phone-brands/16"
 );
 
 const headers = {
@@ -21138,7 +21155,7 @@ Modelos são vinculados a marcas e usados para associar dispositivos de clientes
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/phone-models?search=iPhone&amp;brand_id=1&amp;form_factor=smartphone&amp;release_year=2024&amp;sort=marketing_name&amp;direction=asc&amp;per_page=50" \
+    --get "https://api.maiscapinhas.com.br/api/v1/phone-models?search=iPhone&amp;brand_id=1&amp;form_factor=smartphone&amp;release_year=2024&amp;sort=marketing_name&amp;direction=asc&amp;per_page=50" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -21146,7 +21163,7 @@ Modelos são vinculados a marcas e usados para associar dispositivos de clientes
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/phone-models"
+    "https://api.maiscapinhas.com.br/api/v1/phone-models"
 );
 
 const params = {
@@ -21383,7 +21400,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/phone-models" \
+    "https://api.maiscapinhas.com.br/api/v1/phone-models" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -21399,7 +21416,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/phone-models"
+    "https://api.maiscapinhas.com.br/api/v1/phone-models"
 );
 
 const headers = {
@@ -21612,7 +21629,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/phone-models/16" \
+    --get "https://api.maiscapinhas.com.br/api/v1/phone-models/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -21620,7 +21637,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/phone-models/16"
+    "https://api.maiscapinhas.com.br/api/v1/phone-models/16"
 );
 
 const headers = {
@@ -21779,7 +21796,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PUT \
-    "http://localhost:8000/api/v1/phone-models/16" \
+    "https://api.maiscapinhas.com.br/api/v1/phone-models/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -21795,7 +21812,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/phone-models/16"
+    "https://api.maiscapinhas.com.br/api/v1/phone-models/16"
 );
 
 const headers = {
@@ -22031,7 +22048,7 @@ Must be one of:
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
-    "http://localhost:8000/api/v1/phone-models/16" \
+    "https://api.maiscapinhas.com.br/api/v1/phone-models/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -22039,7 +22056,7 @@ Must be one of:
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/phone-models/16"
+    "https://api.maiscapinhas.com.br/api/v1/phone-models/16"
 );
 
 const headers = {
@@ -22212,7 +22229,7 @@ O escopo de acesso varia conforme o papel do usuário.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/customers?keyword=Jo%C3%A3o&amp;name=Jo%C3%A3o+Silva&amp;email=joao%40email.com&amp;phone=11999999999&amp;city=S%C3%A3o+Paulo&amp;state=SP&amp;initial_date=2026-01-01&amp;final_date=2026-12-31&amp;has_device=1&amp;brand_id=1&amp;model_id=5&amp;sort=name&amp;direction=asc&amp;per_page=15" \
+    --get "https://api.maiscapinhas.com.br/api/v1/customers?keyword=Jo%C3%A3o&amp;name=Jo%C3%A3o+Silva&amp;email=joao%40email.com&amp;phone=11999999999&amp;city=S%C3%A3o+Paulo&amp;state=SP&amp;initial_date=2026-01-01&amp;final_date=2026-12-31&amp;has_device=1&amp;brand_id=1&amp;model_id=5&amp;sort=name&amp;direction=asc&amp;per_page=15" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -22220,7 +22237,7 @@ O escopo de acesso varia conforme o papel do usuário.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/customers"
+    "https://api.maiscapinhas.com.br/api/v1/customers"
 );
 
 const params = {
@@ -22563,7 +22580,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/customers" \
+    "https://api.maiscapinhas.com.br/api/v1/customers" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -22587,7 +22604,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/customers"
+    "https://api.maiscapinhas.com.br/api/v1/customers"
 );
 
 const headers = {
@@ -22902,7 +22919,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/customers/16" \
+    --get "https://api.maiscapinhas.com.br/api/v1/customers/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -22910,7 +22927,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/customers/16"
+    "https://api.maiscapinhas.com.br/api/v1/customers/16"
 );
 
 const headers = {
@@ -23085,7 +23102,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PATCH \
-    "http://localhost:8000/api/v1/customers/16" \
+    "https://api.maiscapinhas.com.br/api/v1/customers/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -23107,7 +23124,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/customers/16"
+    "https://api.maiscapinhas.com.br/api/v1/customers/16"
 );
 
 const headers = {
@@ -23411,7 +23428,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
-    "http://localhost:8000/api/v1/customers/16" \
+    "https://api.maiscapinhas.com.br/api/v1/customers/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -23419,7 +23436,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/customers/16"
+    "https://api.maiscapinhas.com.br/api/v1/customers/16"
 );
 
 const headers = {
@@ -23580,7 +23597,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/customers/16/devices" \
+    --get "https://api.maiscapinhas.com.br/api/v1/customers/16/devices" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -23588,7 +23605,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/customers/16/devices"
+    "https://api.maiscapinhas.com.br/api/v1/customers/16/devices"
 );
 
 const headers = {
@@ -23750,7 +23767,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/customers/16/devices" \
+    "https://api.maiscapinhas.com.br/api/v1/customers/16/devices" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -23764,7 +23781,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/customers/16/devices"
+    "https://api.maiscapinhas.com.br/api/v1/customers/16/devices"
 );
 
 const headers = {
@@ -23977,7 +23994,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PATCH \
-    "http://localhost:8000/api/v1/customers/16/devices/16" \
+    "https://api.maiscapinhas.com.br/api/v1/customers/16/devices/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -23991,7 +24008,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/customers/16/devices/16"
+    "https://api.maiscapinhas.com.br/api/v1/customers/16/devices/16"
 );
 
 const headers = {
@@ -24234,7 +24251,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
-    "http://localhost:8000/api/v1/customers/16/devices/16" \
+    "https://api.maiscapinhas.com.br/api/v1/customers/16/devices/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -24242,7 +24259,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/customers/16/devices/16"
+    "https://api.maiscapinhas.com.br/api/v1/customers/16/devices/16"
 );
 
 const headers = {
@@ -24459,7 +24476,7 @@ Os avisos são separados em duas categorias:</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/me/announcements/active?store_id=1" \
+    --get "https://api.maiscapinhas.com.br/api/v1/me/announcements/active?store_id=1" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -24467,7 +24484,7 @@ Os avisos são separados em duas categorias:</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/me/announcements/active"
+    "https://api.maiscapinhas.com.br/api/v1/me/announcements/active"
 );
 
 const params = {
@@ -24641,31 +24658,31 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/me/announcements?store_id=1&amp;status=active&amp;severity=info&amp;sort=created_at_desc&amp;per_page=15" \
+    --get "https://api.maiscapinhas.com.br/api/v1/me/announcements?store_id=1&amp;status=active&amp;severity=info&amp;sort=created_at_desc&amp;per_page=15" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
-    \"status\": \"active\",
+    \"status\": \"all\",
     \"only_unacknowledged\": false,
-    \"only_unseen\": true,
-    \"severity\": \"danger\",
-    \"type\": \"recado\",
-    \"scope\": \"global\",
+    \"only_unseen\": false,
+    \"severity\": \"info\",
+    \"type\": \"advertencia\",
+    \"scope\": \"user\",
     \"store_id\": 16,
     \"created_by\": 16,
-    \"date_from\": \"2026-01-13T19:06:33\",
+    \"date_from\": \"2026-01-13T19:21:10\",
     \"date_to\": \"2052-02-06\",
     \"per_page\": 22,
     \"page\": 67,
-    \"sort\": \"starts_at_desc\"
+    \"sort\": \"severity_desc\"
 }"
 </code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/me/announcements"
+    "https://api.maiscapinhas.com.br/api/v1/me/announcements"
 );
 
 const params = {
@@ -24685,19 +24702,19 @@ const headers = {
 };
 
 let body = {
-    "status": "active",
+    "status": "all",
     "only_unacknowledged": false,
-    "only_unseen": true,
-    "severity": "danger",
-    "type": "recado",
-    "scope": "global",
+    "only_unseen": false,
+    "severity": "info",
+    "type": "advertencia",
+    "scope": "user",
     "store_id": 16,
     "created_by": 16,
-    "date_from": "2026-01-13T19:06:33",
+    "date_from": "2026-01-13T19:21:10",
     "date_to": "2052-02-06",
     "per_page": 22,
     "page": 67,
-    "sort": "starts_at_desc"
+    "sort": "severity_desc"
 };
 
 fetch(url, {
@@ -24881,10 +24898,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="status"                data-endpoint="GETapi-v1-me-announcements"
-               value="active"
+               value="all"
                data-component="body">
     <br>
-<p>Example: <code>active</code></p>
+<p>Example: <code>all</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>draft</code></li> <li><code>scheduled</code></li> <li><code>active</code></li> <li><code>expired</code></li> <li><code>archived</code></li> <li><code>all</code></li></ul>
         </div>
@@ -24930,7 +24947,7 @@ Must be one of:
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>true</code></p>
+<p>Example: <code>false</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>severity</code></b>&nbsp;&nbsp;
@@ -24939,10 +24956,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="severity"                data-endpoint="GETapi-v1-me-announcements"
-               value="danger"
+               value="info"
                data-component="body">
     <br>
-<p>Example: <code>danger</code></p>
+<p>Example: <code>info</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>info</code></li> <li><code>warning</code></li> <li><code>danger</code></li></ul>
         </div>
@@ -24953,10 +24970,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="type"                data-endpoint="GETapi-v1-me-announcements"
-               value="recado"
+               value="advertencia"
                data-component="body">
     <br>
-<p>Example: <code>recado</code></p>
+<p>Example: <code>advertencia</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>recado</code></li> <li><code>advertencia</code></li></ul>
         </div>
@@ -24967,10 +24984,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="scope"                data-endpoint="GETapi-v1-me-announcements"
-               value="global"
+               value="user"
                data-component="body">
     <br>
-<p>Example: <code>global</code></p>
+<p>Example: <code>user</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>global</code></li> <li><code>store</code></li> <li><code>user</code></li> <li><code>role</code></li></ul>
         </div>
@@ -25005,10 +25022,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="date_from"                data-endpoint="GETapi-v1-me-announcements"
-               value="2026-01-13T19:06:33"
+               value="2026-01-13T19:21:10"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-01-13T19:06:33</code></p>
+<p>Must be a valid date. Example: <code>2026-01-13T19:21:10</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>date_to</code></b>&nbsp;&nbsp;
@@ -25053,10 +25070,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="sort"                data-endpoint="GETapi-v1-me-announcements"
-               value="starts_at_desc"
+               value="severity_desc"
                data-component="body">
     <br>
-<p>Example: <code>starts_at_desc</code></p>
+<p>Example: <code>severity_desc</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>starts_at_desc</code></li> <li><code>starts_at_asc</code></li> <li><code>created_at_desc</code></li> <li><code>created_at_asc</code></li> <li><code>severity_desc</code></li> <li><code>priority_desc</code></li></ul>
         </div>
@@ -25078,31 +25095,31 @@ Super admins veem todos os avisos; outros admins veem apenas avisos das lojas qu
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/announcements?status=active&amp;severity=warning&amp;type=announcement&amp;scope=store&amp;created_by=1&amp;date_from=2026-01-01&amp;date_to=2026-12-31&amp;sort=created_at_desc&amp;per_page=15" \
+    --get "https://api.maiscapinhas.com.br/api/v1/announcements?status=active&amp;severity=warning&amp;type=announcement&amp;scope=store&amp;created_by=1&amp;date_from=2026-01-01&amp;date_to=2026-12-31&amp;sort=created_at_desc&amp;per_page=15" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
-    \"status\": \"all\",
+    \"status\": \"active\",
     \"only_unacknowledged\": false,
     \"only_unseen\": false,
-    \"severity\": \"warning\",
+    \"severity\": \"info\",
     \"type\": \"recado\",
-    \"scope\": \"global\",
+    \"scope\": \"user\",
     \"store_id\": 16,
     \"created_by\": 16,
-    \"date_from\": \"2026-01-13T19:06:33\",
+    \"date_from\": \"2026-01-13T19:21:10\",
     \"date_to\": \"2052-02-06\",
     \"per_page\": 22,
     \"page\": 67,
-    \"sort\": \"created_at_asc\"
+    \"sort\": \"starts_at_asc\"
 }"
 </code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/announcements"
+    "https://api.maiscapinhas.com.br/api/v1/announcements"
 );
 
 const params = {
@@ -25126,19 +25143,19 @@ const headers = {
 };
 
 let body = {
-    "status": "all",
+    "status": "active",
     "only_unacknowledged": false,
     "only_unseen": false,
-    "severity": "warning",
+    "severity": "info",
     "type": "recado",
-    "scope": "global",
+    "scope": "user",
     "store_id": 16,
     "created_by": 16,
-    "date_from": "2026-01-13T19:06:33",
+    "date_from": "2026-01-13T19:21:10",
     "date_to": "2052-02-06",
     "per_page": 22,
     "page": 67,
-    "sort": "created_at_asc"
+    "sort": "starts_at_asc"
 };
 
 fetch(url, {
@@ -25380,10 +25397,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="status"                data-endpoint="GETapi-v1-announcements"
-               value="all"
+               value="active"
                data-component="body">
     <br>
-<p>Example: <code>all</code></p>
+<p>Example: <code>active</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>draft</code></li> <li><code>scheduled</code></li> <li><code>active</code></li> <li><code>expired</code></li> <li><code>archived</code></li> <li><code>all</code></li></ul>
         </div>
@@ -25438,10 +25455,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="severity"                data-endpoint="GETapi-v1-announcements"
-               value="warning"
+               value="info"
                data-component="body">
     <br>
-<p>Example: <code>warning</code></p>
+<p>Example: <code>info</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>info</code></li> <li><code>warning</code></li> <li><code>danger</code></li></ul>
         </div>
@@ -25466,10 +25483,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="scope"                data-endpoint="GETapi-v1-announcements"
-               value="global"
+               value="user"
                data-component="body">
     <br>
-<p>Example: <code>global</code></p>
+<p>Example: <code>user</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>global</code></li> <li><code>store</code></li> <li><code>user</code></li> <li><code>role</code></li></ul>
         </div>
@@ -25504,10 +25521,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="date_from"                data-endpoint="GETapi-v1-announcements"
-               value="2026-01-13T19:06:33"
+               value="2026-01-13T19:21:10"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-01-13T19:06:33</code></p>
+<p>Must be a valid date. Example: <code>2026-01-13T19:21:10</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>date_to</code></b>&nbsp;&nbsp;
@@ -25552,10 +25569,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="sort"                data-endpoint="GETapi-v1-announcements"
-               value="created_at_asc"
+               value="starts_at_asc"
                data-component="body">
     <br>
-<p>Example: <code>created_at_asc</code></p>
+<p>Example: <code>starts_at_asc</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>starts_at_desc</code></li> <li><code>starts_at_asc</code></li> <li><code>created_at_desc</code></li> <li><code>created_at_asc</code></li> <li><code>severity_desc</code></li> <li><code>priority_desc</code></li></ul>
         </div>
@@ -25582,7 +25599,7 @@ Must be one of:
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/announcements" \
+    "https://api.maiscapinhas.com.br/api/v1/announcements" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -25604,7 +25621,7 @@ Must be one of:
     \"expires_at\": \"2026-01-20T23:59:59Z\",
     \"repeat_every_minutes\": 22,
     \"priority\": 10,
-    \"pinned_until\": \"2026-01-13T19:06:33\",
+    \"pinned_until\": \"2026-01-13T19:21:10\",
     \"targets\": [
         \"architecto\"
     ]
@@ -25614,7 +25631,7 @@ Must be one of:
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/announcements"
+    "https://api.maiscapinhas.com.br/api/v1/announcements"
 );
 
 const headers = {
@@ -25641,7 +25658,7 @@ let body = {
     "expires_at": "2026-01-20T23:59:59Z",
     "repeat_every_minutes": 22,
     "priority": 10,
-    "pinned_until": "2026-01-13T19:06:33",
+    "pinned_until": "2026-01-13T19:21:10",
     "targets": [
         "architecto"
     ]
@@ -25984,10 +26001,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="pinned_until"                data-endpoint="POSTapi-v1-announcements"
-               value="2026-01-13T19:06:33"
+               value="2026-01-13T19:21:10"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-01-13T19:06:33</code></p>
+<p>Must be a valid date. Example: <code>2026-01-13T19:21:10</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>meta_json</code></b>&nbsp;&nbsp;
@@ -26054,7 +26071,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/announcements/16" \
+    --get "https://api.maiscapinhas.com.br/api/v1/announcements/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -26062,7 +26079,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/announcements/16"
+    "https://api.maiscapinhas.com.br/api/v1/announcements/16"
 );
 
 const headers = {
@@ -26243,7 +26260,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PUT \
-    "http://localhost:8000/api/v1/announcements/16" \
+    "https://api.maiscapinhas.com.br/api/v1/announcements/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -26253,7 +26270,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"excerpt\": \"n\",
     \"type\": \"recado\",
     \"severity\": \"info\",
-    \"display_mode\": \"modal\",
+    \"display_mode\": \"both\",
     \"icon\": \"g\",
     \"image_url\": \"http:\\/\\/www.okuneva.com\\/fugiat-sunt-nihil-accusantium-harum-mollitia.html\",
     \"image_alt\": \"k\",
@@ -26261,11 +26278,11 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"cta_url\": \"http:\\/\\/www.dubuque.net\\/quo-omnis-nostrum-aut-adipisci\",
     \"scope\": \"store\",
     \"require_ack\": true,
-    \"starts_at\": \"2026-01-13T19:06:33\",
+    \"starts_at\": \"2026-01-13T19:21:10\",
     \"expires_at\": \"2052-02-06\",
     \"repeat_every_minutes\": 22,
     \"priority\": 84,
-    \"pinned_until\": \"2026-01-13T19:06:33\",
+    \"pinned_until\": \"2026-01-13T19:21:10\",
     \"targets\": [
         \"architecto\"
     ]
@@ -26275,7 +26292,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/announcements/16"
+    "https://api.maiscapinhas.com.br/api/v1/announcements/16"
 );
 
 const headers = {
@@ -26290,7 +26307,7 @@ let body = {
     "excerpt": "n",
     "type": "recado",
     "severity": "info",
-    "display_mode": "modal",
+    "display_mode": "both",
     "icon": "g",
     "image_url": "http:\/\/www.okuneva.com\/fugiat-sunt-nihil-accusantium-harum-mollitia.html",
     "image_alt": "k",
@@ -26298,11 +26315,11 @@ let body = {
     "cta_url": "http:\/\/www.dubuque.net\/quo-omnis-nostrum-aut-adipisci",
     "scope": "store",
     "require_ack": true,
-    "starts_at": "2026-01-13T19:06:33",
+    "starts_at": "2026-01-13T19:21:10",
     "expires_at": "2052-02-06",
     "repeat_every_minutes": 22,
     "priority": 84,
-    "pinned_until": "2026-01-13T19:06:33",
+    "pinned_until": "2026-01-13T19:21:10",
     "targets": [
         "architecto"
     ]
@@ -26518,10 +26535,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="display_mode"                data-endpoint="PUTapi-v1-announcements--id-"
-               value="modal"
+               value="both"
                data-component="body">
     <br>
-<p>Example: <code>modal</code></p>
+<p>Example: <code>both</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>banner</code></li> <li><code>modal</code></li> <li><code>both</code></li></ul>
         </div>
@@ -26628,10 +26645,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="starts_at"                data-endpoint="PUTapi-v1-announcements--id-"
-               value="2026-01-13T19:06:33"
+               value="2026-01-13T19:21:10"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-01-13T19:06:33</code></p>
+<p>Must be a valid date. Example: <code>2026-01-13T19:21:10</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>expires_at</code></b>&nbsp;&nbsp;
@@ -26676,10 +26693,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="pinned_until"                data-endpoint="PUTapi-v1-announcements--id-"
-               value="2026-01-13T19:06:33"
+               value="2026-01-13T19:21:10"
                data-component="body">
     <br>
-<p>Must be a valid date. Example: <code>2026-01-13T19:06:33</code></p>
+<p>Must be a valid date. Example: <code>2026-01-13T19:21:10</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>meta_json</code></b>&nbsp;&nbsp;
@@ -26710,10 +26727,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="targets.0.target_type"                data-endpoint="PUTapi-v1-announcements--id-"
-               value="user"
+               value="role"
                data-component="body">
     <br>
-<p>This field is required when <code>targets</code> is present. Example: <code>user</code></p>
+<p>This field is required when <code>targets</code> is present. Example: <code>role</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>store</code></li> <li><code>user</code></li> <li><code>role</code></li></ul>
                     </div>
@@ -26748,7 +26765,7 @@ Must be one of:
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
-    "http://localhost:8000/api/v1/announcements/16" \
+    "https://api.maiscapinhas.com.br/api/v1/announcements/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -26756,7 +26773,7 @@ Must be one of:
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/announcements/16"
+    "https://api.maiscapinhas.com.br/api/v1/announcements/16"
 );
 
 const headers = {
@@ -26914,7 +26931,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/announcements/16/seen" \
+    "https://api.maiscapinhas.com.br/api/v1/announcements/16/seen" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -26926,7 +26943,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/announcements/16/seen"
+    "https://api.maiscapinhas.com.br/api/v1/announcements/16/seen"
 );
 
 const headers = {
@@ -27100,7 +27117,7 @@ Usado para avisos que exigem confirmação explícita (<code>require_ack = true<
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/announcements/16/ack" \
+    "https://api.maiscapinhas.com.br/api/v1/announcements/16/ack" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -27112,7 +27129,7 @@ Usado para avisos que exigem confirmação explícita (<code>require_ack = true<
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/announcements/16/ack"
+    "https://api.maiscapinhas.com.br/api/v1/announcements/16/ack"
 );
 
 const headers = {
@@ -27286,7 +27303,7 @@ O aviso não aparecerá mais no dashboard do usuário.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/announcements/16/dismiss" \
+    "https://api.maiscapinhas.com.br/api/v1/announcements/16/dismiss" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -27298,7 +27315,7 @@ O aviso não aparecerá mais no dashboard do usuário.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/announcements/16/dismiss"
+    "https://api.maiscapinhas.com.br/api/v1/announcements/16/dismiss"
 );
 
 const headers = {
@@ -27472,7 +27489,7 @@ caso contrário, será <code>active</code> imediatamente.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/announcements/16/publish" \
+    "https://api.maiscapinhas.com.br/api/v1/announcements/16/publish" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -27480,7 +27497,7 @@ caso contrário, será <code>active</code> imediatamente.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/announcements/16/publish"
+    "https://api.maiscapinhas.com.br/api/v1/announcements/16/publish"
 );
 
 const headers = {
@@ -27658,7 +27675,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/announcements/16/archive" \
+    "https://api.maiscapinhas.com.br/api/v1/announcements/16/archive" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -27666,7 +27683,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/announcements/16/archive"
+    "https://api.maiscapinhas.com.br/api/v1/announcements/16/archive"
 );
 
 const headers = {
@@ -27831,7 +27848,7 @@ visualizações, confirmações e dispensas.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/announcements/16/stats" \
+    --get "https://api.maiscapinhas.com.br/api/v1/announcements/16/stats" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -27839,7 +27856,7 @@ visualizações, confirmações e dispensas.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/announcements/16/stats"
+    "https://api.maiscapinhas.com.br/api/v1/announcements/16/stats"
 );
 
 const headers = {
@@ -28001,7 +28018,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/announcements/16/receipts?status=pending&amp;store_id=1&amp;per_page=25" \
+    --get "https://api.maiscapinhas.com.br/api/v1/announcements/16/receipts?status=pending&amp;store_id=1&amp;per_page=25" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -28009,7 +28026,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/announcements/16/receipts"
+    "https://api.maiscapinhas.com.br/api/v1/announcements/16/receipts"
 );
 
 const params = {
@@ -28225,7 +28242,7 @@ O título da cópia será prefixado com &quot;[Cópia]&quot;.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/announcements/16/duplicate" \
+    "https://api.maiscapinhas.com.br/api/v1/announcements/16/duplicate" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -28233,7 +28250,7 @@ O título da cópia será prefixado com &quot;[Cópia]&quot;.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/announcements/16/duplicate"
+    "https://api.maiscapinhas.com.br/api/v1/announcements/16/duplicate"
 );
 
 const headers = {
@@ -28405,7 +28422,7 @@ As datas de início e expiração são redefinidas.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/announcements/16/republish" \
+    "https://api.maiscapinhas.com.br/api/v1/announcements/16/republish" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -28413,7 +28430,7 @@ As datas de início e expiração são redefinidas.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/announcements/16/republish"
+    "https://api.maiscapinhas.com.br/api/v1/announcements/16/republish"
 );
 
 const headers = {
@@ -28601,7 +28618,7 @@ Apenas pedidos com status visível à fábrica são retornados.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/fabrica/pedidos?status=pending&amp;initial_date=2026-01-01&amp;final_date=2026-01-31&amp;per_page=15" \
+    --get "https://api.maiscapinhas.com.br/api/v1/fabrica/pedidos?status=pending&amp;initial_date=2026-01-01&amp;final_date=2026-01-31&amp;per_page=15" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -28609,7 +28626,7 @@ Apenas pedidos com status visível à fábrica são retornados.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/fabrica/pedidos"
+    "https://api.maiscapinhas.com.br/api/v1/fabrica/pedidos"
 );
 
 const params = {
@@ -28805,7 +28822,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/fabrica/pedidos/16" \
+    --get "https://api.maiscapinhas.com.br/api/v1/fabrica/pedidos/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -28813,7 +28830,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/fabrica/pedidos/16"
+    "https://api.maiscapinhas.com.br/api/v1/fabrica/pedidos/16"
 );
 
 const headers = {
@@ -29005,7 +29022,7 @@ O status do pedido muda de <code>pending</code> para <code>accepted</code>.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PATCH \
-    "http://localhost:8000/api/v1/fabrica/pedidos/16/aceitar" \
+    "https://api.maiscapinhas.com.br/api/v1/fabrica/pedidos/16/aceitar" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -29018,7 +29035,7 @@ O status do pedido muda de <code>pending</code> para <code>accepted</code>.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/fabrica/pedidos/16/aceitar"
+    "https://api.maiscapinhas.com.br/api/v1/fabrica/pedidos/16/aceitar"
 );
 
 const headers = {
@@ -29220,7 +29237,7 @@ O status do pedido muda de <code>accepted</code> para <code>dispatched</code>.</
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PATCH \
-    "http://localhost:8000/api/v1/fabrica/pedidos/16/despachar" \
+    "https://api.maiscapinhas.com.br/api/v1/fabrica/pedidos/16/despachar" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -29233,7 +29250,7 @@ O status do pedido muda de <code>accepted</code> para <code>dispatched</code>.</
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/fabrica/pedidos/16/despachar"
+    "https://api.maiscapinhas.com.br/api/v1/fabrica/pedidos/16/despachar"
 );
 
 const headers = {
@@ -29422,7 +29439,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/fabrica/pedidos/16/itens/10/foto" \
+    --get "https://api.maiscapinhas.com.br/api/v1/fabrica/pedidos/16/itens/10/foto" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -29430,7 +29447,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/fabrica/pedidos/16/itens/10/foto"
+    "https://api.maiscapinhas.com.br/api/v1/fabrica/pedidos/16/itens/10/foto"
 );
 
 const headers = {
@@ -29622,7 +29639,7 @@ Pedidos representam solicitações de clientes que podem incluir capas personali
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/pedidos?store_id=1&amp;user_id=1&amp;status=1&amp;customer_id=1&amp;initial_date=2026-01-01&amp;final_date=2026-12-31&amp;brand_id=1&amp;model_id=5&amp;keyword=Jo%C3%A3o&amp;sort=created_at&amp;direction=desc&amp;per_page=15" \
+    --get "https://api.maiscapinhas.com.br/api/v1/pedidos?store_id=1&amp;user_id=1&amp;status=1&amp;customer_id=1&amp;initial_date=2026-01-01&amp;final_date=2026-12-31&amp;brand_id=1&amp;model_id=5&amp;keyword=Jo%C3%A3o&amp;sort=created_at&amp;direction=desc&amp;per_page=15" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -29630,7 +29647,7 @@ Pedidos representam solicitações de clientes que podem incluir capas personali
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/pedidos"
+    "https://api.maiscapinhas.com.br/api/v1/pedidos"
 );
 
 const params = {
@@ -29937,7 +29954,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/pedidos" \
+    "https://api.maiscapinhas.com.br/api/v1/pedidos" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -29957,7 +29974,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/pedidos"
+    "https://api.maiscapinhas.com.br/api/v1/pedidos"
 );
 
 const headers = {
@@ -30233,7 +30250,7 @@ Must be one of:
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/pedidos/16" \
+    --get "https://api.maiscapinhas.com.br/api/v1/pedidos/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -30241,7 +30258,7 @@ Must be one of:
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/pedidos/16"
+    "https://api.maiscapinhas.com.br/api/v1/pedidos/16"
 );
 
 const headers = {
@@ -30416,7 +30433,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PATCH \
-    "http://localhost:8000/api/v1/pedidos/16" \
+    "https://api.maiscapinhas.com.br/api/v1/pedidos/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -30433,7 +30450,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/pedidos/16"
+    "https://api.maiscapinhas.com.br/api/v1/pedidos/16"
 );
 
 const headers = {
@@ -30672,7 +30689,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
-    "http://localhost:8000/api/v1/pedidos/16" \
+    "https://api.maiscapinhas.com.br/api/v1/pedidos/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -30680,7 +30697,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/pedidos/16"
+    "https://api.maiscapinhas.com.br/api/v1/pedidos/16"
 );
 
 const headers = {
@@ -30832,7 +30849,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PATCH \
-    "http://localhost:8000/api/v1/pedidos/16/status" \
+    "https://api.maiscapinhas.com.br/api/v1/pedidos/16/status" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -30845,7 +30862,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/pedidos/16/status"
+    "https://api.maiscapinhas.com.br/api/v1/pedidos/16/status"
 );
 
 const headers = {
@@ -31032,7 +31049,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/pedidos/bulk-status" \
+    "https://api.maiscapinhas.com.br/api/v1/pedidos/bulk-status" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -31049,7 +31066,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/pedidos/bulk-status"
+    "https://api.maiscapinhas.com.br/api/v1/pedidos/bulk-status"
 );
 
 const headers = {
@@ -31254,7 +31271,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/producao/admin/limpar-itens-cancelados" \
+    "https://api.maiscapinhas.com.br/api/v1/producao/admin/limpar-itens-cancelados" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -31262,7 +31279,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/producao/admin/limpar-itens-cancelados"
+    "https://api.maiscapinhas.com.br/api/v1/producao/admin/limpar-itens-cancelados"
 );
 
 const headers = {
@@ -31422,7 +31439,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/producao/carrinho" \
+    --get "https://api.maiscapinhas.com.br/api/v1/producao/carrinho" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -31430,7 +31447,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/producao/carrinho"
+    "https://api.maiscapinhas.com.br/api/v1/producao/carrinho"
 );
 
 const headers = {
@@ -31573,7 +31590,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/producao/carrinho/validar" \
+    "https://api.maiscapinhas.com.br/api/v1/producao/carrinho/validar" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -31589,7 +31606,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/producao/carrinho/validar"
+    "https://api.maiscapinhas.com.br/api/v1/producao/carrinho/validar"
 );
 
 const headers = {
@@ -31776,7 +31793,7 @@ Capas bloqueadas são informadas na resposta.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/producao/carrinho/itens" \
+    "https://api.maiscapinhas.com.br/api/v1/producao/carrinho/itens" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -31792,7 +31809,7 @@ Capas bloqueadas são informadas na resposta.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/producao/carrinho/itens"
+    "https://api.maiscapinhas.com.br/api/v1/producao/carrinho/itens"
 );
 
 const headers = {
@@ -31982,7 +31999,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
-    "http://localhost:8000/api/v1/producao/carrinho/itens/bulk" \
+    "https://api.maiscapinhas.com.br/api/v1/producao/carrinho/itens/bulk" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -31998,7 +32015,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/producao/carrinho/itens/bulk"
+    "https://api.maiscapinhas.com.br/api/v1/producao/carrinho/itens/bulk"
 );
 
 const headers = {
@@ -32169,7 +32186,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
-    "http://localhost:8000/api/v1/producao/carrinho/itens/1" \
+    "https://api.maiscapinhas.com.br/api/v1/producao/carrinho/itens/1" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -32177,7 +32194,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/producao/carrinho/itens/1"
+    "https://api.maiscapinhas.com.br/api/v1/producao/carrinho/itens/1"
 );
 
 const headers = {
@@ -32327,7 +32344,7 @@ O carrinho deve ter pelo menos um item.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost:8000/api/v1/producao/carrinho/fechar" \
+    "https://api.maiscapinhas.com.br/api/v1/producao/carrinho/fechar" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -32339,7 +32356,7 @@ O carrinho deve ter pelo menos um item.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/producao/carrinho/fechar"
+    "https://api.maiscapinhas.com.br/api/v1/producao/carrinho/fechar"
 );
 
 const headers = {
@@ -32498,7 +32515,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
-    "http://localhost:8000/api/v1/producao/carrinho" \
+    "https://api.maiscapinhas.com.br/api/v1/producao/carrinho" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -32506,7 +32523,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/producao/carrinho"
+    "https://api.maiscapinhas.com.br/api/v1/producao/carrinho"
 );
 
 const headers = {
@@ -32656,7 +32673,7 @@ Estes endpoints são utilizados após o fechamento do carrinho de produção.</p
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/producao/pedidos?status=pending&amp;initial_date=2026-01-01&amp;final_date=2026-01-31&amp;per_page=15" \
+    --get "https://api.maiscapinhas.com.br/api/v1/producao/pedidos?status=pending&amp;initial_date=2026-01-01&amp;final_date=2026-01-31&amp;per_page=15" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -32664,7 +32681,7 @@ Estes endpoints são utilizados após o fechamento do carrinho de produção.</p
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/producao/pedidos"
+    "https://api.maiscapinhas.com.br/api/v1/producao/pedidos"
 );
 
 const params = {
@@ -32862,7 +32879,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/producao/pedidos/16" \
+    --get "https://api.maiscapinhas.com.br/api/v1/producao/pedidos/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -32870,7 +32887,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/producao/pedidos/16"
+    "https://api.maiscapinhas.com.br/api/v1/producao/pedidos/16"
 );
 
 const headers = {
@@ -33049,7 +33066,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/producao/pedidos/16/timeline" \
+    --get "https://api.maiscapinhas.com.br/api/v1/producao/pedidos/16/timeline" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -33057,7 +33074,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/producao/pedidos/16/timeline"
+    "https://api.maiscapinhas.com.br/api/v1/producao/pedidos/16/timeline"
 );
 
 const headers = {
@@ -33231,7 +33248,7 @@ O status do pedido muda de <code>dispatched</code> para <code>received</code>.</
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PATCH \
-    "http://localhost:8000/api/v1/producao/pedidos/16/receber" \
+    "https://api.maiscapinhas.com.br/api/v1/producao/pedidos/16/receber" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -33243,7 +33260,7 @@ O status do pedido muda de <code>dispatched</code> para <code>received</code>.</
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/producao/pedidos/16/receber"
+    "https://api.maiscapinhas.com.br/api/v1/producao/pedidos/16/receber"
 );
 
 const headers = {
@@ -33422,7 +33439,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
-    "http://localhost:8000/api/v1/producao/pedidos/16" \
+    "https://api.maiscapinhas.com.br/api/v1/producao/pedidos/16" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -33434,7 +33451,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/producao/pedidos/16"
+    "https://api.maiscapinhas.com.br/api/v1/producao/pedidos/16"
 );
 
 const headers = {
@@ -33627,7 +33644,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/reports/ranking?month=2026-01&amp;store_id=1&amp;limit=10&amp;order=asc" \
+    --get "https://api.maiscapinhas.com.br/api/v1/reports/ranking?month=2026-01&amp;store_id=1&amp;limit=10&amp;order=asc" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -33635,14 +33652,14 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"month\": \"6425-59\",
     \"store_id\": 16,
     \"limit\": 22,
-    \"order\": \"desc\"
+    \"order\": \"asc\"
 }"
 </code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/reports/ranking"
+    "https://api.maiscapinhas.com.br/api/v1/reports/ranking"
 );
 
 const params = {
@@ -33664,7 +33681,7 @@ let body = {
     "month": "6425-59",
     "store_id": 16,
     "limit": 22,
-    "order": "desc"
+    "order": "asc"
 };
 
 fetch(url, {
@@ -33876,10 +33893,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="order"                data-endpoint="GETapi-v1-reports-ranking"
-               value="desc"
+               value="asc"
                data-component="body">
     <br>
-<p>Example: <code>desc</code></p>
+<p>Example: <code>asc</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>asc</code></li> <li><code>desc</code></li></ul>
         </div>
@@ -33900,7 +33917,7 @@ Must be one of:
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/users/birthdays?month=1&amp;store_id=1" \
+    --get "https://api.maiscapinhas.com.br/api/v1/users/birthdays?month=1&amp;store_id=1" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -33913,7 +33930,7 @@ Must be one of:
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/users/birthdays"
+    "https://api.maiscapinhas.com.br/api/v1/users/birthdays"
 );
 
 const params = {
@@ -34160,7 +34177,7 @@ que o gestor mantinha manualmente.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/reports/store-performance?store_id=1&amp;month=2026-01" \
+    --get "https://api.maiscapinhas.com.br/api/v1/reports/store-performance?store_id=1&amp;month=2026-01" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -34173,7 +34190,7 @@ que o gestor mantinha manualmente.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/reports/store-performance"
+    "https://api.maiscapinhas.com.br/api/v1/reports/store-performance"
 );
 
 const params = {
@@ -34386,7 +34403,7 @@ com totais consolidados.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/reports/consolidated?month=2026-01" \
+    --get "https://api.maiscapinhas.com.br/api/v1/reports/consolidated?month=2026-01" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -34398,7 +34415,7 @@ com totais consolidados.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/reports/consolidated"
+    "https://api.maiscapinhas.com.br/api/v1/reports/consolidated"
 );
 
 const params = {
@@ -34622,7 +34639,7 @@ incluindo % de quebra, divergências e alertas.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost:8000/api/v1/reports/cash-integrity?store_id=1&amp;month=2026-01" \
+    --get "https://api.maiscapinhas.com.br/api/v1/reports/cash-integrity?store_id=1&amp;month=2026-01" \
     --header "Authorization: Bearer {SEU_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -34635,7 +34652,7 @@ incluindo % de quebra, divergências e alertas.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost:8000/api/v1/reports/cash-integrity"
+    "https://api.maiscapinhas.com.br/api/v1/reports/cash-integrity"
 );
 
 const params = {

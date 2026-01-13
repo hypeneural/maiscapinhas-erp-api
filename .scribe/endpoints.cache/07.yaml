@@ -111,7 +111,7 @@ endpoints:
         name: date
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-13T19:06:34'
+        example: '2026-01-13T19:21:10'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -122,7 +122,7 @@ endpoints:
         name: status
         description: ''
         required: false
-        example: open
+        example: pending
         type: string
         enumValues:
           - open
@@ -144,8 +144,8 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      date: '2026-01-13T19:06:34'
-      status: open
+      date: '2026-01-13T19:21:10'
+      status: pending
       per_page: 22
     fileParameters: []
     responses:
