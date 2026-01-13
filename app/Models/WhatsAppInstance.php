@@ -68,8 +68,7 @@ class WhatsAppInstance extends Model
     protected function casts(): array
     {
         return [
-            'api_key' => 'encrypted',
-            'token' => 'encrypted',
+            // api_key and token encrypted via mutators
             'webhook_secret' => 'encrypted',
             'last_state' => 'array',
             'webhook_events' => 'array',
@@ -158,6 +157,34 @@ class WhatsAppInstance extends Model
     }
 
     // ========================================
+    // Getters (decrypt secrets)
+    // ========================================
+
+    public function getApiKeyAttribute(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+        try {
+            return decrypt($value);
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    public function getTokenAttribute(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+        try {
+            return decrypt($value);
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    // ========================================
     // Mutators (set secrets with metadata)
     // ========================================
 
@@ -168,8 +195,8 @@ class WhatsAppInstance extends Model
             $this->attributes['api_key_last4'] = null;
             $this->attributes['api_key_fingerprint'] = null;
         } else {
-            // Store encrypted value (handled by cast)
-            $this->attributes['api_key'] = $value;
+            // Encrypt manually since we're setting attributes directly (bypasses cast)
+            $this->attributes['api_key'] = encrypt($value);
             $this->attributes['api_key_last4'] = substr($value, -4);
             $this->attributes['api_key_fingerprint'] = substr(hash('sha256', $value), 0, 16);
         }
@@ -182,8 +209,8 @@ class WhatsAppInstance extends Model
             $this->attributes['token_last4'] = null;
             $this->attributes['token_fingerprint'] = null;
         } else {
-            // Store encrypted value (handled by cast)
-            $this->attributes['token'] = $value;
+            // Encrypt manually since we're setting attributes directly
+            $this->attributes['token'] = encrypt($value);
             $this->attributes['token_last4'] = substr($value, -4);
             $this->attributes['token_fingerprint'] = substr(hash('sha256', $value), 0, 16);
         }
