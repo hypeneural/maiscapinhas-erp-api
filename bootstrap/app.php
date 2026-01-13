@@ -31,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Register middleware aliases
         $middleware->alias([
             'fabrica' => \App\Http\Middleware\EnsureIsFabrica::class,
+            'super-admin' => \App\Http\Middleware\EnsureIsSuperAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

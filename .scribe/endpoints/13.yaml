@@ -7,6 +7,77 @@ endpoints:
   -
     custom: []
     httpMethods:
+      - GET
+    uri: api/v1/analytics/people/shift
+    metadata:
+      custom: []
+      groupName: 'People Analytics'
+      groupDescription: |-
+
+        Endpoints para consultar e inserir KPIs de fluxo de pessoas por turno.
+        Dados podem vir de sincronização com FastAPI ou inserção manual.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get People KPIs for a store and date.'
+      description: 'GET /api/v1/analytics/people/shift?store_id=&date='
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'The <code>id</code> of an existing record in the stores table.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      date:
+        custom: []
+        name: date
+        description: 'Must be a valid date.'
+        required: true
+        example: '2026-01-13T20:33:54'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      store_id: 16
+      date: '2026-01-13T20:33:54'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
       - POST
     uri: api/v1/analytics/people/shift
     metadata:
@@ -47,7 +118,7 @@ endpoints:
         name: date
         description: 'Must be a valid date.'
         required: true
-        example: '2026-01-13T19:21:11'
+        example: '2026-01-13T20:33:54'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -58,7 +129,7 @@ endpoints:
         name: shift_code
         description: ''
         required: true
-        example: '2'
+        example: 'N'
         type: string
         enumValues:
           - '1'
@@ -116,8 +187,8 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      date: '2026-01-13T19:21:11'
-      shift_code: '2'
+      date: '2026-01-13T20:33:54'
+      shift_code: 'N'
       in_count: 39
       out_count: 84
       staff_in: 12

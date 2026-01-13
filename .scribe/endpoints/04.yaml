@@ -242,7 +242,7 @@ endpoints:
         name: status
         description: ''
         required: false
-        example: all
+        example: scheduled
         type: string
         enumValues:
           - draft
@@ -295,7 +295,7 @@ endpoints:
         name: type
         description: ''
         required: false
-        example: advertencia
+        example: recado
         type: string
         enumValues:
           - recado
@@ -345,7 +345,7 @@ endpoints:
         name: date_from
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-13T19:21:10'
+        example: '2026-01-13T20:33:54'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -402,15 +402,15 @@ endpoints:
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      status: all
+      status: scheduled
       only_unacknowledged: false
       only_unseen: false
       severity: info
-      type: advertencia
+      type: recado
       scope: user
       store_id: 16
       created_by: 16
-      date_from: '2026-01-13T19:21:10'
+      date_from: '2026-01-13T20:33:54'
       date_to: '2052-02-06'
       per_page: 22
       page: 67
@@ -622,7 +622,7 @@ endpoints:
         name: only_unseen
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -633,7 +633,7 @@ endpoints:
         name: severity
         description: ''
         required: false
-        example: info
+        example: warning
         type: string
         enumValues:
           - info
@@ -647,7 +647,7 @@ endpoints:
         name: type
         description: ''
         required: false
-        example: recado
+        example: advertencia
         type: string
         enumValues:
           - recado
@@ -660,7 +660,7 @@ endpoints:
         name: scope
         description: ''
         required: false
-        example: user
+        example: role
         type: string
         enumValues:
           - global
@@ -697,7 +697,7 @@ endpoints:
         name: date_from
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-13T19:21:10'
+        example: '2026-01-13T20:33:54'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -741,7 +741,7 @@ endpoints:
         name: sort
         description: ''
         required: false
-        example: starts_at_asc
+        example: severity_desc
         type: string
         enumValues:
           - starts_at_desc
@@ -756,17 +756,17 @@ endpoints:
     cleanBodyParameters:
       status: active
       only_unacknowledged: false
-      only_unseen: false
-      severity: info
-      type: recado
-      scope: user
+      only_unseen: true
+      severity: warning
+      type: advertencia
+      scope: role
       store_id: 16
       created_by: 16
-      date_from: '2026-01-13T19:21:10'
+      date_from: '2026-01-13T20:33:54'
       date_to: '2052-02-06'
       per_page: 22
       page: 67
-      sort: starts_at_asc
+      sort: severity_desc
     fileParameters: []
     responses:
       -
@@ -1035,7 +1035,7 @@ endpoints:
         name: pinned_until
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-13T19:21:10'
+        example: '2026-01-13T20:33:54'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1104,7 +1104,7 @@ endpoints:
       expires_at: '2026-01-20T23:59:59Z'
       repeat_every_minutes: 22
       priority: 10
-      pinned_until: '2026-01-13T19:21:10'
+      pinned_until: '2026-01-13T20:33:54'
       targets:
         - architecto
     fileParameters: []
@@ -1348,7 +1348,7 @@ endpoints:
         name: type
         description: ''
         required: false
-        example: recado
+        example: advertencia
         type: string
         enumValues:
           - recado
@@ -1372,7 +1372,7 @@ endpoints:
         name: display_mode
         description: ''
         required: false
-        example: both
+        example: banner
         type: string
         enumValues:
           - banner
@@ -1441,7 +1441,7 @@ endpoints:
         name: scope
         description: ''
         required: false
-        example: store
+        example: user
         type: string
         enumValues:
           - global
@@ -1467,7 +1467,7 @@ endpoints:
         name: starts_at
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-13T19:21:10'
+        example: '2026-01-13T20:33:54'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1511,7 +1511,7 @@ endpoints:
         name: pinned_until
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-13T19:21:10'
+        example: '2026-01-13T20:33:54'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1545,7 +1545,7 @@ endpoints:
         name: 'targets[].target_type'
         description: 'This field is required when <code>targets</code> is present.'
         required: false
-        example: role
+        example: user
         type: string
         enumValues:
           - store
@@ -1569,21 +1569,21 @@ endpoints:
       title: 'Título atualizado'
       message: 'Nova mensagem'
       excerpt: 'n'
-      type: recado
+      type: advertencia
       severity: info
-      display_mode: both
+      display_mode: banner
       icon: g
       image_url: 'http://www.okuneva.com/fugiat-sunt-nihil-accusantium-harum-mollitia.html'
       image_alt: k
       cta_label: h
       cta_url: 'http://www.dubuque.net/quo-omnis-nostrum-aut-adipisci'
-      scope: store
+      scope: user
       require_ack: true
-      starts_at: '2026-01-13T19:21:10'
+      starts_at: '2026-01-13T20:33:54'
       expires_at: '2052-02-06'
       repeat_every_minutes: 22
       priority: 84
-      pinned_until: '2026-01-13T19:21:10'
+      pinned_until: '2026-01-13T20:33:54'
       targets:
         - architecto
     fileParameters: []

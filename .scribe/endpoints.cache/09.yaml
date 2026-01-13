@@ -14,6 +14,58 @@ endpoints:
   -
     custom: []
     httpMethods:
+      - GET
+    uri: api/v1/rules/bonus
+    metadata:
+      custom: []
+      groupName: 'Regras de Bônus'
+      groupDescription: |-
+
+        Gerenciamento de regras de bônus diário.
+        Regras definem faixas de vendas mínimas e valores de bônus correspondentes.
+
+        **Hierarquia de regras:**
+        - Regra específica de loja (`store_id` preenchido) tem prioridade sobre regra global
+        - Regra mais recente (`effective_from` maior) tem prioridade
+        - Versionamento automático a cada atualização
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List bonus rules.'
+      description: 'GET /api/v1/rules/bonus'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
       - POST
     uri: api/v1/rules/bonus
     metadata:
@@ -59,7 +111,7 @@ endpoints:
         name: effective_from
         description: 'Must be a valid date.'
         required: true
-        example: '2026-01-13T19:21:10'
+        example: '2026-01-13T20:33:54'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -101,13 +153,77 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      effective_from: '2026-01-13T19:21:10'
+      effective_from: '2026-01-13T20:33:54'
       config_json:
         -
           min_sales: 27
           bonus: 39
     fileParameters: []
     responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/rules/bonus/{rule_id}'
+    metadata:
+      custom: []
+      groupName: 'Regras de Bônus'
+      groupDescription: |-
+
+        Gerenciamento de regras de bônus diário.
+        Regras definem faixas de vendas mínimas e valores de bônus correspondentes.
+
+        **Hierarquia de regras:**
+        - Regra específica de loja (`store_id` preenchido) tem prioridade sobre regra global
+        - Regra mais recente (`effective_from` maior) tem prioridade
+        - Versionamento automático a cada atualização
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Show a specific bonus rule.'
+      description: 'GET /api/v1/rules/bonus/{rule}'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      rule_id:
+        custom: []
+        name: rule_id
+        description: 'The ID of the rule.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      rule_id: 16
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
     responseFields: []
     auth:
       - headers
@@ -177,7 +293,7 @@ endpoints:
         name: effective_from
         description: 'Must be a valid date.'
         required: true
-        example: '2026-01-13T19:21:11'
+        example: '2026-01-13T20:33:54'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -219,7 +335,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      effective_from: '2026-01-13T19:21:11'
+      effective_from: '2026-01-13T20:33:54'
       config_json:
         -
           min_sales: 27

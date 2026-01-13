@@ -59,6 +59,9 @@ tags:
     name: 'Administração - Vínculos Loja-Usuário'
     description: "\nGerenciamento dos vínculos entre lojas e usuários (tabela `store_users`).\n\nEste módulo controla **qual usuário trabalha em qual loja** e com\n**qual nível de permissão (role)**.\n\n**Sistema de Roles:**\n| Role | Pode fazer |\n|------|------------|\n| `admin` | Tudo: gerenciar usuários, lojas, regras, confirmar comissões |\n| `gerente` | Gerenciar equipe da loja, aprovar fechamentos, ver dashboards |\n| `conferente` | Aprovar/rejeitar fechamentos de caixa |\n| `vendedor` | Registrar vendas, submeter fechamento do próprio turno |\n\n**Regras de Negócio:**\n- Um usuário pode ter roles diferentes em lojas diferentes\n- A role `admin` em qualquer loja dá acesso administrativo global\n- Vendedor \"volante\" pode trabalhar temporariamente em outra loja\n- Não é possível remover seu próprio vínculo (proteção)\n\n**Vínculo × Comissão:**\n- Vendas são sempre registradas na loja onde ocorreram (`store_id` da venda)\n- Comissão vai para o vendedor que realizou a venda (`seller_id`)\n- Meta é calculada pela loja + split configurado"
   -
+    name: 'Administração - WhatsApp'
+    description: "\nGerenciamento de instâncias WhatsApp (Evolution API).\n\nEste módulo permite criar, editar, listar e gerenciar instâncias do WhatsApp\nconectadas via Evolution API. Apenas super admins têm acesso.\n\n**Modelo de Escopos:**\n- Global: `store_id = null` e `user_id = null` (para notificações gerais)\n- Por Loja: `store_id` preenchido (instância específica da loja)\n- Por Usuário: `user_id` preenchido (instância específica do usuário)\n\n**Secrets:**\n- `api_key` e `token` são criptografados em repouso\n- Nunca são retornados nas responses (apenas masked values)"
+  -
     name: Bio
     description: "\nEndpoints públicos para exibição na Bio do Instagram.\nEstes endpoints não requerem autenticação."
   -
@@ -80,6 +83,9 @@ tags:
     name: 'Fábrica - Pedidos de Produção'
     description: "\nPortal da fábrica para gestão de pedidos de produção de capas personalizadas.\nEstes endpoints são exclusivos para usuários com papel de fábrica (middleware `fabrica`).\n\n**Fluxo de produção:**\n1. Admin envia capas para produção → Pedido criado com status `pending`\n2. Fábrica aceita pedido (informa valor) → Status `accepted`\n3. Fábrica despacha pedido (informa rastreio) → Status `dispatched`\n4. Admin recebe pedido → Status `received`\n\n**Permissões:** Apenas usuários com papel de fábrica."
   -
+    name: Outros
+    description: ''
+  -
     name: Pedidos
     description: "\nGestão de pedidos de clientes nas lojas.\nPedidos representam solicitações de clientes que podem incluir capas personalizadas ou produtos do catálogo.\n\n**Escopo de acesso:**\n- Super admins e admins globais: acesso a todos os pedidos\n- Outros usuários: apenas pedidos que criaram\n\n**Status do pedido:** 1=Novo, 2=Em produção, 3=Pronto, 4=Entregue, 5=Cancelado\n\n**Permissões:** Todos os usuários autenticados."
   -
@@ -97,6 +103,9 @@ tags:
   -
     name: 'Relatórios Gerenciais'
     description: "\nEndpoints de relatórios avançados para gestão e auditoria.\n\nEste módulo fornece KPIs estratégicos para tomada de decisão:\n- **Performance de Loja** - Atingimento de meta, crescimento YoY, projeções\n- **Integridade de Caixa** - % de quebra, divergências, alertas\n\n**Público-alvo:**\n- Gerentes e Admins para visão estratégica\n- Conferentes para auditoria de caixa\n- Sócios para acompanhamento financeiro\n\n**Cache:** Dados históricos (ano passado) são cacheados para performance."
+  -
+    name: 'WhatsApp - Mensagens'
+    description: "\nEndpoints para envio de mensagens e verificação de números via WhatsApp.\n\nEstes endpoints permitem que o sistema envie mensagens através\ndas instâncias WhatsApp configuradas.\n\n**Autorização:**\n- Super admin: acesso total a qualquer instância\n- Usuários: acesso a instâncias do seu escopo (user/store/global)\n\n**Resolução de Instância:**\nSe não informar instance_id, o sistema resolve automaticamente:\n1. Instância do usuário (se existir)\n2. Instância da loja (se usuário tiver vínculo)\n3. Instância global favorita"
 components:
   securitySchemes:
     default:
@@ -1421,7 +1430,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T19:21:11'
+                  example: '2026-01-13T20:33:54'
               required:
                 - store_id
   /api/v1/dashboard/conferente:
@@ -1539,7 +1548,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T19:21:11'
+                  example: '2026-01-13T20:33:54'
               required:
                 - store_id
   /api/v1/dashboard/admin:
@@ -1860,11 +1869,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T19:21:10'
+                  example: '2026-01-13T20:33:54'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T19:21:10'
+                  example: '2026-01-13T20:33:54'
                 per_page:
                   type: integer
                   description: 'Must be at least 1. Must not be greater than 100.'
@@ -2330,11 +2339,11 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T19:21:10'
+                  example: '2026-01-13T20:33:54'
                 status:
                   type: string
                   description: ''
-                  example: pending
+                  example: open
                   enum:
                     - open
                     - closed
@@ -3365,6 +3374,26 @@ paths:
         schema:
           type: integer
   /api/v1/rules/bonus:
+    get:
+      summary: 'List bonus rules.'
+      operationId: listBonusRules
+      description: 'GET /api/v1/rules/bonus'
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - 'Regras de Bônus'
     post:
       summary: 'Create a new bonus rule.'
       operationId: createANewBonusRule
@@ -3388,7 +3417,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T19:21:10'
+                  example: '2026-01-13T20:33:54'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -3412,6 +3441,26 @@ paths:
                 - effective_from
                 - config_json
   '/api/v1/rules/bonus/{rule_id}':
+    get:
+      summary: 'Show a specific bonus rule.'
+      operationId: showASpecificBonusRule
+      description: 'GET /api/v1/rules/bonus/{rule}'
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - 'Regras de Bônus'
     put:
       summary: 'Update a bonus rule.'
       operationId: updateABonusRule
@@ -3435,7 +3484,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T19:21:11'
+                  example: '2026-01-13T20:33:54'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -3476,6 +3525,26 @@ paths:
         schema:
           type: integer
   /api/v1/rules/commission:
+    get:
+      summary: 'List commission rules.'
+      operationId: listCommissionRules
+      description: 'GET /api/v1/rules/commission'
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - 'Regras de Comissão'
     post:
       summary: 'Create a new commission rule.'
       operationId: createANewCommissionRule
@@ -3499,7 +3568,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T19:21:11'
+                  example: '2026-01-13T20:33:54'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -3523,6 +3592,26 @@ paths:
                 - effective_from
                 - config_json
   '/api/v1/rules/commission/{rule_id}':
+    get:
+      summary: 'Show a specific commission rule.'
+      operationId: showASpecificCommissionRule
+      description: 'GET /api/v1/rules/commission/{rule}'
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - 'Regras de Comissão'
     put:
       summary: 'Update a commission rule.'
       operationId: updateACommissionRule
@@ -3546,7 +3635,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T19:21:11'
+                  example: '2026-01-13T20:33:54'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -3587,6 +3676,26 @@ paths:
         schema:
           type: integer
   /api/v1/goals/monthly:
+    get:
+      summary: 'List monthly goals.'
+      operationId: listMonthlyGoals
+      description: 'GET /api/v1/goals/monthly'
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - 'Metas Mensais'
     post:
       summary: 'Create a new monthly goal.'
       operationId: createANewMonthlyGoal
@@ -3617,12 +3726,32 @@ paths:
                 active:
                   type: boolean
                   description: ''
-                  example: false
+                  example: true
               required:
                 - store_id
                 - month
                 - goal_amount
   '/api/v1/goals/monthly/{goal_id}':
+    get:
+      summary: 'Show a specific goal.'
+      operationId: showASpecificGoal
+      description: 'GET /api/v1/goals/monthly/{goal}'
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - 'Metas Mensais'
     put:
       summary: 'Update a monthly goal.'
       operationId: updateAMonthlyGoal
@@ -3645,7 +3774,7 @@ paths:
                 active:
                   type: boolean
                   description: ''
-                  example: false
+                  example: true
     delete:
       summary: 'Delete a monthly goal.'
       operationId: deleteAMonthlyGoal
@@ -3709,6 +3838,50 @@ paths:
         required: true
         schema:
           type: integer
+  /api/v1/finance/bonus:
+    get:
+      summary: 'Get bonus ledger.'
+      operationId: getBonusLedger
+      description: 'GET /api/v1/finance/bonus?store_id=&from=&to='
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - 'Extrato Financeiro'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                store_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: 16
+                from:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2026-01-13T20:33:54'
+                to:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2026-01-13T20:33:54'
+                per_page:
+                  type: integer
+                  description: 'Must be at least 1. Must not be greater than 100.'
+                  example: 22
   /api/v1/finance/bonus/calculate:
     get:
       summary: 'Simulador de bônus'
@@ -3937,11 +4110,110 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T19:21:11'
+                  example: '2026-01-13T20:33:54'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T19:21:11'
+                  example: '2026-01-13T20:33:54'
+    parameters:
+      -
+        in: path
+        name: seller_id
+        description: 'The ID of the seller.'
+        example: 16
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: seller
+        description: 'ID do vendedor.'
+        example: 5
+        required: true
+        schema:
+          type: integer
+  /api/v1/finance/commission:
+    get:
+      summary: 'Get commission ledger.'
+      operationId: getCommissionLedger
+      description: 'GET /api/v1/finance/commission?store_id=&month='
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - 'Extrato Financeiro'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                store_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: 16
+                month:
+                  type: string
+                  description: 'Must match the regex /^\d{4}-\d{2}$/.'
+                  example: 6425-59
+                per_page:
+                  type: integer
+                  description: 'Must be at least 1. Must not be greater than 100.'
+                  example: 19
+  '/api/v1/finance/commission/seller/{seller_id}':
+    get:
+      summary: 'Comissão de um vendedor'
+      operationId: comissoDeUmVendedor
+      description: 'Retorna a comissão de um vendedor para um mês específico.'
+      parameters:
+        -
+          in: query
+          name: month
+          description: 'Mês (YYYY-MM).'
+          example: 2026-01
+          required: false
+          schema:
+            type: string
+            description: 'Mês (YYYY-MM).'
+            example: 2026-01
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - 'Extrato Financeiro'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                month:
+                  type: string
+                  description: 'Must match the regex /^\d{4}-\d{2}$/.'
+                  example: 6425-59
     parameters:
       -
         in: path
@@ -4107,6 +4379,44 @@ paths:
         schema:
           type: integer
   /api/v1/analytics/people/shift:
+    get:
+      summary: 'Get People KPIs for a store and date.'
+      operationId: getPeopleKPIsForAStoreAndDate
+      description: 'GET /api/v1/analytics/people/shift?store_id=&date='
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - 'People Analytics'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                store_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: 16
+                date:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2026-01-13T20:33:54'
+              required:
+                - store_id
+                - date
     post:
       summary: 'Manually insert KPI data.'
       operationId: manuallyInsertKPIData
@@ -4129,11 +4439,11 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T19:21:11'
+                  example: '2026-01-13T20:33:54'
                 shift_code:
                   type: string
                   description: ''
-                  example: '2'
+                  example: 'N'
                   enum:
                     - '1'
                     - '2'
@@ -4412,11 +4722,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T19:21:11'
+                  example: '2026-01-13T20:33:55'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T19:21:11'
+                  example: '2026-01-13T20:33:55'
                 causer_id:
                   type: integer
                   description: 'The <code>id</code> of an existing record in the users table.'
@@ -4548,11 +4858,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T19:21:11'
+                  example: '2026-01-13T20:33:55'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T19:21:11'
+                  example: '2026-01-13T20:33:55'
   '/api/v1/admin/audit-logs/{auditLog_id}':
     get:
       summary: 'Ver detalhes do log'
@@ -4868,7 +5178,7 @@ paths:
                 bio_enabled:
                   type: boolean
                   description: ''
-                  example: true
+                  example: false
                 address:
                   type: string
                   description: 'Must not be greater than 255 characters.'
@@ -4969,16 +5279,16 @@ paths:
                             type: object
                             description: ''
                             example:
-                              start: '19:21'
+                              start: '20:33'
                             properties:
                               start:
                                 type: string
                                 description: 'Must be a valid date in the format <code>H:i</code>.'
-                                example: '19:21'
+                                example: '20:33'
                               end:
                                 type: string
                                 description: 'Must be a valid date in the format <code>H:i</code>.'
-                                example: '19:21'
+                                example: '20:33'
                             required:
                               - start
                               - end
@@ -5262,16 +5572,16 @@ paths:
                             type: object
                             description: ''
                             example:
-                              start: '19:21'
+                              start: '20:33'
                             properties:
                               start:
                                 type: string
                                 description: 'Must be a valid date in the format <code>H:i</code>.'
-                                example: '19:21'
+                                example: '20:33'
                               end:
                                 type: string
                                 description: 'Must be a valid date in the format <code>H:i</code>.'
-                                example: '19:21'
+                                example: '20:33'
                             required:
                               - start
                               - end
@@ -5706,7 +6016,7 @@ paths:
                 is_super_admin:
                   type: boolean
                   description: ''
-                  example: true
+                  example: false
                 zip_code:
                   type: string
                   description: 'Must not be greater than 8 characters.'
@@ -5935,7 +6245,7 @@ paths:
                 is_super_admin:
                   type: boolean
                   description: ''
-                  example: true
+                  example: false
                 zip_code:
                   type: string
                   description: 'Must not be greater than 8 characters.'
@@ -6094,7 +6404,7 @@ paths:
                       role:
                         type: string
                         description: ''
-                        example: vendedor
+                        example: gerente
                         enum:
                           - admin
                           - gerente
@@ -6145,7 +6455,7 @@ paths:
                       role:
                         type: string
                         description: ''
-                        example: admin
+                        example: conferente
                         enum:
                           - admin
                           - gerente
@@ -6174,7 +6484,7 @@ paths:
                 role:
                   type: string
                   description: ''
-                  example: admin
+                  example: conferente
                   enum:
                     - admin
                     - gerente
@@ -6521,6 +6831,847 @@ paths:
         name: user
         description: 'ID do usuário no vínculo.'
         example: 6
+        required: true
+        schema:
+          type: integer
+  /api/v1/admin/whatsapp/instances:
+    get:
+      summary: 'Listar instâncias WhatsApp'
+      operationId: listarInstnciasWhatsApp
+      description: 'Retorna uma lista paginada de todas as instâncias WhatsApp cadastradas.'
+      parameters:
+        -
+          in: query
+          name: search
+          description: 'Busca por nome ou URL.'
+          example: loja_01
+          required: false
+          schema:
+            type: string
+            description: 'Busca por nome ou URL.'
+            example: loja_01
+        -
+          in: query
+          name: scope
+          description: 'Filtrar por escopo: global, store, user.'
+          example: global
+          required: false
+          schema:
+            type: string
+            description: 'Filtrar por escopo: global, store, user.'
+            example: global
+        -
+          in: query
+          name: store_id
+          description: 'Filtrar por loja.'
+          example: 1
+          required: false
+          schema:
+            type: integer
+            description: 'Filtrar por loja.'
+            example: 1
+        -
+          in: query
+          name: user_id
+          description: 'Filtrar por usuário.'
+          example: 5
+          required: false
+          schema:
+            type: integer
+            description: 'Filtrar por usuário.'
+            example: 5
+        -
+          in: query
+          name: status
+          description: 'Filtrar por status: connected, disconnected, unknown, connecting.'
+          example: connected
+          required: false
+          schema:
+            type: string
+            description: 'Filtrar por status: connected, disconnected, unknown, connecting.'
+            example: connected
+        -
+          in: query
+          name: is_active
+          description: 'Filtrar por ativo/inativo.'
+          example: true
+          required: false
+          schema:
+            type: boolean
+            description: 'Filtrar por ativo/inativo.'
+            example: true
+        -
+          in: query
+          name: provider
+          description: 'Filtrar por provedor.'
+          example: evolution
+          required: false
+          schema:
+            type: string
+            description: 'Filtrar por provedor.'
+            example: evolution
+        -
+          in: query
+          name: per_page
+          description: 'Itens por página (1-100, default: 25).'
+          example: 25
+          required: false
+          schema:
+            type: integer
+            description: 'Itens por página (1-100, default: 25).'
+            example: 25
+      responses:
+        200:
+          description: 'Lista de instâncias'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    -
+                      id: 1
+                      name: loja_01
+                      scope: global
+                      provider: evolution
+                      base_url: 'https://evolution.example.com'
+                      status: connected
+                      is_default: true
+                      is_active: true
+                      has_api_key: true
+                      api_key_masked: '********1234'
+                  meta:
+                    pagination:
+                      total: 1
+                      current_page: 1
+                properties:
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        name: loja_01
+                        scope: global
+                        provider: evolution
+                        base_url: 'https://evolution.example.com'
+                        status: connected
+                        is_default: true
+                        is_active: true
+                        has_api_key: true
+                        api_key_masked: '********1234'
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: loja_01
+                        scope:
+                          type: string
+                          example: global
+                        provider:
+                          type: string
+                          example: evolution
+                        base_url:
+                          type: string
+                          example: 'https://evolution.example.com'
+                        status:
+                          type: string
+                          example: connected
+                        is_default:
+                          type: boolean
+                          example: true
+                        is_active:
+                          type: boolean
+                          example: true
+                        has_api_key:
+                          type: boolean
+                          example: true
+                        api_key_masked:
+                          type: string
+                          example: '********1234'
+                  meta:
+                    type: object
+                    properties:
+                      pagination:
+                        type: object
+                        properties:
+                          total:
+                            type: integer
+                            example: 1
+                          current_page:
+                            type: integer
+                            example: 1
+      tags:
+        - 'Administração - WhatsApp'
+    post:
+      summary: 'Criar instância WhatsApp'
+      operationId: criarInstnciaWhatsApp
+      description: 'Cadastra uma nova instância WhatsApp no sistema.'
+      parameters: []
+      responses:
+        201:
+          description: 'Instância criada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    name: loja_01
+                    scope: global
+                    status: unknown
+                    has_api_key: true
+                    api_key_masked: '********here'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: loja_01
+                      scope:
+                        type: string
+                        example: global
+                      status:
+                        type: string
+                        example: unknown
+                      has_api_key:
+                        type: boolean
+                        example: true
+                      api_key_masked:
+                        type: string
+                        example: '********here'
+      tags:
+        - 'Administração - WhatsApp'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Nome único da instância (letras, números, _ e -).'
+                  example: loja_01
+                provider:
+                  type: string
+                  description: 'Provedor (default: evolution).'
+                  example: evolution
+                base_url:
+                  type: string
+                  description: 'URL do servidor Evolution.'
+                  example: 'https://evolution.example.com'
+                phone_e164:
+                  type: string
+                  description: 'Must match the regex /^\d+$/. Must not be greater than 20 characters.'
+                  example: nikhwaykcmyuwpwl
+                  nullable: true
+                api_key:
+                  type: string
+                  description: 'API Key do Evolution.'
+                  example: your-api-key-here
+                  nullable: true
+                token:
+                  type: string
+                  description: 'Must not be greater than 500 characters.'
+                  example: q
+                  nullable: true
+                store_id:
+                  type: integer
+                  description: 'ID da loja (para escopo loja).'
+                  example: 1
+                  nullable: true
+                user_id:
+                  type: integer
+                  description: 'ID do usuário (para escopo usuário).'
+                  example: 5
+                  nullable: true
+                is_default:
+                  type: boolean
+                  description: 'Marcar como favorita no escopo.'
+                  example: true
+                is_active:
+                  type: boolean
+                  description: 'Ativa para uso.'
+                  example: true
+                notes:
+                  type: string
+                  description: 'Must not be greater than 1000 characters.'
+                  example: 'n'
+                  nullable: true
+                webhook_secret:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: g
+                  nullable: true
+                webhook_url:
+                  type: string
+                  description: 'Must be a valid URL. Must not be greater than 255 characters.'
+                  example: 'http://www.okuneva.com/fugiat-sunt-nihil-accusantium-harum-mollitia.html'
+                  nullable: true
+                webhook_events:
+                  type: object
+                  description: ''
+                  example: null
+                  properties: {  }
+                  nullable: true
+              required:
+                - name
+                - base_url
+  '/api/v1/admin/whatsapp/instances/{id}':
+    get:
+      summary: 'Ver detalhes da instância'
+      operationId: verDetalhesDaInstncia
+      description: 'Retorna informações completas de uma instância WhatsApp.'
+      parameters: []
+      responses:
+        200:
+          description: Detalhes
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    name: loja_01
+                    scope: global
+                    provider: evolution
+                    base_url: 'https://evolution.example.com'
+                    status: connected
+                    last_state:
+                      instance:
+                        state: open
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: loja_01
+                      scope:
+                        type: string
+                        example: global
+                      provider:
+                        type: string
+                        example: evolution
+                      base_url:
+                        type: string
+                        example: 'https://evolution.example.com'
+                      status:
+                        type: string
+                        example: connected
+                      last_state:
+                        type: object
+                        properties:
+                          instance:
+                            type: object
+                            properties:
+                              state:
+                                type: string
+                                example: open
+      tags:
+        - 'Administração - WhatsApp'
+    put:
+      summary: 'Atualizar instância'
+      operationId: atualizarInstncia
+      description: "Atualiza dados de uma instância WhatsApp.\nSecrets só são atualizados se enviados no payload."
+      parameters: []
+      responses:
+        200:
+          description: Atualizada
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    name: loja_02
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: loja_02
+      tags:
+        - 'Administração - WhatsApp'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Nome da instância.'
+                  example: loja_02
+                provider:
+                  type: string
+                  description: 'Must not be greater than 50 characters.'
+                  example: 'n'
+                base_url:
+                  type: string
+                  description: 'Must be a valid URL. Must not be greater than 255 characters.'
+                  example: 'http://crooks.biz/et-fugiat-sunt-nihil-accusantium'
+                phone_e164:
+                  type: string
+                  description: 'Must match the regex /^\d+$/. Must not be greater than 20 characters.'
+                  example: nikhwaykcmyuwpwl
+                  nullable: true
+                api_key:
+                  type: string
+                  description: 'Nova API Key (deixe vazio para manter).'
+                  example: new-api-key
+                  nullable: true
+                token:
+                  type: string
+                  description: 'Must not be greater than 500 characters.'
+                  example: q
+                  nullable: true
+                store_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: 16
+                  nullable: true
+                user_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the users table.'
+                  example: 16
+                  nullable: true
+                is_default:
+                  type: boolean
+                  description: ''
+                  example: true
+                is_active:
+                  type: boolean
+                  description: ''
+                  example: true
+                notes:
+                  type: string
+                  description: 'Must not be greater than 1000 characters.'
+                  example: 'n'
+                  nullable: true
+                webhook_secret:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: g
+                  nullable: true
+                webhook_url:
+                  type: string
+                  description: 'Must be a valid URL. Must not be greater than 255 characters.'
+                  example: 'http://www.okuneva.com/fugiat-sunt-nihil-accusantium-harum-mollitia.html'
+                  nullable: true
+                webhook_events:
+                  type: object
+                  description: ''
+                  example: null
+                  properties: {  }
+                  nullable: true
+                status:
+                  type: string
+                  description: ''
+                  example: disconnected
+                  enum:
+                    - unknown
+                    - connected
+                    - disconnected
+                    - connecting
+                  nullable: true
+    delete:
+      summary: 'Excluir instância (soft delete)'
+      operationId: excluirInstnciasoftDelete
+      description: 'Remove uma instância WhatsApp (soft delete).'
+      parameters: []
+      responses:
+        200:
+          description: Excluída
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    message: 'Instância excluída com sucesso.'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: 'Instância excluída com sucesso.'
+      tags:
+        - 'Administração - WhatsApp'
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the instance.'
+        example: 16
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: instance
+        description: 'ID da instância.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/whatsapp/instances/{instance_id}/set-default':
+    post:
+      summary: 'Definir como favorita'
+      operationId: definirComoFavorita
+      description: "Marca a instância como favorita no seu escopo.\nRemove a flag das outras instâncias do mesmo escopo."
+      parameters: []
+      responses:
+        200:
+          description: 'Definida como favorita'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    message: 'Instância definida como favorita.'
+                    instance:
+                      id: 1
+                      is_default: true
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: 'Instância definida como favorita.'
+                      instance:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          is_default:
+                            type: boolean
+                            example: true
+      tags:
+        - 'Administração - WhatsApp'
+    parameters:
+      -
+        in: path
+        name: instance_id
+        description: 'The ID of the instance.'
+        example: 16
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: instance
+        description: 'ID da instância.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/whatsapp/instances/{instance_id}/secrets/api-key':
+    delete:
+      summary: 'Limpar API Key'
+      operationId: limparAPIKey
+      description: 'Remove a API Key da instância.'
+      parameters: []
+      responses:
+        200:
+          description: 'API Key removida'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    message: 'API Key removida.'
+                    has_api_key: false
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: 'API Key removida.'
+                      has_api_key:
+                        type: boolean
+                        example: false
+      tags:
+        - 'Administração - WhatsApp'
+    parameters:
+      -
+        in: path
+        name: instance_id
+        description: 'The ID of the instance.'
+        example: 16
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: instance
+        description: 'ID da instância.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/whatsapp/instances/{instance_id}/secrets/token':
+    delete:
+      summary: 'Limpar Token'
+      operationId: limparToken
+      description: 'Remove o Token da instância.'
+      parameters: []
+      responses:
+        200:
+          description: 'Token removido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    message: 'Token removido.'
+                    has_token: false
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: 'Token removido.'
+                      has_token:
+                        type: boolean
+                        example: false
+      tags:
+        - 'Administração - WhatsApp'
+    parameters:
+      -
+        in: path
+        name: instance_id
+        description: 'The ID of the instance.'
+        example: 16
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: instance
+        description: 'ID da instância.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/whatsapp/instances/{instance_id}/state':
+    get:
+      summary: 'Verificar estado da conexão'
+      operationId: verificarEstadoDaConexo
+      description: "Consulta o estado atual da instância na Evolution API\ne atualiza o status local."
+      parameters: []
+      responses:
+        200:
+          description: 'Estado atualizado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    status: connected
+                    last_state:
+                      instance:
+                        state: open
+                    last_state_checked_at: '2026-01-13T17:00:00Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        example: connected
+                      last_state:
+                        type: object
+                        properties:
+                          instance:
+                            type: object
+                            properties:
+                              state:
+                                type: string
+                                example: open
+                      last_state_checked_at:
+                        type: string
+                        example: '2026-01-13T17:00:00Z'
+        422:
+          description: 'Sem API Key'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Instância sem API Key configurada.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Instância sem API Key configurada.'
+        502:
+          description: 'Erro no provedor'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Erro ao consultar Evolution API.'
+                  details:
+                    status: 500
+                    data: null
+                properties:
+                  message:
+                    type: string
+                    example: 'Erro ao consultar Evolution API.'
+                  details:
+                    type: object
+                    properties:
+                      status:
+                        type: integer
+                        example: 500
+                      data:
+                        type: string
+                        example: null
+      tags:
+        - 'Administração - WhatsApp'
+    parameters:
+      -
+        in: path
+        name: instance_id
+        description: 'The ID of the instance.'
+        example: 16
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: instance
+        description: 'ID da instância.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/whatsapp/instances/{instance_id}/connect':
+    get:
+      summary: 'Conectar instância (obter QR Code)'
+      operationId: conectarInstnciaobterQRCode
+      description: "Solicita conexão da instância na Evolution API.\nRetorna o código para gerar QR Code no frontend.\n\n**Renderização do QR:**\nUse o campo `code` com uma biblioteca de QR code no frontend.\nO campo `pairingCode` é o código alfanumérico alternativo."
+      parameters: []
+      responses:
+        200:
+          description: 'QR Code gerado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    type: qr_text
+                    code: 2@y8eK+bjtEjUWy9/FOM...
+                    pairingCode: WZYEH1YY
+                    expires_in: 60
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        example: qr_text
+                      code:
+                        type: string
+                        example: 2@y8eK+bjtEjUWy9/FOM...
+                      pairingCode:
+                        type: string
+                        example: WZYEH1YY
+                      expires_in:
+                        type: integer
+                        example: 60
+      tags:
+        - 'Administração - WhatsApp'
+    parameters:
+      -
+        in: path
+        name: instance_id
+        description: 'The ID of the instance.'
+        example: 16
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: instance
+        description: 'ID da instância.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/whatsapp/instances/{instance_id}/test':
+    post:
+      summary: 'Testar conexão'
+      operationId: testarConexo
+      description: 'Executa um teste rápido de conexão com a Evolution API.'
+      parameters: []
+      responses:
+        200:
+          description: 'Teste OK'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    ok: true
+                    status: connected
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      ok:
+                        type: boolean
+                        example: true
+                      status:
+                        type: string
+                        example: connected
+      tags:
+        - 'Administração - WhatsApp'
+    parameters:
+      -
+        in: path
+        name: instance_id
+        description: 'The ID of the instance.'
+        example: 16
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: instance
+        description: 'ID da instância.'
+        example: 1
         required: true
         schema:
           type: integer
@@ -7042,7 +8193,7 @@ paths:
                 payday:
                   type: string
                   description: 'This field is required when <code>payed</code> is <code>true</code> or <code>1</code>. Must be a valid date.'
-                  example: '2026-01-13T19:21:11'
+                  example: '2026-01-13T20:33:54'
                   nullable: true
                 received_by_id:
                   type: integer
@@ -7052,7 +8203,7 @@ paths:
                 status:
                   type: integer
                   description: ''
-                  example: '6'
+                  example: '2'
                   enum:
                     - '1'
                     - '2'
@@ -7186,7 +8337,7 @@ paths:
                 status:
                   type: integer
                   description: ''
-                  example: '1'
+                  example: '4'
                   enum:
                     - '1'
                     - '2'
@@ -9361,7 +10512,7 @@ paths:
                 status:
                   type: string
                   description: ''
-                  example: all
+                  example: scheduled
                   enum:
                     - draft
                     - scheduled
@@ -9388,7 +10539,7 @@ paths:
                 type:
                   type: string
                   description: ''
-                  example: advertencia
+                  example: recado
                   enum:
                     - recado
                     - advertencia
@@ -9412,7 +10563,7 @@ paths:
                 date_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T19:21:10'
+                  example: '2026-01-13T20:33:54'
                 date_to:
                   type: string
                   description: 'Must be a valid date. Must be a date after or equal to <code>date_from</code>.'
@@ -9621,11 +10772,11 @@ paths:
                 only_unseen:
                   type: boolean
                   description: ''
-                  example: false
+                  example: true
                 severity:
                   type: string
                   description: ''
-                  example: info
+                  example: warning
                   enum:
                     - info
                     - warning
@@ -9633,14 +10784,14 @@ paths:
                 type:
                   type: string
                   description: ''
-                  example: recado
+                  example: advertencia
                   enum:
                     - recado
                     - advertencia
                 scope:
                   type: string
                   description: ''
-                  example: user
+                  example: role
                   enum:
                     - global
                     - store
@@ -9657,7 +10808,7 @@ paths:
                 date_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T19:21:10'
+                  example: '2026-01-13T20:33:54'
                 date_to:
                   type: string
                   description: 'Must be a valid date. Must be a date after or equal to <code>date_from</code>.'
@@ -9673,7 +10824,7 @@ paths:
                 sort:
                   type: string
                   description: ''
-                  example: starts_at_asc
+                  example: severity_desc
                   enum:
                     - starts_at_desc
                     - starts_at_asc
@@ -9812,7 +10963,7 @@ paths:
                 pinned_until:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T19:21:10'
+                  example: '2026-01-13T20:33:54'
                   nullable: true
                 meta_json:
                   type: object
@@ -9980,7 +11131,7 @@ paths:
                 type:
                   type: string
                   description: ''
-                  example: recado
+                  example: advertencia
                   enum:
                     - recado
                     - advertencia
@@ -9991,7 +11142,7 @@ paths:
                 display_mode:
                   type: string
                   description: ''
-                  example: both
+                  example: banner
                   enum:
                     - banner
                     - modal
@@ -10024,7 +11175,7 @@ paths:
                 scope:
                   type: string
                   description: ''
-                  example: store
+                  example: user
                   enum:
                     - global
                     - store
@@ -10037,7 +11188,7 @@ paths:
                 starts_at:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T19:21:10'
+                  example: '2026-01-13T20:33:54'
                   nullable: true
                 expires_at:
                   type: string
@@ -10056,7 +11207,7 @@ paths:
                 pinned_until:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T19:21:10'
+                  example: '2026-01-13T20:33:54'
                   nullable: true
                 meta_json:
                   type: object
@@ -11204,6 +12355,62 @@ paths:
         required: true
         schema:
           type: integer
+  /api/v1/users/kpis:
+    get:
+      summary: 'Get aggregated KPIs for users.'
+      operationId: getAggregatedKPIsForUsers
+      description: "Returns statistical data about users without exposing personal information.\nUseful for dashboard cards and charts."
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: Unauthenticated.
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated.
+      tags:
+        - Outros
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                active:
+                  type: string
+                  description: ''
+                  example: all
+                  enum:
+                    - '0'
+                    - '1'
+                    - all
+                state:
+                  type: string
+                  description: 'Must be 2 characters.'
+                  example: bn
+                  nullable: true
+                city:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: g
+                  nullable: true
+                date_from:
+                  type: string
+                  description: 'Must be a valid date in the format <code>Y-m-d</code>.'
+                  example: '2026-01-13'
+                  nullable: true
+                date_to:
+                  type: string
+                  description: 'Must be a valid date in the format <code>Y-m-d</code>. Must be a date after or equal to <code>date_from</code>.'
+                  example: '2052-02-06'
+                  nullable: true
   /api/v1/pedidos:
     get:
       summary: 'Listar pedidos'
@@ -12878,7 +14085,7 @@ paths:
                 order:
                   type: string
                   description: ''
-                  example: asc
+                  example: desc
                   enum:
                     - asc
                     - desc
@@ -13353,3 +14560,298 @@ paths:
                   example: 6425-59
               required:
                 - store_id
+  '/api/v1/whatsapp/instances/{instance_id}/messages/text':
+    post:
+      summary: 'Enviar mensagem de texto'
+      operationId: enviarMensagemDeTexto
+      description: 'Envia uma mensagem de texto via WhatsApp.'
+      parameters: []
+      responses:
+        200:
+          description: 'Mensagem enviada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    ok: true
+                    message_id: 3EB0C767D097B3C5C12345
+                    provider_data:
+                      key:
+                        id: ...
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      ok:
+                        type: boolean
+                        example: true
+                      message_id:
+                        type: string
+                        example: 3EB0C767D097B3C5C12345
+                      provider_data:
+                        type: object
+                        properties:
+                          key:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                                example: ...
+        403:
+          description: 'Instância inativa'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Instância não está ativa.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Instância não está ativa.'
+        422:
+          description: 'Instância sem API Key'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Instância sem API Key configurada.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Instância sem API Key configurada.'
+        502:
+          description: 'Erro no provedor'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Erro ao enviar mensagem.'
+                  errors:
+                    provider_status: 500
+                properties:
+                  message:
+                    type: string
+                    example: 'Erro ao enviar mensagem.'
+                  errors:
+                    type: object
+                    properties:
+                      provider_status:
+                        type: integer
+                        example: 500
+      tags:
+        - 'WhatsApp - Mensagens'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                number:
+                  type: string
+                  description: 'Número do destinatário (com DDI, só dígitos).'
+                  example: '5548999999999'
+                text:
+                  type: string
+                  description: 'Texto da mensagem (max 4000 chars).'
+                  example: 'Olá! Seu pedido está pronto.'
+              required:
+                - number
+                - text
+    parameters:
+      -
+        in: path
+        name: instance_id
+        description: 'The ID of the instance.'
+        example: 16
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: instance
+        description: 'ID da instância WhatsApp.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/whatsapp/instances/{instance_id}/messages/media':
+    post:
+      summary: 'Enviar mensagem com mídia'
+      operationId: enviarMensagemComMdia
+      description: 'Envia uma mensagem com mídia (imagem, vídeo, documento, áudio) via WhatsApp.'
+      parameters: []
+      responses:
+        200:
+          description: 'Mídia enviada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    ok: true
+                    message_id: 3EB0C767D097B3C5C12345
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      ok:
+                        type: boolean
+                        example: true
+                      message_id:
+                        type: string
+                        example: 3EB0C767D097B3C5C12345
+      tags:
+        - 'WhatsApp - Mensagens'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                number:
+                  type: string
+                  description: 'Número do destinatário (com DDI).'
+                  example: '5548999999999'
+                mediatype:
+                  type: string
+                  description: 'Tipo: image, video, document, audio.'
+                  example: image
+                mimetype:
+                  type: string
+                  description: 'MIME type do arquivo.'
+                  example: image/jpeg
+                media:
+                  type: string
+                  description: 'URL pública do arquivo.'
+                  example: 'https://example.com/image.jpg'
+                fileName:
+                  type: string
+                  description: 'Nome do arquivo (para documents).'
+                  example: documento.pdf
+                  nullable: true
+                caption:
+                  type: string
+                  description: 'Legenda da mídia.'
+                  example: 'Aqui está seu comprovante!'
+                  nullable: true
+              required:
+                - number
+                - mediatype
+                - mimetype
+                - media
+    parameters:
+      -
+        in: path
+        name: instance_id
+        description: 'The ID of the instance.'
+        example: 16
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: instance
+        description: 'ID da instância WhatsApp.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/whatsapp/instances/{instance_id}/numbers/check':
+    post:
+      summary: 'Verificar números WhatsApp'
+      operationId: verificarNmerosWhatsApp
+      description: 'Verifica se uma lista de números possui WhatsApp.'
+      parameters: []
+      responses:
+        200:
+          description: 'Verificação realizada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    ok: true
+                    results:
+                      -
+                        number: '5548999999999'
+                        exists: true
+                        jid: 5548999999999@s.whatsapp.net
+                      -
+                        number: '5548888888888'
+                        exists: false
+                        jid: null
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      ok:
+                        type: boolean
+                        example: true
+                      results:
+                        type: array
+                        example:
+                          -
+                            number: '5548999999999'
+                            exists: true
+                            jid: 5548999999999@s.whatsapp.net
+                          -
+                            number: '5548888888888'
+                            exists: false
+                            jid: null
+                        items:
+                          type: object
+                          properties:
+                            number:
+                              type: string
+                              example: '5548999999999'
+                            exists:
+                              type: boolean
+                              example: true
+                            jid:
+                              type: string
+                              example: 5548999999999@s.whatsapp.net
+      tags:
+        - 'WhatsApp - Mensagens'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                numbers:
+                  type: array
+                  description: 'Lista de números (max 200).'
+                  example:
+                    - '5548999999999'
+                    - '5548888888888'
+                  items:
+                    type: string
+              required:
+                - numbers
+    parameters:
+      -
+        in: path
+        name: instance_id
+        description: 'The ID of the instance.'
+        example: 16
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: instance
+        description: 'ID da instância WhatsApp.'
+        example: 1
+        required: true
+        schema:
+          type: integer

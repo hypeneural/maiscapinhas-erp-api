@@ -11,6 +11,55 @@ endpoints:
   -
     custom: []
     httpMethods:
+      - GET
+    uri: api/v1/goals/monthly
+    metadata:
+      custom: []
+      groupName: 'Metas Mensais'
+      groupDescription: |-
+
+        Gerenciamento de metas mensais por loja e distribuição entre vendedores (splits).
+        Cada split define a porcentagem da meta que cada vendedor deve atingir.
+
+        **Regra:** A soma dos splits deve ser exatamente 100%.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List monthly goals.'
+      description: 'GET /api/v1/goals/monthly'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
       - POST
     uri: api/v1/goals/monthly
     metadata:
@@ -75,7 +124,7 @@ endpoints:
         name: active
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -85,9 +134,70 @@ endpoints:
       store_id: 16
       month: 6425-59
       goal_amount: 9
-      active: false
+      active: true
     fileParameters: []
     responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/goals/monthly/{goal_id}'
+    metadata:
+      custom: []
+      groupName: 'Metas Mensais'
+      groupDescription: |-
+
+        Gerenciamento de metas mensais por loja e distribuição entre vendedores (splits).
+        Cada split define a porcentagem da meta que cada vendedor deve atingir.
+
+        **Regra:** A soma dos splits deve ser exatamente 100%.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Show a specific goal.'
+      description: 'GET /api/v1/goals/monthly/{goal}'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      goal_id:
+        custom: []
+        name: goal_id
+        description: 'The ID of the goal.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      goal_id: 16
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
     responseFields: []
     auth:
       - headers
@@ -153,7 +263,7 @@ endpoints:
         name: active
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -161,7 +271,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       goal_amount: 27
-      active: false
+      active: true
     fileParameters: []
     responses: []
     responseFields: []

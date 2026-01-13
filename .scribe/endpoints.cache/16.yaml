@@ -125,7 +125,7 @@ endpoints:
         name: order
         description: ''
         required: false
-        example: asc
+        example: desc
         type: string
         enumValues:
           - asc
@@ -137,7 +137,7 @@ endpoints:
       month: 6425-59
       store_id: 16
       limit: 22
-      order: asc
+      order: desc
     fileParameters: []
     responses:
       -

@@ -1,15 +1,18 @@
-name: 'Produção - Pedidos (Admin)'
+name: 'Produção - Carrinho'
 description: |-
 
-  Gestão de pedidos de produção pelo administrador.
-  Estes endpoints são utilizados após o fechamento do carrinho de produção.
+  Gerenciamento do carrinho de produção para agrupar capas personalizadas antes de enviar à fábrica.
 
-  **Fluxo do pedido:**
-  1. Pedido criado ao fechar carrinho → Status `pending`
-  2. Fábrica aceita → Status `accepted`
-  3. Fábrica despacha → Status `dispatched`
-  4. Admin recebe → Status `received` (este controller)
-  5. Ou Admin cancela → Status `cancelled`
+  **Fluxo do carrinho:**
+  1. Obter/criar carrinho aberto (um por usuário por vez)
+  2. Validar capas antes de adicionar (dry-run opcional)
+  3. Adicionar capas ao carrinho
+  4. Fechar carrinho → cria pedido de produção
+
+  **Regras de negócio:**
+  - Cada usuário pode ter apenas um carrinho aberto por vez
+  - Capas devem estar com status "Encomenda Solicitada" para serem adicionadas
+  - Capas já em outro carrinho/pedido são bloqueadas
 
   **Permissões:** Administradores e gerentes.
 endpoints:
@@ -17,28 +20,31 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/producao/pedidos
+    uri: api/v1/producao/carrinho
     metadata:
       custom: []
-      groupName: 'Produção - Pedidos (Admin)'
+      groupName: 'Produção - Carrinho'
       groupDescription: |-
 
-        Gestão de pedidos de produção pelo administrador.
-        Estes endpoints são utilizados após o fechamento do carrinho de produção.
+        Gerenciamento do carrinho de produção para agrupar capas personalizadas antes de enviar à fábrica.
 
-        **Fluxo do pedido:**
-        1. Pedido criado ao fechar carrinho → Status `pending`
-        2. Fábrica aceita → Status `accepted`
-        3. Fábrica despacha → Status `dispatched`
-        4. Admin recebe → Status `received` (este controller)
-        5. Ou Admin cancela → Status `cancelled`
+        **Fluxo do carrinho:**
+        1. Obter/criar carrinho aberto (um por usuário por vez)
+        2. Validar capas antes de adicionar (dry-run opcional)
+        3. Adicionar capas ao carrinho
+        4. Fechar carrinho → cria pedido de produção
+
+        **Regras de negócio:**
+        - Cada usuário pode ter apenas um carrinho aberto por vez
+        - Capas devem estar com status "Encomenda Solicitada" para serem adicionadas
+        - Capas já em outro carrinho/pedido são bloqueadas
 
         **Permissões:** Administradores e gerentes.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Listar pedidos de produção'
+      title: 'Obter carrinho atual'
       description: |-
-        Retorna lista paginada de pedidos de produção com filtros.
+        Retorna o carrinho aberto do usuário atual. Se não existir, cria um novo.
 
         **Quem pode usar:** Administradores e gerentes.
       authenticated: true
@@ -49,145 +55,6 @@ endpoints:
       Accept: application/json
     urlParameters: []
     cleanUrlParameters: []
-    queryParameters:
-      status:
-        custom: []
-        name: status
-        description: 'Filtrar por status: `cart`, `pending`, `accepted`, `dispatched`, `received`, `cancelled`.'
-        required: false
-        example: pending
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      initial_date:
-        custom: []
-        name: initial_date
-        description: 'Data inicial (ISO 8601).'
-        required: false
-        example: '2026-01-01'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      final_date:
-        custom: []
-        name: final_date
-        description: 'Data final (ISO 8601).'
-        required: false
-        example: '2026-01-31'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      per_page:
-        custom: []
-        name: per_page
-        description: 'Itens por página (máx 100).'
-        required: false
-        example: 15
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanQueryParameters:
-      status: pending
-      initial_date: '2026-01-01'
-      final_date: '2026-01-31'
-      per_page: 15
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "data": [{
-              "id": 1,
-              "status": "dispatched",
-              "items_count": 10,
-              "factory_total": 150.00,
-              "tracking_code": "BR123456789XX",
-              "created_at": "2026-01-13T15:00:00+00:00"
-            }],
-            "meta": {"current_page": 1, "total": 25}
-          }
-        headers: []
-        description: 'Lista de pedidos'
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: 'api/v1/producao/pedidos/{id}'
-    metadata:
-      custom: []
-      groupName: 'Produção - Pedidos (Admin)'
-      groupDescription: |-
-
-        Gestão de pedidos de produção pelo administrador.
-        Estes endpoints são utilizados após o fechamento do carrinho de produção.
-
-        **Fluxo do pedido:**
-        1. Pedido criado ao fechar carrinho → Status `pending`
-        2. Fábrica aceita → Status `accepted`
-        3. Fábrica despacha → Status `dispatched`
-        4. Admin recebe → Status `received` (este controller)
-        5. Ou Admin cancela → Status `cancelled`
-
-        **Permissões:** Administradores e gerentes.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Detalhes do pedido'
-      description: |-
-        Retorna detalhes completos do pedido com itens e timeline de eventos.
-
-        **Quem pode usar:** Administradores e gerentes.
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        custom: []
-        name: id
-        description: 'The ID of the pedido.'
-        required: true
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      pedido:
-        custom: []
-        name: pedido
-        description: 'ID do pedido.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      id: 16
-      pedido: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -201,21 +68,14 @@ endpoints:
           {
             "data": {
               "id": 1,
-              "status": "dispatched",
+              "status": "cart",
+              "items_count": 5,
               "items": [{"id": 1, "capa_id": 10, "customer_name": "João"}],
-              "events": [{"type": "dispatched", "created_at": "2026-01-13T15:00:00+00:00"}],
-              "factory_total": 150.00,
-              "tracking_code": "BR123456789XX"
+              "created_by": {"id": 1, "name": "Admin"}
             }
           }
         headers: []
-        description: 'Detalhes do pedido'
-      -
-        custom: []
-        status: 404
-        content: '{"message": "Not found."}'
-        headers: []
-        description: 'Não encontrado'
+        description: 'Carrinho atual'
     responseFields: []
     auth:
       - headers
@@ -227,29 +87,33 @@ endpoints:
   -
     custom: []
     httpMethods:
-      - GET
-    uri: 'api/v1/producao/pedidos/{pedido_id}/timeline'
+      - POST
+    uri: api/v1/producao/carrinho/validar
     metadata:
       custom: []
-      groupName: 'Produção - Pedidos (Admin)'
+      groupName: 'Produção - Carrinho'
       groupDescription: |-
 
-        Gestão de pedidos de produção pelo administrador.
-        Estes endpoints são utilizados após o fechamento do carrinho de produção.
+        Gerenciamento do carrinho de produção para agrupar capas personalizadas antes de enviar à fábrica.
 
-        **Fluxo do pedido:**
-        1. Pedido criado ao fechar carrinho → Status `pending`
-        2. Fábrica aceita → Status `accepted`
-        3. Fábrica despacha → Status `dispatched`
-        4. Admin recebe → Status `received` (este controller)
-        5. Ou Admin cancela → Status `cancelled`
+        **Fluxo do carrinho:**
+        1. Obter/criar carrinho aberto (um por usuário por vez)
+        2. Validar capas antes de adicionar (dry-run opcional)
+        3. Adicionar capas ao carrinho
+        4. Fechar carrinho → cria pedido de produção
+
+        **Regras de negócio:**
+        - Cada usuário pode ter apenas um carrinho aberto por vez
+        - Capas devem estar com status "Encomenda Solicitada" para serem adicionadas
+        - Capas já em outro carrinho/pedido são bloqueadas
 
         **Permissões:** Administradores e gerentes.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Timeline do pedido'
+      title: 'Validar capas (dry-run)'
       description: |-
-        Retorna apenas a timeline de eventos do pedido, ordenada do mais recente.
+        Valida quais capas podem ser adicionadas ao carrinho antes de adicionar.
+        Útil para feedback ao usuário antes da ação real.
 
         **Quem pode usar:** Administradores e gerentes.
       authenticated: true
@@ -258,22 +122,29 @@ endpoints:
       Authorization: 'Bearer {SEU_TOKEN}'
       Content-Type: application/json
       Accept: application/json
-    urlParameters:
-      pedido_id:
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      capa_ids:
         custom: []
-        name: pedido_id
-        description: 'The ID of the pedido.'
+        name: capa_ids
+        description: 'Lista de IDs das capas para validar.'
         required: true
-        example: 16
-        type: integer
+        example:
+          - 1
+          - 2
+          - 3
+        type: 'string[]'
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: false
         deprecated: false
-      pedido:
+      'capa_ids.*':
         custom: []
-        name: pedido
-        description: 'ID do pedido.'
+        name: 'capa_ids.*'
+        description: 'ID da capa.'
         required: true
         example: 1
         type: integer
@@ -281,13 +152,11 @@ endpoints:
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-    cleanUrlParameters:
-      pedido_id: 16
-      pedido: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
+    cleanBodyParameters:
+      capa_ids:
+        - 1
+        - 2
+        - 3
     fileParameters: []
     responses:
       -
@@ -295,14 +164,15 @@ endpoints:
         status: 200
         content: |-
           {
-            "data": [
-              {"type": "dispatched", "description": "Pedido despachado", "created_at": "2026-01-15T10:00:00+00:00"},
-              {"type": "accepted", "description": "Pedido aceito pela fábrica", "created_at": "2026-01-14T10:00:00+00:00"},
-              {"type": "created", "description": "Pedido criado", "created_at": "2026-01-13T15:00:00+00:00"}
-            ]
+            "data": {
+              "eligible": [{"id": 1, "customer": "João"}, {"id": 2, "customer": "Maria"}],
+              "blocked": [{"id": 3, "reason": "Já está em outro carrinho"}],
+              "eligible_count": 2,
+              "blocked_count": 1
+            }
           }
         headers: []
-        description: Timeline
+        description: Validação
     responseFields: []
     auth:
       - headers
@@ -314,58 +184,69 @@ endpoints:
   -
     custom: []
     httpMethods:
-      - PATCH
-    uri: 'api/v1/producao/pedidos/{pedido_id}/receber'
+      - POST
+    uri: api/v1/producao/carrinho/itens
     metadata:
       custom: []
-      groupName: 'Produção - Pedidos (Admin)'
+      groupName: 'Produção - Carrinho'
       groupDescription: |-
 
-        Gestão de pedidos de produção pelo administrador.
-        Estes endpoints são utilizados após o fechamento do carrinho de produção.
+        Gerenciamento do carrinho de produção para agrupar capas personalizadas antes de enviar à fábrica.
 
-        **Fluxo do pedido:**
-        1. Pedido criado ao fechar carrinho → Status `pending`
-        2. Fábrica aceita → Status `accepted`
-        3. Fábrica despacha → Status `dispatched`
-        4. Admin recebe → Status `received` (este controller)
-        5. Ou Admin cancela → Status `cancelled`
+        **Fluxo do carrinho:**
+        1. Obter/criar carrinho aberto (um por usuário por vez)
+        2. Validar capas antes de adicionar (dry-run opcional)
+        3. Adicionar capas ao carrinho
+        4. Fechar carrinho → cria pedido de produção
+
+        **Regras de negócio:**
+        - Cada usuário pode ter apenas um carrinho aberto por vez
+        - Capas devem estar com status "Encomenda Solicitada" para serem adicionadas
+        - Capas já em outro carrinho/pedido são bloqueadas
 
         **Permissões:** Administradores e gerentes.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Receber pedido'
+      title: 'Adicionar itens ao carrinho'
       description: |-
-        Registra o recebimento do pedido da fábrica.
-        O status do pedido muda de `dispatched` para `received`.
+        Adiciona capas personalizadas ao carrinho de produção.
+        Capas bloqueadas são informadas na resposta.
 
         **Quem pode usar:** Administradores e gerentes.
 
         **Regras de negócio:**
-        - Apenas pedidos com status `dispatched` podem ser recebidos
-        - As capas do pedido são atualizadas para "Pronta para entrega"
+        - Capas devem ter status "Encomenda Solicitada"
+        - Capas já em outro carrinho/pedido são bloqueadas
+        - Se nenhuma capa for adicionada, retorna 409
       authenticated: true
       deprecated: false
     headers:
       Authorization: 'Bearer {SEU_TOKEN}'
       Content-Type: application/json
       Accept: application/json
-    urlParameters:
-      pedido_id:
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      capa_ids:
         custom: []
-        name: pedido_id
-        description: 'The ID of the pedido.'
+        name: capa_ids
+        description: 'Lista de IDs das capas.'
         required: true
-        example: 16
-        type: integer
+        example:
+          - 1
+          - 2
+          - 3
+        type: 'string[]'
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: false
         deprecated: false
-      pedido:
+      'capa_ids.*':
         custom: []
-        name: pedido
-        description: 'ID do pedido.'
+        name: 'capa_ids.*'
+        description: 'ID da capa.'
         required: true
         example: 1
         type: integer
@@ -373,25 +254,11 @@ endpoints:
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-    cleanUrlParameters:
-      pedido_id: 16
-      pedido: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      observation:
-        custom: []
-        name: observation
-        description: 'Observações do recebimento.'
-        required: false
-        example: 'Recebido em bom estado'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
     cleanBodyParameters:
-      observation: 'Recebido em bom estado'
+      capa_ids:
+        - 1
+        - 2
+        - 3
     fileParameters: []
     responses:
       -
@@ -399,11 +266,26 @@ endpoints:
         status: 200
         content: |-
           {
-            "message": "Pedido recebido com sucesso.",
-            "data": {"id": 1, "status": "received"}
+            "message": "3 item(ns) adicionado(s)",
+            "data": {
+              "added": [1, 2, 3],
+              "blocked": [],
+              "added_count": 3,
+              "blocked_count": 0
+            }
           }
         headers: []
-        description: 'Pedido recebido'
+        description: 'Itens adicionados'
+      -
+        custom: []
+        status: 409
+        content: |-
+          {
+            "message": "0 item(ns) adicionado(s), 3 bloqueado(s)",
+            "data": {"added": [], "blocked": [1, 2, 3], "added_count": 0, "blocked_count": 3}
+          }
+        headers: []
+        description: 'Todos bloqueados'
     responseFields: []
     auth:
       - headers
@@ -416,34 +298,125 @@ endpoints:
     custom: []
     httpMethods:
       - DELETE
-    uri: 'api/v1/producao/pedidos/{pedido_id}'
+    uri: api/v1/producao/carrinho/itens/bulk
     metadata:
       custom: []
-      groupName: 'Produção - Pedidos (Admin)'
+      groupName: 'Produção - Carrinho'
       groupDescription: |-
 
-        Gestão de pedidos de produção pelo administrador.
-        Estes endpoints são utilizados após o fechamento do carrinho de produção.
+        Gerenciamento do carrinho de produção para agrupar capas personalizadas antes de enviar à fábrica.
 
-        **Fluxo do pedido:**
-        1. Pedido criado ao fechar carrinho → Status `pending`
-        2. Fábrica aceita → Status `accepted`
-        3. Fábrica despacha → Status `dispatched`
-        4. Admin recebe → Status `received` (este controller)
-        5. Ou Admin cancela → Status `cancelled`
+        **Fluxo do carrinho:**
+        1. Obter/criar carrinho aberto (um por usuário por vez)
+        2. Validar capas antes de adicionar (dry-run opcional)
+        3. Adicionar capas ao carrinho
+        4. Fechar carrinho → cria pedido de produção
+
+        **Regras de negócio:**
+        - Cada usuário pode ter apenas um carrinho aberto por vez
+        - Capas devem estar com status "Encomenda Solicitada" para serem adicionadas
+        - Capas já em outro carrinho/pedido são bloqueadas
 
         **Permissões:** Administradores e gerentes.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Cancelar pedido'
+      title: 'Remover múltiplos itens (bulk)'
       description: |-
-        Cancela um pedido de produção. As capas são liberadas e voltam ao status anterior.
+        Remove vários itens do carrinho de uma só vez.
 
         **Quem pode usar:** Administradores e gerentes.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      item_ids:
+        custom: []
+        name: item_ids
+        description: 'Lista de IDs dos itens.'
+        required: true
+        example:
+          - 1
+          - 2
+          - 3
+        type: 'string[]'
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      'item_ids.*':
+        custom: []
+        name: 'item_ids.*'
+        description: 'ID do item.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      item_ids:
+        - 1
+        - 2
+        - 3
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "message": "3 item(ns) removido(s)",
+            "data": {"removed": [1, 2, 3], "errors": [], "removed_count": 3, "error_count": 0}
+          }
+        headers: []
+        description: 'Itens removidos'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/v1/producao/carrinho/itens/{item}'
+    metadata:
+      custom: []
+      groupName: 'Produção - Carrinho'
+      groupDescription: |-
+
+        Gerenciamento do carrinho de produção para agrupar capas personalizadas antes de enviar à fábrica.
+
+        **Fluxo do carrinho:**
+        1. Obter/criar carrinho aberto (um por usuário por vez)
+        2. Validar capas antes de adicionar (dry-run opcional)
+        3. Adicionar capas ao carrinho
+        4. Fechar carrinho → cria pedido de produção
 
         **Regras de negócio:**
-        - Apenas pedidos com status `pending` ou `cart` podem ser cancelados
-        - A fábrica deve ser notificada manualmente se necessário
+        - Cada usuário pode ter apenas um carrinho aberto por vez
+        - Capas devem estar com status "Encomenda Solicitada" para serem adicionadas
+        - Capas já em outro carrinho/pedido são bloqueadas
+
+        **Permissões:** Administradores e gerentes.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Remover item do carrinho'
+      description: |-
+        Remove um item específico do carrinho.
+
+        **Quem pode usar:** Administradores e gerentes.
       authenticated: true
       deprecated: false
     headers:
@@ -451,21 +424,10 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      pedido_id:
+      item:
         custom: []
-        name: pedido_id
-        description: 'The ID of the pedido.'
-        required: true
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      pedido:
-        custom: []
-        name: pedido
-        description: 'ID do pedido.'
+        name: item
+        description: 'ID do item no carrinho.'
         required: true
         example: 1
         type: integer
@@ -474,42 +436,172 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      pedido_id: 16
-      pedido: 1
+      item: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"message": "Item removido do carrinho."}'
+        headers: []
+        description: 'Item removido'
+      -
+        custom: []
+        status: 404
+        content: '{"message": "Not found."}'
+        headers: []
+        description: 'Item não encontrado'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/producao/carrinho/fechar
+    metadata:
+      custom: []
+      groupName: 'Produção - Carrinho'
+      groupDescription: |-
+
+        Gerenciamento do carrinho de produção para agrupar capas personalizadas antes de enviar à fábrica.
+
+        **Fluxo do carrinho:**
+        1. Obter/criar carrinho aberto (um por usuário por vez)
+        2. Validar capas antes de adicionar (dry-run opcional)
+        3. Adicionar capas ao carrinho
+        4. Fechar carrinho → cria pedido de produção
+
+        **Regras de negócio:**
+        - Cada usuário pode ter apenas um carrinho aberto por vez
+        - Capas devem estar com status "Encomenda Solicitada" para serem adicionadas
+        - Capas já em outro carrinho/pedido são bloqueadas
+
+        **Permissões:** Administradores e gerentes.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Fechar carrinho'
+      description: |-
+        Fecha o carrinho atual e cria um pedido de produção.
+        O carrinho deve ter pelo menos um item.
+
+        **Quem pode usar:** Administradores e gerentes.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      reason:
+      observation:
         custom: []
-        name: reason
-        description: 'Motivo do cancelamento.'
+        name: observation
+        description: 'Observação para a fábrica.'
         required: false
-        example: 'Cliente desistiu'
+        example: 'Urgente - prazo curto'
         type: string
         enumValues: []
         exampleWasSpecified: true
         nullable: true
         deprecated: false
     cleanBodyParameters:
-      reason: 'Cliente desistiu'
+      observation: 'Urgente - prazo curto'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 201
+        content: |-
+          {
+            "message": "Pedido de produção criado com sucesso.",
+            "data": {"id": 1, "status": "pending", "items_count": 5}
+          }
+        headers: []
+        description: 'Pedido criado'
+      -
+        custom: []
+        status: 422
+        content: '{"message": "O carrinho está vazio."}'
+        headers: []
+        description: 'Carrinho vazio'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: api/v1/producao/carrinho
+    metadata:
+      custom: []
+      groupName: 'Produção - Carrinho'
+      groupDescription: |-
+
+        Gerenciamento do carrinho de produção para agrupar capas personalizadas antes de enviar à fábrica.
+
+        **Fluxo do carrinho:**
+        1. Obter/criar carrinho aberto (um por usuário por vez)
+        2. Validar capas antes de adicionar (dry-run opcional)
+        3. Adicionar capas ao carrinho
+        4. Fechar carrinho → cria pedido de produção
+
+        **Regras de negócio:**
+        - Cada usuário pode ter apenas um carrinho aberto por vez
+        - Capas devem estar com status "Encomenda Solicitada" para serem adicionadas
+        - Capas já em outro carrinho/pedido são bloqueadas
+
+        **Permissões:** Administradores e gerentes.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Cancelar carrinho'
+      description: |-
+        Cancela o carrinho aberto atual, liberando todos os itens.
+
+        **Quem pode usar:** Administradores e gerentes.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
     fileParameters: []
     responses:
       -
         custom: []
         status: 200
-        content: |-
-          {
-            "message": "Pedido cancelado.",
-            "data": {"id": 1, "status": "cancelled"}
-          }
+        content: '{"message": "Carrinho cancelado."}'
         headers: []
-        description: 'Pedido cancelado'
+        description: 'Carrinho cancelado'
       -
         custom: []
-        status: 422
-        content: '{"message": "Pedido não pode ser cancelado neste status."}'
+        status: 404
+        content: '{"message": "Nenhum carrinho aberto encontrado."}'
         headers: []
-        description: 'Não pode cancelar'
+        description: 'Sem carrinho aberto'
     responseFields: []
     auth:
       - headers

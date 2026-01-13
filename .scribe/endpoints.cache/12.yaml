@@ -10,6 +10,101 @@ endpoints:
     custom: []
     httpMethods:
       - GET
+    uri: api/v1/finance/bonus
+    metadata:
+      custom: []
+      groupName: 'Extrato Financeiro'
+      groupDescription: |-
+
+        Endpoints para consultar o extrato de bônus diário e comissão mensal.
+        Vendedores veem apenas seus próprios dados; gerentes/admins veem todos.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get bonus ledger.'
+      description: 'GET /api/v1/finance/bonus?store_id=&from=&to='
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'The <code>id</code> of an existing record in the stores table.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      from:
+        custom: []
+        name: from
+        description: 'Must be a valid date.'
+        required: false
+        example: '2026-01-13T20:33:54'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      to:
+        custom: []
+        name: to
+        description: 'Must be a valid date.'
+        required: false
+        example: '2026-01-13T20:33:54'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      per_page:
+        custom: []
+        name: per_page
+        description: 'Must be at least 1. Must not be greater than 100.'
+        required: false
+        example: 22
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      store_id: 16
+      from: '2026-01-13T20:33:54'
+      to: '2026-01-13T20:33:54'
+      per_page: 22
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
     uri: api/v1/finance/bonus/calculate
     metadata:
       custom: []
@@ -189,7 +284,7 @@ endpoints:
         name: from
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-13T19:21:11'
+        example: '2026-01-13T20:33:54'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -200,15 +295,15 @@ endpoints:
         name: to
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-13T19:21:11'
+        example: '2026-01-13T20:33:54'
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      from: '2026-01-13T19:21:11'
-      to: '2026-01-13T19:21:11'
+      from: '2026-01-13T20:33:54'
+      to: '2026-01-13T20:33:54'
     fileParameters: []
     responses:
       -
@@ -227,6 +322,184 @@ endpoints:
           }
         headers: []
         description: 'Extrato de bônus'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/finance/commission
+    metadata:
+      custom: []
+      groupName: 'Extrato Financeiro'
+      groupDescription: |-
+
+        Endpoints para consultar o extrato de bônus diário e comissão mensal.
+        Vendedores veem apenas seus próprios dados; gerentes/admins veem todos.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get commission ledger.'
+      description: 'GET /api/v1/finance/commission?store_id=&month='
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'The <code>id</code> of an existing record in the stores table.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      month:
+        custom: []
+        name: month
+        description: 'Must match the regex /^\d{4}-\d{2}$/.'
+        required: false
+        example: 6425-59
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      per_page:
+        custom: []
+        name: per_page
+        description: 'Must be at least 1. Must not be greater than 100.'
+        required: false
+        example: 19
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      store_id: 16
+      month: 6425-59
+      per_page: 19
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/finance/commission/seller/{seller_id}'
+    metadata:
+      custom: []
+      groupName: 'Extrato Financeiro'
+      groupDescription: |-
+
+        Endpoints para consultar o extrato de bônus diário e comissão mensal.
+        Vendedores veem apenas seus próprios dados; gerentes/admins veem todos.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Comissão de um vendedor'
+      description: 'Retorna a comissão de um vendedor para um mês específico.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      seller_id:
+        custom: []
+        name: seller_id
+        description: 'The ID of the seller.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      seller:
+        custom: []
+        name: seller
+        description: 'ID do vendedor.'
+        required: true
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      seller_id: 16
+      seller: 5
+    queryParameters:
+      month:
+        custom: []
+        name: month
+        description: 'Mês (YYYY-MM).'
+        required: false
+        example: 2026-01
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      month: 2026-01
+    bodyParameters:
+      month:
+        custom: []
+        name: month
+        description: 'Must match the regex /^\d{4}-\d{2}$/.'
+        required: false
+        example: 6425-59
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      month: 6425-59
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
     responseFields: []
     auth:
       - headers
