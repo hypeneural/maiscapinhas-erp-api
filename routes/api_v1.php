@@ -106,6 +106,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{announcement}/dismiss', [AnnouncementController::class, 'dismiss'])->name('dismiss');
         Route::post('/{announcement}/publish', [AnnouncementController::class, 'publish'])->name('publish');
         Route::post('/{announcement}/archive', [AnnouncementController::class, 'archive'])->name('archive');
+        Route::get('/{announcement}/stats', [AnnouncementController::class, 'stats'])->name('stats');
+        Route::get('/{announcement}/receipts', [AnnouncementController::class, 'receipts'])->name('receipts');
+        Route::post('/{announcement}/duplicate', [AnnouncementController::class, 'duplicate'])->name('duplicate');
+        Route::post('/{announcement}/republish', [AnnouncementController::class, 'republish'])->name('republish');
     });
 
     // Stores (user's stores)

@@ -353,6 +353,211 @@ class AnnouncementController extends Controller
         ]);
     }
 
+    /**
+     * GET /announcements/{announcement}/stats
+     * Get announcement statistics.
+     */
+    public function stats(Request $request, Announcement $announcement): JsonResponse
+    {
+        Gate::authorize('view', $announcement);
+
+        // Calculate expected recipients (approximation based on scope)
+        $totalRecipients = $this->estimateTotalRecipients($announcement);
+
+        // Get actual receipt stats
+        $receipts = $announcement->receipts();
+        $deliveredCount = $receipts->count();
+        $seenCount = $receipts->clone()->whereNotNull('seen_at')->count();
+        $acknowledgedCount = $receipts->clone()->whereNotNull('acknowledged_at')->count();
+        $dismissedCount = $receipts->clone()->whereNotNull('dismissed_at')->count();
+        $pendingCount = $totalRecipients - $acknowledgedCount;
+
+        return $this->success([
+            'total_recipients' => $totalRecipients,
+            'delivered_count' => $deliveredCount,
+            'seen_count' => $seenCount,
+            'acknowledged_count' => $acknowledgedCount,
+            'dismissed_count' => $dismissedCount,
+            'pending_count' => max(0, $pendingCount),
+            'seen_percentage' => $totalRecipients > 0 ? round(($seenCount / $totalRecipients) * 100, 1) : 0,
+            'ack_percentage' => $totalRecipients > 0 ? round(($acknowledgedCount / $totalRecipients) * 100, 1) : 0,
+            'require_ack' => $announcement->require_ack,
+        ]);
+    }
+
+    /**
+     * GET /announcements/{announcement}/receipts
+     * Get announcement receipts list.
+     */
+    public function receipts(Request $request, Announcement $announcement): JsonResponse
+    {
+        Gate::authorize('view', $announcement);
+
+        $query = $announcement->receipts()
+            ->with(['user:id,name,email,avatar_url', 'store:id,name'])
+            ->orderByDesc('delivered_at');
+
+        // Filters
+        if ($request->filled('status')) {
+            match ($request->input('status')) {
+                'seen' => $query->whereNotNull('seen_at'),
+                'unseen' => $query->whereNull('seen_at'),
+                'acknowledged' => $query->whereNotNull('acknowledged_at'),
+                'pending' => $query->whereNull('acknowledged_at'),
+                'dismissed' => $query->whereNotNull('dismissed_at'),
+                default => null,
+            };
+        }
+
+        if ($request->filled('store_id')) {
+            $query->where('store_id', $request->input('store_id'));
+        }
+
+        $perPage = $request->integer('per_page', 25);
+        $receipts = $query->paginate($perPage);
+
+        return $this->paginated($receipts, function ($receipt) {
+            return [
+                'user' => [
+                    'id' => $receipt->user->id,
+                    'name' => $receipt->user->name,
+                    'email' => $receipt->user->email,
+                    'avatar_url' => $receipt->user->avatar_url,
+                ],
+                'store' => $receipt->store ? [
+                    'id' => $receipt->store->id,
+                    'name' => $receipt->store->name,
+                ] : null,
+                'delivered_at' => $receipt->delivered_at?->toIso8601String(),
+                'seen_at' => $receipt->seen_at?->toIso8601String(),
+                'acknowledged_at' => $receipt->acknowledged_at?->toIso8601String(),
+                'dismissed_at' => $receipt->dismissed_at?->toIso8601String(),
+                'last_shown_at' => $receipt->last_shown_at?->toIso8601String(),
+                'show_count' => $receipt->show_count,
+            ];
+        });
+    }
+
+    /**
+     * POST /announcements/{announcement}/duplicate
+     * Duplicate announcement as draft.
+     */
+    public function duplicate(Request $request, Announcement $announcement): JsonResponse
+    {
+        Gate::authorize('view', $announcement);
+
+        $newAnnouncement = DB::transaction(function () use ($announcement, $request) {
+            $data = $announcement->only([
+                'title', 'message', 'excerpt', 'type', 'severity', 'display_mode',
+                'icon', 'image_url', 'image_alt', 'cta_label', 'cta_url',
+                'scope', 'require_ack', 'repeat_every_minutes', 'priority', 'meta_json',
+            ]);
+
+            $data['title'] = "[Cópia] " . $data['title'];
+            $data['status'] = AnnouncementStatus::DRAFT->value;
+            $data['created_by_user_id'] = $request->user()->id;
+            $data['starts_at'] = null;
+            $data['expires_at'] = null;
+
+            $newAnnouncement = Announcement::create($data);
+
+            // Copy targets
+            foreach ($announcement->targets as $target) {
+                AnnouncementTarget::create([
+                    'announcement_id' => $newAnnouncement->id,
+                    'target_type' => $target->target_type->value,
+                    'target_id' => $target->target_id,
+                    'created_at' => now(),
+                ]);
+            }
+
+            return $newAnnouncement;
+        });
+
+        $newAnnouncement->load(['targets', 'createdBy']);
+
+        return $this->created(new AnnouncementDetailResource($newAnnouncement));
+    }
+
+    /**
+     * POST /announcements/{announcement}/republish
+     * Republish an archived or expired announcement.
+     */
+    public function republish(Request $request, Announcement $announcement): JsonResponse
+    {
+        Gate::authorize('publish', $announcement);
+
+        if (!in_array($announcement->status, [AnnouncementStatus::ARCHIVED, AnnouncementStatus::EXPIRED])) {
+            return $this->error('Apenas comunicados arquivados ou expirados podem ser republicados.', 422);
+        }
+
+        $now = now();
+
+        $announcement->update([
+            'status' => AnnouncementStatus::ACTIVE->value,
+            'starts_at' => $now,
+            'expires_at' => null,
+            'archived_at' => null,
+            'archived_by_user_id' => null,
+            'published_at' => $now,
+            'published_by_user_id' => $request->user()->id,
+        ]);
+
+        return $this->success([
+            'message' => 'Republicado com sucesso.',
+            'status' => 'active',
+            'published_at' => $announcement->published_at->toIso8601String(),
+        ]);
+    }
+
+    /**
+     * Estimate total recipients for an announcement.
+     */
+    private function estimateTotalRecipients(Announcement $announcement): int
+    {
+        return match ($announcement->scope) {
+            AnnouncementScope::GLOBAL => \App\Models\User::where('active', true)->count(),
+            AnnouncementScope::STORE => $this->countStoreUsers($announcement),
+            AnnouncementScope::USER => $announcement->targets()
+                ->where('target_type', 'user')
+                ->count(),
+            AnnouncementScope::ROLE => $this->countRoleUsers($announcement),
+        };
+    }
+
+    private function countStoreUsers(Announcement $announcement): int
+    {
+        $storeIds = $announcement->targets()
+            ->where('target_type', 'store')
+            ->pluck('target_id')
+            ->map(fn($id) => (int) $id)
+            ->all();
+
+        if (empty($storeIds)) {
+            return 0;
+        }
+
+        return \App\Models\StoreUser::whereIn('store_id', $storeIds)
+            ->distinct('user_id')
+            ->count('user_id');
+    }
+
+    private function countRoleUsers(Announcement $announcement): int
+    {
+        $roles = $announcement->targets()
+            ->where('target_type', 'role')
+            ->pluck('target_id')
+            ->all();
+
+        if (empty($roles)) {
+            return 0;
+        }
+
+        return \App\Models\StoreUser::whereIn('role', $roles)
+            ->distinct('user_id')
+            ->count('user_id');
+    }
+
     // ========================================
     // Private helpers
     // ========================================
