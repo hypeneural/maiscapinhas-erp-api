@@ -32,6 +32,9 @@ use App\Http\Controllers\Api\V1\PhoneModelController;
 use App\Http\Controllers\Api\V1\PedidoController;
 use App\Http\Controllers\Api\V1\CapaPersonalizadaController;
 use App\Http\Controllers\Api\V1\AnnouncementController;
+use App\Http\Controllers\Api\V1\ProducaoCarrinhoController;
+use App\Http\Controllers\Api\V1\ProducaoPedidoController;
+use App\Http\Controllers\Api\V1\FabricaPedidoController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -308,6 +311,42 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/', [AuditLogController::class, 'index'])->name('index');
             Route::get('/stats', [AuditLogController::class, 'stats'])->name('stats');
             Route::get('/{auditLog}', [AuditLogController::class, 'show'])->name('show');
+        });
+    });
+
+    // ============================================
+    // Produção - Carrinho e Pedidos (Admin)
+    // ============================================
+    Route::prefix('producao')->name('producao.')->group(function () {
+        // Carrinho
+        Route::prefix('carrinho')->name('carrinho.')->group(function () {
+            Route::get('/', [ProducaoCarrinhoController::class, 'index'])->name('index');
+            Route::post('/itens', [ProducaoCarrinhoController::class, 'addItems'])->name('itens.add');
+            Route::delete('/itens/{item}', [ProducaoCarrinhoController::class, 'removeItem'])->name('itens.remove');
+            Route::post('/fechar', [ProducaoCarrinhoController::class, 'close'])->name('fechar');
+            Route::delete('/', [ProducaoCarrinhoController::class, 'cancel'])->name('cancel');
+        });
+
+        // Pedidos (Admin)
+        Route::prefix('pedidos')->name('pedidos.')->group(function () {
+            Route::get('/', [ProducaoPedidoController::class, 'index'])->name('index');
+            Route::get('/{pedido}', [ProducaoPedidoController::class, 'show'])->name('show');
+            Route::get('/{pedido}/timeline', [ProducaoPedidoController::class, 'timeline'])->name('timeline');
+            Route::patch('/{pedido}/receber', [ProducaoPedidoController::class, 'receive'])->name('receber');
+            Route::delete('/{pedido}', [ProducaoPedidoController::class, 'cancel'])->name('cancel');
+        });
+    });
+
+    // ============================================
+    // Fábrica - Portal da Fábrica
+    // ============================================
+    Route::prefix('fabrica')->name('fabrica.')->middleware('fabrica')->group(function () {
+        Route::prefix('pedidos')->name('pedidos.')->group(function () {
+            Route::get('/', [FabricaPedidoController::class, 'index'])->name('index');
+            Route::get('/{pedido}', [FabricaPedidoController::class, 'show'])->name('show');
+            Route::patch('/{pedido}/aceitar', [FabricaPedidoController::class, 'accept'])->name('aceitar');
+            Route::patch('/{pedido}/despachar', [FabricaPedidoController::class, 'dispatch'])->name('despachar');
+            Route::get('/{pedido}/itens/{item}/foto', [FabricaPedidoController::class, 'downloadPhoto'])->name('item.foto');
         });
     });
 

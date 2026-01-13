@@ -27,6 +27,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('api', [
             \App\Http\Middleware\RequestIdMiddleware::class,
         ]);
+
+        // Register middleware aliases
+        $middleware->alias([
+            'fabrica' => \App\Http\Middleware\EnsureIsFabrica::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // Return JSON for unauthenticated API requests

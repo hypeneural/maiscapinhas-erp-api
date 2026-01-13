@@ -33,6 +33,7 @@ class CapaPersonalizada extends Model
         'payday',
         'received_by_id',
         'sended_to_production_at',
+        'producao_pedido_id',
         'status',
         'created_by_id',
         'updated_by_id',
@@ -85,6 +86,16 @@ class CapaPersonalizada extends Model
     public function updatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by_id');
+    }
+
+    public function producaoPedido(): BelongsTo
+    {
+        return $this->belongsTo(ProducaoPedido::class, 'producao_pedido_id');
+    }
+
+    public function eventos()
+    {
+        return ProducaoEvento::forCapaPersonalizada($this->id)->get();
     }
 
     // ========================================
@@ -244,5 +255,63 @@ class CapaPersonalizada extends Model
             'upload_token' => null,
             'upload_token_expires_at' => null,
         ]);
+    }
+
+    // ========================================
+    // Production Cart Methods
+    // ========================================
+
+    /**
+     * Check if capa can be added to cart.
+     */
+    public function canAddToCart(): bool
+    {
+        return $this->status->canAddToCart() && $this->photo_path !== null;
+    }
+
+    /**
+     * Check if capa is currently in a production cart.
+     */
+    public function isInCart(): bool
+    {
+        return $this->producao_pedido_id !== null
+            && $this->producaoPedido?->isCarrinhoAberto();
+    }
+
+    /**
+     * Check if capa was ever sent to factory.
+     */
+    public function wasEverSentToFactory(): bool
+    {
+        return $this->sended_to_production_at !== null
+            || $this->status === CapaPersonalizadaStatus::ENVIADO_PRODUCAO;
+    }
+
+    /**
+     * Get reason why capa cannot be added to cart.
+     */
+    public function getCartBlockReason(): ?array
+    {
+        if ($this->status === CapaPersonalizadaStatus::CANCELADA) {
+            return ['reason' => 'CANCELLED', 'message' => 'Capa está cancelada'];
+        }
+
+        if (!$this->photo_path) {
+            return ['reason' => 'NO_PHOTO', 'message' => 'Capa não possui foto'];
+        }
+
+        if ($this->isInCart()) {
+            return ['reason' => 'ALREADY_IN_CART', 'message' => 'Capa já está no carrinho'];
+        }
+
+        if ($this->wasEverSentToFactory()) {
+            return ['reason' => 'ALREADY_SENT', 'message' => 'Capa já foi enviada para fábrica'];
+        }
+
+        if (!$this->status->canAddToCart()) {
+            return ['reason' => 'INVALID_STATUS', 'message' => 'Status deve ser "Encomenda Solicitada"'];
+        }
+
+        return null;
     }
 }
