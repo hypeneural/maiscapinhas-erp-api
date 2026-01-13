@@ -203,6 +203,11 @@ class UserController extends Controller
                 }
             }
 
+            // Assign global roles if provided
+            if ($request->has('roles')) {
+                $user->syncRoles($request->input('roles'));
+            }
+
             return $user;
         });
 
@@ -317,6 +322,11 @@ class UserController extends Controller
 
         $user->update($data);
 
+        // Sync global roles if provided
+        if ($request->has('roles')) {
+            $user->syncRoles($request->input('roles'));
+        }
+
         return $this->success(new UserResource($user->load('storeUsers.store')));
     }
 
@@ -364,6 +374,144 @@ class UserController extends Controller
 
         return $this->success(['message' => 'Usuário desativado com sucesso.']);
     }
+
+    // ========================================
+    // Bulk Store Operations
+    // ========================================
+
+    /**
+     * Sync user stores (replace all bindings).
+     * PUT /admin/users/{user}/stores
+     */
+    public function syncStores(Request $request, User $user): JsonResponse
+    {
+        $this->authorizeAdmin($request);
+
+        $validated = $request->validate([
+            'stores' => ['required', 'array'],
+            'stores.*.store_id' => ['required', 'integer', 'exists:stores,id'],
+            'stores.*.role' => ['required', 'string', 'in:admin,gerente,conferente,vendedor'],
+        ]);
+
+        DB::transaction(function () use ($user, $validated) {
+            // Remove all existing bindings
+            StoreUser::where('user_id', $user->id)->delete();
+
+            // Create new bindings
+            foreach ($validated['stores'] as $storeData) {
+                StoreUser::create([
+                    'user_id' => $user->id,
+                    'store_id' => $storeData['store_id'],
+                    'role' => $storeData['role'],
+                ]);
+            }
+        });
+
+        return $this->success([
+            'message' => count($validated['stores']) . ' vínculo(s) sincronizado(s).',
+            'user' => new UserResource($user->fresh()->load('storeUsers.store')),
+        ]);
+    }
+
+    /**
+     * Bulk add user to multiple stores.
+     * POST /admin/users/{user}/stores/bulk
+     */
+    public function bulkAddStores(Request $request, User $user): JsonResponse
+    {
+        $this->authorizeAdmin($request);
+
+        $validated = $request->validate([
+            'stores' => ['required', 'array', 'min:1'],
+            'stores.*.store_id' => ['required', 'integer', 'exists:stores,id'],
+            'stores.*.role' => ['required', 'string', 'in:admin,gerente,conferente,vendedor'],
+        ]);
+
+        $created = [];
+        $skipped = [];
+
+        DB::transaction(function () use ($user, $validated, &$created, &$skipped) {
+            foreach ($validated['stores'] as $storeData) {
+                $exists = StoreUser::where('user_id', $user->id)
+                    ->where('store_id', $storeData['store_id'])
+                    ->exists();
+
+                if ($exists) {
+                    $skipped[] = $storeData['store_id'];
+                    continue;
+                }
+
+                StoreUser::create([
+                    'user_id' => $user->id,
+                    'store_id' => $storeData['store_id'],
+                    'role' => $storeData['role'],
+                ]);
+                $created[] = $storeData['store_id'];
+            }
+        });
+
+        return $this->success([
+            'message' => count($created) . ' vínculo(s) criado(s), ' . count($skipped) . ' ignorado(s).',
+            'created' => $created,
+            'skipped' => $skipped,
+        ]);
+    }
+
+    /**
+     * Bulk update role in multiple stores.
+     * PATCH /admin/users/{user}/stores/bulk
+     */
+    public function bulkUpdateStores(Request $request, User $user): JsonResponse
+    {
+        $this->authorizeAdmin($request);
+
+        $validated = $request->validate([
+            'role' => ['required', 'string', 'in:admin,gerente,conferente,vendedor'],
+            'store_ids' => ['required', 'array', 'min:1'],
+            'store_ids.*' => ['integer', 'exists:stores,id'],
+        ]);
+
+        $updated = StoreUser::where('user_id', $user->id)
+            ->whereIn('store_id', $validated['store_ids'])
+            ->update(['role' => $validated['role']]);
+
+        return $this->success([
+            'message' => $updated . ' vínculo(s) atualizado(s).',
+            'updated_count' => $updated,
+        ]);
+    }
+
+    /**
+     * Bulk remove user from multiple stores.
+     * DELETE /admin/users/{user}/stores/bulk
+     */
+    public function bulkRemoveStores(Request $request, User $user): JsonResponse
+    {
+        $this->authorizeAdmin($request);
+
+        $validated = $request->validate([
+            'store_ids' => ['required', 'array', 'min:1'],
+            'store_ids.*' => ['integer', 'exists:stores,id'],
+        ]);
+
+        // Prevent removing self
+        if ($request->user()->id === $user->id) {
+            return $this->forbidden('Você não pode remover seus próprios vínculos.');
+        }
+
+        $deleted = StoreUser::where('user_id', $user->id)
+            ->whereIn('store_id', $validated['store_ids'])
+            ->delete();
+
+        return $this->success([
+            'message' => $deleted . ' vínculo(s) removido(s).',
+            'deleted_count' => $deleted,
+        ]);
+    }
+
+    // ========================================
+    // Authorization
+    // ========================================
 
     /**
      * Verify user is admin.

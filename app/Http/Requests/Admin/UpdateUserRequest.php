@@ -63,6 +63,10 @@ class UpdateUserRequest extends FormRequest
                 Rule::unique('users', 'cpf')->ignore($userId),
             ],
             'pix_key' => ['sometimes', 'nullable', 'string', 'max:255'],
+
+            // Global roles (Spatie)
+            'roles' => ['sometimes', 'array'],
+            'roles.*' => ['string', Rule::in(['fabrica'])],
         ];
     }
 

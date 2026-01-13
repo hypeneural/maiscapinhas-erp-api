@@ -20,6 +20,9 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'active' => $this->active,
             'is_super_admin' => $this->is_super_admin ?? false,
+            'is_global_admin' => $this->isGlobalAdmin(),
+            'has_fabrica_access' => $this->hasRole('fabrica'),
+            'roles' => $this->getRoleNames()->toArray(),
 
             // Address data
             'zip_code' => $this->zip_code,

@@ -70,6 +70,10 @@ class StoreUserRequest extends FormRequest
             'stores' => ['sometimes', 'array'],
             'stores.*.store_id' => ['required_with:stores', 'integer', 'exists:stores,id'],
             'stores.*.role' => ['required_with:stores', 'string', Rule::enum(StoreUserRole::class)],
+
+            // Optional: assign global roles (Spatie)
+            'roles' => ['sometimes', 'array'],
+            'roles.*' => ['string', Rule::in(['fabrica'])],
         ];
     }
 
