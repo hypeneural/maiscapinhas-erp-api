@@ -20,8 +20,8 @@ class ProducaoPedidoItemResource extends JsonResource
             'observation' => $this->observation,
             'photo_url' => $this->photo_url,
             'photo_download_url' => $this->when(
-                $request->user()?->hasRole('fabrica'),
-                fn() => route('api.v1.producao.pedidos.item.foto', [
+                $request->user()?->hasRole('fabrica') || $request->user()?->isGlobalAdmin(),
+                fn() => route('api.v1.fabrica.pedidos.item.foto', [
                     'pedido' => $this->producao_pedido_id,
                     'item' => $this->id,
                 ])
