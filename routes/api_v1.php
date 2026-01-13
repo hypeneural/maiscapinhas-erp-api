@@ -294,6 +294,16 @@ Route::middleware('auth:sanctum')->group(function () {
         // Users Management
         Route::apiResource('users', AdminUserController::class);
 
+        // User Bulk Store Operations
+        Route::put('/users/{user}/stores', [AdminUserController::class, 'syncStores'])
+            ->name('users.stores.sync');
+        Route::post('/users/{user}/stores/bulk', [AdminUserController::class, 'bulkAddStores'])
+            ->name('users.stores.bulk-add');
+        Route::patch('/users/{user}/stores/bulk', [AdminUserController::class, 'bulkUpdateStores'])
+            ->name('users.stores.bulk-update');
+        Route::delete('/users/{user}/stores/bulk', [AdminUserController::class, 'bulkRemoveStores'])
+            ->name('users.stores.bulk-remove');
+
         // Stores Management
         Route::apiResource('stores', AdminStoreController::class);
         Route::post('/stores/validate-hours', [AdminStoreController::class, 'validateOpeningHours'])

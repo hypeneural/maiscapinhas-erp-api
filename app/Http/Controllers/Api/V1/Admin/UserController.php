@@ -108,6 +108,30 @@ class UserController extends Controller
             });
         }
 
+        // Filter by has_stores (true = has at least one store, false = no stores)
+        if ($request->has('has_stores')) {
+            if ($request->boolean('has_stores')) {
+                $query->whereHas('storeUsers');
+            } else {
+                $query->whereDoesntHave('storeUsers');
+            }
+        }
+
+        // Filter by global role (Spatie)
+        if ($request->filled('role')) {
+            $query->role($request->input('role'));
+        }
+
+        // Filter by is_global_admin (super_admin OR admin in any store)
+        if ($request->has('is_global_admin')) {
+            if ($request->boolean('is_global_admin')) {
+                $query->where(function ($q) {
+                    $q->where('is_super_admin', true)
+                        ->orWhereHas('storeUsers', fn($sq) => $sq->where('role', 'admin'));
+                });
+            }
+        }
+
         $users = $query->orderBy('name')->paginate($request->input('per_page', 25));
 
         return $this->paginated($users, UserResource::class);
