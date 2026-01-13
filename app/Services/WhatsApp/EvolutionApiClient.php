@@ -13,6 +13,7 @@ class EvolutionApiClient
         private string $baseUrl,
         private string $apiKey,
         private string $instanceName,
+        private ?string $forcedIp = null,
     ) {
     }
 
@@ -21,10 +22,22 @@ class EvolutionApiClient
      */
     private function http(): PendingRequest
     {
-        return Http::baseUrl(rtrim($this->baseUrl, '/'))
+        $client = Http::baseUrl(rtrim($this->baseUrl, '/'))
             ->withHeaders(['apikey' => $this->apiKey])
             ->timeout(20)
             ->retry(2, 250, throw: false);
+
+        // Bypass DNS resolution issues on shared hosting
+        if ($this->forcedIp) {
+            $host = parse_url($this->baseUrl, PHP_URL_HOST);
+            $client = $client->withOptions([
+                'curl' => [
+                    CURLOPT_RESOLVE => ["{$host}:443:{$this->forcedIp}"],
+                ],
+            ]);
+        }
+
+        return $client;
     }
 
     /**

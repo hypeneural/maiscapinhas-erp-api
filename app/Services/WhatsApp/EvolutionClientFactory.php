@@ -22,8 +22,9 @@ class EvolutionClientFactory
 
         return new EvolutionApiClient(
             baseUrl: $instance->base_url,
-            apiKey: $instance->api_key, // Decrypted by model cast
+            apiKey: $instance->api_key, // Decrypted by model getter
             instanceName: $instance->name,
+            forcedIp: $instance->forced_ip,
         );
     }
 

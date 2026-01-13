@@ -25,6 +25,7 @@ class WhatsAppInstance extends Model
         'name',
         'phone_e164',
         'base_url',
+        'forced_ip',
         'is_default',
         'is_active',
         'notes',
