@@ -88,6 +88,11 @@ class ProducaoCarrinhoService
                     continue;
                 }
 
+                // Release if orphaned (linked to cancelled cart)
+                if ($capa->releaseIfOrphan()) {
+                    $capa->refresh();
+                }
+
                 // Check if can add to cart
                 $blockReason = $capa->getCartBlockReason();
                 if ($blockReason) {
@@ -149,7 +154,17 @@ class ProducaoCarrinhoService
                 continue;
             }
 
+            // Check if orphaned - it will be released when added
+            $isOrphan = $capa->isOrphan();
+
             $blockReason = $capa->getCartBlockReason();
+
+            // If orphaned, it would be blocked due to invalid status, but will be auto-released
+            if ($isOrphan && $blockReason && $blockReason['reason'] === 'INVALID_STATUS') {
+                $results['eligible'][] = $capaId;
+                continue;
+            }
+
             if ($blockReason) {
                 $results['blocked'][] = array_merge(['id' => $capaId], $blockReason);
             } else {
@@ -351,5 +366,29 @@ class ProducaoCarrinhoService
 
             return true;
         });
+    }
+
+    /**
+     * Cleanup orphaned capas from cancelled production orders.
+     * Returns the count of capas that were released.
+     */
+    public function cleanupOrphanedCapas(): int
+    {
+        $releasedCount = 0;
+
+        // Find all capas linked to cancelled production orders
+        $orphanedCapas = CapaPersonalizada::whereNotNull('producao_pedido_id')
+            ->whereHas('producaoPedido', function ($query) {
+                $query->where('status', ProducaoPedidoStatus::CANCELADO);
+            })
+            ->get();
+
+        foreach ($orphanedCapas as $capa) {
+            if ($capa->releaseIfOrphan()) {
+                $releasedCount++;
+            }
+        }
+
+        return $releasedCount;
     }
 }

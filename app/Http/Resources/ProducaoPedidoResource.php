@@ -42,6 +42,10 @@ class ProducaoPedidoResource extends JsonResource
             'can_receive' => $this->canReceive(),
             'can_cancel' => $this->canCancel(),
             'is_carrinho_aberto' => $this->isCarrinhoAberto(),
+
+            // Cart-specific fields (only when open cart)
+            'can_add_more' => $this->when($this->isCarrinhoAberto(), true),
+            'blockers' => $this->when($this->isCarrinhoAberto(), []),
         ];
     }
 }

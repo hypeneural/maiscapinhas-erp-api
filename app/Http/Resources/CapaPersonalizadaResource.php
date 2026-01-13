@@ -100,6 +100,10 @@ class CapaPersonalizadaResource extends JsonResource
                 ]
             ),
 
+            // Production Order (if linked)
+            'producao_pedido_id' => $this->producao_pedido_id,
+            'producao_history' => $this->getProducaoHistory(),
+
             // Timestamps
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),

@@ -314,4 +314,65 @@ class CapaPersonalizada extends Model
 
         return null;
     }
+
+    /**
+     * Check if capa is orphaned (linked to a cancelled production order).
+     */
+    public function isOrphan(): bool
+    {
+        if (!$this->producao_pedido_id) {
+            return false;
+        }
+
+        $pedido = $this->producaoPedido;
+
+        if (!$pedido) {
+            // Pedido was deleted - this is orphan
+            return true;
+        }
+
+        // Check if pedido is cancelled
+        return $pedido->status === \App\Enums\ProducaoPedidoStatus::CANCELADO;
+    }
+
+    /**
+     * Release capa from orphan state (cancelled production order).
+     * Returns true if capa was released, false if not orphan.
+     */
+    public function releaseIfOrphan(): bool
+    {
+        if (!$this->isOrphan()) {
+            return false;
+        }
+
+        $this->update([
+            'producao_pedido_id' => null,
+            'status' => CapaPersonalizadaStatus::ENCOMENDA_SOLICITADA,
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Get production history for this capa.
+     * Returns array of pedidos this capa has been associated with.
+     */
+    public function getProducaoHistory(): array
+    {
+        // Get from producao_pedido_itens (historical snapshots)
+        $items = \App\Models\ProducaoPedidoItem::where('capa_personalizada_id', $this->id)
+            ->with('producaoPedido:id,status,created_at')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return $items->map(function ($item) {
+            $pedido = $item->producaoPedido;
+            return [
+                'pedido_id' => $pedido?->id,
+                'status' => $pedido?->status?->name ?? 'DELETED',
+                'status_label' => $pedido?->status?->label() ?? 'Deletado',
+                'added_at' => $item->created_at->toDateString(),
+            ];
+        })->toArray();
+    }
 }

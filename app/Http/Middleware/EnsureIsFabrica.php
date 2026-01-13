@@ -19,9 +19,10 @@ class EnsureIsFabrica
     {
         $user = $request->user();
 
-        if (!$user || !$user->hasRole('fabrica')) {
+        // Allow access if user has 'fabrica' role OR is a global admin (admin/super_admin)
+        if (!$user || (!$user->hasRole('fabrica') && !$user->isGlobalAdmin())) {
             return response()->json([
-                'message' => 'Acesso negado. Apenas fábrica.',
+                'message' => 'Acesso negado. Apenas fábrica ou administradores.',
             ], 403);
         }
 

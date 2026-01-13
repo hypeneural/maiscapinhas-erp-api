@@ -34,6 +34,7 @@ use App\Http\Controllers\Api\V1\CapaPersonalizadaController;
 use App\Http\Controllers\Api\V1\AnnouncementController;
 use App\Http\Controllers\Api\V1\ProducaoCarrinhoController;
 use App\Http\Controllers\Api\V1\ProducaoPedidoController;
+use App\Http\Controllers\Api\V1\ProducaoAdminController;
 use App\Http\Controllers\Api\V1\FabricaPedidoController;
 use Illuminate\Support\Facades\Route;
 
@@ -336,6 +337,12 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/{pedido}/timeline', [ProducaoPedidoController::class, 'timeline'])->name('timeline');
             Route::patch('/{pedido}/receber', [ProducaoPedidoController::class, 'receive'])->name('receber');
             Route::delete('/{pedido}', [ProducaoPedidoController::class, 'cancel'])->name('cancel');
+        });
+
+        // Admin Actions
+        Route::prefix('admin')->name('admin.')->group(function () {
+            Route::post('/limpar-itens-cancelados', [ProducaoAdminController::class, 'cleanupOrphanedItems'])
+                ->name('limpar-itens-cancelados');
         });
     });
 
