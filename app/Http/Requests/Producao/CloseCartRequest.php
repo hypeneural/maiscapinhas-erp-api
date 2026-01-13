@@ -10,9 +10,9 @@ class CloseCartRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // Only admins can close cart
+        // Only global admins can close cart
         $user = $this->user();
-        return $user && ($user->hasRole('admin') || $user->hasRole('super_admin'));
+        return $user && $user->isGlobalAdmin();
     }
 
     public function rules(): array

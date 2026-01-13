@@ -130,6 +130,88 @@ class ProducaoCarrinhoService
     }
 
     /**
+     * Validate capas before adding to cart (dry-run).
+     * Returns which capas can be added and which are blocked.
+     */
+    public function validateCapas(array $capaIds): array
+    {
+        $results = ['eligible' => [], 'blocked' => []];
+
+        foreach ($capaIds as $capaId) {
+            $capa = CapaPersonalizada::find($capaId);
+
+            if (!$capa) {
+                $results['blocked'][] = [
+                    'id' => $capaId,
+                    'reason' => 'NOT_FOUND',
+                    'message' => 'Capa não encontrada',
+                ];
+                continue;
+            }
+
+            $blockReason = $capa->getCartBlockReason();
+            if ($blockReason) {
+                $results['blocked'][] = array_merge(['id' => $capaId], $blockReason);
+            } else {
+                $results['eligible'][] = $capaId;
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * Remove multiple items from the cart.
+     */
+    public function bulkRemoveFromCart(array $itemIds): array
+    {
+        $results = ['removed' => [], 'errors' => []];
+        $user = Auth::user();
+        $carrinho = $this->getOpenCart();
+
+        if (!$carrinho) {
+            throw ValidationException::withMessages([
+                'carrinho' => ['Nenhum carrinho aberto encontrado.'],
+            ]);
+        }
+
+        DB::transaction(function () use ($itemIds, $carrinho, $user, &$results) {
+            foreach ($itemIds as $itemId) {
+                $item = $carrinho->itens()->find($itemId);
+
+                if (!$item) {
+                    $results['errors'][] = [
+                        'id' => $itemId,
+                        'message' => 'Item não encontrado no carrinho.',
+                    ];
+                    continue;
+                }
+
+                $capaId = $item->capa_personalizada_id;
+                $capa = $item->capaPersonalizada;
+
+                // Delete item
+                $item->delete();
+
+                // Revert capa status
+                if ($capa) {
+                    $capa->update([
+                        'status' => CapaPersonalizadaStatus::ENCOMENDA_SOLICITADA,
+                        'producao_pedido_id' => null,
+                    ]);
+                }
+
+                // Log event
+                $this->eventoService->logItemRemovido($carrinho->id, $capaId, $user);
+
+                $results['removed'][] = $itemId;
+            }
+        });
+
+        return $results;
+    }
+
+    /**
      * Remove an item from the cart.
      */
     public function removeFromCart(int $itemId): bool

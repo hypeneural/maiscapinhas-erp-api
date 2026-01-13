@@ -10,9 +10,9 @@ class AddToCartRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // Only admins can add to cart
+        // Only global admins (super_admin or admin in any store) can add to cart
         $user = $this->user();
-        return $user && ($user->hasRole('admin') || $user->hasRole('super_admin'));
+        return $user && $user->isGlobalAdmin();
     }
 
     public function rules(): array

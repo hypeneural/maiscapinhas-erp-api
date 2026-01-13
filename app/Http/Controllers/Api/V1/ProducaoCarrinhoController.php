@@ -10,6 +10,7 @@ use App\Http\Requests\Producao\CloseCartRequest;
 use App\Http\Resources\ProducaoPedidoResource;
 use App\Services\ProducaoCarrinhoService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ProducaoCarrinhoController extends Controller
 {
@@ -29,6 +30,30 @@ class ProducaoCarrinhoController extends Controller
 
         return response()->json([
             'data' => new ProducaoPedidoResource($carrinho->load(['itens.capaPersonalizada.customer', 'createdBy'])),
+        ]);
+    }
+
+    /**
+     * POST /api/v1/producao/carrinho/validar
+     * 
+     * Validate capas before adding to cart (dry-run).
+     */
+    public function validate(Request $request): JsonResponse
+    {
+        $request->validate([
+            'capa_ids' => ['required', 'array', 'min:1', 'max:100'],
+            'capa_ids.*' => ['required', 'integer'],
+        ]);
+
+        $results = $this->carrinhoService->validateCapas($request->input('capa_ids'));
+
+        return response()->json([
+            'data' => [
+                'eligible' => $results['eligible'],
+                'blocked' => $results['blocked'],
+                'eligible_count' => count($results['eligible']),
+                'blocked_count' => count($results['blocked']),
+            ],
         ]);
     }
 
@@ -74,6 +99,34 @@ class ProducaoCarrinhoController extends Controller
 
         return response()->json([
             'message' => 'Item removido do carrinho.',
+        ]);
+    }
+
+    /**
+     * DELETE /api/v1/producao/carrinho/itens
+     * 
+     * Remove multiple items from the cart (bulk).
+     */
+    public function bulkRemoveItems(Request $request): JsonResponse
+    {
+        $request->validate([
+            'item_ids' => ['required', 'array', 'min:1', 'max:100'],
+            'item_ids.*' => ['required', 'integer'],
+        ]);
+
+        $results = $this->carrinhoService->bulkRemoveFromCart($request->input('item_ids'));
+
+        $removedCount = count($results['removed']);
+        $errorCount = count($results['errors']);
+
+        return response()->json([
+            'message' => "{$removedCount} item(ns) removido(s)",
+            'data' => [
+                'removed' => $results['removed'],
+                'errors' => $results['errors'],
+                'removed_count' => $removedCount,
+                'error_count' => $errorCount,
+            ],
         ]);
     }
 

@@ -321,7 +321,9 @@ Route::middleware('auth:sanctum')->group(function () {
         // Carrinho
         Route::prefix('carrinho')->name('carrinho.')->group(function () {
             Route::get('/', [ProducaoCarrinhoController::class, 'index'])->name('index');
+            Route::post('/validar', [ProducaoCarrinhoController::class, 'validate'])->name('validar');
             Route::post('/itens', [ProducaoCarrinhoController::class, 'addItems'])->name('itens.add');
+            Route::delete('/itens/bulk', [ProducaoCarrinhoController::class, 'bulkRemoveItems'])->name('itens.bulk-remove');
             Route::delete('/itens/{item}', [ProducaoCarrinhoController::class, 'removeItem'])->name('itens.remove');
             Route::post('/fechar', [ProducaoCarrinhoController::class, 'close'])->name('fechar');
             Route::delete('/', [ProducaoCarrinhoController::class, 'cancel'])->name('cancel');
