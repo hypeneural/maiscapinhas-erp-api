@@ -176,7 +176,12 @@ class CapaPersonalizada extends Model
         }
 
         return $query->where(function ($q) use ($term) {
-            $q->where('selected_product', 'like', "%{$term}%")
+            // If term is purely numeric, search by ID as well
+            if (ctype_digit($term)) {
+                $q->where('id', (int) $term);
+            }
+
+            $q->orWhere('selected_product', 'like', "%{$term}%")
                 ->orWhere('product_reference', 'like', "%{$term}%")
                 ->orWhere('obs', 'like', "%{$term}%")
                 ->orWhereHas('customer', function ($cq) use ($term) {

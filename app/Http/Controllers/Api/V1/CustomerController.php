@@ -37,7 +37,12 @@ class CustomerController extends Controller
             });
         }
 
-        // Filters
+        // Unified keyword search (name, email, phone)
+        if ($request->filled('keyword')) {
+            $query->search($request->input('keyword'));
+        }
+
+        // Individual field filters (kept for backward compatibility)
         if ($request->filled('name')) {
             $query->where('name', 'like', '%' . $request->input('name') . '%');
         }
@@ -56,6 +61,15 @@ class CustomerController extends Controller
 
         if ($request->filled('state')) {
             $query->where('state', $request->input('state'));
+        }
+
+        // Date range filters
+        if ($request->filled('initial_date')) {
+            $query->where('created_at', '>=', $request->input('initial_date'));
+        }
+
+        if ($request->filled('final_date')) {
+            $query->where('created_at', '<=', $request->input('final_date') . ' 23:59:59');
         }
 
         if ($request->filled('has_device')) {
@@ -82,9 +96,11 @@ class CustomerController extends Controller
             );
         }
 
-        // Sorting
+        // Sorting with whitelist validation
+        $allowedSortFields = ['id', 'name', 'email', 'phone', 'city', 'state', 'created_at', 'updated_at'];
         $sortField = $request->input('sort', 'created_at');
-        $sortDirection = $request->input('direction', 'desc');
+        $sortField = in_array($sortField, $allowedSortFields) ? $sortField : 'created_at';
+        $sortDirection = $request->input('direction', 'desc') === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortField, $sortDirection);
 
         // Pagination

@@ -46,8 +46,14 @@ class PedidoController extends Controller
             $query->forUser((int) $request->input('user_id'));
         }
 
+        // Multi-status support: status=1 or status[]=1&status[]=2
         if ($request->filled('status')) {
-            $query->withStatus((int) $request->input('status'));
+            $statuses = $request->input('status');
+            if (is_array($statuses)) {
+                $query->whereIn('status', array_map('intval', $statuses));
+            } else {
+                $query->withStatus((int) $statuses);
+            }
         }
 
         if ($request->filled('customer_id')) {
@@ -74,9 +80,11 @@ class PedidoController extends Controller
             $query->search($request->input('keyword'));
         }
 
-        // Sorting
+        // Sorting with whitelist validation
+        $allowedSortFields = ['id', 'created_at', 'updated_at', 'status', 'selected_product', 'store_id', 'user_id'];
         $sortField = $request->input('sort', 'created_at');
-        $sortDirection = $request->input('direction', 'desc');
+        $sortField = in_array($sortField, $allowedSortFields) ? $sortField : 'created_at';
+        $sortDirection = $request->input('direction', 'desc') === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortField, $sortDirection);
 
         // Pagination
