@@ -58,7 +58,9 @@ Route::get('/version', VersionController::class)->name('version');
 Route::prefix('auth')->name('auth.')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login');
     Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword'])->name('forgot-password');
+    Route::post('/forgot-password/whatsapp', [PasswordResetController::class, 'forgotPasswordWhatsApp'])->name('forgot-password.whatsapp');
     Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('reset-password');
+    Route::post('/reset-password/code', [PasswordResetController::class, 'resetPasswordWithCode'])->name('reset-password.code');
 });
 
 // Bio routes (public - for Instagram Bio page)
