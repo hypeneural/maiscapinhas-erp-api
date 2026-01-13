@@ -1,390 +1,33 @@
-name: 'Turnos de Caixa'
+name: Lojas
 description: |-
 
-  Endpoints para gerenciar turnos de caixa.
-  Cada turno representa um período de trabalho de um vendedor em uma loja.
+  Endpoints para consultar lojas às quais o usuário tem acesso.
+  O usuário só pode visualizar lojas onde está vinculado via `store_users`.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/cash/shifts
+    uri: api/v1/stores
     metadata:
       custom: []
-      groupName: 'Turnos de Caixa'
+      groupName: Lojas
       groupDescription: |-
 
-        Endpoints para gerenciar turnos de caixa.
-        Cada turno representa um período de trabalho de um vendedor em uma loja.
+        Endpoints para consultar lojas às quais o usuário tem acesso.
+        O usuário só pode visualizar lojas onde está vinculado via `store_users`.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Listar turnos de caixa'
+      title: 'Listar lojas do usuário'
       description: |-
-        Retorna os turnos de caixa das lojas às quais o usuário tem acesso,
-        com filtros por loja, data e status.
+        Retorna todas as lojas ativas às quais o usuário autenticado tem acesso.
+        Cada loja inclui o papel (role) do usuário naquela loja.
 
         **Quem pode usar:** Qualquer usuário autenticado.
 
-        **Filtros disponíveis:**
-        - `store_id` - Filtrar por loja específica
-        - `date` - Filtrar por data específica (YYYY-MM-DD)
-        - `status` - Filtrar por status (open, closed, pending)
-
-        **Códigos de turno:**
-        - `M` - Manhã
-        - `T` - Tarde
-        - `N` - Noite
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters:
-      store_id:
-        custom: []
-        name: store_id
-        description: 'ID da loja para filtrar.'
-        required: false
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      date:
-        custom: []
-        name: date
-        description: 'Data específica (YYYY-MM-DD).'
-        required: false
-        example: '2026-01-07'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      status:
-        custom: []
-        name: status
-        description: 'Status do turno.'
-        required: false
-        example: open
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      per_page:
-        custom: []
-        name: per_page
-        description: 'Itens por página (1-100).'
-        required: false
-        example: 25
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanQueryParameters:
-      store_id: 1
-      date: '2026-01-07'
-      status: open
-      per_page: 25
-    bodyParameters:
-      store_id:
-        custom: []
-        name: store_id
-        description: 'The <code>id</code> of an existing record in the stores table.'
-        required: false
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      date:
-        custom: []
-        name: date
-        description: 'Must be a valid date.'
-        required: false
-        example: '2026-01-08T01:32:43'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      status:
-        custom: []
-        name: status
-        description: ''
-        required: false
-        example: open
-        type: string
-        enumValues:
-          - open
-          - closed
-          - pending
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      per_page:
-        custom: []
-        name: per_page
-        description: 'Must be at least 1. Must not be greater than 100.'
-        required: false
-        example: 22
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      store_id: 16
-      date: '2026-01-08T01:32:43'
-      status: open
-      per_page: 22
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "data": [
-              {
-                "id": 1,
-                "store_id": 1,
-                "date": "2026-01-07",
-                "shift_code": "M",
-                "seller_id": 6,
-                "status": "open",
-                "store": { "id": 1, "name": "Mais Capinhas Tijucas" },
-                "seller": { "id": 6, "name": "João Vendedor" },
-                "cash_closing": null
-              }
-            ],
-            "meta": { "current_page": 1, "per_page": 25, "total": 84 }
-          }
-        headers: []
-        description: 'Lista de turnos'
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: api/v1/cash/shifts/pending
-    metadata:
-      custom: []
-      groupName: 'Turnos de Caixa'
-      groupDescription: |-
-
-        Endpoints para gerenciar turnos de caixa.
-        Cada turno representa um período de trabalho de um vendedor em uma loja.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Turnos pendentes de conferência'
-      description: |-
-        Lista turnos que ainda não foram aprovados, ordenados por prioridade
-        (mais antigos primeiro).
-
-        **Quem pode usar:** Conferentes, Gerentes e Admins.
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters:
-      store_id:
-        custom: []
-        name: store_id
-        description: 'Filtrar por loja.'
-        required: false
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanQueryParameters:
-      store_id: 1
-    bodyParameters:
-      store_id:
-        custom: []
-        name: store_id
-        description: 'The <code>id</code> of an existing record in the stores table.'
-        required: false
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      store_id: 16
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "data": {
-              "total_pending": 12,
-              "shifts": [
-                {
-                  "id": 5,
-                  "date": "2026-01-06",
-                  "shift_code": "T",
-                  "days_pending": 2,
-                  "priority": "high",
-                  "store_name": "Tijucas",
-                  "seller_name": "João Silva",
-                  "system_total": 4500.00
-                }
-              ]
-            }
-          }
-        headers: []
-        description: 'Turnos pendentes'
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: api/v1/cash/shifts/divergent
-    metadata:
-      custom: []
-      groupName: 'Turnos de Caixa'
-      groupDescription: |-
-
-        Endpoints para gerenciar turnos de caixa.
-        Cada turno representa um período de trabalho de um vendedor em uma loja.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Turnos com divergência'
-      description: |-
-        Lista turnos que possuem divergência não justificada entre
-        valores do sistema e valores reais.
-
-        **Quem pode usar:** Conferentes, Gerentes e Admins.
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters:
-      store_id:
-        custom: []
-        name: store_id
-        description: 'Filtrar por loja.'
-        required: false
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanQueryParameters:
-      store_id: 1
-    bodyParameters:
-      store_id:
-        custom: []
-        name: store_id
-        description: 'The <code>id</code> of an existing record in the stores table.'
-        required: false
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      store_id: 16
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "data": {
-              "total_divergent": 3,
-              "total_divergence_value": -85.00,
-              "shifts": [
-                {
-                  "id": 8,
-                  "date": "2026-01-05",
-                  "shift_code": "N",
-                  "store_name": "Bombinhas",
-                  "seller_name": "Maria Santos",
-                  "divergence": -50.00,
-                  "has_justification": false,
-                  "days_pending": 3
-                }
-              ]
-            }
-          }
-        headers: []
-        description: 'Turnos divergentes'
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - POST
-    uri: api/v1/cash/shifts
-    metadata:
-      custom: []
-      groupName: 'Turnos de Caixa'
-      groupDescription: |-
-
-        Endpoints para gerenciar turnos de caixa.
-        Cada turno representa um período de trabalho de um vendedor em uma loja.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Criar novo turno de caixa'
-      description: |-
-        Cria um novo turno de caixa para uma loja/data/período.
-
-        **Quem pode usar:** Usuários com acesso à loja.
-
-        **Regras de negócio:**
-        - Não pode haver dois turnos com mesma loja + data + turno + vendedor
-        - O turno inicia com status `open`
-        - Se `seller_id` não for informado, assume o usuário atual
-
-        **Códigos de turno:**
-        - `M` - Manhã (08h-14h)
-        - `T` - Tarde (14h-20h)
-        - `N` - Noite (20h-00h)
+        **Regras:**
+        - Apenas lojas ativas (`active = true`) são retornadas
+        - Apenas lojas onde o usuário está vinculado são listadas
       authenticated: true
       deprecated: false
     headers:
@@ -395,10 +38,154 @@ endpoints:
     cleanUrlParameters: []
     queryParameters: []
     cleanQueryParameters: []
-    bodyParameters:
-      store_id:
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
         custom: []
-        name: store_id
+        status: 200
+        content: |-
+          {
+            "data": [
+              { "id": 1, "name": "Mais Capinhas Tijucas", "city": "Tijucas", "role": "admin" },
+              { "id": 2, "name": "Mais Capinhas Itapema", "city": "Itapema", "role": "gerente" }
+            ],
+            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+          }
+        headers: []
+        description: 'Lista de lojas'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/stores/all
+    metadata:
+      custom: []
+      groupName: Lojas
+      groupDescription: |-
+
+        Endpoints para consultar lojas às quais o usuário tem acesso.
+        O usuário só pode visualizar lojas onde está vinculado via `store_users`.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Listar todas as lojas ativas'
+      description: |-
+        Retorna todas as lojas ativas do sistema (sem verificação de vínculo).
+        Útil para selects de filtro por cidade/loja.
+
+        **Quem pode usar:** Qualquer usuário autenticado.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      per_page:
+        custom: []
+        name: per_page
+        description: 'Itens por página (1-100, default: 100).'
+        required: false
+        example: 100
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      city:
+        custom: []
+        name: city
+        description: 'Filtrar por cidade.'
+        required: false
+        example: Tijucas
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      per_page: 100
+      city: Tijucas
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": [
+              { "id": 1, "name": "Mais Capinhas Tijucas", "city": "Tijucas" },
+              { "id": 2, "name": "Mais Capinhas Itapema", "city": "Itapema" }
+            ],
+            "meta": { "current_page": 1, "per_page": 100, "total": 3, "last_page": 1 }
+          }
+        headers: []
+        description: 'Lista de lojas'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/stores/{id}'
+    metadata:
+      custom: []
+      groupName: Lojas
+      groupDescription: |-
+
+        Endpoints para consultar lojas às quais o usuário tem acesso.
+        O usuário só pode visualizar lojas onde está vinculado via `store_users`.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Obter detalhes de uma loja'
+      description: |-
+        Retorna os detalhes de uma loja específica, se o usuário tiver acesso.
+
+        **Quem pode usar:** Usuários com vínculo na loja.
+
+        **Erros possíveis:**
+        - `403` - Usuário não tem acesso a esta loja
+        - `404` - Loja não encontrada
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the store.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      store:
+        custom: []
+        name: store
         description: 'ID da loja.'
         required: true
         example: 1
@@ -407,71 +194,41 @@ endpoints:
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-      date:
-        custom: []
-        name: date
-        description: 'Data do turno (YYYY-MM-DD).'
-        required: true
-        example: '2026-01-07'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      shift_code:
-        custom: []
-        name: shift_code
-        description: 'Código do turno (M, T ou N).'
-        required: true
-        example: M
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      seller_id:
-        custom: []
-        name: seller_id
-        description: 'ID do vendedor (padrão: usuário atual).'
-        required: false
-        example: 6
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      store_id: 1
-      date: '2026-01-07'
-      shift_code: M
-      seller_id: 6
+    cleanUrlParameters:
+      id: 16
+      store: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
     fileParameters: []
     responses:
       -
         custom: []
-        status: 201
+        status: 200
         content: |-
           {
             "data": {
               "id": 1,
-              "store_id": 1,
-              "date": "2026-01-07",
-              "shift_code": "M",
-              "seller_id": 6,
-              "status": "open",
-              "store": { "id": 1, "name": "Mais Capinhas Tijucas" },
-              "seller": { "id": 6, "name": "João Vendedor" }
+              "name": "Mais Capinhas Tijucas",
+              "city": "Tijucas",
+              "active": true,
+              "role": "admin",
+              "created_at": "2026-01-01T00:00:00+00:00"
             },
             "meta": { "timestamp": "2026-01-07T12:00:00Z" }
           }
         headers: []
-        description: 'Turno criado'
+        description: 'Loja encontrada'
       -
         custom: []
         status: 403
         content: |-
           {
-            "error": { "code": 403, "message": "You do not have access to this store." }
+            "error": {
+              "code": 403,
+              "message": "You do not have access to this store."
+            }
           }
         headers: []
         description: 'Sem acesso'
@@ -487,21 +244,22 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/cash/shifts/{id}'
+    uri: 'api/v1/stores/{store_id}/sellers'
     metadata:
       custom: []
-      groupName: 'Turnos de Caixa'
+      groupName: Lojas
       groupDescription: |-
 
-        Endpoints para gerenciar turnos de caixa.
-        Cada turno representa um período de trabalho de um vendedor em uma loja.
+        Endpoints para consultar lojas às quais o usuário tem acesso.
+        O usuário só pode visualizar lojas onde está vinculado via `store_users`.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Obter detalhes de um turno'
+      title: 'Listar vendedores de uma loja'
       description: |-
-        Retorna os detalhes de um turno específico, incluindo o fechamento se existir.
+        Retorna todos os vendedores ativos vinculados a uma loja,
+        com estatísticas do mês atual.
 
-        **Quem pode usar:** Usuários com acesso à loja.
+        **Quem pode usar:** Gerentes e Admins da loja.
       authenticated: true
       deprecated: false
     headers:
@@ -509,21 +267,21 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      id:
+      store_id:
         custom: []
-        name: id
-        description: 'The ID of the shift.'
+        name: store_id
+        description: 'The ID of the store.'
         required: true
-        example: 1
+        example: 16
         type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      shift:
+      store:
         custom: []
-        name: shift
-        description: 'ID do turno.'
+        name: store
+        description: 'ID da loja.'
         required: true
         example: 1
         type: integer
@@ -532,8 +290,117 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 1
-      shift: 1
+      store_id: 16
+      store: 1
+    queryParameters:
+      month:
+        custom: []
+        name: month
+        description: 'Mês para estatísticas (YYYY-MM).'
+        required: false
+        example: 2026-01
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      month: 2026-01
+    bodyParameters:
+      month:
+        custom: []
+        name: month
+        description: 'Must match the regex /^\d{4}-\d{2}$/.'
+        required: false
+        example: 6425-59
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      month: 6425-59
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": [
+              {
+                "id": 5,
+                "name": "João Silva",
+                "avatar_url": "https://...",
+                "role": "vendedor",
+                "total_sold_mtd": 45000.00,
+                "goal": 50000.00,
+                "achievement_rate": 90.00,
+                "ranking_position": 2
+              }
+            ]
+          }
+        headers: []
+        description: 'Lista de vendedores'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/stores/{store_id}/users'
+    metadata:
+      custom: []
+      groupName: Lojas
+      groupDescription: |-
+
+        Endpoints para consultar lojas às quais o usuário tem acesso.
+        O usuário só pode visualizar lojas onde está vinculado via `store_users`.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Listar todos os usuários de uma loja'
+      description: |-
+        Retorna todos os usuários vinculados a uma loja específica.
+
+        **Quem pode usar:** Qualquer usuário autenticado.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'The ID of the store.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      store:
+        custom: []
+        name: store
+        description: 'ID da loja.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      store_id: 16
+      store: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -545,22 +412,18 @@ endpoints:
         status: 200
         content: |-
           {
-            "data": {
-              "id": 1,
-              "store_id": 1,
-              "date": "2026-01-07",
-              "shift_code": "M",
-              "status": "closed",
-              "cash_closing": {
-                "id": 1,
-                "status": "approved",
-                "lines": []
+            "data": [
+              {
+                "user_id": 2,
+                "user_name": "Carlos Gerente",
+                "user_email": "carlos.gerente@maiscapinhas.com.br",
+                "role": "gerente",
+                "active": true
               }
-            },
-            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+            ]
           }
         headers: []
-        description: 'Turno encontrado'
+        description: 'Lista de usuários'
     responseFields: []
     auth:
       - headers

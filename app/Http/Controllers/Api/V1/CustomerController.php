@@ -17,10 +17,54 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * @group Clientes
+ *
+ * Gestão de clientes e seus dispositivos (celulares).
+ * Clientes são usados para associar pedidos e capas personalizadas.
+ *
+ * **Escopo de acesso:**
+ * - Super admins e admins globais: acesso a todos os clientes
+ * - Outros usuários: apenas clientes que criaram ou possuem pedidos/capas associadas
+ *
+ * **Permissões:** Todos os usuários autenticados.
+ */
 class CustomerController extends Controller
 {
     /**
-     * List customers with filters.
+     * Listar clientes
+     *
+     * Retorna lista paginada de clientes com filtros diversos.
+     * O escopo de acesso varia conforme o papel do usuário.
+     *
+     * **Quem pode usar:** Todos os usuários autenticados.
+     *
+     * @queryParam keyword string Busca unificada (nome, email, telefone). Example: João
+     * @queryParam name string Filtrar por nome. Example: João Silva
+     * @queryParam email string Filtrar por email. Example: joao@email.com
+     * @queryParam phone string Filtrar por telefone. Example: 11999999999
+     * @queryParam city string Filtrar por cidade. Example: São Paulo
+     * @queryParam state string Filtrar por UF (sigla). Example: SP
+     * @queryParam initial_date string Data de cadastro inicial. Example: 2026-01-01
+     * @queryParam final_date string Data de cadastro final. Example: 2026-12-31
+     * @queryParam has_device boolean Filtrar clientes com/sem dispositivo. Example: true
+     * @queryParam brand_id integer Filtrar por marca de dispositivo. Example: 1
+     * @queryParam model_id integer Filtrar por modelo de dispositivo. Example: 5
+     * @queryParam sort string Campo para ordenação. Example: name
+     * @queryParam direction string Direção: `asc` ou `desc`. Example: asc
+     * @queryParam per_page integer Itens por página (máx 100). Example: 15
+     *
+     * @response 200 scenario="Lista de clientes" {
+     *   "data": [{
+     *     "id": 1,
+     *     "name": "João Silva",
+     *     "email": "joao@email.com",
+     *     "phone": "11999999999",
+     *     "city": "São Paulo",
+     *     "devices": [{"id": 1, "model": "iPhone 15"}]
+     *   }],
+     *   "meta": {"current_page": 1, "total": 100}
+     * }
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -110,7 +154,26 @@ class CustomerController extends Controller
     }
 
     /**
-     * Create a new customer.
+     * Criar cliente
+     *
+     * Cria um novo cliente no sistema.
+     *
+     * **Quem pode usar:** Todos os usuários autenticados.
+     *
+     * @bodyParam name string required Nome do cliente. Example: João Silva
+     * @bodyParam email string Email do cliente. Example: joao@email.com
+     * @bodyParam phone string Telefone do cliente. Example: 11999999999
+     * @bodyParam city string Cidade. Example: São Paulo
+     * @bodyParam state string UF (sigla). Example: SP
+     * @bodyParam address string Endereço completo. Example: Rua das Flores, 123
+     * @bodyParam notes string Observações. Example: Cliente preferencial
+     *
+     * @response 201 scenario="Cliente criado" {
+     *   "message": "Cliente criado com sucesso.",
+     *   "data": {"id": 1, "name": "João Silva", "email": "joao@email.com"}
+     * }
+     *
+     * @response 422 scenario="Validação falhou" {"message": "The name field is required."}
      */
     public function store(StoreCustomerRequest $request): JsonResponse
     {
@@ -126,7 +189,24 @@ class CustomerController extends Controller
     }
 
     /**
-     * Show customer details.
+     * Detalhes do cliente
+     *
+     * Retorna detalhes completos do cliente com dispositivos.
+     *
+     * **Quem pode usar:** Usuário com acesso ao cliente.
+     *
+     * @urlParam customer integer required ID do cliente. Example: 1
+     *
+     * @response 200 scenario="Detalhes do cliente" {
+     *   "data": {
+     *     "id": 1,
+     *     "name": "João Silva",
+     *     "devices": [{"id": 1, "model": "iPhone 15", "brand": "Apple"}],
+     *     "created_by": {"id": 1, "name": "Admin"}
+     *   }
+     * }
+     *
+     * @response 403 scenario="Sem permissão" {"message": "Você não tem permissão para acessar este cliente."}
      */
     public function show(Request $request, Customer $customer): JsonResponse
     {
@@ -138,7 +218,21 @@ class CustomerController extends Controller
     }
 
     /**
-     * Update customer.
+     * Atualizar cliente
+     *
+     * Atualiza os dados de um cliente existente.
+     *
+     * **Quem pode usar:** Usuário com acesso ao cliente.
+     *
+     * @urlParam customer integer required ID do cliente. Example: 1
+     * @bodyParam name string Nome do cliente. Example: João Silva Atualizado
+     * @bodyParam email string Email do cliente. Example: joao.novo@email.com
+     * @bodyParam phone string Telefone do cliente. Example: 11988888888
+     *
+     * @response 200 scenario="Cliente atualizado" {
+     *   "message": "Cliente atualizado com sucesso.",
+     *   "data": {"id": 1, "name": "João Silva Atualizado"}
+     * }
      */
     public function update(UpdateCustomerRequest $request, Customer $customer): JsonResponse
     {
@@ -153,7 +247,16 @@ class CustomerController extends Controller
     }
 
     /**
-     * Delete customer (soft delete).
+     * Excluir cliente
+     *
+     * Remove um cliente (soft delete).
+     *
+     * **Quem pode usar:** Usuário com acesso ao cliente.
+     *
+     * @urlParam customer integer required ID do cliente. Example: 1
+     *
+     * @response 200 scenario="Cliente excluído" {"message": "Cliente excluído com sucesso."}
+     * @response 403 scenario="Sem permissão" {"message": "Você não tem permissão para acessar este cliente."}
      */
     public function destroy(Request $request, Customer $customer): JsonResponse
     {
@@ -171,7 +274,19 @@ class CustomerController extends Controller
     // ========================================
 
     /**
-     * List customer devices.
+     * Listar dispositivos do cliente
+     *
+     * Retorna todos os dispositivos (celulares) vinculados ao cliente.
+     *
+     * **Quem pode usar:** Usuário com acesso ao cliente.
+     *
+     * @urlParam customer integer required ID do cliente. Example: 1
+     *
+     * @response 200 scenario="Lista de dispositivos" {
+     *   "data": [
+     *     {"id": 1, "phone_model": {"id": 5, "name": "iPhone 15", "brand": "Apple"}, "is_primary": true}
+     *   ]
+     * }
      */
     public function devices(Request $request, Customer $customer): AnonymousResourceCollection
     {
@@ -183,7 +298,21 @@ class CustomerController extends Controller
     }
 
     /**
-     * Add device to customer.
+     * Adicionar dispositivo
+     *
+     * Vincula um novo dispositivo ao cliente.
+     *
+     * **Quem pode usar:** Usuário com acesso ao cliente.
+     *
+     * @urlParam customer integer required ID do cliente. Example: 1
+     * @bodyParam phone_model_id integer required ID do modelo de telefone. Example: 5
+     * @bodyParam is_primary boolean Definir como dispositivo principal. Example: true
+     * @bodyParam nickname string Apelido do dispositivo. Example: Celular do trabalho
+     *
+     * @response 201 scenario="Dispositivo adicionado" {
+     *   "message": "Dispositivo vinculado com sucesso.",
+     *   "data": {"id": 1, "phone_model": {"name": "iPhone 15"}, "is_primary": true}
+     * }
      */
     public function storeDevice(StoreCustomerDeviceRequest $request, Customer $customer): JsonResponse
     {
@@ -206,7 +335,24 @@ class CustomerController extends Controller
     }
 
     /**
-     * Update customer device.
+     * Atualizar dispositivo
+     *
+     * Atualiza os dados de um dispositivo do cliente.
+     *
+     * **Quem pode usar:** Usuário com acesso ao cliente.
+     *
+     * @urlParam customer integer required ID do cliente. Example: 1
+     * @urlParam device integer required ID do dispositivo. Example: 1
+     * @bodyParam phone_model_id integer ID do modelo de telefone. Example: 6
+     * @bodyParam is_primary boolean Definir como dispositivo principal. Example: false
+     * @bodyParam nickname string Apelido do dispositivo. Example: Celular pessoal
+     *
+     * @response 200 scenario="Dispositivo atualizado" {
+     *   "message": "Dispositivo atualizado com sucesso.",
+     *   "data": {"id": 1, "is_primary": false}
+     * }
+     *
+     * @response 404 scenario="Não pertence ao cliente" {"message": "Dispositivo não pertence a este cliente."}
      */
     public function updateDevice(
         UpdateCustomerDeviceRequest $request,
@@ -238,7 +384,17 @@ class CustomerController extends Controller
     }
 
     /**
-     * Remove device from customer.
+     * Remover dispositivo
+     *
+     * Remove um dispositivo do cliente.
+     *
+     * **Quem pode usar:** Usuário com acesso ao cliente.
+     *
+     * @urlParam customer integer required ID do cliente. Example: 1
+     * @urlParam device integer required ID do dispositivo. Example: 1
+     *
+     * @response 200 scenario="Dispositivo removido" {"message": "Dispositivo removido com sucesso."}
+     * @response 404 scenario="Não pertence ao cliente" {"message": "Dispositivo não pertence a este cliente."}
      */
     public function destroyDevice(Request $request, Customer $customer, CustomerDevice $device): JsonResponse
     {
@@ -286,3 +442,4 @@ class CustomerController extends Controller
         }
     }
 }
+

@@ -14,6 +14,20 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
+/**
+ * @group Fábrica - Pedidos de Produção
+ *
+ * Portal da fábrica para gestão de pedidos de produção de capas personalizadas.
+ * Estes endpoints são exclusivos para usuários com papel de fábrica (middleware `fabrica`).
+ *
+ * **Fluxo de produção:**
+ * 1. Admin envia capas para produção → Pedido criado com status `pending`
+ * 2. Fábrica aceita pedido (informa valor) → Status `accepted`
+ * 3. Fábrica despacha pedido (informa rastreio) → Status `dispatched`
+ * 4. Admin recebe pedido → Status `received`
+ *
+ * **Permissões:** Apenas usuários com papel de fábrica.
+ */
 class FabricaPedidoController extends Controller
 {
     public function __construct(
@@ -22,9 +36,27 @@ class FabricaPedidoController extends Controller
     }
 
     /**
-     * GET /api/v1/fabrica/pedidos
-     * 
-     * List production orders visible to factory.
+     * Listar pedidos de produção
+     *
+     * Retorna lista paginada de pedidos visíveis à fábrica.
+     * Apenas pedidos com status visível à fábrica são retornados.
+     *
+     * **Quem pode usar:** Usuários da fábrica.
+     *
+     * @queryParam status string Filtrar por status: `pending`, `accepted`, `dispatched`. Example: pending
+     * @queryParam initial_date string Data inicial (ISO 8601). Example: 2026-01-01
+     * @queryParam final_date string Data final (ISO 8601). Example: 2026-01-31
+     * @queryParam per_page integer Itens por página (máx 100). Example: 15
+     *
+     * @response 200 scenario="Lista de pedidos" {
+     *   "data": [{
+     *     "id": 1,
+     *     "status": "pending",
+     *     "items_count": 10,
+     *     "created_at": "2026-01-13T15:00:00+00:00"
+     *   }],
+     *   "meta": {"current_page": 1, "total": 25}
+     * }
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -37,9 +69,25 @@ class FabricaPedidoController extends Controller
     }
 
     /**
-     * GET /api/v1/fabrica/pedidos/{pedido}
-     * 
-     * Get production order details.
+     * Detalhes do pedido
+     *
+     * Retorna detalhes completos do pedido com itens e eventos de timeline.
+     *
+     * **Quem pode usar:** Usuários da fábrica.
+     *
+     * @urlParam pedido integer required ID do pedido. Example: 1
+     *
+     * @response 200 scenario="Detalhes do pedido" {
+     *   "data": {
+     *     "id": 1,
+     *     "status": "pending",
+     *     "items": [{"id": 1, "capa_id": 10, "photo_url": "https://..."}],
+     *     "events": [{"type": "created", "created_at": "2026-01-13T15:00:00+00:00"}]
+     *   }
+     * }
+     *
+     * @response 403 scenario="Pedido não disponível" {"message": "Pedido não disponível."}
+     * @response 404 scenario="Não encontrado" {"message": "Not found."}
      */
     public function show(int $pedidoId): JsonResponse
     {
@@ -56,9 +104,27 @@ class FabricaPedidoController extends Controller
     }
 
     /**
-     * PATCH /api/v1/fabrica/pedidos/{pedido}/aceitar
-     * 
-     * Factory accepts the order.
+     * Aceitar pedido
+     *
+     * A fábrica aceita o pedido e informa o valor total de produção.
+     * O status do pedido muda de `pending` para `accepted`.
+     *
+     * **Quem pode usar:** Usuários da fábrica.
+     *
+     * **Regras de negócio:**
+     * - Apenas pedidos com status `pending` podem ser aceitos
+     * - O valor total é obrigatório
+
+     * @urlParam pedido integer required ID do pedido. Example: 1
+     * @bodyParam factory_total number required Valor total da produção (R$). Example: 150.00
+     * @bodyParam factory_notes string Observações da fábrica. Example: Prazo de 5 dias úteis
+     *
+     * @response 200 scenario="Pedido aceito" {
+     *   "message": "Pedido aceito com sucesso.",
+     *   "data": {"id": 1, "status": "accepted", "factory_total": 150.00}
+     * }
+     *
+     * @response 422 scenario="Validação falhou" {"message": "The factory_total field is required."}
      */
     public function accept(Request $request, ProducaoPedido $pedido): JsonResponse
     {
@@ -80,9 +146,24 @@ class FabricaPedidoController extends Controller
     }
 
     /**
-     * PATCH /api/v1/fabrica/pedidos/{pedido}/despachar
-     * 
-     * Factory dispatches the order.
+     * Despachar pedido
+     *
+     * A fábrica registra o despacho do pedido, opcionalmente informando código de rastreio.
+     * O status do pedido muda de `accepted` para `dispatched`.
+     *
+     * **Quem pode usar:** Usuários da fábrica.
+     *
+     * **Regras de negócio:**
+     * - Apenas pedidos com status `accepted` podem ser despachados
+     *
+     * @urlParam pedido integer required ID do pedido. Example: 1
+     * @bodyParam tracking_code string Código de rastreio dos Correios/transportadora. Example: BR123456789XX
+     * @bodyParam factory_notes string Observações do despacho. Example: Enviado via Sedex
+     *
+     * @response 200 scenario="Pedido despachado" {
+     *   "message": "Pedido despachado com sucesso.",
+     *   "data": {"id": 1, "status": "dispatched", "tracking_code": "BR123456789XX"}
+     * }
      */
     public function dispatch(Request $request, ProducaoPedido $pedido): JsonResponse
     {
@@ -104,9 +185,19 @@ class FabricaPedidoController extends Controller
     }
 
     /**
-     * GET /api/v1/fabrica/pedidos/{pedido}/itens/{item}/foto
-     * 
-     * Download item photo.
+     * Download da foto do item
+     *
+     * Faz download da foto da capa personalizada de um item do pedido.
+     * Útil para a fábrica baixar as artes para produção.
+     *
+     * **Quem pode usar:** Usuários da fábrica.
+     *
+     * @urlParam pedido integer required ID do pedido. Example: 1
+     * @urlParam item integer required ID do item. Example: 10
+     *
+     * @response 200 scenario="Download da foto" file
+     * @response 404 scenario="Foto não disponível" {"message": "Foto não disponível."}
+     * @response 404 scenario="Arquivo não encontrado" {"message": "Arquivo não encontrado."}
      */
     public function downloadPhoto(ProducaoPedido $pedido, int $itemId): StreamedResponse|JsonResponse
     {
@@ -126,3 +217,4 @@ class FabricaPedidoController extends Controller
         return Storage::disk('public')->download($photoPath, 'capa_' . $item->capa_personalizada_id . '.jpg');
     }
 }
+

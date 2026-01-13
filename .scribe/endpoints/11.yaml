@@ -1,25 +1,29 @@
-name: 'People Analytics'
+name: 'Metas Mensais'
 description: |-
 
-  Endpoints para consultar e inserir KPIs de fluxo de pessoas por turno.
-  Dados podem vir de sincronização com FastAPI ou inserção manual.
+  Gerenciamento de metas mensais por loja e distribuição entre vendedores (splits).
+  Cada split define a porcentagem da meta que cada vendedor deve atingir.
+
+  **Regra:** A soma dos splits deve ser exatamente 100%.
 endpoints:
   -
     custom: []
     httpMethods:
-      - GET
-    uri: api/v1/analytics/people/shift
+      - POST
+    uri: api/v1/goals/monthly
     metadata:
       custom: []
-      groupName: 'People Analytics'
+      groupName: 'Metas Mensais'
       groupDescription: |-
 
-        Endpoints para consultar e inserir KPIs de fluxo de pessoas por turno.
-        Dados podem vir de sincronização com FastAPI ou inserção manual.
+        Gerenciamento de metas mensais por loja e distribuição entre vendedores (splits).
+        Cada split define a porcentagem da meta que cada vendedor deve atingir.
+
+        **Regra:** A soma dos splits deve ser exatamente 100%.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Get People KPIs for a store and date.'
-      description: 'GET /api/v1/analytics/people/shift?store_id=&date='
+      title: 'Create a new monthly goal.'
+      description: 'POST /api/v1/goals/monthly'
       authenticated: true
       deprecated: false
     headers:
@@ -42,31 +46,46 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      date:
+      month:
         custom: []
-        name: date
-        description: 'Must be a valid date.'
+        name: month
+        description: 'Must match the regex /^\d{4}-\d{2}$/.'
         required: true
-        example: '2026-01-08T01:32:45'
+        example: 6425-59
         type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      goal_amount:
+        custom: []
+        name: goal_amount
+        description: 'Must be at least 0.'
+        required: true
+        example: 9
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      active:
+        custom: []
+        name: active
+        description: ''
+        required: false
+        example: false
+        type: boolean
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      date: '2026-01-08T01:32:45'
+      month: 6425-59
+      goal_amount: 9
+      active: false
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          vary: Origin
-        description: null
+    responses: []
     responseFields: []
     auth:
       - headers
@@ -78,34 +97,32 @@ endpoints:
   -
     custom: []
     httpMethods:
-      - POST
-    uri: api/v1/analytics/people/shift
+      - PUT
+    uri: 'api/v1/goals/monthly/{goal_id}'
     metadata:
       custom: []
-      groupName: 'People Analytics'
+      groupName: 'Metas Mensais'
       groupDescription: |-
 
-        Endpoints para consultar e inserir KPIs de fluxo de pessoas por turno.
-        Dados podem vir de sincronização com FastAPI ou inserção manual.
+        Gerenciamento de metas mensais por loja e distribuição entre vendedores (splits).
+        Cada split define a porcentagem da meta que cada vendedor deve atingir.
+
+        **Regra:** A soma dos splits deve ser exatamente 100%.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Manually insert KPI data.'
-      description: 'POST /api/v1/analytics/people/shift'
+      title: 'Update a monthly goal.'
+      description: 'PUT /api/v1/goals/monthly/{goal}'
       authenticated: true
       deprecated: false
     headers:
       Authorization: 'Bearer {SEU_TOKEN}'
       Content-Type: application/json
       Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      store_id:
+    urlParameters:
+      goal_id:
         custom: []
-        name: store_id
-        description: 'The <code>id</code> of an existing record in the stores table.'
+        name: goal_id
+        description: 'The ID of the goal.'
         required: true
         example: 16
         type: integer
@@ -113,83 +130,178 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      date:
+    cleanUrlParameters:
+      goal_id: 16
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      goal_amount:
         custom: []
-        name: date
-        description: 'Must be a valid date.'
-        required: true
-        example: '2026-01-08T01:32:45'
-        type: string
+        name: goal_amount
+        description: 'Must be at least 0.'
+        required: false
+        example: 27
+        type: number
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      shift_code:
+      active:
         custom: []
-        name: shift_code
+        name: active
         description: ''
-        required: true
-        example: 'N'
-        type: string
-        enumValues:
-          - M
-          - T
-          - 'N'
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      in_count:
-        custom: []
-        name: in_count
-        description: 'Must be at least 0.'
-        required: true
-        example: 39
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      out_count:
-        custom: []
-        name: out_count
-        description: 'Must be at least 0.'
-        required: true
-        example: 84
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      staff_in:
-        custom: []
-        name: staff_in
-        description: 'Must be at least 0.'
         required: false
-        example: 12
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      staff_out:
-        custom: []
-        name: staff_out
-        description: 'Must be at least 0.'
-        required: false
-        example: 77
-        type: integer
+        example: true
+        type: boolean
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      store_id: 16
-      date: '2026-01-08T01:32:45'
-      shift_code: 'N'
-      in_count: 39
-      out_count: 84
-      staff_in: 12
-      staff_out: 77
+      goal_amount: 27
+      active: true
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/v1/goals/monthly/{goal_id}'
+    metadata:
+      custom: []
+      groupName: 'Metas Mensais'
+      groupDescription: |-
+
+        Gerenciamento de metas mensais por loja e distribuição entre vendedores (splits).
+        Cada split define a porcentagem da meta que cada vendedor deve atingir.
+
+        **Regra:** A soma dos splits deve ser exatamente 100%.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Delete a monthly goal.'
+      description: 'DELETE /api/v1/goals/monthly/{goal}'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      goal_id:
+        custom: []
+        name: goal_id
+        description: 'The ID of the goal.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      goal_id: 16
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+    uri: 'api/v1/goals/monthly/{goal_id}/splits'
+    metadata:
+      custom: []
+      groupName: 'Metas Mensais'
+      groupDescription: |-
+
+        Gerenciamento de metas mensais por loja e distribuição entre vendedores (splits).
+        Cada split define a porcentagem da meta que cada vendedor deve atingir.
+
+        **Regra:** A soma dos splits deve ser exatamente 100%.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Set splits for a goal.'
+      description: 'PUT /api/v1/goals/monthly/{goal}/splits'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      goal_id:
+        custom: []
+        name: goal_id
+        description: 'The ID of the goal.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      goal_id: 16
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      splits:
+        custom: []
+        name: splits
+        description: 'Must have at least 1 items.'
+        required: true
+        example:
+          - []
+        type: 'object[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'splits[].user_id':
+        custom: []
+        name: 'splits[].user_id'
+        description: 'The <code>id</code> of an existing record in the users table.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'splits[].percent':
+        custom: []
+        name: 'splits[].percent'
+        description: 'Must be at least 0. Must not be greater than 100.'
+        required: true
+        example: 22
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      splits:
+        -
+          user_id: 16
+          percent: 22
     fileParameters: []
     responses: []
     responseFields: []

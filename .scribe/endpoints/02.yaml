@@ -1,37 +1,27 @@
-name: 'Perfil do Usuário'
+name: Bio
 description: |-
 
-  Endpoint para obter informações do usuário autenticado.
+  Endpoints públicos para exibição na Bio do Instagram.
+  Estes endpoints não requerem autenticação.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/me
+    uri: api/v1/bio/stores
     metadata:
       custom: []
-      groupName: 'Perfil do Usuário'
+      groupName: Bio
       groupDescription: |-
 
-        Endpoint para obter informações do usuário autenticado.
+        Endpoints públicos para exibição na Bio do Instagram.
+        Estes endpoints não requerem autenticação.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Obter perfil do usuário atual'
+      title: 'Listar lojas habilitadas para Bio'
       description: |-
-        Retorna os dados do usuário autenticado, incluindo as lojas
-        às quais ele tem acesso e seu papel (role) em cada uma.
-
-        **Quem pode usar:** Qualquer usuário autenticado.
-
-        **Informações retornadas:**
-        - Dados básicos do usuário (id, nome, email, status ativo)
-        - Lista de lojas com o papel do usuário em cada uma
-
-        **Papéis possíveis:**
-        - `admin` - Administrador global (acesso total)
-        - `gerente` - Gerente da loja (gerencia vendedores e metas)
-        - `conferente` - Confere fechamentos de caixa
-        - `vendedor` - Vendedor (registra vendas e turnos)
+        Retorna todas as lojas ativas com bio_enabled = true.
+        Este endpoint é público e não requer autenticação.
       authenticated: true
       deprecated: false
     headers:
@@ -40,6 +30,105 @@ endpoints:
       Accept: application/json
     urlParameters: []
     cleanUrlParameters: []
+    queryParameters:
+      city:
+        custom: []
+        name: city
+        description: 'Filtrar por cidade.'
+        required: false
+        example: Tijucas
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      city: Tijucas
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": [
+              {
+                "id": 1,
+                "name": "Mais Capinhas Tijucas",
+                "city": "Tijucas",
+                "photo_url": "/storage/stores/1/photo.jpg",
+                "hours_human": {
+                  "is_open_now": true,
+                  "status_label": "Aberto agora • Fecha às 20:30"
+                }
+              }
+            ],
+            "meta": {
+              "total": 1
+            }
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/bio/stores/{id}'
+    metadata:
+      custom: []
+      groupName: Bio
+      groupDescription: |-
+
+        Endpoints públicos para exibição na Bio do Instagram.
+        Estes endpoints não requerem autenticação.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Obter detalhes de uma loja para Bio'
+      description: |-
+        Retorna os detalhes de uma loja específica habilitada para Bio.
+        Retorna 404 se a loja não existir ou não estiver habilitada para Bio.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the store.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      store:
+        custom: []
+        name: store
+        description: 'ID da loja.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: architecto
+      store: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -52,22 +141,36 @@ endpoints:
         content: |-
           {
             "data": {
-              "user": {
-                "id": 1,
-                "name": "Admin Sistema",
-                "email": "admin@maiscapinhas.com.br",
-                "active": true,
-                "created_at": "2026-01-01T00:00:00+00:00"
-              },
-              "stores": [
-                { "id": 1, "name": "Mais Capinhas Tijucas", "city": "Tijucas", "role": "admin" },
-                { "id": 2, "name": "Mais Capinhas Itapema", "city": "Itapema", "role": "admin" }
-              ]
-            },
-            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+              "id": 1,
+              "name": "Mais Capinhas Tijucas",
+              "city": "Tijucas",
+              "hours_human": {
+                "timezone": "America/Sao_Paulo",
+                "is_open_now": true,
+                "status": "open",
+                "status_label": "Aberto agora • Fecha às 20:30",
+                "today_hours_label": "Hoje: 08:30–20:30",
+                "opens_at": null,
+                "closes_at": "20:30",
+                "next_change_at": "2026-01-10T20:30:00-03:00",
+                "weekly_label": "Seg–Sáb 08:30–20:30 | Dom Fechado"
+              }
+            }
           }
         headers: []
-        description: 'Perfil com múltiplas lojas'
+        description: ''
+      -
+        custom: []
+        status: 404
+        content: |-
+          {
+            "error": {
+              "code": 404,
+              "message": "Loja não encontrada ou não habilitada para Bio."
+            }
+          }
+        headers: []
+        description: ''
     responseFields: []
     auth:
       - headers

@@ -1,0 +1,612 @@
+name: 'Produção - Carrinho'
+description: |-
+
+  Gerenciamento do carrinho de produção para agrupar capas personalizadas antes de enviar à fábrica.
+
+  **Fluxo do carrinho:**
+  1. Obter/criar carrinho aberto (um por usuário por vez)
+  2. Validar capas antes de adicionar (dry-run opcional)
+  3. Adicionar capas ao carrinho
+  4. Fechar carrinho → cria pedido de produção
+
+  **Regras de negócio:**
+  - Cada usuário pode ter apenas um carrinho aberto por vez
+  - Capas devem estar com status "Encomenda Solicitada" para serem adicionadas
+  - Capas já em outro carrinho/pedido são bloqueadas
+
+  **Permissões:** Administradores e gerentes.
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/producao/carrinho
+    metadata:
+      custom: []
+      groupName: 'Produção - Carrinho'
+      groupDescription: |-
+
+        Gerenciamento do carrinho de produção para agrupar capas personalizadas antes de enviar à fábrica.
+
+        **Fluxo do carrinho:**
+        1. Obter/criar carrinho aberto (um por usuário por vez)
+        2. Validar capas antes de adicionar (dry-run opcional)
+        3. Adicionar capas ao carrinho
+        4. Fechar carrinho → cria pedido de produção
+
+        **Regras de negócio:**
+        - Cada usuário pode ter apenas um carrinho aberto por vez
+        - Capas devem estar com status "Encomenda Solicitada" para serem adicionadas
+        - Capas já em outro carrinho/pedido são bloqueadas
+
+        **Permissões:** Administradores e gerentes.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Obter carrinho atual'
+      description: |-
+        Retorna o carrinho aberto do usuário atual. Se não existir, cria um novo.
+
+        **Quem pode usar:** Administradores e gerentes.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "id": 1,
+              "status": "cart",
+              "items_count": 5,
+              "items": [{"id": 1, "capa_id": 10, "customer_name": "João"}],
+              "created_by": {"id": 1, "name": "Admin"}
+            }
+          }
+        headers: []
+        description: 'Carrinho atual'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/producao/carrinho/validar
+    metadata:
+      custom: []
+      groupName: 'Produção - Carrinho'
+      groupDescription: |-
+
+        Gerenciamento do carrinho de produção para agrupar capas personalizadas antes de enviar à fábrica.
+
+        **Fluxo do carrinho:**
+        1. Obter/criar carrinho aberto (um por usuário por vez)
+        2. Validar capas antes de adicionar (dry-run opcional)
+        3. Adicionar capas ao carrinho
+        4. Fechar carrinho → cria pedido de produção
+
+        **Regras de negócio:**
+        - Cada usuário pode ter apenas um carrinho aberto por vez
+        - Capas devem estar com status "Encomenda Solicitada" para serem adicionadas
+        - Capas já em outro carrinho/pedido são bloqueadas
+
+        **Permissões:** Administradores e gerentes.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Validar capas (dry-run)'
+      description: |-
+        Valida quais capas podem ser adicionadas ao carrinho antes de adicionar.
+        Útil para feedback ao usuário antes da ação real.
+
+        **Quem pode usar:** Administradores e gerentes.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      capa_ids:
+        custom: []
+        name: capa_ids
+        description: 'Lista de IDs das capas para validar.'
+        required: true
+        example:
+          - 1
+          - 2
+          - 3
+        type: 'string[]'
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      'capa_ids.*':
+        custom: []
+        name: 'capa_ids.*'
+        description: 'ID da capa.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      capa_ids:
+        - 1
+        - 2
+        - 3
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "eligible": [{"id": 1, "customer": "João"}, {"id": 2, "customer": "Maria"}],
+              "blocked": [{"id": 3, "reason": "Já está em outro carrinho"}],
+              "eligible_count": 2,
+              "blocked_count": 1
+            }
+          }
+        headers: []
+        description: Validação
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/producao/carrinho/itens
+    metadata:
+      custom: []
+      groupName: 'Produção - Carrinho'
+      groupDescription: |-
+
+        Gerenciamento do carrinho de produção para agrupar capas personalizadas antes de enviar à fábrica.
+
+        **Fluxo do carrinho:**
+        1. Obter/criar carrinho aberto (um por usuário por vez)
+        2. Validar capas antes de adicionar (dry-run opcional)
+        3. Adicionar capas ao carrinho
+        4. Fechar carrinho → cria pedido de produção
+
+        **Regras de negócio:**
+        - Cada usuário pode ter apenas um carrinho aberto por vez
+        - Capas devem estar com status "Encomenda Solicitada" para serem adicionadas
+        - Capas já em outro carrinho/pedido são bloqueadas
+
+        **Permissões:** Administradores e gerentes.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Adicionar itens ao carrinho'
+      description: |-
+        Adiciona capas personalizadas ao carrinho de produção.
+        Capas bloqueadas são informadas na resposta.
+
+        **Quem pode usar:** Administradores e gerentes.
+
+        **Regras de negócio:**
+        - Capas devem ter status "Encomenda Solicitada"
+        - Capas já em outro carrinho/pedido são bloqueadas
+        - Se nenhuma capa for adicionada, retorna 409
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      capa_ids:
+        custom: []
+        name: capa_ids
+        description: 'Lista de IDs das capas.'
+        required: true
+        example:
+          - 1
+          - 2
+          - 3
+        type: 'string[]'
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      'capa_ids.*':
+        custom: []
+        name: 'capa_ids.*'
+        description: 'ID da capa.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      capa_ids:
+        - 1
+        - 2
+        - 3
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "message": "3 item(ns) adicionado(s)",
+            "data": {
+              "added": [1, 2, 3],
+              "blocked": [],
+              "added_count": 3,
+              "blocked_count": 0
+            }
+          }
+        headers: []
+        description: 'Itens adicionados'
+      -
+        custom: []
+        status: 409
+        content: |-
+          {
+            "message": "0 item(ns) adicionado(s), 3 bloqueado(s)",
+            "data": {"added": [], "blocked": [1, 2, 3], "added_count": 0, "blocked_count": 3}
+          }
+        headers: []
+        description: 'Todos bloqueados'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: api/v1/producao/carrinho/itens/bulk
+    metadata:
+      custom: []
+      groupName: 'Produção - Carrinho'
+      groupDescription: |-
+
+        Gerenciamento do carrinho de produção para agrupar capas personalizadas antes de enviar à fábrica.
+
+        **Fluxo do carrinho:**
+        1. Obter/criar carrinho aberto (um por usuário por vez)
+        2. Validar capas antes de adicionar (dry-run opcional)
+        3. Adicionar capas ao carrinho
+        4. Fechar carrinho → cria pedido de produção
+
+        **Regras de negócio:**
+        - Cada usuário pode ter apenas um carrinho aberto por vez
+        - Capas devem estar com status "Encomenda Solicitada" para serem adicionadas
+        - Capas já em outro carrinho/pedido são bloqueadas
+
+        **Permissões:** Administradores e gerentes.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Remover múltiplos itens (bulk)'
+      description: |-
+        Remove vários itens do carrinho de uma só vez.
+
+        **Quem pode usar:** Administradores e gerentes.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      item_ids:
+        custom: []
+        name: item_ids
+        description: 'Lista de IDs dos itens.'
+        required: true
+        example:
+          - 1
+          - 2
+          - 3
+        type: 'string[]'
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      'item_ids.*':
+        custom: []
+        name: 'item_ids.*'
+        description: 'ID do item.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      item_ids:
+        - 1
+        - 2
+        - 3
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "message": "3 item(ns) removido(s)",
+            "data": {"removed": [1, 2, 3], "errors": [], "removed_count": 3, "error_count": 0}
+          }
+        headers: []
+        description: 'Itens removidos'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/v1/producao/carrinho/itens/{item}'
+    metadata:
+      custom: []
+      groupName: 'Produção - Carrinho'
+      groupDescription: |-
+
+        Gerenciamento do carrinho de produção para agrupar capas personalizadas antes de enviar à fábrica.
+
+        **Fluxo do carrinho:**
+        1. Obter/criar carrinho aberto (um por usuário por vez)
+        2. Validar capas antes de adicionar (dry-run opcional)
+        3. Adicionar capas ao carrinho
+        4. Fechar carrinho → cria pedido de produção
+
+        **Regras de negócio:**
+        - Cada usuário pode ter apenas um carrinho aberto por vez
+        - Capas devem estar com status "Encomenda Solicitada" para serem adicionadas
+        - Capas já em outro carrinho/pedido são bloqueadas
+
+        **Permissões:** Administradores e gerentes.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Remover item do carrinho'
+      description: |-
+        Remove um item específico do carrinho.
+
+        **Quem pode usar:** Administradores e gerentes.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      item:
+        custom: []
+        name: item
+        description: 'ID do item no carrinho.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      item: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"message": "Item removido do carrinho."}'
+        headers: []
+        description: 'Item removido'
+      -
+        custom: []
+        status: 404
+        content: '{"message": "Not found."}'
+        headers: []
+        description: 'Item não encontrado'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/producao/carrinho/fechar
+    metadata:
+      custom: []
+      groupName: 'Produção - Carrinho'
+      groupDescription: |-
+
+        Gerenciamento do carrinho de produção para agrupar capas personalizadas antes de enviar à fábrica.
+
+        **Fluxo do carrinho:**
+        1. Obter/criar carrinho aberto (um por usuário por vez)
+        2. Validar capas antes de adicionar (dry-run opcional)
+        3. Adicionar capas ao carrinho
+        4. Fechar carrinho → cria pedido de produção
+
+        **Regras de negócio:**
+        - Cada usuário pode ter apenas um carrinho aberto por vez
+        - Capas devem estar com status "Encomenda Solicitada" para serem adicionadas
+        - Capas já em outro carrinho/pedido são bloqueadas
+
+        **Permissões:** Administradores e gerentes.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Fechar carrinho'
+      description: |-
+        Fecha o carrinho atual e cria um pedido de produção.
+        O carrinho deve ter pelo menos um item.
+
+        **Quem pode usar:** Administradores e gerentes.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      observation:
+        custom: []
+        name: observation
+        description: 'Observação para a fábrica.'
+        required: false
+        example: 'Urgente - prazo curto'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      observation: 'Urgente - prazo curto'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 201
+        content: |-
+          {
+            "message": "Pedido de produção criado com sucesso.",
+            "data": {"id": 1, "status": "pending", "items_count": 5}
+          }
+        headers: []
+        description: 'Pedido criado'
+      -
+        custom: []
+        status: 422
+        content: '{"message": "O carrinho está vazio."}'
+        headers: []
+        description: 'Carrinho vazio'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: api/v1/producao/carrinho
+    metadata:
+      custom: []
+      groupName: 'Produção - Carrinho'
+      groupDescription: |-
+
+        Gerenciamento do carrinho de produção para agrupar capas personalizadas antes de enviar à fábrica.
+
+        **Fluxo do carrinho:**
+        1. Obter/criar carrinho aberto (um por usuário por vez)
+        2. Validar capas antes de adicionar (dry-run opcional)
+        3. Adicionar capas ao carrinho
+        4. Fechar carrinho → cria pedido de produção
+
+        **Regras de negócio:**
+        - Cada usuário pode ter apenas um carrinho aberto por vez
+        - Capas devem estar com status "Encomenda Solicitada" para serem adicionadas
+        - Capas já em outro carrinho/pedido são bloqueadas
+
+        **Permissões:** Administradores e gerentes.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Cancelar carrinho'
+      description: |-
+        Cancela o carrinho aberto atual, liberando todos os itens.
+
+        **Quem pode usar:** Administradores e gerentes.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"message": "Carrinho cancelado."}'
+        headers: []
+        description: 'Carrinho cancelado'
+      -
+        custom: []
+        status: 404
+        content: '{"message": "Nenhum carrinho aberto encontrado."}'
+        headers: []
+        description: 'Sem carrinho aberto'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

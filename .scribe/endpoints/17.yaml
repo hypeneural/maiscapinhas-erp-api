@@ -1,113 +1,219 @@
-name: 'Administração - Vínculos Loja-Usuário'
+name: Clientes
 description: |-
 
-  Gerenciamento dos vínculos entre lojas e usuários (tabela `store_users`).
+  Gestão de clientes e seus dispositivos (celulares).
+  Clientes são usados para associar pedidos e capas personalizadas.
 
-  Este módulo controla **qual usuário trabalha em qual loja** e com
-  **qual nível de permissão (role)**.
+  **Escopo de acesso:**
+  - Super admins e admins globais: acesso a todos os clientes
+  - Outros usuários: apenas clientes que criaram ou possuem pedidos/capas associadas
 
-  **Sistema de Roles:**
-  | Role | Pode fazer |
-  |------|------------|
-  | `admin` | Tudo: gerenciar usuários, lojas, regras, confirmar comissões |
-  | `gerente` | Gerenciar equipe da loja, aprovar fechamentos, ver dashboards |
-  | `conferente` | Aprovar/rejeitar fechamentos de caixa |
-  | `vendedor` | Registrar vendas, submeter fechamento do próprio turno |
-
-  **Regras de Negócio:**
-  - Um usuário pode ter roles diferentes em lojas diferentes
-  - A role `admin` em qualquer loja dá acesso administrativo global
-  - Vendedor "volante" pode trabalhar temporariamente em outra loja
-  - Não é possível remover seu próprio vínculo (proteção)
-
-  **Vínculo × Comissão:**
-  - Vendas são sempre registradas na loja onde ocorreram (`store_id` da venda)
-  - Comissão vai para o vendedor que realizou a venda (`seller_id`)
-  - Meta é calculada pela loja + split configurado
+  **Permissões:** Todos os usuários autenticados.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/admin/stores/{store_id}/users'
+    uri: api/v1/customers
     metadata:
       custom: []
-      groupName: 'Administração - Vínculos Loja-Usuário'
+      groupName: Clientes
       groupDescription: |-
 
-        Gerenciamento dos vínculos entre lojas e usuários (tabela `store_users`).
+        Gestão de clientes e seus dispositivos (celulares).
+        Clientes são usados para associar pedidos e capas personalizadas.
 
-        Este módulo controla **qual usuário trabalha em qual loja** e com
-        **qual nível de permissão (role)**.
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todos os clientes
+        - Outros usuários: apenas clientes que criaram ou possuem pedidos/capas associadas
 
-        **Sistema de Roles:**
-        | Role | Pode fazer |
-        |------|------------|
-        | `admin` | Tudo: gerenciar usuários, lojas, regras, confirmar comissões |
-        | `gerente` | Gerenciar equipe da loja, aprovar fechamentos, ver dashboards |
-        | `conferente` | Aprovar/rejeitar fechamentos de caixa |
-        | `vendedor` | Registrar vendas, submeter fechamento do próprio turno |
-
-        **Regras de Negócio:**
-        - Um usuário pode ter roles diferentes em lojas diferentes
-        - A role `admin` em qualquer loja dá acesso administrativo global
-        - Vendedor "volante" pode trabalhar temporariamente em outra loja
-        - Não é possível remover seu próprio vínculo (proteção)
-
-        **Vínculo × Comissão:**
-        - Vendas são sempre registradas na loja onde ocorreram (`store_id` da venda)
-        - Comissão vai para o vendedor que realizou a venda (`seller_id`)
-        - Meta é calculada pela loja + split configurado
+        **Permissões:** Todos os usuários autenticados.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Listar usuários de uma loja'
+      title: 'Listar clientes'
       description: |-
-        Retorna todos os usuários vinculados a uma loja específica,
-        com suas respectivas roles e status.
+        Retorna lista paginada de clientes com filtros diversos.
+        O escopo de acesso varia conforme o papel do usuário.
 
-        **Dados retornados por vínculo:**
-        - `user_id` - ID do usuário
-        - `user_name` - Nome do usuário
-        - `user_email` - Email do usuário
-        - `user_active` - Se o usuário está ativo
-        - `role` - Role do usuário nesta loja
-        - `created_at` - Quando o vínculo foi criado
-
-        **Quem pode usar:** Apenas administradores.
+        **Quem pode usar:** Todos os usuários autenticados.
       authenticated: true
       deprecated: false
     headers:
       Authorization: 'Bearer {SEU_TOKEN}'
       Content-Type: application/json
       Accept: application/json
-    urlParameters:
-      store_id:
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      keyword:
         custom: []
-        name: store_id
-        description: 'The ID of the store.'
-        required: true
-        example: 1
-        type: integer
+        name: keyword
+        description: 'Busca unificada (nome, email, telefone).'
+        required: false
+        example: João
+        type: string
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: false
         deprecated: false
-      store:
+      name:
         custom: []
-        name: store
-        description: 'ID da loja.'
-        required: true
+        name: name
+        description: 'Filtrar por nome.'
+        required: false
+        example: 'João Silva'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      email:
+        custom: []
+        name: email
+        description: 'Filtrar por email.'
+        required: false
+        example: joao@email.com
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      phone:
+        custom: []
+        name: phone
+        description: 'Filtrar por telefone.'
+        required: false
+        example: '11999999999'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      city:
+        custom: []
+        name: city
+        description: 'Filtrar por cidade.'
+        required: false
+        example: 'São Paulo'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      state:
+        custom: []
+        name: state
+        description: 'Filtrar por UF (sigla).'
+        required: false
+        example: SP
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      initial_date:
+        custom: []
+        name: initial_date
+        description: 'Data de cadastro inicial.'
+        required: false
+        example: '2026-01-01'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      final_date:
+        custom: []
+        name: final_date
+        description: 'Data de cadastro final.'
+        required: false
+        example: '2026-12-31'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      has_device:
+        custom: []
+        name: has_device
+        description: 'Filtrar clientes com/sem dispositivo.'
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      brand_id:
+        custom: []
+        name: brand_id
+        description: 'Filtrar por marca de dispositivo.'
+        required: false
         example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-    cleanUrlParameters:
-      store_id: 1
-      store: 1
-    queryParameters: []
-    cleanQueryParameters: []
+      model_id:
+        custom: []
+        name: model_id
+        description: 'Filtrar por modelo de dispositivo.'
+        required: false
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      sort:
+        custom: []
+        name: sort
+        description: 'Campo para ordenação.'
+        required: false
+        example: name
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      direction:
+        custom: []
+        name: direction
+        description: 'Direção: `asc` ou `desc`.'
+        required: false
+        example: asc
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      per_page:
+        custom: []
+        name: per_page
+        description: 'Itens por página (máx 100).'
+        required: false
+        example: 15
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      keyword: João
+      name: 'João Silva'
+      email: joao@email.com
+      phone: '11999999999'
+      city: 'São Paulo'
+      state: SP
+      initial_date: '2026-01-01'
+      final_date: '2026-12-31'
+      has_device: true
+      brand_id: 1
+      model_id: 5
+      sort: name
+      direction: asc
+      per_page: 15
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
@@ -117,27 +223,18 @@ endpoints:
         status: 200
         content: |-
           {
-            "data": [
-              {
-                "user_id": 2,
-                "user_name": "Carlos Gerente",
-                "user_email": "carlos.gerente@maiscapinhas.com.br",
-                "user_active": true,
-                "role": "gerente",
-                "created_at": "2026-01-01T00:00:00Z"
-              },
-              {
-                "user_id": 6,
-                "user_name": "João Vendedor",
-                "user_email": "joao.vendedor@maiscapinhas.com.br",
-                "user_active": true,
-                "role": "vendedor",
-                "created_at": "2026-01-01T00:00:00Z"
-              }
-            ]
+            "data": [{
+              "id": 1,
+              "name": "João Silva",
+              "email": "joao@email.com",
+              "phone": "11999999999",
+              "city": "São Paulo",
+              "devices": [{"id": 1, "model": "iPhone 15"}]
+            }],
+            "meta": {"current_page": 1, "total": 100}
           }
         headers: []
-        description: 'Usuários da loja'
+        description: 'Lista de clientes'
     responseFields: []
     auth:
       - headers
@@ -150,113 +247,195 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: 'api/v1/admin/stores/{store_id}/users'
+    uri: api/v1/customers
     metadata:
       custom: []
-      groupName: 'Administração - Vínculos Loja-Usuário'
+      groupName: Clientes
       groupDescription: |-
 
-        Gerenciamento dos vínculos entre lojas e usuários (tabela `store_users`).
+        Gestão de clientes e seus dispositivos (celulares).
+        Clientes são usados para associar pedidos e capas personalizadas.
 
-        Este módulo controla **qual usuário trabalha em qual loja** e com
-        **qual nível de permissão (role)**.
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todos os clientes
+        - Outros usuários: apenas clientes que criaram ou possuem pedidos/capas associadas
 
-        **Sistema de Roles:**
-        | Role | Pode fazer |
-        |------|------------|
-        | `admin` | Tudo: gerenciar usuários, lojas, regras, confirmar comissões |
-        | `gerente` | Gerenciar equipe da loja, aprovar fechamentos, ver dashboards |
-        | `conferente` | Aprovar/rejeitar fechamentos de caixa |
-        | `vendedor` | Registrar vendas, submeter fechamento do próprio turno |
-
-        **Regras de Negócio:**
-        - Um usuário pode ter roles diferentes em lojas diferentes
-        - A role `admin` em qualquer loja dá acesso administrativo global
-        - Vendedor "volante" pode trabalhar temporariamente em outra loja
-        - Não é possível remover seu próprio vínculo (proteção)
-
-        **Vínculo × Comissão:**
-        - Vendas são sempre registradas na loja onde ocorreram (`store_id` da venda)
-        - Comissão vai para o vendedor que realizou a venda (`seller_id`)
-        - Meta é calculada pela loja + split configurado
+        **Permissões:** Todos os usuários autenticados.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Vincular usuário a loja'
+      title: 'Criar cliente'
       description: |-
-        Cria um novo vínculo entre um usuário existente e uma loja,
-        definindo qual role esse usuário terá nessa loja.
+        Cria um novo cliente no sistema.
 
-        **Casos de uso:**
-        - Adicionar novo vendedor à equipe de uma loja
-        - Promover funcionário a gerente em determinada loja
-        - Configurar vendedor "volante" para trabalhar temporariamente
-
-        **Regras de Negócio:**
-        - Um usuário só pode ter um vínculo por loja (unique: store_id + user_id)
-        - Para alterar a role, use PUT
-        - O usuário deve existir previamente (criar via POST /admin/users)
-
-        **Quem pode usar:** Apenas administradores.
+        **Quem pode usar:** Todos os usuários autenticados.
       authenticated: true
       deprecated: false
     headers:
       Authorization: 'Bearer {SEU_TOKEN}'
       Content-Type: application/json
       Accept: application/json
-    urlParameters:
-      store_id:
-        custom: []
-        name: store_id
-        description: 'The ID of the store.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      store:
-        custom: []
-        name: store
-        description: 'ID da loja.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      store_id: 1
-      store: 1
+    urlParameters: []
+    cleanUrlParameters: []
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      user_id:
+      name:
         custom: []
-        name: user_id
-        description: 'ID do usuário a vincular.'
+        name: name
+        description: 'Nome do cliente.'
         required: true
-        example: 8
-        type: integer
+        example: 'João Silva'
+        type: string
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-      role:
+      email:
         custom: []
-        name: role
-        description: 'Role: admin, gerente, conferente ou vendedor.'
-        required: true
-        example: vendedor
+        name: email
+        description: 'Email do cliente.'
+        required: false
+        example: joao@email.com
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      phone:
+        custom: []
+        name: phone
+        description: 'Telefone do cliente.'
+        required: false
+        example: '11999999999'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      zip_code:
+        custom: []
+        name: zip_code
+        description: 'Must not be greater than 8 characters.'
+        required: false
+        example: yuwpwlvq
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      street:
+        custom: []
+        name: street
+        description: 'Must not be greater than 255 characters.'
+        required: false
+        example: w
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      number:
+        custom: []
+        name: number
+        description: 'Must not be greater than 20 characters.'
+        required: false
+        example: rsitcpscqldzsnrw
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      complement:
+        custom: []
+        name: complement
+        description: 'Must not be greater than 255 characters.'
+        required: false
+        example: t
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      neighborhood:
+        custom: []
+        name: neighborhood
+        description: 'Must not be greater than 100 characters.'
+        required: false
+        example: u
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      city:
+        custom: []
+        name: city
+        description: Cidade.
+        required: false
+        example: 'São Paulo'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      state:
+        custom: []
+        name: state
+        description: 'UF (sigla).'
+        required: false
+        example: SP
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      birth_date:
+        custom: []
+        name: birth_date
+        description: 'Must be a valid date. Must be a date before <code>today</code>.'
+        required: false
+        example: '2022-02-06'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      address:
+        custom: []
+        name: address
+        description: 'Endereço completo.'
+        required: false
+        example: 'Rua das Flores, 123'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      notes:
+        custom: []
+        name: notes
+        description: Observações.
+        required: false
+        example: 'Cliente preferencial'
         type: string
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      user_id: 8
-      role: vendedor
+      name: 'João Silva'
+      email: joao@email.com
+      phone: '11999999999'
+      zip_code: yuwpwlvq
+      street: w
+      number: rsitcpscqldzsnrw
+      complement: t
+      neighborhood: u
+      city: 'São Paulo'
+      state: SP
+      birth_date: '2022-02-06'
+      address: 'Rua das Flores, 123'
+      notes: 'Cliente preferencial'
     fileParameters: []
     responses:
       -
@@ -264,24 +443,17 @@ endpoints:
         status: 201
         content: |-
           {
-            "data": {
-              "user_id": 8,
-              "store_id": 1,
-              "role": "vendedor"
-            }
+            "message": "Cliente criado com sucesso.",
+            "data": {"id": 1, "name": "João Silva", "email": "joao@email.com"}
           }
         headers: []
-        description: 'Vínculo criado'
+        description: 'Cliente criado'
       -
         custom: []
         status: 422
-        content: |-
-          {
-            "message": "The given data was invalid.",
-            "errors": { "user_id": ["Este usuário já está vinculado a esta loja."] }
-          }
+        content: '{"message": "The name field is required."}'
         headers: []
-        description: 'Usuário já vinculado'
+        description: 'Validação falhou'
     responseFields: []
     auth:
       - headers
@@ -293,48 +465,28 @@ endpoints:
   -
     custom: []
     httpMethods:
-      - PUT
-    uri: 'api/v1/admin/stores/{store_id}/users/{id}'
+      - GET
+    uri: 'api/v1/customers/{id}'
     metadata:
       custom: []
-      groupName: 'Administração - Vínculos Loja-Usuário'
+      groupName: Clientes
       groupDescription: |-
 
-        Gerenciamento dos vínculos entre lojas e usuários (tabela `store_users`).
+        Gestão de clientes e seus dispositivos (celulares).
+        Clientes são usados para associar pedidos e capas personalizadas.
 
-        Este módulo controla **qual usuário trabalha em qual loja** e com
-        **qual nível de permissão (role)**.
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todos os clientes
+        - Outros usuários: apenas clientes que criaram ou possuem pedidos/capas associadas
 
-        **Sistema de Roles:**
-        | Role | Pode fazer |
-        |------|------------|
-        | `admin` | Tudo: gerenciar usuários, lojas, regras, confirmar comissões |
-        | `gerente` | Gerenciar equipe da loja, aprovar fechamentos, ver dashboards |
-        | `conferente` | Aprovar/rejeitar fechamentos de caixa |
-        | `vendedor` | Registrar vendas, submeter fechamento do próprio turno |
-
-        **Regras de Negócio:**
-        - Um usuário pode ter roles diferentes em lojas diferentes
-        - A role `admin` em qualquer loja dá acesso administrativo global
-        - Vendedor "volante" pode trabalhar temporariamente em outra loja
-        - Não é possível remover seu próprio vínculo (proteção)
-
-        **Vínculo × Comissão:**
-        - Vendas são sempre registradas na loja onde ocorreram (`store_id` da venda)
-        - Comissão vai para o vendedor que realizou a venda (`seller_id`)
-        - Meta é calculada pela loja + split configurado
+        **Permissões:** Todos os usuários autenticados.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Atualizar role do usuário na loja'
+      title: 'Detalhes do cliente'
       description: |-
-        Altera a role de um usuário em uma loja específica.
+        Retorna detalhes completos do cliente com dispositivos.
 
-        **Casos de uso:**
-        - Promover vendedor a conferente
-        - Rebaixar gerente a conferente
-        - Dar acesso admin a um gerente
-
-        **Quem pode usar:** Apenas administradores.
+        **Quem pode usar:** Usuário com acesso ao cliente.
       authenticated: true
       deprecated: false
     headers:
@@ -342,83 +494,35 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      store_id:
-        custom: []
-        name: store_id
-        description: 'The ID of the store.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
       id:
         custom: []
         name: id
-        description: 'The ID of the user.'
+        description: 'The ID of the customer.'
         required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      store:
-        custom: []
-        name: store
-        description: 'ID da loja.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      user:
-        custom: []
-        name: user
-        description: 'ID do usuário no vínculo.'
-        required: true
-        example: 6
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      store_id: 1
-      id: 1
-      store: 1
-      user: 6
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      user_id:
-        custom: []
-        name: user_id
-        description: 'This field is required when <code>role</code> is not present. The <code>id</code> of an existing record in the users table.'
-        required: false
         example: 16
         type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      role:
+      customer:
         custom: []
-        name: role
-        description: 'Nova role: admin, gerente, conferente ou vendedor.'
+        name: customer
+        description: 'ID do cliente.'
         required: true
-        example: gerente
-        type: string
+        example: 1
+        type: integer
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-    cleanBodyParameters:
-      user_id: 16
-      role: gerente
+    cleanUrlParameters:
+      id: 16
+      customer: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
     fileParameters: []
     responses:
       -
@@ -427,22 +531,233 @@ endpoints:
         content: |-
           {
             "data": {
-              "user_id": 6,
-              "store_id": 1,
-              "role": "gerente"
+              "id": 1,
+              "name": "João Silva",
+              "devices": [{"id": 1, "model": "iPhone 15", "brand": "Apple"}],
+              "created_by": {"id": 1, "name": "Admin"}
             }
           }
         headers: []
-        description: 'Role atualizada'
+        description: 'Detalhes do cliente'
       -
         custom: []
-        status: 404
+        status: 403
+        content: '{"message": "Você não tem permissão para acessar este cliente."}'
+        headers: []
+        description: 'Sem permissão'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: 'api/v1/customers/{id}'
+    metadata:
+      custom: []
+      groupName: Clientes
+      groupDescription: |-
+
+        Gestão de clientes e seus dispositivos (celulares).
+        Clientes são usados para associar pedidos e capas personalizadas.
+
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todos os clientes
+        - Outros usuários: apenas clientes que criaram ou possuem pedidos/capas associadas
+
+        **Permissões:** Todos os usuários autenticados.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Atualizar cliente'
+      description: |-
+        Atualiza os dados de um cliente existente.
+
+        **Quem pode usar:** Usuário com acesso ao cliente.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the customer.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      customer:
+        custom: []
+        name: customer
+        description: 'ID do cliente.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 16
+      customer: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      name:
+        custom: []
+        name: name
+        description: 'Nome do cliente.'
+        required: false
+        example: 'João Silva Atualizado'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      email:
+        custom: []
+        name: email
+        description: 'Email do cliente.'
+        required: false
+        example: joao.novo@email.com
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      phone:
+        custom: []
+        name: phone
+        description: 'Telefone do cliente.'
+        required: false
+        example: '11988888888'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      zip_code:
+        custom: []
+        name: zip_code
+        description: 'Must not be greater than 8 characters.'
+        required: false
+        example: yuwpwlvq
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      street:
+        custom: []
+        name: street
+        description: 'Must not be greater than 255 characters.'
+        required: false
+        example: w
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      number:
+        custom: []
+        name: number
+        description: 'Must not be greater than 20 characters.'
+        required: false
+        example: rsitcpscqldzsnrw
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      complement:
+        custom: []
+        name: complement
+        description: 'Must not be greater than 255 characters.'
+        required: false
+        example: t
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      neighborhood:
+        custom: []
+        name: neighborhood
+        description: 'Must not be greater than 100 characters.'
+        required: false
+        example: u
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      city:
+        custom: []
+        name: city
+        description: 'Must not be greater than 255 characters.'
+        required: false
+        example: j
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      state:
+        custom: []
+        name: state
+        description: 'Must be 2 characters.'
+        required: false
+        example: wv
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      birth_date:
+        custom: []
+        name: birth_date
+        description: 'Must be a valid date. Must be a date before <code>today</code>.'
+        required: false
+        example: '2022-02-06'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      name: 'João Silva Atualizado'
+      email: joao.novo@email.com
+      phone: '11988888888'
+      zip_code: yuwpwlvq
+      street: w
+      number: rsitcpscqldzsnrw
+      complement: t
+      neighborhood: u
+      city: j
+      state: wv
+      birth_date: '2022-02-06'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
         content: |-
           {
-            "message": "Usuário não está vinculado a esta loja."
+            "message": "Cliente atualizado com sucesso.",
+            "data": {"id": 1, "name": "João Silva Atualizado"}
           }
         headers: []
-        description: 'Vínculo não existe'
+        description: 'Cliente atualizado'
     responseFields: []
     auth:
       - headers
@@ -455,51 +770,27 @@ endpoints:
     custom: []
     httpMethods:
       - DELETE
-    uri: 'api/v1/admin/stores/{store_id}/users/{id}'
+    uri: 'api/v1/customers/{id}'
     metadata:
       custom: []
-      groupName: 'Administração - Vínculos Loja-Usuário'
+      groupName: Clientes
       groupDescription: |-
 
-        Gerenciamento dos vínculos entre lojas e usuários (tabela `store_users`).
+        Gestão de clientes e seus dispositivos (celulares).
+        Clientes são usados para associar pedidos e capas personalizadas.
 
-        Este módulo controla **qual usuário trabalha em qual loja** e com
-        **qual nível de permissão (role)**.
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todos os clientes
+        - Outros usuários: apenas clientes que criaram ou possuem pedidos/capas associadas
 
-        **Sistema de Roles:**
-        | Role | Pode fazer |
-        |------|------------|
-        | `admin` | Tudo: gerenciar usuários, lojas, regras, confirmar comissões |
-        | `gerente` | Gerenciar equipe da loja, aprovar fechamentos, ver dashboards |
-        | `conferente` | Aprovar/rejeitar fechamentos de caixa |
-        | `vendedor` | Registrar vendas, submeter fechamento do próprio turno |
-
-        **Regras de Negócio:**
-        - Um usuário pode ter roles diferentes em lojas diferentes
-        - A role `admin` em qualquer loja dá acesso administrativo global
-        - Vendedor "volante" pode trabalhar temporariamente em outra loja
-        - Não é possível remover seu próprio vínculo (proteção)
-
-        **Vínculo × Comissão:**
-        - Vendas são sempre registradas na loja onde ocorreram (`store_id` da venda)
-        - Comissão vai para o vendedor que realizou a venda (`seller_id`)
-        - Meta é calculada pela loja + split configurado
+        **Permissões:** Todos os usuários autenticados.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Remover vínculo'
+      title: 'Excluir cliente'
       description: |-
-        Remove completamente o vínculo de um usuário com uma loja.
+        Remove um cliente (soft delete).
 
-        **Atenção:**
-        - O usuário perde todo acesso a esta loja
-        - Dados históricos (vendas, fechamentos) são mantidos
-        - Para desativar temporariamente, considere alterar a role
-
-        **Regras de Negócio:**
-        - Não é possível remover seu próprio vínculo (proteção)
-        - Se o usuário só tinha vínculo com esta loja, ficará "órfão"
-
-        **Quem pode usar:** Apenas administradores.
+        **Quem pode usar:** Usuário com acesso ao cliente.
       authenticated: true
       deprecated: false
     headers:
@@ -507,55 +798,114 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      store_id:
-        custom: []
-        name: store_id
-        description: 'The ID of the store.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
       id:
         custom: []
         name: id
-        description: 'The ID of the user.'
+        description: 'The ID of the customer.'
         required: true
-        example: 1
+        example: 16
         type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      store:
+      customer:
         custom: []
-        name: store
-        description: 'ID da loja.'
+        name: customer
+        description: 'ID do cliente.'
         required: true
         example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      user:
-        custom: []
-        name: user
-        description: 'ID do usuário.'
-        required: true
-        example: 8
         type: integer
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      store_id: 1
-      id: 1
-      store: 1
-      user: 8
+      id: 16
+      customer: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"message": "Cliente excluído com sucesso."}'
+        headers: []
+        description: 'Cliente excluído'
+      -
+        custom: []
+        status: 403
+        content: '{"message": "Você não tem permissão para acessar este cliente."}'
+        headers: []
+        description: 'Sem permissão'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/customers/{customer_id}/devices'
+    metadata:
+      custom: []
+      groupName: Clientes
+      groupDescription: |-
+
+        Gestão de clientes e seus dispositivos (celulares).
+        Clientes são usados para associar pedidos e capas personalizadas.
+
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todos os clientes
+        - Outros usuários: apenas clientes que criaram ou possuem pedidos/capas associadas
+
+        **Permissões:** Todos os usuários autenticados.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Listar dispositivos do cliente'
+      description: |-
+        Retorna todos os dispositivos (celulares) vinculados ao cliente.
+
+        **Quem pode usar:** Usuário com acesso ao cliente.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      customer_id:
+        custom: []
+        name: customer_id
+        description: 'The ID of the customer.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      customer:
+        custom: []
+        name: customer
+        description: 'ID do cliente.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      customer_id: 16
+      customer: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -567,28 +917,383 @@ endpoints:
         status: 200
         content: |-
           {
-            "data": { "message": "Vínculo removido com sucesso." }
+            "data": [
+              {"id": 1, "phone_model": {"id": 5, "name": "iPhone 15", "brand": "Apple"}, "is_primary": true}
+            ]
           }
         headers: []
-        description: 'Vínculo removido'
+        description: 'Lista de dispositivos'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/customers/{customer_id}/devices'
+    metadata:
+      custom: []
+      groupName: Clientes
+      groupDescription: |-
+
+        Gestão de clientes e seus dispositivos (celulares).
+        Clientes são usados para associar pedidos e capas personalizadas.
+
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todos os clientes
+        - Outros usuários: apenas clientes que criaram ou possuem pedidos/capas associadas
+
+        **Permissões:** Todos os usuários autenticados.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Adicionar dispositivo'
+      description: |-
+        Vincula um novo dispositivo ao cliente.
+
+        **Quem pode usar:** Usuário com acesso ao cliente.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      customer_id:
+        custom: []
+        name: customer_id
+        description: 'The ID of the customer.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      customer:
+        custom: []
+        name: customer
+        description: 'ID do cliente.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      customer_id: 16
+      customer: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      phone_model_id:
+        custom: []
+        name: phone_model_id
+        description: 'ID do modelo de telefone.'
+        required: true
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      nickname:
+        custom: []
+        name: nickname
+        description: 'Apelido do dispositivo.'
+        required: false
+        example: 'Celular do trabalho'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      is_primary:
+        custom: []
+        name: is_primary
+        description: 'Definir como dispositivo principal.'
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      phone_model_id: 5
+      nickname: 'Celular do trabalho'
+      is_primary: true
+    fileParameters: []
+    responses:
       -
         custom: []
-        status: 403
+        status: 201
         content: |-
           {
-            "message": "Você não pode remover seu próprio vínculo."
+            "message": "Dispositivo vinculado com sucesso.",
+            "data": {"id": 1, "phone_model": {"name": "iPhone 15"}, "is_primary": true}
           }
         headers: []
-        description: 'Tentativa de auto-remoção'
+        description: 'Dispositivo adicionado'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: 'api/v1/customers/{customer_id}/devices/{id}'
+    metadata:
+      custom: []
+      groupName: Clientes
+      groupDescription: |-
+
+        Gestão de clientes e seus dispositivos (celulares).
+        Clientes são usados para associar pedidos e capas personalizadas.
+
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todos os clientes
+        - Outros usuários: apenas clientes que criaram ou possuem pedidos/capas associadas
+
+        **Permissões:** Todos os usuários autenticados.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Atualizar dispositivo'
+      description: |-
+        Atualiza os dados de um dispositivo do cliente.
+
+        **Quem pode usar:** Usuário com acesso ao cliente.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      customer_id:
+        custom: []
+        name: customer_id
+        description: 'The ID of the customer.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the device.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      customer:
+        custom: []
+        name: customer
+        description: 'ID do cliente.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      device:
+        custom: []
+        name: device
+        description: 'ID do dispositivo.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      customer_id: 16
+      id: 16
+      customer: 1
+      device: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      nickname:
+        custom: []
+        name: nickname
+        description: 'Apelido do dispositivo.'
+        required: false
+        example: 'Celular pessoal'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      is_primary:
+        custom: []
+        name: is_primary
+        description: 'Definir como dispositivo principal.'
+        required: false
+        example: false
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      phone_model_id:
+        custom: []
+        name: phone_model_id
+        description: 'ID do modelo de telefone.'
+        required: false
+        example: 6
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      nickname: 'Celular pessoal'
+      is_primary: false
+      phone_model_id: 6
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "message": "Dispositivo atualizado com sucesso.",
+            "data": {"id": 1, "is_primary": false}
+          }
+        headers: []
+        description: 'Dispositivo atualizado'
       -
         custom: []
         status: 404
-        content: |-
-          {
-            "message": "Vínculo não encontrado."
-          }
+        content: '{"message": "Dispositivo não pertence a este cliente."}'
         headers: []
-        description: 'Vínculo não encontrado'
+        description: 'Não pertence ao cliente'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/v1/customers/{customer_id}/devices/{id}'
+    metadata:
+      custom: []
+      groupName: Clientes
+      groupDescription: |-
+
+        Gestão de clientes e seus dispositivos (celulares).
+        Clientes são usados para associar pedidos e capas personalizadas.
+
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todos os clientes
+        - Outros usuários: apenas clientes que criaram ou possuem pedidos/capas associadas
+
+        **Permissões:** Todos os usuários autenticados.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Remover dispositivo'
+      description: |-
+        Remove um dispositivo do cliente.
+
+        **Quem pode usar:** Usuário com acesso ao cliente.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      customer_id:
+        custom: []
+        name: customer_id
+        description: 'The ID of the customer.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the device.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      customer:
+        custom: []
+        name: customer
+        description: 'ID do cliente.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      device:
+        custom: []
+        name: device
+        description: 'ID do dispositivo.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      customer_id: 16
+      id: 16
+      customer: 1
+      device: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"message": "Dispositivo removido com sucesso."}'
+        headers: []
+        description: 'Dispositivo removido'
+      -
+        custom: []
+        status: 404
+        content: '{"message": "Dispositivo não pertence a este cliente."}'
+        headers: []
+        description: 'Não pertence ao cliente'
     responseFields: []
     auth:
       - headers

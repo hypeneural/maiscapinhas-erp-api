@@ -25,6 +25,27 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
+/**
+ * @group Comunicação Interna - Avisos
+ *
+ * Endpoints para gerenciamento de avisos e comunicados internos.
+ * O sistema permite criar, publicar e acompanhar avisos direcionados a:
+ * - **Todos os usuários** (scope global)
+ * - **Lojas específicas** (scope store)
+ * - **Usuários específicos** (scope user)
+ * - **Cargos específicos** (scope role)
+ *
+ * **Funcionalidades:**
+ * - Criação e edição de avisos com suporte a imagens e call-to-action
+ * - Publicação imediata ou agendada
+ * - Controle de leitura (seen), confirmação (ack) e dispensa (dismiss)
+ * - Estatísticas de engajamento em tempo real
+ * - Duplicação e republicação de avisos arquivados
+ *
+ * **Níveis de severidade:** `info`, `warning`, `danger`
+ *
+ * **Permissões:** Apenas administradores e gerentes podem criar e gerenciar avisos.
+ */
 class AnnouncementController extends Controller
 {
     use ApiResponse;
@@ -39,8 +60,48 @@ class AnnouncementController extends Controller
     // ========================================
 
     /**
-     * GET /me/announcements/active
-     * Get active announcements for current user (dashboard).
+     * Obter avisos ativos para o dashboard
+     *
+     * Retorna os avisos ativos que o usuário atual deve visualizar no dashboard.
+     * Os avisos são separados em duas categorias:
+     * - **critical**: Avisos de alta prioridade que exigem atenção imediata
+     * - **banners**: Avisos informativos exibidos como banners
+     *
+     * **Quem pode usar:** Qualquer usuário autenticado.
+     *
+     * **Regras de negócio:**
+     * - Apenas avisos com status `active` são retornados
+     * - Avisos já dispensados pelo usuário não aparecem
+     * - Se `store_id` for informado, filtra avisos direcionados àquela loja
+     *
+     * @queryParam store_id integer Filtrar avisos por loja específica. Example: 1
+     *
+     * @response 200 scenario="Avisos ativos" {
+     *   "data": {
+     *     "critical": [
+     *       {
+     *         "id": 1,
+     *         "title": "Manutenção Programada",
+     *         "excerpt": "Sistema ficará indisponível das 22h às 23h",
+     *         "severity": "warning",
+     *         "require_ack": true
+     *       }
+     *     ],
+     *     "banners": [
+     *       {
+     *         "id": 2,
+     *         "title": "Nova funcionalidade disponível",
+     *         "excerpt": "Confira as novidades do sistema",
+     *         "severity": "info",
+     *         "require_ack": false
+     *       }
+     *     ]
+     *   }
+     * }
+     *
+     * @response 403 scenario="Sem acesso à loja" {
+     *   "message": "Você não tem acesso a esta loja."
+     * }
      */
     public function activeForCurrentUser(Request $request): JsonResponse
     {
@@ -60,8 +121,22 @@ class AnnouncementController extends Controller
     }
 
     /**
-     * GET /me/announcements
-     * Get announcement history for current user.
+     * Histórico de avisos do usuário
+     *
+     * Retorna o histórico de avisos que o usuário recebeu, com paginação e filtros.
+     *
+     * **Quem pode usar:** Qualquer usuário autenticado.
+     *
+     * @queryParam store_id integer Filtrar por loja. Example: 1
+     * @queryParam status string Filtrar por status: `draft`, `active`, `archived`, `expired`. Example: active
+     * @queryParam severity string Filtrar por severidade: `info`, `warning`, `danger`. Example: info
+     * @queryParam sort string Ordenação: `created_at_desc`, `created_at_asc`, `starts_at_desc`, `priority_desc`. Example: created_at_desc
+     * @queryParam per_page integer Itens por página (máx 100). Example: 15
+     *
+     * @response 200 scenario="Lista de avisos" {
+     *   "data": [{"id": 1, "title": "Aviso importante", "severity": "warning"}],
+     *   "meta": {"current_page": 1, "total": 10}
+     * }
      */
     public function userHistory(ListAnnouncementsRequest $request): JsonResponse
     {
@@ -86,8 +161,28 @@ class AnnouncementController extends Controller
     }
 
     /**
-     * GET /announcements/{announcement}
-     * Get announcement details.
+     * Detalhes do aviso
+     *
+     * Retorna os detalhes completos de um aviso, incluindo targets e status de leitura do usuário atual.
+     *
+     * **Quem pode usar:** Usuário autenticado com permissão de visualização.
+     *
+     * @urlParam announcement integer required ID do aviso. Example: 1
+     *
+     * @response 200 scenario="Detalhes do aviso" {
+     *   "data": {
+     *     "id": 1,
+     *     "title": "Manutenção Programada",
+     *     "message": "O sistema ficará indisponível...",
+     *     "severity": "warning",
+     *     "status": "active",
+     *     "require_ack": true,
+     *     "created_by": {"id": 1, "name": "Admin"}
+     *   }
+     * }
+     *
+     * @response 403 scenario="Sem permissão" {"message": "This action is unauthorized."}
+     * @response 404 scenario="Não encontrado" {"message": "Not found."}
      */
     public function show(Request $request, Announcement $announcement): JsonResponse
     {
@@ -106,8 +201,18 @@ class AnnouncementController extends Controller
     }
 
     /**
-     * POST /announcements/{announcement}/seen
-     * Mark announcement as seen.
+     * Marcar aviso como visto
+     *
+     * Registra que o usuário visualizou o aviso. A data/hora é registrada automaticamente.
+     *
+     * **Quem pode usar:** Usuário autenticado que recebeu o aviso.
+     *
+     * @urlParam announcement integer required ID do aviso. Example: 1
+     * @bodyParam store_id integer ID da loja (contexto). Example: 1
+     *
+     * @response 200 scenario="Marcado como visto" {
+     *   "data": {"message": "Marcado como visto.", "seen_at": "2026-01-13T15:00:00+00:00"}
+     * }
      */
     public function seen(SeenAnnouncementRequest $request, Announcement $announcement): JsonResponse
     {
@@ -134,8 +239,19 @@ class AnnouncementController extends Controller
     }
 
     /**
-     * POST /announcements/{announcement}/ack
-     * Acknowledge announcement.
+     * Confirmar leitura do aviso
+     *
+     * Registra que o usuário confirmou a leitura do aviso (acknowledge).
+     * Usado para avisos que exigem confirmação explícita (`require_ack = true`).
+     *
+     * **Quem pode usar:** Usuário autenticado que recebeu o aviso.
+     *
+     * @urlParam announcement integer required ID do aviso. Example: 1
+     * @bodyParam store_id integer ID da loja (contexto). Example: 1
+     *
+     * @response 200 scenario="Confirmação registrada" {
+     *   "data": {"message": "Confirmação registrada.", "acknowledged_at": "2026-01-13T15:00:00+00:00"}
+     * }
      */
     public function ack(AckAnnouncementRequest $request, Announcement $announcement): JsonResponse
     {
@@ -162,8 +278,19 @@ class AnnouncementController extends Controller
     }
 
     /**
-     * POST /announcements/{announcement}/dismiss
-     * Dismiss announcement.
+     * Dispensar aviso
+     *
+     * Registra que o usuário dispensou o aviso (não quer mais ver).
+     * O aviso não aparecerá mais no dashboard do usuário.
+     *
+     * **Quem pode usar:** Usuário autenticado que recebeu o aviso.
+     *
+     * @urlParam announcement integer required ID do aviso. Example: 1
+     * @bodyParam store_id integer ID da loja (contexto). Example: 1
+     *
+     * @response 200 scenario="Dispensado" {
+     *   "data": {"message": "Dispensado com sucesso.", "dismissed_at": "2026-01-13T15:00:00+00:00"}
+     * }
      */
     public function dismiss(DismissAnnouncementRequest $request, Announcement $announcement): JsonResponse
     {
@@ -194,8 +321,29 @@ class AnnouncementController extends Controller
     // ========================================
 
     /**
-     * GET /announcements
-     * List announcements (admin).
+     * Listar avisos (Admin)
+     *
+     * Retorna lista de avisos com filtros e paginação para gerenciamento.
+     * Super admins veem todos os avisos; outros admins veem apenas avisos das lojas que gerenciam.
+     *
+     * **Quem pode usar:** Administradores e gerentes.
+     *
+     * @queryParam status string Filtrar por status: `draft`, `scheduled`, `active`, `archived`, `expired`, `all`. Example: active
+     * @queryParam severity string Filtrar por severidade: `info`, `warning`, `danger`. Example: warning
+     * @queryParam type string Filtrar por tipo. Example: announcement
+     * @queryParam scope string Filtrar por escopo: `global`, `store`, `user`, `role`. Example: store
+     * @queryParam created_by integer Filtrar por criador. Example: 1
+     * @queryParam date_from string Filtrar por data inicial (ISO 8601). Example: 2026-01-01
+     * @queryParam date_to string Filtrar por data final (ISO 8601). Example: 2026-12-31
+     * @queryParam sort string Ordenação. Example: created_at_desc
+     * @queryParam per_page integer Itens por página. Example: 15
+     *
+     * @response 200 scenario="Lista de avisos" {
+     *   "data": [{"id": 1, "title": "Aviso", "status": "active", "severity": "info"}],
+     *   "meta": {"current_page": 1, "total": 50}
+     * }
+     *
+     * @response 403 scenario="Sem permissão" {"message": "This action is unauthorized."}
      */
     public function adminIndex(ListAnnouncementsRequest $request): JsonResponse
     {
@@ -224,8 +372,37 @@ class AnnouncementController extends Controller
     }
 
     /**
-     * POST /announcements
-     * Create announcement.
+     * Criar aviso
+     *
+     * Cria um novo aviso em status `draft`. Após criar, use o endpoint `/publish` para publicar.
+     *
+     * **Quem pode usar:** Administradores e gerentes.
+     *
+     * **Regras de negócio:**
+     * - Avisos são criados como rascunho (draft)
+     * - É necessário definir targets para avisos com scope `store`, `user` ou `role`
+     * - `require_ack` define se o usuário precisa confirmar leitura
+     *
+     * @bodyParam title string required Título do aviso (máx 255 caracteres). Example: Manutenção Programada
+     * @bodyParam message string required Conteúdo do aviso (suporta markdown). Example: O sistema ficará indisponível...
+     * @bodyParam excerpt string Resumo curto (máx 500 caracteres). Example: Sistema indisponível das 22h às 23h
+     * @bodyParam type string Tipo do aviso. Example: announcement
+     * @bodyParam severity string required Severidade: `info`, `warning`, `danger`. Example: warning
+     * @bodyParam display_mode string Modo de exibição: `modal`, `banner`, `toast`. Example: modal
+     * @bodyParam scope string required Escopo: `global`, `store`, `user`, `role`. Example: store
+     * @bodyParam require_ack boolean Se requer confirmação de leitura. Example: true
+     * @bodyParam priority integer Prioridade (quanto maior, mais importante). Example: 10
+     * @bodyParam starts_at string Data de início (ISO 8601). Example: 2026-01-15T10:00:00Z
+     * @bodyParam expires_at string Data de expiração (ISO 8601). Example: 2026-01-20T23:59:59Z
+     * @bodyParam targets array Lista de targets (obrigatório para scope != global).
+     * @bodyParam targets[].target_type string required Tipo: `store`, `user`, `role`. Example: store
+     * @bodyParam targets[].target_id integer required ID do target. Example: 1
+     *
+     * @response 201 scenario="Aviso criado" {
+     *   "data": {"id": 1, "title": "Manutenção Programada", "status": "draft"}
+     * }
+     *
+     * @response 422 scenario="Validação falhou" {"message": "The title field is required."}
      */
     public function store(StoreAnnouncementRequest $request): JsonResponse
     {
@@ -260,8 +437,23 @@ class AnnouncementController extends Controller
     }
 
     /**
-     * PUT /announcements/{announcement}
-     * Update announcement.
+     * Atualizar aviso
+     *
+     * Atualiza os dados de um aviso existente. Apenas rascunhos podem ter seus targets atualizados.
+     *
+     * **Quem pode usar:** Administradores e gerentes (criador ou com acesso ao scope).
+     *
+     * @urlParam announcement integer required ID do aviso. Example: 1
+     * @bodyParam title string Título do aviso. Example: Título atualizado
+     * @bodyParam message string Conteúdo do aviso. Example: Nova mensagem
+     * @bodyParam severity string Severidade: `info`, `warning`, `danger`. Example: info
+     * @bodyParam targets array Lista de targets (substitui os existentes).
+     *
+     * @response 200 scenario="Aviso atualizado" {
+     *   "data": {"id": 1, "title": "Título atualizado", "status": "draft"}
+     * }
+     *
+     * @response 403 scenario="Sem permissão" {"message": "This action is unauthorized."}
      */
     public function update(UpdateAnnouncementRequest $request, Announcement $announcement): JsonResponse
     {
@@ -293,8 +485,16 @@ class AnnouncementController extends Controller
     }
 
     /**
-     * DELETE /announcements/{announcement}
-     * Delete announcement.
+     * Excluir aviso
+     *
+     * Exclui permanentemente um aviso. Apenas rascunhos podem ser excluídos.
+     *
+     * **Quem pode usar:** Criador do aviso ou super admin.
+     *
+     * @urlParam announcement integer required ID do aviso. Example: 1
+     *
+     * @response 204 scenario="Aviso excluído"
+     * @response 403 scenario="Sem permissão" {"message": "This action is unauthorized."}
      */
     public function destroy(Announcement $announcement): JsonResponse
     {
@@ -306,8 +506,24 @@ class AnnouncementController extends Controller
     }
 
     /**
-     * POST /announcements/{announcement}/publish
-     * Publish announcement.
+     * Publicar aviso
+     *
+     * Publica um aviso que está em rascunho. Se `starts_at` for no futuro, o status será `scheduled`;
+     * caso contrário, será `active` imediatamente.
+     *
+     * **Quem pode usar:** Administradores e gerentes com permissão.
+     *
+     * @urlParam announcement integer required ID do aviso. Example: 1
+     *
+     * @response 200 scenario="Publicado" {
+     *   "data": {"message": "Publicado com sucesso.", "status": "active", "published_at": "2026-01-13T15:00:00+00:00"}
+     * }
+     *
+     * @response 200 scenario="Agendado" {
+     *   "data": {"message": "Agendado com sucesso.", "status": "scheduled", "published_at": "2026-01-13T15:00:00+00:00"}
+     * }
+     *
+     * @response 403 scenario="Sem permissão" {"message": "This action is unauthorized."}
      */
     public function publish(Request $request, Announcement $announcement): JsonResponse
     {
@@ -334,8 +550,19 @@ class AnnouncementController extends Controller
     }
 
     /**
-     * POST /announcements/{announcement}/archive
-     * Archive announcement.
+     * Arquivar aviso
+     *
+     * Arquiva um aviso ativo ou agendado. O aviso não aparecerá mais para os usuários.
+     *
+     * **Quem pode usar:** Administradores e gerentes com permissão.
+     *
+     * @urlParam announcement integer required ID do aviso. Example: 1
+     *
+     * @response 200 scenario="Arquivado" {
+     *   "data": {"message": "Arquivado com sucesso.", "archived_at": "2026-01-13T15:00:00+00:00"}
+     * }
+     *
+     * @response 403 scenario="Sem permissão" {"message": "This action is unauthorized."}
      */
     public function archive(Request $request, Announcement $announcement): JsonResponse
     {
@@ -354,8 +581,28 @@ class AnnouncementController extends Controller
     }
 
     /**
-     * GET /announcements/{announcement}/stats
-     * Get announcement statistics.
+     * Estatísticas do aviso
+     *
+     * Retorna estatísticas de engajamento do aviso: total de destinatários,
+     * visualizações, confirmações e dispensas.
+     *
+     * **Quem pode usar:** Administradores e gerentes com acesso ao aviso.
+     *
+     * @urlParam announcement integer required ID do aviso. Example: 1
+     *
+     * @response 200 scenario="Estatísticas" {
+     *   "data": {
+     *     "total_recipients": 50,
+     *     "delivered_count": 45,
+     *     "seen_count": 40,
+     *     "acknowledged_count": 35,
+     *     "dismissed_count": 5,
+     *     "pending_count": 15,
+     *     "seen_percentage": 80.0,
+     *     "ack_percentage": 70.0,
+     *     "require_ack": true
+     *   }
+     * }
      */
     public function stats(Request $request, Announcement $announcement): JsonResponse
     {
@@ -386,8 +633,26 @@ class AnnouncementController extends Controller
     }
 
     /**
-     * GET /announcements/{announcement}/receipts
-     * Get announcement receipts list.
+     * Lista de recebimentos do aviso
+     *
+     * Retorna a lista paginada de usuários que receberam o aviso, com status de leitura e confirmação.
+     *
+     * **Quem pode usar:** Administradores e gerentes com acesso ao aviso.
+     *
+     * @urlParam announcement integer required ID do aviso. Example: 1
+     * @queryParam status string Filtrar por status: `seen`, `unseen`, `acknowledged`, `pending`, `dismissed`. Example: pending
+     * @queryParam store_id integer Filtrar por loja. Example: 1
+     * @queryParam per_page integer Itens por página. Example: 25
+     *
+     * @response 200 scenario="Lista de recebimentos" {
+     *   "data": [{
+     *     "user": {"id": 1, "name": "João Silva", "email": "joao@email.com"},
+     *     "store": {"id": 1, "name": "Loja Centro"},
+     *     "seen_at": "2026-01-13T15:00:00+00:00",
+     *     "acknowledged_at": null
+     *   }],
+     *   "meta": {"current_page": 1, "total": 45}
+     * }
      */
     public function receipts(Request $request, Announcement $announcement): JsonResponse
     {
@@ -439,8 +704,20 @@ class AnnouncementController extends Controller
     }
 
     /**
-     * POST /announcements/{announcement}/duplicate
-     * Duplicate announcement as draft.
+     * Duplicar aviso como rascunho
+     *
+     * Cria uma cópia do aviso como rascunho, incluindo todos os targets.
+     * O título da cópia será prefixado com "[Cópia]".
+     *
+     * **Quem pode usar:** Administradores e gerentes com acesso ao aviso.
+     *
+     * @urlParam announcement integer required ID do aviso. Example: 1
+     *
+     * @response 201 scenario="Aviso duplicado" {
+     *   "data": {"id": 2, "title": "[Cópia] Manutenção Programada", "status": "draft"}
+     * }
+     *
+     * @response 403 scenario="Sem permissão" {"message": "This action is unauthorized."}
      */
     public function duplicate(Request $request, Announcement $announcement): JsonResponse
     {
@@ -448,9 +725,22 @@ class AnnouncementController extends Controller
 
         $newAnnouncement = DB::transaction(function () use ($announcement, $request) {
             $data = $announcement->only([
-                'title', 'message', 'excerpt', 'type', 'severity', 'display_mode',
-                'icon', 'image_url', 'image_alt', 'cta_label', 'cta_url',
-                'scope', 'require_ack', 'repeat_every_minutes', 'priority', 'meta_json',
+                'title',
+                'message',
+                'excerpt',
+                'type',
+                'severity',
+                'display_mode',
+                'icon',
+                'image_url',
+                'image_alt',
+                'cta_label',
+                'cta_url',
+                'scope',
+                'require_ack',
+                'repeat_every_minutes',
+                'priority',
+                'meta_json',
             ]);
 
             $data['title'] = "[Cópia] " . $data['title'];
@@ -480,8 +770,26 @@ class AnnouncementController extends Controller
     }
 
     /**
-     * POST /announcements/{announcement}/republish
-     * Republish an archived or expired announcement.
+     * Republicar aviso arquivado/expirado
+     *
+     * Republica um aviso que foi arquivado ou expirou, tornando-o ativo novamente.
+     * As datas de início e expiração são redefinidas.
+     *
+     * **Quem pode usar:** Administradores e gerentes com permissão de publicação.
+     *
+     * **Regras de negócio:**
+     * - Apenas avisos com status `archived` ou `expired` podem ser republicados
+     * - A data de início é definida como agora
+     * - A data de expiração é removida
+     *
+     * @urlParam announcement integer required ID do aviso. Example: 1
+     *
+     * @response 200 scenario="Republicado" {
+     *   "data": {"message": "Republicado com sucesso.", "status": "active", "published_at": "2026-01-13T15:00:00+00:00"}
+     * }
+     *
+     * @response 422 scenario="Status inválido" {"message": "Apenas comunicados arquivados ou expirados podem ser republicados."}
+     * @response 403 scenario="Sem permissão" {"message": "This action is unauthorized."}
      */
     public function republish(Request $request, Announcement $announcement): JsonResponse
     {

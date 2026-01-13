@@ -12,6 +12,24 @@ use App\Services\ProducaoCarrinhoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * @group Produção - Carrinho
+ *
+ * Gerenciamento do carrinho de produção para agrupar capas personalizadas antes de enviar à fábrica.
+ *
+ * **Fluxo do carrinho:**
+ * 1. Obter/criar carrinho aberto (um por usuário por vez)
+ * 2. Validar capas antes de adicionar (dry-run opcional)
+ * 3. Adicionar capas ao carrinho
+ * 4. Fechar carrinho → cria pedido de produção
+ *
+ * **Regras de negócio:**
+ * - Cada usuário pode ter apenas um carrinho aberto por vez
+ * - Capas devem estar com status "Encomenda Solicitada" para serem adicionadas
+ * - Capas já em outro carrinho/pedido são bloqueadas
+ *
+ * **Permissões:** Administradores e gerentes.
+ */
 class ProducaoCarrinhoController extends Controller
 {
     public function __construct(
@@ -20,9 +38,21 @@ class ProducaoCarrinhoController extends Controller
     }
 
     /**
-     * GET /api/v1/producao/carrinho
-     * 
-     * Get or create the current open cart.
+     * Obter carrinho atual
+     *
+     * Retorna o carrinho aberto do usuário atual. Se não existir, cria um novo.
+     *
+     * **Quem pode usar:** Administradores e gerentes.
+     *
+     * @response 200 scenario="Carrinho atual" {
+     *   "data": {
+     *     "id": 1,
+     *     "status": "cart",
+     *     "items_count": 5,
+     *     "items": [{"id": 1, "capa_id": 10, "customer_name": "João"}],
+     *     "created_by": {"id": 1, "name": "Admin"}
+     *   }
+     * }
      */
     public function index(): JsonResponse
     {
@@ -34,9 +64,24 @@ class ProducaoCarrinhoController extends Controller
     }
 
     /**
-     * POST /api/v1/producao/carrinho/validar
-     * 
-     * Validate capas before adding to cart (dry-run).
+     * Validar capas (dry-run)
+     *
+     * Valida quais capas podem ser adicionadas ao carrinho antes de adicionar.
+     * Útil para feedback ao usuário antes da ação real.
+     *
+     * **Quem pode usar:** Administradores e gerentes.
+     *
+     * @bodyParam capa_ids array required Lista de IDs das capas para validar. Example: [1, 2, 3]
+     * @bodyParam capa_ids.* integer required ID da capa. Example: 1
+     *
+     * @response 200 scenario="Validação" {
+     *   "data": {
+     *     "eligible": [{"id": 1, "customer": "João"}, {"id": 2, "customer": "Maria"}],
+     *     "blocked": [{"id": 3, "reason": "Já está em outro carrinho"}],
+     *     "eligible_count": 2,
+     *     "blocked_count": 1
+     *   }
+     * }
      */
     public function validate(Request $request): JsonResponse
     {
@@ -58,9 +103,35 @@ class ProducaoCarrinhoController extends Controller
     }
 
     /**
-     * POST /api/v1/producao/carrinho/itens
-     * 
-     * Add capas to the cart.
+     * Adicionar itens ao carrinho
+     *
+     * Adiciona capas personalizadas ao carrinho de produção.
+     * Capas bloqueadas são informadas na resposta.
+     *
+     * **Quem pode usar:** Administradores e gerentes.
+     *
+     * **Regras de negócio:**
+     * - Capas devem ter status "Encomenda Solicitada"
+     * - Capas já em outro carrinho/pedido são bloqueadas
+     * - Se nenhuma capa for adicionada, retorna 409
+     *
+     * @bodyParam capa_ids array required Lista de IDs das capas. Example: [1, 2, 3]
+     * @bodyParam capa_ids.* integer required ID da capa. Example: 1
+     *
+     * @response 200 scenario="Itens adicionados" {
+     *   "message": "3 item(ns) adicionado(s)",
+     *   "data": {
+     *     "added": [1, 2, 3],
+     *     "blocked": [],
+     *     "added_count": 3,
+     *     "blocked_count": 0
+     *   }
+     * }
+     *
+     * @response 409 scenario="Todos bloqueados" {
+     *   "message": "0 item(ns) adicionado(s), 3 bloqueado(s)",
+     *   "data": {"added": [], "blocked": [1, 2, 3], "added_count": 0, "blocked_count": 3}
+     * }
      */
     public function addItems(AddToCartRequest $request): JsonResponse
     {
@@ -89,9 +160,16 @@ class ProducaoCarrinhoController extends Controller
     }
 
     /**
-     * DELETE /api/v1/producao/carrinho/itens/{item}
-     * 
-     * Remove an item from the cart.
+     * Remover item do carrinho
+     *
+     * Remove um item específico do carrinho.
+     *
+     * **Quem pode usar:** Administradores e gerentes.
+     *
+     * @urlParam item integer required ID do item no carrinho. Example: 1
+     *
+     * @response 200 scenario="Item removido" {"message": "Item removido do carrinho."}
+     * @response 404 scenario="Item não encontrado" {"message": "Not found."}
      */
     public function removeItem(int $itemId): JsonResponse
     {
@@ -103,9 +181,19 @@ class ProducaoCarrinhoController extends Controller
     }
 
     /**
-     * DELETE /api/v1/producao/carrinho/itens
-     * 
-     * Remove multiple items from the cart (bulk).
+     * Remover múltiplos itens (bulk)
+     *
+     * Remove vários itens do carrinho de uma só vez.
+     *
+     * **Quem pode usar:** Administradores e gerentes.
+     *
+     * @bodyParam item_ids array required Lista de IDs dos itens. Example: [1, 2, 3]
+     * @bodyParam item_ids.* integer required ID do item. Example: 1
+     *
+     * @response 200 scenario="Itens removidos" {
+     *   "message": "3 item(ns) removido(s)",
+     *   "data": {"removed": [1, 2, 3], "errors": [], "removed_count": 3, "error_count": 0}
+     * }
      */
     public function bulkRemoveItems(Request $request): JsonResponse
     {
@@ -131,9 +219,21 @@ class ProducaoCarrinhoController extends Controller
     }
 
     /**
-     * POST /api/v1/producao/carrinho/fechar
-     * 
-     * Close the cart and create the production order.
+     * Fechar carrinho
+     *
+     * Fecha o carrinho atual e cria um pedido de produção.
+     * O carrinho deve ter pelo menos um item.
+     *
+     * **Quem pode usar:** Administradores e gerentes.
+     *
+     * @bodyParam observation string Observação para a fábrica. Example: Urgente - prazo curto
+     *
+     * @response 201 scenario="Pedido criado" {
+     *   "message": "Pedido de produção criado com sucesso.",
+     *   "data": {"id": 1, "status": "pending", "items_count": 5}
+     * }
+     *
+     * @response 422 scenario="Carrinho vazio" {"message": "O carrinho está vazio."}
      */
     public function close(CloseCartRequest $request): JsonResponse
     {
@@ -147,9 +247,14 @@ class ProducaoCarrinhoController extends Controller
     }
 
     /**
-     * DELETE /api/v1/producao/carrinho
-     * 
-     * Cancel the current open cart.
+     * Cancelar carrinho
+     *
+     * Cancela o carrinho aberto atual, liberando todos os itens.
+     *
+     * **Quem pode usar:** Administradores e gerentes.
+     *
+     * @response 200 scenario="Carrinho cancelado" {"message": "Carrinho cancelado."}
+     * @response 404 scenario="Sem carrinho aberto" {"message": "Nenhum carrinho aberto encontrado."}
      */
     public function cancel(): JsonResponse
     {
@@ -166,3 +271,4 @@ class ProducaoCarrinhoController extends Controller
         ]);
     }
 }
+

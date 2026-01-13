@@ -17,6 +17,20 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * @group Pedidos
+ *
+ * Gestão de pedidos de clientes nas lojas.
+ * Pedidos representam solicitações de clientes que podem incluir capas personalizadas ou produtos do catálogo.
+ *
+ * **Escopo de acesso:**
+ * - Super admins e admins globais: acesso a todos os pedidos
+ * - Outros usuários: apenas pedidos que criaram
+ *
+ * **Status do pedido:** 1=Novo, 2=Em produção, 3=Pronto, 4=Entregue, 5=Cancelado
+ *
+ * **Permissões:** Todos os usuários autenticados.
+ */
 class PedidoController extends Controller
 {
     public function __construct(
@@ -25,7 +39,35 @@ class PedidoController extends Controller
     }
 
     /**
-     * List pedidos with filters.
+     * Listar pedidos
+     *
+     * Retorna lista paginada de pedidos com filtros diversos.
+     *
+     * **Quem pode usar:** Todos os usuários autenticados.
+     *
+     * @queryParam store_id integer Filtrar por loja (apenas admins). Example: 1
+     * @queryParam user_id integer Filtrar por usuário (apenas admins). Example: 1
+     * @queryParam status integer|array Status do pedido (aceita array para múltiplos). Example: 1
+     * @queryParam customer_id integer Filtrar por cliente. Example: 1
+     * @queryParam initial_date string Data inicial. Example: 2026-01-01
+     * @queryParam final_date string Data final. Example: 2026-12-31
+     * @queryParam brand_id integer Filtrar por marca do dispositivo. Example: 1
+     * @queryParam model_id integer Filtrar por modelo do dispositivo. Example: 5
+     * @queryParam keyword string Busca em texto. Example: João
+     * @queryParam sort string Campo para ordenação. Example: created_at
+     * @queryParam direction string Direção: `asc` ou `desc`. Example: desc
+     * @queryParam per_page integer Itens por página (máx 100). Example: 15
+     *
+     * @response 200 scenario="Lista de pedidos" {
+     *   "data": [{
+     *     "id": 1,
+     *     "status": 1,
+     *     "selected_product": "Capa Personalizada",
+     *     "customer": {"id": 1, "name": "João"},
+     *     "store": {"id": 1, "name": "Loja Centro"}
+     *   }],
+     *   "meta": {"current_page": 1, "total": 50}
+     * }
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -94,7 +136,26 @@ class PedidoController extends Controller
     }
 
     /**
-     * Create a new pedido.
+     * Criar pedido
+     *
+     * Cria um novo pedido associado a um cliente.
+     *
+     * **Quem pode usar:** Todos os usuários autenticados.
+     *
+     * @bodyParam customer_id integer required ID do cliente. Example: 1
+     * @bodyParam customer_device_id integer ID do dispositivo do cliente. Example: 1
+     * @bodyParam store_id integer ID da loja (usa loja do usuário se não informado). Example: 1
+     * @bodyParam selected_product string Produto selecionado. Example: Capa Personalizada
+     * @bodyParam observation string Observações. Example: Cliente pediu urgência
+     * @bodyParam value number Valor do pedido. Example: 49.90
+     *
+     * @response 201 scenario="Pedido criado" {
+     *   "message": "Pedido criado com sucesso.",
+     *   "data": {"id": 1, "status": 1, "customer": {"name": "João"}}
+     * }
+     *
+     * @response 422 scenario="Sem loja" {"message": "Usuário não está vinculado a nenhuma loja."}
+     * @response 403 scenario="Sem acesso à loja" {"message": "Você não tem acesso a esta loja."}
      */
     public function store(StorePedidoRequest $request): JsonResponse
     {
@@ -134,7 +195,24 @@ class PedidoController extends Controller
     }
 
     /**
-     * Show pedido details.
+     * Detalhes do pedido
+     *
+     * Retorna detalhes completos do pedido.
+     *
+     * **Quem pode usar:** Usuário com acesso ao pedido.
+     *
+     * @urlParam pedido integer required ID do pedido. Example: 1
+     *
+     * @response 200 scenario="Detalhes do pedido" {
+     *   "data": {
+     *     "id": 1,
+     *     "status": 1,
+     *     "customer": {"id": 1, "name": "João"},
+     *     "status_history": [{"status": 1, "changed_by": "Admin", "created_at": "2026-01-13T15:00:00+00:00"}]
+     *   }
+     * }
+     *
+     * @response 403 scenario="Sem permissão" {"message": "Você não tem permissão para acessar este pedido."}
      */
     public function show(Request $request, Pedido $pedido): JsonResponse
     {
@@ -154,7 +232,21 @@ class PedidoController extends Controller
     }
 
     /**
-     * Update pedido.
+     * Atualizar pedido
+     *
+     * Atualiza dados do pedido. Se o status for alterado, registra no histórico.
+     *
+     * **Quem pode usar:** Usuário com acesso ao pedido.
+     *
+     * @urlParam pedido integer required ID do pedido. Example: 1
+     * @bodyParam selected_product string Produto selecionado. Example: Capa Nova
+     * @bodyParam observation string Observações. Example: Cliente alterou pedido
+     * @bodyParam status integer Novo status do pedido. Example: 2
+     *
+     * @response 200 scenario="Pedido atualizado" {
+     *   "message": "Pedido atualizado com sucesso.",
+     *   "data": {"id": 1, "status": 2}
+     * }
      */
     public function update(UpdatePedidoRequest $request, Pedido $pedido): JsonResponse
     {
@@ -187,7 +279,15 @@ class PedidoController extends Controller
     }
 
     /**
-     * Delete pedido (soft delete).
+     * Excluir pedido
+     *
+     * Remove um pedido (soft delete).
+     *
+     * **Quem pode usar:** Usuário com acesso ao pedido.
+     *
+     * @urlParam pedido integer required ID do pedido. Example: 1
+     *
+     * @response 200 scenario="Pedido excluído" {"message": "Pedido excluído com sucesso."}
      */
     public function destroy(Request $request, Pedido $pedido): JsonResponse
     {
@@ -201,7 +301,20 @@ class PedidoController extends Controller
     }
 
     /**
-     * Update pedido status.
+     * Atualizar status do pedido
+     *
+     * Atualiza apenas o status do pedido com registro no histórico.
+     *
+     * **Quem pode usar:** Usuário com acesso ao pedido.
+     *
+     * @urlParam pedido integer required ID do pedido. Example: 1
+     * @bodyParam status integer required Novo status. Example: 3
+     * @bodyParam reason string Motivo da alteração. Example: Cliente confirmou recebimento
+     *
+     * @response 200 scenario="Status atualizado" {
+     *   "message": "Status atualizado com sucesso.",
+     *   "data": {"id": 1, "status": 3}
+     * }
      */
     public function updateStatus(UpdateStatusPedidoRequest $request, Pedido $pedido): JsonResponse
     {
@@ -227,7 +340,22 @@ class PedidoController extends Controller
     }
 
     /**
-     * Bulk update status (admin only).
+     * Atualização em lote de status
+     *
+     * Atualiza o status de múltiplos pedidos de uma só vez.
+     *
+     * **Quem pode usar:** Apenas administradores.
+     *
+     * @bodyParam ids array required Lista de IDs dos pedidos. Example: [1, 2, 3]
+     * @bodyParam ids.* integer required ID do pedido. Example: 1
+     * @bodyParam status integer required Novo status. Example: 4
+     *
+     * @response 200 scenario="Atualização concluída" {
+     *   "message": "Atualização em lote concluída. 3 atualizados, 0 ignorados.",
+     *   "data": {"updated": 3, "skipped": 0, "updated_ids": [1, 2, 3], "skipped_ids": []}
+     * }
+     *
+     * @response 403 scenario="Sem permissão" {"message": "Apenas administradores podem alterar status em lote."}
      */
     public function bulkStatus(BulkStatusPedidoRequest $request): JsonResponse
     {
@@ -270,3 +398,4 @@ class PedidoController extends Controller
         }
     }
 }
+
