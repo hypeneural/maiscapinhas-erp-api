@@ -201,17 +201,25 @@ class WhatsAppNotificationService
         $product = $capa->selected_product ?? 'Capa Personalizada';
         $storeName = $capa->store?->name ?? 'Nossa Loja';
         $storeCity = $capa->store?->city ?? '';
+        $sellerName = $capa->user?->name ?? null;
         $orderId = $capa->id;
 
         $storeInfo = $storeCity ? "{$storeName} - {$storeCity}" : $storeName;
 
-        return "Olá {$customerName}! 👋\n\n" .
+        $message = "Olá {$customerName}! 👋\n\n" .
             "Sua capa personalizada está pronta para retirada! 🎉\n\n" .
             "📦 *Produto:* {$product}\n" .
             "🏪 *Loja:* {$storeInfo}\n" .
-            "📋 *Pedido:* #{$orderId}\n\n" .
-            "Aguardamos sua visita!\n" .
+            "📋 *Pedido:* #{$orderId}\n";
+
+        if ($sellerName) {
+            $message .= "👤 *Você foi atendido por:* {$sellerName}\n";
+        }
+
+        $message .= "\nAguardamos sua visita!\n" .
             "*+MaisCapinhas*";
+
+        return $message;
     }
 }
 
