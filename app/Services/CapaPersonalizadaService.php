@@ -55,8 +55,8 @@ class CapaPersonalizadaService
         // Send WhatsApp notification if requested and status is "Disponível na Loja"
         $whatsappNotification = null;
         if ($notifyWhatsApp && $newStatus === CapaPersonalizadaStatus::DISPONIVEL_LOJA) {
-            // Load customer relationship if not loaded
-            $capa->loadMissing(['customer', 'store']);
+            // Load customer, store and user (seller) relationships if not loaded
+            $capa->loadMissing(['customer', 'store', 'user']);
             $whatsappNotification = $this->whatsAppService->sendCapaAvailableNotification($capa);
         }
 
