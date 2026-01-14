@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\WhatsApp;
 
+use App\Models\CapaPersonalizada;
 use App\Models\User;
 use App\Models\WhatsAppInstance;
 use RuntimeException;
@@ -127,4 +128,90 @@ class WhatsAppNotificationService
             "Este código expira em *15 minutos*.\n\n" .
             "Se você não solicitou este código, ignore esta mensagem.";
     }
+
+    // ========================================
+    // Capa Personalizada Notifications
+    // ========================================
+
+    /**
+     * Send notification when capa personalizada is available for pickup.
+     *
+     * @return array{sent: bool, phone: ?string, error: ?string}
+     */
+    public function sendCapaAvailableNotification(
+        CapaPersonalizada $capa,
+        ?WhatsAppInstance $instance = null
+    ): array {
+        $customer = $capa->customer;
+
+        if (!$customer || !$customer->phone) {
+            return [
+                'sent' => false,
+                'phone' => null,
+                'error' => 'Cliente não possui telefone cadastrado.',
+            ];
+        }
+
+        $instance = $instance ?? $this->resolveInstanceForCapa($capa);
+        if (!$instance) {
+            return [
+                'sent' => false,
+                'phone' => null,
+                'error' => 'Nenhuma instância WhatsApp ativa disponível.',
+            ];
+        }
+
+        $phone = $this->normalizePhoneNumber($customer->phone);
+        $message = $this->buildCapaAvailableMessage($capa);
+
+        try {
+            $client = $this->clientFactory->make($instance);
+            $result = $client->sendText($phone, $message);
+
+            $sent = $result['ok'] ?? false;
+
+            return [
+                'sent' => $sent,
+                'phone' => $this->maskPhoneNumber($phone),
+                'error' => !$sent ? ($result['data']['message'] ?? 'Erro ao enviar mensagem.') : null,
+            ];
+        } catch (\Exception $e) {
+            return [
+                'sent' => false,
+                'phone' => $this->maskPhoneNumber($phone),
+                'error' => 'Erro de conexão com WhatsApp: ' . $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Resolve WhatsApp instance for a capa (store -> global fallback).
+     */
+    private function resolveInstanceForCapa(CapaPersonalizada $capa): ?WhatsAppInstance
+    {
+        return WhatsAppInstance::resolveForContext(null, $capa->store_id);
+    }
+
+    /**
+     * Build message for capa available notification.
+     */
+    private function buildCapaAvailableMessage(CapaPersonalizada $capa): string
+    {
+        $customerName = $capa->customer?->name ?? 'Cliente';
+        $product = $capa->selected_product ?? 'Capa Personalizada';
+        $storeName = $capa->store?->name ?? 'Nossa Loja';
+        $storeCity = $capa->store?->city ?? '';
+        $orderId = $capa->id;
+
+        $storeInfo = $storeCity ? "{$storeName} - {$storeCity}" : $storeName;
+
+        return "Olá {$customerName}! 👋\n\n" .
+            "Sua capa personalizada está pronta para retirada! 🎉\n\n" .
+            "📦 *Produto:* {$product}\n" .
+            "🏪 *Loja:* {$storeInfo}\n" .
+            "📋 *Pedido:* #{$orderId}\n\n" .
+            "Aguardamos sua visita!\n" .
+            "*+MaisCapinhas*";
+    }
 }
+

@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Enums\CapaPersonalizadaStatus;
 use App\Models\CapaPersonalizada;
 use App\Models\User;
+use App\Services\WhatsApp\WhatsAppNotificationService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -14,6 +15,11 @@ use Illuminate\Support\Str;
 
 class CapaPersonalizadaService
 {
+    public function __construct(
+        private readonly WhatsAppNotificationService $whatsAppService,
+    ) {
+    }
+
     /**
      * Create a new capa personalizada.
      */
@@ -28,12 +34,15 @@ class CapaPersonalizadaService
 
     /**
      * Update capa status.
+     *
+     * @return array{capa: CapaPersonalizada, whatsapp_notification: ?array}
      */
     public function updateStatus(
         CapaPersonalizada $capa,
         int $newStatusValue,
-        User $changedBy
-    ): CapaPersonalizada {
+        User $changedBy,
+        bool $notifyWhatsApp = false
+    ): array {
         $newStatus = CapaPersonalizadaStatus::from($newStatusValue);
 
         $capa->update([
@@ -41,7 +50,20 @@ class CapaPersonalizadaService
             'updated_by_id' => $changedBy->id,
         ]);
 
-        return $capa->fresh();
+        $capa = $capa->fresh();
+
+        // Send WhatsApp notification if requested and status is "Disponível na Loja"
+        $whatsappNotification = null;
+        if ($notifyWhatsApp && $newStatus === CapaPersonalizadaStatus::DISPONIVEL_LOJA) {
+            // Load customer relationship if not loaded
+            $capa->loadMissing(['customer', 'store']);
+            $whatsappNotification = $this->whatsAppService->sendCapaAvailableNotification($capa);
+        }
+
+        return [
+            'capa' => $capa,
+            'whatsapp_notification' => $whatsappNotification,
+        ];
     }
 
     /**
@@ -75,7 +97,7 @@ class CapaPersonalizadaService
                         continue;
                     }
 
-                    $this->updateStatus($capa, $newStatus->value, $changedBy);
+                    $this->updateStatus($capa, $newStatus->value, $changedBy, false);
                     $results['updated']++;
                 } catch (\Exception $e) {
                     $results['errors'][] = "Erro na capa {$id}: " . $e->getMessage();

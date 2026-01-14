@@ -318,37 +318,60 @@ class CapaPersonalizadaController extends Controller
      * Atualizar status da capa
      *
      * Atualiza o status de uma capa personalizada.
+     * Quando o status é alterado para "Disponível na Loja" (3), é possível
+     * enviar uma notificação via WhatsApp para o cliente.
      *
      * **Quem pode usar:** Usuário com acesso à capa.
      *
      * @urlParam capasPersonalizada integer required ID da capa. Example: 1
-     * @bodyParam status integer required Novo status (1-6). Example: 3
+     * @bodyParam status integer required Novo status (1-7). Example: 3
+     * @bodyParam notify_whatsapp boolean Enviar notificação WhatsApp ao cliente (apenas para status 3). Example: true
      *
      * @response 200 scenario="Status atualizado" {
      *   "message": "Status atualizado com sucesso.",
      *   "data": {"id": 1, "status": 3}
+     * }
+     *
+     * @response 200 scenario="Status atualizado com notificação" {
+     *   "message": "Status atualizado com sucesso.",
+     *   "data": {"id": 1, "status": 3},
+     *   "whatsapp_notification": {"sent": true, "phone": "****9999"}
+     * }
+     *
+     * @response 200 scenario="Notificação falhou" {
+     *   "message": "Status atualizado com sucesso.",
+     *   "data": {"id": 1, "status": 3},
+     *   "whatsapp_notification": {"sent": false, "phone": null, "error": "Cliente não possui telefone cadastrado."}
      * }
      */
     public function updateStatus(UpdateStatusCapaRequest $request, CapaPersonalizada $capasPersonalizada): JsonResponse
     {
         $this->authorizeAccess($request, $capasPersonalizada);
 
-        $capa = $this->capaService->updateStatus(
+        $result = $this->capaService->updateStatus(
             $capasPersonalizada,
             $request->validated()['status'],
-            $request->user()
+            $request->user(),
+            $request->boolean('notify_whatsapp', false)
         );
 
-        return response()->json([
+        $response = [
             'message' => 'Status atualizado com sucesso.',
-            'data' => new CapaPersonalizadaResource($capa->load([
+            'data' => new CapaPersonalizadaResource($result['capa']->load([
                 'store',
                 'user',
                 'customer',
                 'customerDevice.phoneModel.brand',
                 'receivedBy'
             ])),
-        ]);
+        ];
+
+        // Include WhatsApp notification result if requested
+        if ($result['whatsapp_notification'] !== null) {
+            $response['whatsapp_notification'] = $result['whatsapp_notification'];
+        }
+
+        return response()->json($response);
     }
 
     /**
