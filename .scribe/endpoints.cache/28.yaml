@@ -170,7 +170,7 @@ endpoints:
         name: id
         description: 'The ID of the pedido.'
         required: true
-        example: 16
+        example: 5
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -188,7 +188,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 16
+      id: 5
       pedido: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -266,7 +266,7 @@ endpoints:
         name: pedido_id
         description: 'The ID of the pedido.'
         required: true
-        example: 16
+        example: 5
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -284,7 +284,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      pedido_id: 16
+      pedido_id: 5
       pedido: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -358,7 +358,7 @@ endpoints:
         name: pedido_id
         description: 'The ID of the pedido.'
         required: true
-        example: 16
+        example: 5
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -376,7 +376,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      pedido_id: 16
+      pedido_id: 5
       pedido: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -458,7 +458,7 @@ endpoints:
         name: pedido_id
         description: 'The ID of the pedido.'
         required: true
-        example: 16
+        example: 5
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -476,7 +476,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      pedido_id: 16
+      pedido_id: 5
       pedido: 1
     queryParameters: []
     cleanQueryParameters: []

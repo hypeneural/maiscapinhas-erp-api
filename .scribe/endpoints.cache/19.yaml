@@ -256,7 +256,7 @@ endpoints:
         name: id
         description: 'The ID of the phone brand.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -274,7 +274,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 16
+      id: 1
       phoneBrand: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -334,7 +334,7 @@ endpoints:
         name: id
         description: 'The ID of the phone brand.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -352,7 +352,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 16
+      id: 1
       phoneBrand: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -451,7 +451,7 @@ endpoints:
         name: id
         description: 'The ID of the phone brand.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -469,7 +469,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 16
+      id: 1
       phoneBrand: 1
     queryParameters: []
     cleanQueryParameters: []

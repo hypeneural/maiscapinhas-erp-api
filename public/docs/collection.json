@@ -10,7 +10,7 @@
     ],
     "info": {
         "name": "MaisCapinhas ERP API - Documenta\u00e7\u00e3o",
-        "_postman_id": "015b1dca-0a17-4486-bde4-b5ad582d74a1",
+        "_postman_id": "90b569a5-f232-43eb-bf30-1e41f9ef3cca",
         "description": "API REST para gest\u00e3o de vendas, metas, fechamento de caixa, b\u00f4nus e comiss\u00f5es do ERP MaisCapinhas.",
         "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json",
         "version": "1.0.0"
@@ -191,6 +191,62 @@
                     ]
                 },
                 {
+                    "name": "Solicitar recupera\u00e7\u00e3o de senha via WhatsApp",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/auth\/forgot-password\/whatsapp",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/forgot-password\/whatsapp"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"email\":\"joao@maiscapinhas.com.br\",\"whatsapp\":\"48999999999\"}"
+                        },
+                        "description": "Envia um c\u00f3digo de 6 d\u00edgitos via WhatsApp para redefinir a senha.\nO c\u00f3digo expira em 15 minutos.\n\n**Quem pode usar:** Qualquer usu\u00e1rio com email ou WhatsApp cadastrado.\n\n**Rate Limit:** 3 tentativas por minuto por IP.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"message\": \"C\u00f3digo enviado via WhatsApp.\",\n    \"phone_masked\": \"****9999\",\n    \"expires_in_minutes\": 15\n  },\n  \"meta\": { \"timestamp\": \"2026-01-13T12:00:00Z\" }\n}",
+                            "name": "C\u00f3digo enviado"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n  \"message\": \"Usu\u00e1rio n\u00e3o encontrado.\"\n}",
+                            "name": "Usu\u00e1rio n\u00e3o encontrado"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n  \"message\": \"Usu\u00e1rio n\u00e3o possui WhatsApp cadastrado.\"\n}",
+                            "name": "Usu\u00e1rio sem WhatsApp"
+                        },
+                        {
+                            "header": [],
+                            "code": 502,
+                            "body": "{\n  \"message\": \"Falha ao enviar c\u00f3digo via WhatsApp. Tente novamente.\"\n}",
+                            "name": "Falha ao enviar"
+                        }
+                    ]
+                },
+                {
                     "name": "Redefinir senha",
                     "request": {
                         "url": {
@@ -231,6 +287,50 @@
                             "code": 422,
                             "body": "{\n  \"message\": \"Token de recupera\u00e7\u00e3o inv\u00e1lido ou expirado.\"\n}",
                             "name": "Token inv\u00e1lido"
+                        }
+                    ]
+                },
+                {
+                    "name": "Redefinir senha com c\u00f3digo WhatsApp",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/auth\/reset-password\/code",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/reset-password\/code"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"code\":\"123456\",\"email\":\"joao@maiscapinhas.com.br\",\"password\":\"novaSenha123\",\"password_confirmation\":\"novaSenha123\"}"
+                        },
+                        "description": "Redefine a senha usando o c\u00f3digo de 6 d\u00edgitos recebido via WhatsApp.\n\n**Quem pode usar:** Qualquer usu\u00e1rio com c\u00f3digo v\u00e1lido.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": { \"message\": \"Senha alterada com sucesso.\" },\n  \"meta\": { \"timestamp\": \"2026-01-13T12:00:00Z\" }\n}",
+                            "name": "Senha alterada"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n  \"message\": \"C\u00f3digo inv\u00e1lido ou expirado.\"\n}",
+                            "name": "C\u00f3digo inv\u00e1lido"
                         }
                     ]
                 },
@@ -513,7 +613,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the store."
                                 },
                                 {
@@ -572,7 +672,7 @@
                                 {
                                     "id": "store_id",
                                     "key": "store_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the store."
                                 },
                                 {
@@ -621,7 +721,7 @@
                                 {
                                     "id": "store_id",
                                     "key": "store_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the store."
                                 },
                                 {
@@ -696,7 +796,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-13T20:33:54\"}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-14T01:18:08\"}"
                         },
                         "description": "Retorna m\u00e9tricas completas para o vendedor, incluindo:\n- Vendas pessoais do dia\n- **Gamifica\u00e7\u00e3o de B\u00f4nus** - quanto falta para o pr\u00f3ximo n\u00edvel\n- **Proje\u00e7\u00e3o de Comiss\u00e3o** - tier atual e potencial\n- **Pace Di\u00e1rio** - ritmo comparado \u00e0 m\u00e9dia\n\nEste dashboard \u00e9 projetado para **motivar** o vendedor mostrando\nmetas tang\u00edveis e progresso em tempo real.\n\n**Quem pode usar:** Vendedores e n\u00edveis superiores.\n\n**M\u00e9tricas retornadas:**\n| M\u00e9trica | Descri\u00e7\u00e3o |\n|---------|-----------|\n| `my_sales` | Quantidade e valor total das vendas do dia |\n| `store_sales` | Total de vendas da loja (para compara\u00e7\u00e3o) |\n| `bonus_gamification` | Gap para pr\u00f3ximo b\u00f4nus, b\u00f4nus atual |\n| `monthly_commission` | Tier atual, proje\u00e7\u00e3o, potencial |\n| `daily_pace` | Ritmo vs m\u00e9dia di\u00e1ria |\n| `my_shifts` | Turnos do dia com status |"
                     },
@@ -744,7 +844,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-13T20:33:54\"}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-14T01:18:08\"}"
                         },
                         "description": "Retorna m\u00e9tricas para confer\u00eancia de caixa e auditoria,\nincluindo fechamentos pendentes e ranking de vendedores.\n\n**Foco:** Integridade de caixa e aprova\u00e7\u00e3o de fechamentos.\n\n**Quem pode usar:** Conferentes, Gerentes e Admins.\n\n**M\u00e9tricas retornadas:**\n| M\u00e9trica | Descri\u00e7\u00e3o |\n|---------|-----------|\n| `pending_closings` | Fechamentos aguardando aprova\u00e7\u00e3o |\n| `pending_count` | Quantidade de pendentes |\n| `store_sales` | Total de vendas da loja no dia |\n| `shifts_today` | Resumo por status (open\/closed\/pending) |\n| `top_sellers` | Top 5 vendedores do dia |"
                     },
@@ -858,7 +958,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"seller_id\":16,\"from\":\"2026-01-13T20:33:54\",\"to\":\"2026-01-13T20:33:54\",\"per_page\":22}"
+                            "raw": "{\"store_id\":16,\"seller_id\":16,\"from\":\"2026-01-14T01:18:06\",\"to\":\"2026-01-14T01:18:06\",\"per_page\":22}"
                         },
                         "description": "Retorna a lista paginada de vendas das lojas \u00e0s quais o\nusu\u00e1rio tem acesso, com diversos filtros dispon\u00edveis.\n\n**Visibilidade:**\n- Vendedor: v\u00ea vendas de todas as lojas onde trabalha\n- Gerente: v\u00ea todas as vendas das lojas que gerencia\n- Admin: v\u00ea todas as vendas do sistema\n\n**Filtros dispon\u00edveis:**\n- `store_id` - Filtrar por loja espec\u00edfica\n- `seller_id` - Filtrar por vendedor\n- `from`\/`to` - Per\u00edodo de datas\n\n**Ordena\u00e7\u00e3o:** Por data de venda, mais recentes primeiro.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado (v\u00ea apenas suas lojas)."
                     },
@@ -1124,7 +1224,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-13T20:33:54\",\"status\":\"open\",\"per_page\":22}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-14T01:18:07\",\"status\":\"pending\",\"per_page\":22}"
                         },
                         "description": "Retorna os turnos de caixa das lojas \u00e0s quais o usu\u00e1rio tem acesso,\ncom filtros por loja, data e status.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado.\n\n**Filtros dispon\u00edveis:**\n- `store_id` - Filtrar por loja espec\u00edfica\n- `date` - Filtrar por data espec\u00edfica (YYYY-MM-DD)\n- `status` - Filtrar por status (open, closed, pending)\n\n**C\u00f3digos de turno:**\n- `1` ou `M` - Manh\u00e3\n- `2` ou `T` - Tarde\n- `3` ou `N` - Noite"
                     },
@@ -1674,14 +1774,10 @@
                                 {
                                     "key": "content-type",
                                     "value": "application\/json"
-                                },
-                                {
-                                    "key": "vary",
-                                    "value": "Origin"
                                 }
                             ],
-                            "code": 401,
-                            "body": "{\"message\":\"Unauthenticated.\"}",
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/rules\/bonus could not be found.\"\n}",
                             "name": ""
                         }
                     ]
@@ -1708,7 +1804,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-13T20:33:54\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-14T01:18:07\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
                         },
                         "description": "POST \/api\/v1\/rules\/bonus"
                     },
@@ -1726,7 +1822,7 @@
                                 {
                                     "id": "rule_id",
                                     "key": "rule_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the rule."
                                 }
                             ]
@@ -1755,14 +1851,10 @@
                                 {
                                     "key": "content-type",
                                     "value": "application\/json"
-                                },
-                                {
-                                    "key": "vary",
-                                    "value": "Origin"
                                 }
                             ],
-                            "code": 401,
-                            "body": "{\"message\":\"Unauthenticated.\"}",
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/rules\/bonus\/1 could not be found.\"\n}",
                             "name": ""
                         }
                     ]
@@ -1779,7 +1871,7 @@
                                 {
                                     "id": "rule_id",
                                     "key": "rule_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the rule."
                                 }
                             ]
@@ -1797,7 +1889,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-13T20:33:54\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-14T01:18:07\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
                         },
                         "description": "PUT \/api\/v1\/rules\/bonus\/{rule}"
                     },
@@ -1815,7 +1907,7 @@
                                 {
                                     "id": "rule_id",
                                     "key": "rule_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the rule."
                                 }
                             ]
@@ -1875,14 +1967,10 @@
                                 {
                                     "key": "content-type",
                                     "value": "application\/json"
-                                },
-                                {
-                                    "key": "vary",
-                                    "value": "Origin"
                                 }
                             ],
-                            "code": 401,
-                            "body": "{\"message\":\"Unauthenticated.\"}",
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/rules\/commission could not be found.\"\n}",
                             "name": ""
                         }
                     ]
@@ -1909,7 +1997,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-13T20:33:54\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-14T01:18:07\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
                         },
                         "description": "POST \/api\/v1\/rules\/commission"
                     },
@@ -1927,7 +2015,7 @@
                                 {
                                     "id": "rule_id",
                                     "key": "rule_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the rule."
                                 }
                             ]
@@ -1956,14 +2044,10 @@
                                 {
                                     "key": "content-type",
                                     "value": "application\/json"
-                                },
-                                {
-                                    "key": "vary",
-                                    "value": "Origin"
                                 }
                             ],
-                            "code": 401,
-                            "body": "{\"message\":\"Unauthenticated.\"}",
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/rules\/commission\/1 could not be found.\"\n}",
                             "name": ""
                         }
                     ]
@@ -1980,7 +2064,7 @@
                                 {
                                     "id": "rule_id",
                                     "key": "rule_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the rule."
                                 }
                             ]
@@ -1998,7 +2082,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-13T20:33:54\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-14T01:18:07\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
                         },
                         "description": "PUT \/api\/v1\/rules\/commission\/{rule}"
                     },
@@ -2016,7 +2100,7 @@
                                 {
                                     "id": "rule_id",
                                     "key": "rule_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the rule."
                                 }
                             ]
@@ -2076,14 +2160,10 @@
                                 {
                                     "key": "content-type",
                                     "value": "application\/json"
-                                },
-                                {
-                                    "key": "vary",
-                                    "value": "Origin"
                                 }
                             ],
-                            "code": 401,
-                            "body": "{\"message\":\"Unauthenticated.\"}",
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/goals\/monthly could not be found.\"\n}",
                             "name": ""
                         }
                     ]
@@ -2157,14 +2237,10 @@
                                 {
                                     "key": "content-type",
                                     "value": "application\/json"
-                                },
-                                {
-                                    "key": "vary",
-                                    "value": "Origin"
                                 }
                             ],
-                            "code": 401,
-                            "body": "{\"message\":\"Unauthenticated.\"}",
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/goals\/monthly\/16 could not be found.\"\n}",
                             "name": ""
                         }
                     ]
@@ -2302,7 +2378,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"from\":\"2026-01-13T20:33:54\",\"to\":\"2026-01-13T20:33:54\",\"per_page\":22}"
+                            "raw": "{\"store_id\":16,\"from\":\"2026-01-14T01:18:08\",\"to\":\"2026-01-14T01:18:08\",\"per_page\":22}"
                         },
                         "description": "GET \/api\/v1\/finance\/bonus?store_id=&from=&to="
                     },
@@ -2316,14 +2392,10 @@
                                 {
                                     "key": "content-type",
                                     "value": "application\/json"
-                                },
-                                {
-                                    "key": "vary",
-                                    "value": "Origin"
                                 }
                             ],
-                            "code": 401,
-                            "body": "{\"message\":\"Unauthenticated.\"}",
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/finance\/bonus could not be found.\"\n}",
                             "name": ""
                         }
                     ]
@@ -2401,7 +2473,7 @@
                                 {
                                     "id": "seller_id",
                                     "key": "seller_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the seller."
                                 },
                                 {
@@ -2425,7 +2497,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"from\":\"2026-01-13T20:33:54\",\"to\":\"2026-01-13T20:33:54\"}"
+                            "raw": "{\"from\":\"2026-01-14T01:18:08\",\"to\":\"2026-01-14T01:18:08\"}"
                         },
                         "description": "Retorna o hist\u00f3rico de b\u00f4nus de um vendedor espec\u00edfico com resumo.\n\n**Quem pode usar:** O pr\u00f3prio vendedor ou Gerentes\/Admins."
                     },
@@ -2474,14 +2546,10 @@
                                 {
                                     "key": "content-type",
                                     "value": "application\/json"
-                                },
-                                {
-                                    "key": "vary",
-                                    "value": "Origin"
                                 }
                             ],
-                            "code": 401,
-                            "body": "{\"message\":\"Unauthenticated.\"}",
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/finance\/commission could not be found.\"\n}",
                             "name": ""
                         }
                     ]
@@ -2505,7 +2573,7 @@
                                 {
                                     "id": "seller_id",
                                     "key": "seller_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the seller."
                                 },
                                 {
@@ -2543,14 +2611,10 @@
                                 {
                                     "key": "content-type",
                                     "value": "application\/json"
-                                },
-                                {
-                                    "key": "vary",
-                                    "value": "Origin"
                                 }
                             ],
-                            "code": 401,
-                            "body": "{\"message\":\"Unauthenticated.\"}",
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/finance\/commission\/seller\/1 could not be found.\"\n}",
                             "name": ""
                         }
                     ]
@@ -2574,7 +2638,7 @@
                                 {
                                     "id": "seller_id",
                                     "key": "seller_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the seller."
                                 },
                                 {
@@ -2639,7 +2703,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-13T20:33:54\"}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-14T01:18:08\"}"
                         },
                         "description": "GET \/api\/v1\/analytics\/people\/shift?store_id=&date="
                     },
@@ -2653,14 +2717,10 @@
                                 {
                                     "key": "content-type",
                                     "value": "application\/json"
-                                },
-                                {
-                                    "key": "vary",
-                                    "value": "Origin"
                                 }
                             ],
-                            "code": 401,
-                            "body": "{\"message\":\"Unauthenticated.\"}",
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/analytics\/people\/shift could not be found.\"\n}",
                             "name": ""
                         }
                     ]
@@ -2687,7 +2747,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-13T20:33:54\",\"shift_code\":\"N\",\"in_count\":39,\"out_count\":84,\"staff_in\":12,\"staff_out\":77}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-14T01:18:08\",\"shift_code\":\"M\",\"in_count\":39,\"out_count\":84,\"staff_in\":12,\"staff_out\":77}"
                         },
                         "description": "POST \/api\/v1\/analytics\/people\/shift"
                     },
@@ -2776,7 +2836,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"from\":\"2026-01-13T20:33:55\",\"to\":\"2026-01-13T20:33:55\",\"causer_id\":16,\"event\":\"n\",\"log_name\":\"g\",\"store_id\":16,\"subject_type\":\"n\",\"subject_id\":16,\"per_page\":22}"
+                            "raw": "{\"from\":\"2026-01-14T01:18:10\",\"to\":\"2026-01-14T01:18:10\",\"causer_id\":16,\"event\":\"n\",\"log_name\":\"g\",\"store_id\":16,\"subject_type\":\"n\",\"subject_id\":16,\"per_page\":22}"
                         },
                         "description": "Retorna lista paginada de logs com suporte a diversos filtros.\n\n**Filtros dispon\u00edveis:**\n- `from`\/`to` - Per\u00edodo de datas\n- `causer_id` - ID do usu\u00e1rio que executou a a\u00e7\u00e3o\n- `event` - Nome do evento (suporta wildcard: `auth.*`)\n- `log_name` - Dom\u00ednio: auth, cash, rules, goals\n- `store_id` - Loja relacionada\n- `subject_type` - Tipo de entidade (CashClosing, BonusRule, etc)\n- `subject_id` - ID da entidade\n\n**Ordena\u00e7\u00e3o:** Por data de cria\u00e7\u00e3o, mais recentes primeiro.\n\n**Quem pode usar:** Apenas administradores."
                     },
@@ -2830,7 +2890,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"from\":\"2026-01-13T20:33:55\",\"to\":\"2026-01-13T20:33:55\"}"
+                            "raw": "{\"from\":\"2026-01-14T01:18:10\",\"to\":\"2026-01-14T01:18:10\"}"
                         },
                         "description": "Retorna estat\u00edsticas agregadas dos logs para overview.\n\n**Quem pode usar:** Apenas administradores."
                     },
@@ -2855,7 +2915,7 @@
                                 {
                                     "id": "auditLog_id",
                                     "key": "auditLog_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the auditLog."
                                 },
                                 {
@@ -2968,7 +3028,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"name\":\"Mais Capinhas Shopping Center\",\"city\":\"Florian\u00f3polis\",\"active\":true,\"codigo\":\"gzmiyvdljnikhway\",\"bio_enabled\":false,\"address\":\"k\",\"neighborhood\":\"c\",\"state\":\"my\",\"zip_code\":\"uwpwlv\",\"latitude\":-90,\"longitude\":-180,\"phone\":\"rsitcpscqldzsnrw\",\"whatsapp\":\"tujwvlxjklqppwqb\",\"instagram\":\"e\",\"opening_hours\":{\"tz\":\"America\\\/Matamoros\",\"weekly\":{\"*\":[[]]},\"exceptions\":[{\"date\":\"2026-01-13\",\"closed\":true,\"reason\":\"o\"}]},\"cnpj\":\"tnnoqitpxntltcvi\",\"troco_padrao\":15}"
+                            "raw": "{\"name\":\"Mais Capinhas Shopping Center\",\"city\":\"Florian\u00f3polis\",\"active\":true,\"codigo\":\"gzmiyvdljnikhway\",\"bio_enabled\":false,\"address\":\"k\",\"neighborhood\":\"c\",\"state\":\"my\",\"zip_code\":\"uwpwlv\",\"latitude\":-90,\"longitude\":-180,\"phone\":\"rsitcpscqldzsnrw\",\"whatsapp\":\"tujwvlxjklqppwqb\",\"instagram\":\"e\",\"opening_hours\":{\"tz\":\"America\\\/Matamoros\",\"weekly\":{\"*\":[[]]},\"exceptions\":[{\"date\":\"2026-01-14\",\"closed\":true,\"reason\":\"o\"}]},\"cnpj\":\"tnnoqitpxntltcvi\",\"troco_padrao\":15}"
                         },
                         "description": "Cadastra uma nova loja (ponto de venda) no sistema.\n\nAp\u00f3s criar a loja, voc\u00ea deve:\n1. Vincular usu\u00e1rios \u00e0 loja (via endpoint de v\u00ednculos)\n2. Configurar metas mensais (via `\/goals\/monthly`)\n3. Opcionalmente criar regras espec\u00edficas de b\u00f4nus\/comiss\u00e3o\n\n**Quem pode usar:** Apenas administradores."
                     },
@@ -2993,7 +3053,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the store."
                                 },
                                 {
@@ -3039,7 +3099,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the store."
                                 },
                                 {
@@ -3063,7 +3123,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"name\":\"Mais Capinhas Tijucas - Centro\",\"city\":\"Tijucas\",\"active\":true,\"codigo\":\"gzmiyvdljnikhway\",\"bio_enabled\":true,\"address\":\"k\",\"neighborhood\":\"c\",\"state\":\"my\",\"zip_code\":\"uwpwlv\",\"latitude\":-90,\"longitude\":-180,\"phone\":\"rsitcpscqldzsnrw\",\"whatsapp\":\"tujwvlxjklqppwqb\",\"instagram\":\"e\",\"opening_hours\":{\"tz\":\"America\\\/Matamoros\",\"weekly\":{\"*\":[[]]},\"exceptions\":[{\"date\":\"2026-01-13\",\"closed\":true,\"reason\":\"o\"}]},\"cnpj\":\"tnnoqitpxntltcvi\",\"troco_padrao\":15}"
+                            "raw": "{\"name\":\"Mais Capinhas Tijucas - Centro\",\"city\":\"Tijucas\",\"active\":true,\"codigo\":\"gzmiyvdljnikhway\",\"bio_enabled\":false,\"address\":\"k\",\"neighborhood\":\"c\",\"state\":\"my\",\"zip_code\":\"uwpwlv\",\"latitude\":-90,\"longitude\":-180,\"phone\":\"rsitcpscqldzsnrw\",\"whatsapp\":\"tujwvlxjklqppwqb\",\"instagram\":\"e\",\"opening_hours\":{\"tz\":\"America\\\/Matamoros\",\"weekly\":{\"*\":[[]]},\"exceptions\":[{\"date\":\"2026-01-14\",\"closed\":true,\"reason\":\"o\"}]},\"cnpj\":\"tnnoqitpxntltcvi\",\"troco_padrao\":15}"
                         },
                         "description": "Atualiza informa\u00e7\u00f5es de uma loja existente.\nApenas os campos informados ser\u00e3o alterados.\n\n**Quem pode usar:** Apenas administradores."
                     },
@@ -3088,7 +3148,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the store."
                                 },
                                 {
@@ -3285,7 +3345,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the user."
                                 },
                                 {
@@ -3337,7 +3397,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the user."
                                 },
                                 {
@@ -3361,7 +3421,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"name\":\"Jo\u00e3o da Silva Atualizado\",\"email\":\"joao.novo@maiscapinhas.com.br\",\"password\":\"novasenha123\",\"active\":true,\"is_super_admin\":false,\"zip_code\":\"vdljnikh\",\"street\":\"w\",\"number\":\"aykcmyuwpwlvqwrs\",\"complement\":\"i\",\"neighborhood\":\"t\",\"city\":\"c\",\"state\":\"ps\",\"birth_date\":\"2022-02-06\",\"hire_date\":\"2022-02-06\",\"whatsapp\":\"ngzmiyvdljnikhwa\",\"instagram\":\"y\",\"cpf\":\"kcmyuwpwlvqwrs\",\"pix_key\":\"i\",\"roles\":[\"fabrica\"]}"
+                            "raw": "{\"name\":\"Jo\u00e3o da Silva Atualizado\",\"email\":\"joao.novo@maiscapinhas.com.br\",\"password\":\"novasenha123\",\"active\":true,\"is_super_admin\":true,\"zip_code\":\"vdljnikh\",\"street\":\"w\",\"number\":\"aykcmyuwpwlvqwrs\",\"complement\":\"i\",\"neighborhood\":\"t\",\"city\":\"c\",\"state\":\"ps\",\"birth_date\":\"2022-02-06\",\"hire_date\":\"2022-02-06\",\"whatsapp\":\"ngzmiyvdljnikhwa\",\"instagram\":\"y\",\"cpf\":\"kcmyuwpwlvqwrs\",\"pix_key\":\"i\",\"roles\":[\"fabrica\"]}"
                         },
                         "description": "Atualiza dados cadastrais de um usu\u00e1rio existente.\nApenas os campos informados ser\u00e3o alterados.\n\n**Casos de uso:**\n- Corrigir nome ou email\n- Alterar senha\n- Ativar\/desativar usu\u00e1rio\n\n**Regras de Neg\u00f3cio:**\n- Email deve continuar \u00fanico (valida\u00e7\u00e3o considera o pr\u00f3prio usu\u00e1rio)\n- Para gerenciar v\u00ednculos com lojas, use os endpoints de v\u00ednculos\n\n**Quem pode usar:** Apenas administradores."
                     },
@@ -3386,7 +3446,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the user."
                                 },
                                 {
@@ -3438,7 +3498,7 @@
                                 {
                                     "id": "user_id",
                                     "key": "user_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the user."
                                 }
                             ]
@@ -3456,7 +3516,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"stores\":[{\"store_id\":16,\"role\":\"gerente\"}]}"
+                            "raw": "{\"stores\":[{\"store_id\":16,\"role\":\"admin\"}]}"
                         },
                         "description": "PUT \/admin\/users\/{user}\/stores"
                     },
@@ -3474,7 +3534,7 @@
                                 {
                                     "id": "user_id",
                                     "key": "user_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the user."
                                 }
                             ]
@@ -3492,7 +3552,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"stores\":[{\"store_id\":16,\"role\":\"conferente\"}]}"
+                            "raw": "{\"stores\":[{\"store_id\":16,\"role\":\"vendedor\"}]}"
                         },
                         "description": "POST \/admin\/users\/{user}\/stores\/bulk"
                     },
@@ -3510,7 +3570,7 @@
                                 {
                                     "id": "user_id",
                                     "key": "user_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the user."
                                 }
                             ]
@@ -3546,7 +3606,7 @@
                                 {
                                     "id": "user_id",
                                     "key": "user_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the user."
                                 }
                             ]
@@ -3588,7 +3648,7 @@
                                 {
                                     "id": "store_id",
                                     "key": "store_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the store."
                                 },
                                 {
@@ -3634,7 +3694,7 @@
                                 {
                                     "id": "store_id",
                                     "key": "store_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the store."
                                 },
                                 {
@@ -3689,13 +3749,13 @@
                                 {
                                     "id": "store_id",
                                     "key": "store_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the store."
                                 },
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the user."
                                 },
                                 {
@@ -3756,13 +3816,13 @@
                                 {
                                     "id": "store_id",
                                     "key": "store_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the store."
                                 },
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the user."
                                 },
                                 {
@@ -3948,7 +4008,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "4",
                                     "description": "The ID of the instance."
                                 },
                                 {
@@ -3994,7 +4054,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "4",
                                     "description": "The ID of the instance."
                                 },
                                 {
@@ -4018,7 +4078,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"name\":\"loja_02\",\"provider\":\"n\",\"base_url\":\"http:\\\/\\\/crooks.biz\\\/et-fugiat-sunt-nihil-accusantium\",\"phone_e164\":\"nikhwaykcmyuwpwl\",\"api_key\":\"new-api-key\",\"token\":\"q\",\"store_id\":16,\"user_id\":16,\"is_default\":true,\"is_active\":true,\"notes\":\"n\",\"webhook_secret\":\"g\",\"webhook_url\":\"http:\\\/\\\/www.okuneva.com\\\/fugiat-sunt-nihil-accusantium-harum-mollitia.html\",\"status\":\"disconnected\"}"
+                            "raw": "{\"name\":\"loja_02\",\"provider\":\"n\",\"base_url\":\"http:\\\/\\\/crooks.biz\\\/et-fugiat-sunt-nihil-accusantium\",\"phone_e164\":\"nikhwaykcmyuwpwl\",\"api_key\":\"new-api-key\",\"token\":\"q\",\"store_id\":16,\"user_id\":16,\"is_default\":true,\"is_active\":true,\"notes\":\"n\",\"webhook_secret\":\"g\",\"webhook_url\":\"http:\\\/\\\/www.okuneva.com\\\/fugiat-sunt-nihil-accusantium-harum-mollitia.html\",\"status\":\"connected\"}"
                         },
                         "description": "Atualiza dados de uma inst\u00e2ncia WhatsApp.\nSecrets s\u00f3 s\u00e3o atualizados se enviados no payload."
                     },
@@ -4043,7 +4103,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "4",
                                     "description": "The ID of the instance."
                                 },
                                 {
@@ -4089,7 +4149,7 @@
                                 {
                                     "id": "instance_id",
                                     "key": "instance_id",
-                                    "value": "16",
+                                    "value": "4",
                                     "description": "The ID of the instance."
                                 },
                                 {
@@ -4135,7 +4195,7 @@
                                 {
                                     "id": "instance_id",
                                     "key": "instance_id",
-                                    "value": "16",
+                                    "value": "4",
                                     "description": "The ID of the instance."
                                 },
                                 {
@@ -4181,7 +4241,7 @@
                                 {
                                     "id": "instance_id",
                                     "key": "instance_id",
-                                    "value": "16",
+                                    "value": "4",
                                     "description": "The ID of the instance."
                                 },
                                 {
@@ -4227,7 +4287,7 @@
                                 {
                                     "id": "instance_id",
                                     "key": "instance_id",
-                                    "value": "16",
+                                    "value": "4",
                                     "description": "The ID of the instance."
                                 },
                                 {
@@ -4285,7 +4345,7 @@
                                 {
                                     "id": "instance_id",
                                     "key": "instance_id",
-                                    "value": "16",
+                                    "value": "4",
                                     "description": "The ID of the instance."
                                 },
                                 {
@@ -4331,7 +4391,7 @@
                                 {
                                     "id": "instance_id",
                                     "key": "instance_id",
-                                    "value": "16",
+                                    "value": "4",
                                     "description": "The ID of the instance."
                                 },
                                 {
@@ -4613,7 +4673,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":1,\"user_id\":16,\"customer_id\":1,\"customer_device_id\":1,\"selected_product\":\"Capa Premium\",\"product_reference\":\"g\",\"obs\":\"z\",\"qty\":1,\"price\":49.9,\"payed\":false,\"payday\":\"2026-01-13T20:33:54\",\"received_by_id\":16,\"status\":\"2\",\"observation\":\"Cliente quer borda preta\"}"
+                            "raw": "{\"store_id\":1,\"user_id\":16,\"customer_id\":1,\"customer_device_id\":1,\"selected_product\":\"Capa Premium\",\"product_reference\":\"g\",\"obs\":\"z\",\"qty\":1,\"price\":49.9,\"payed\":false,\"payday\":\"2026-01-14T01:18:09\",\"received_by_id\":16,\"status\":\"1\",\"observation\":\"Cliente quer borda preta\"}"
                         },
                         "description": "Cria uma nova capa personalizada para um cliente.\nA capa iniciar\u00e1 no status \"Aguardando Foto\" at\u00e9 o upload.\n\n**Quem pode usar:** Todos os usu\u00e1rios autenticados."
                     },
@@ -4644,7 +4704,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "31",
                                     "description": "The ID of the capas personalizada."
                                 },
                                 {
@@ -4690,7 +4750,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "31",
                                     "description": "The ID of the capas personalizada."
                                 },
                                 {
@@ -4714,7 +4774,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"customer_id\":16,\"customer_device_id\":16,\"selected_product\":\"Capa Ultra Premium\",\"product_reference\":\"g\",\"obs\":\"z\",\"qty\":27,\"price\":59.9,\"status\":\"4\",\"observation\":\"Cliente alterou modelo\"}"
+                            "raw": "{\"customer_id\":16,\"customer_device_id\":16,\"selected_product\":\"Capa Ultra Premium\",\"product_reference\":\"g\",\"obs\":\"z\",\"qty\":27,\"price\":59.9,\"status\":\"3\",\"observation\":\"Cliente alterou modelo\"}"
                         },
                         "description": "Atualiza dados de uma capa personalizada.\n\n**Quem pode usar:** Usu\u00e1rio com acesso \u00e0 capa."
                     },
@@ -4739,7 +4799,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "31",
                                     "description": "The ID of the capas personalizada."
                                 },
                                 {
@@ -4809,9 +4869,9 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"status\":3}"
+                            "raw": "{\"status\":3,\"notify_whatsapp\":true}"
                         },
-                        "description": "Atualiza o status de uma capa personalizada.\n\n**Quem pode usar:** Usu\u00e1rio com acesso \u00e0 capa."
+                        "description": "Atualiza o status de uma capa personalizada.\nQuando o status \u00e9 alterado para \"Dispon\u00edvel na Loja\" (3), \u00e9 poss\u00edvel\nenviar uma notifica\u00e7\u00e3o via WhatsApp para o cliente.\n\n**Quem pode usar:** Usu\u00e1rio com acesso \u00e0 capa."
                     },
                     "response": [
                         {
@@ -4819,6 +4879,18 @@
                             "code": 200,
                             "body": "{\n  \"message\": \"Status atualizado com sucesso.\",\n  \"data\": {\"id\": 1, \"status\": 3}\n}",
                             "name": "Status atualizado"
+                        },
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"message\": \"Status atualizado com sucesso.\",\n  \"data\": {\"id\": 1, \"status\": 3},\n  \"whatsapp_notification\": {\"sent\": true, \"phone\": \"****9999\"}\n}",
+                            "name": "Status atualizado com notifica\u00e7\u00e3o"
+                        },
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"message\": \"Status atualizado com sucesso.\",\n  \"data\": {\"id\": 1, \"status\": 3},\n  \"whatsapp_notification\": {\"sent\": false, \"phone\": null, \"error\": \"Cliente n\u00e3o possui telefone cadastrado.\"}\n}",
+                            "name": "Notifica\u00e7\u00e3o falhou"
                         }
                     ]
                 },
@@ -5173,7 +5245,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the phone brand."
                                 },
                                 {
@@ -5219,7 +5291,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the phone brand."
                                 },
                                 {
@@ -5268,7 +5340,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the phone brand."
                                 },
                                 {
@@ -5442,7 +5514,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the phone model."
                                 },
                                 {
@@ -5488,7 +5560,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the phone model."
                                 },
                                 {
@@ -5537,7 +5609,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the phone model."
                                 },
                                 {
@@ -5753,7 +5825,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the customer."
                                 },
                                 {
@@ -5805,7 +5877,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the customer."
                                 },
                                 {
@@ -5816,7 +5888,7 @@
                                 }
                             ]
                         },
-                        "method": "PATCH",
+                        "method": "PUT",
                         "header": [
                             {
                                 "key": "Content-Type",
@@ -5854,7 +5926,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the customer."
                                 },
                                 {
@@ -5906,7 +5978,7 @@
                                 {
                                     "id": "customer_id",
                                     "key": "customer_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the customer."
                                 },
                                 {
@@ -5952,7 +6024,7 @@
                                 {
                                     "id": "customer_id",
                                     "key": "customer_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the customer."
                                 },
                                 {
@@ -6001,13 +6073,13 @@
                                 {
                                     "id": "customer_id",
                                     "key": "customer_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the customer."
                                 },
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the device."
                                 },
                                 {
@@ -6068,13 +6140,13 @@
                                 {
                                     "id": "customer_id",
                                     "key": "customer_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the customer."
                                 },
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the device."
                                 },
                                 {
@@ -6224,7 +6296,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"status\":\"scheduled\",\"only_unacknowledged\":false,\"only_unseen\":false,\"severity\":\"info\",\"type\":\"recado\",\"scope\":\"user\",\"store_id\":16,\"created_by\":16,\"date_from\":\"2026-01-13T20:33:54\",\"date_to\":\"2052-02-06\",\"per_page\":22,\"page\":67,\"sort\":\"severity_desc\"}"
+                            "raw": "{\"status\":\"archived\",\"only_unacknowledged\":true,\"only_unseen\":true,\"severity\":\"info\",\"type\":\"recado\",\"scope\":\"global\",\"store_id\":16,\"created_by\":16,\"date_from\":\"2026-01-14T01:18:05\",\"date_to\":\"2052-02-07\",\"per_page\":22,\"page\":67,\"sort\":\"created_at_desc\"}"
                         },
                         "description": "Retorna o hist\u00f3rico de avisos que o usu\u00e1rio recebeu, com pagina\u00e7\u00e3o e filtros.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado."
                     },
@@ -6314,7 +6386,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"status\":\"active\",\"only_unacknowledged\":false,\"only_unseen\":true,\"severity\":\"warning\",\"type\":\"advertencia\",\"scope\":\"role\",\"store_id\":16,\"created_by\":16,\"date_from\":\"2026-01-13T20:33:54\",\"date_to\":\"2052-02-06\",\"per_page\":22,\"page\":67,\"sort\":\"severity_desc\"}"
+                            "raw": "{\"status\":\"scheduled\",\"only_unacknowledged\":true,\"only_unseen\":false,\"severity\":\"info\",\"type\":\"recado\",\"scope\":\"role\",\"store_id\":16,\"created_by\":16,\"date_from\":\"2026-01-14T01:18:05\",\"date_to\":\"2052-02-07\",\"per_page\":22,\"page\":67,\"sort\":\"severity_desc\"}"
                         },
                         "description": "Retorna lista de avisos com filtros e pagina\u00e7\u00e3o para gerenciamento.\nSuper admins veem todos os avisos; outros admins veem apenas avisos das lojas que gerenciam.\n\n**Quem pode usar:** Administradores e gerentes."
                     },
@@ -6355,7 +6427,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"title\":\"Manuten\u00e7\u00e3o Programada\",\"message\":\"O sistema ficar\u00e1 indispon\u00edvel...\",\"excerpt\":\"Sistema indispon\u00edvel das 22h \u00e0s 23h\",\"type\":\"announcement\",\"severity\":\"warning\",\"display_mode\":\"modal\",\"icon\":\"g\",\"image_url\":\"http:\\\/\\\/www.okuneva.com\\\/fugiat-sunt-nihil-accusantium-harum-mollitia.html\",\"image_alt\":\"k\",\"cta_label\":\"h\",\"cta_url\":\"http:\\\/\\\/www.dubuque.net\\\/quo-omnis-nostrum-aut-adipisci\",\"scope\":\"store\",\"require_ack\":true,\"starts_at\":\"2026-01-15T10:00:00Z\",\"expires_at\":\"2026-01-20T23:59:59Z\",\"repeat_every_minutes\":22,\"priority\":10,\"pinned_until\":\"2026-01-13T20:33:54\",\"targets\":[\"architecto\"]}"
+                            "raw": "{\"title\":\"Manuten\u00e7\u00e3o Programada\",\"message\":\"O sistema ficar\u00e1 indispon\u00edvel...\",\"excerpt\":\"Sistema indispon\u00edvel das 22h \u00e0s 23h\",\"type\":\"announcement\",\"severity\":\"warning\",\"display_mode\":\"modal\",\"icon\":\"g\",\"image_url\":\"http:\\\/\\\/www.okuneva.com\\\/fugiat-sunt-nihil-accusantium-harum-mollitia.html\",\"image_alt\":\"k\",\"cta_label\":\"h\",\"cta_url\":\"http:\\\/\\\/www.dubuque.net\\\/quo-omnis-nostrum-aut-adipisci\",\"scope\":\"store\",\"require_ack\":true,\"starts_at\":\"2026-01-15T10:00:00Z\",\"expires_at\":\"2026-01-20T23:59:59Z\",\"repeat_every_minutes\":22,\"priority\":10,\"pinned_until\":\"2026-01-14T01:18:05\",\"targets\":[\"architecto\"]}"
                         },
                         "description": "Cria um novo aviso em status `draft`. Ap\u00f3s criar, use o endpoint `\/publish` para publicar.\n\n**Quem pode usar:** Administradores e gerentes.\n\n**Regras de neg\u00f3cio:**\n- Avisos s\u00e3o criados como rascunho (draft)\n- \u00c9 necess\u00e1rio definir targets para avisos com scope `store`, `user` ou `role`\n- `require_ack` define se o usu\u00e1rio precisa confirmar leitura"
                     },
@@ -6386,7 +6458,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the announcement."
                                 },
                                 {
@@ -6444,7 +6516,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the announcement."
                                 },
                                 {
@@ -6468,7 +6540,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"title\":\"T\u00edtulo atualizado\",\"message\":\"Nova mensagem\",\"excerpt\":\"n\",\"type\":\"advertencia\",\"severity\":\"info\",\"display_mode\":\"banner\",\"icon\":\"g\",\"image_url\":\"http:\\\/\\\/www.okuneva.com\\\/fugiat-sunt-nihil-accusantium-harum-mollitia.html\",\"image_alt\":\"k\",\"cta_label\":\"h\",\"cta_url\":\"http:\\\/\\\/www.dubuque.net\\\/quo-omnis-nostrum-aut-adipisci\",\"scope\":\"user\",\"require_ack\":true,\"starts_at\":\"2026-01-13T20:33:54\",\"expires_at\":\"2052-02-06\",\"repeat_every_minutes\":22,\"priority\":84,\"pinned_until\":\"2026-01-13T20:33:54\",\"targets\":[\"architecto\"]}"
+                            "raw": "{\"title\":\"T\u00edtulo atualizado\",\"message\":\"Nova mensagem\",\"excerpt\":\"n\",\"type\":\"advertencia\",\"severity\":\"info\",\"display_mode\":\"modal\",\"icon\":\"g\",\"image_url\":\"http:\\\/\\\/www.okuneva.com\\\/fugiat-sunt-nihil-accusantium-harum-mollitia.html\",\"image_alt\":\"k\",\"cta_label\":\"h\",\"cta_url\":\"http:\\\/\\\/www.dubuque.net\\\/quo-omnis-nostrum-aut-adipisci\",\"scope\":\"global\",\"require_ack\":true,\"starts_at\":\"2026-01-14T01:18:06\",\"expires_at\":\"2052-02-07\",\"repeat_every_minutes\":22,\"priority\":84,\"pinned_until\":\"2026-01-14T01:18:06\",\"targets\":[\"architecto\"]}"
                         },
                         "description": "Atualiza os dados de um aviso existente. Apenas rascunhos podem ter seus targets atualizados.\n\n**Quem pode usar:** Administradores e gerentes (criador ou com acesso ao scope)."
                     },
@@ -6499,7 +6571,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the announcement."
                                 },
                                 {
@@ -6551,7 +6623,7 @@
                                 {
                                     "id": "announcement_id",
                                     "key": "announcement_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the announcement."
                                 },
                                 {
@@ -6600,7 +6672,7 @@
                                 {
                                     "id": "announcement_id",
                                     "key": "announcement_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the announcement."
                                 },
                                 {
@@ -6649,7 +6721,7 @@
                                 {
                                     "id": "announcement_id",
                                     "key": "announcement_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the announcement."
                                 },
                                 {
@@ -6698,7 +6770,7 @@
                                 {
                                     "id": "announcement_id",
                                     "key": "announcement_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the announcement."
                                 },
                                 {
@@ -6756,7 +6828,7 @@
                                 {
                                     "id": "announcement_id",
                                     "key": "announcement_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the announcement."
                                 },
                                 {
@@ -6808,7 +6880,7 @@
                                 {
                                     "id": "announcement_id",
                                     "key": "announcement_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the announcement."
                                 },
                                 {
@@ -6873,7 +6945,7 @@
                                 {
                                     "id": "announcement_id",
                                     "key": "announcement_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the announcement."
                                 },
                                 {
@@ -6919,7 +6991,7 @@
                                 {
                                     "id": "announcement_id",
                                     "key": "announcement_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the announcement."
                                 },
                                 {
@@ -6971,7 +7043,7 @@
                                 {
                                     "id": "announcement_id",
                                     "key": "announcement_id",
-                                    "value": "16",
+                                    "value": "1",
                                     "description": "The ID of the announcement."
                                 },
                                 {
@@ -7092,7 +7164,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "5",
                                     "description": "The ID of the pedido."
                                 },
                                 {
@@ -7150,7 +7222,7 @@
                                 {
                                     "id": "pedido_id",
                                     "key": "pedido_id",
-                                    "value": "16",
+                                    "value": "5",
                                     "description": "The ID of the pedido."
                                 },
                                 {
@@ -7205,7 +7277,7 @@
                                 {
                                     "id": "pedido_id",
                                     "key": "pedido_id",
-                                    "value": "16",
+                                    "value": "5",
                                     "description": "The ID of the pedido."
                                 },
                                 {
@@ -7254,7 +7326,7 @@
                                 {
                                     "id": "pedido_id",
                                     "key": "pedido_id",
-                                    "value": "16",
+                                    "value": "5",
                                     "description": "The ID of the pedido."
                                 },
                                 {
@@ -7334,7 +7406,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"active\":\"all\",\"state\":\"bn\",\"city\":\"g\",\"date_from\":\"2026-01-13\",\"date_to\":\"2052-02-06\"}"
+                            "raw": "{\"active\":\"1\",\"state\":\"bn\",\"city\":\"g\",\"date_from\":\"2026-01-14\",\"date_to\":\"2052-02-07\"}"
                         },
                         "description": "Returns statistical data about users without exposing personal information.\nUseful for dashboard cards and charts."
                     },
@@ -7348,14 +7420,10 @@
                                 {
                                     "key": "content-type",
                                     "value": "application\/json"
-                                },
-                                {
-                                    "key": "vary",
-                                    "value": "Origin"
                                 }
                             ],
-                            "code": 401,
-                            "body": "{\"message\":\"Unauthenticated.\"}",
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/users\/kpis could not be found.\"\n}",
                             "name": ""
                         }
                     ]
@@ -7530,7 +7598,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "5",
                                     "description": "The ID of the pedido."
                                 },
                                 {
@@ -7582,7 +7650,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "5",
                                     "description": "The ID of the pedido."
                                 },
                                 {
@@ -7631,7 +7699,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "5",
                                     "description": "The ID of the pedido."
                                 },
                                 {
@@ -7677,7 +7745,7 @@
                                 {
                                     "id": "pedido_id",
                                     "key": "pedido_id",
-                                    "value": "16",
+                                    "value": "5",
                                     "description": "The ID of the pedido."
                                 },
                                 {
@@ -7701,9 +7769,9 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"status\":3,\"reason\":\"Cliente confirmou recebimento\"}"
+                            "raw": "{\"status\":3,\"reason\":\"Cliente confirmou recebimento\",\"notify_whatsapp\":true}"
                         },
-                        "description": "Atualiza apenas o status do pedido com registro no hist\u00f3rico.\n\n**Quem pode usar:** Usu\u00e1rio com acesso ao pedido."
+                        "description": "Atualiza apenas o status do pedido com registro no hist\u00f3rico.\nQuando o status \u00e9 alterado para \"Dispon\u00edvel na Loja\" (3), \u00e9 poss\u00edvel\nenviar uma notifica\u00e7\u00e3o via WhatsApp para o cliente.\n\n**Quem pode usar:** Usu\u00e1rio com acesso ao pedido."
                     },
                     "response": [
                         {
@@ -7711,6 +7779,18 @@
                             "code": 200,
                             "body": "{\n  \"message\": \"Status atualizado com sucesso.\",\n  \"data\": {\"id\": 1, \"status\": 3}\n}",
                             "name": "Status atualizado"
+                        },
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"message\": \"Status atualizado com sucesso.\",\n  \"data\": {\"id\": 1, \"status\": 3},\n  \"whatsapp_notification\": {\"sent\": true, \"phone\": \"****9999\"}\n}",
+                            "name": "Status atualizado com notifica\u00e7\u00e3o"
+                        },
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"message\": \"Status atualizado com sucesso.\",\n  \"data\": {\"id\": 1, \"status\": 3},\n  \"whatsapp_notification\": {\"sent\": false, \"phone\": null, \"error\": \"Cliente n\u00e3o possui telefone cadastrado.\"}\n}",
+                            "name": "Notifica\u00e7\u00e3o falhou"
                         }
                     ]
                 },
@@ -8148,7 +8228,7 @@
                                 {
                                     "id": "id",
                                     "key": "id",
-                                    "value": "16",
+                                    "value": "5",
                                     "description": "The ID of the pedido."
                                 },
                                 {
@@ -8200,7 +8280,7 @@
                                 {
                                     "id": "pedido_id",
                                     "key": "pedido_id",
-                                    "value": "16",
+                                    "value": "5",
                                     "description": "The ID of the pedido."
                                 },
                                 {
@@ -8246,7 +8326,7 @@
                                 {
                                     "id": "pedido_id",
                                     "key": "pedido_id",
-                                    "value": "16",
+                                    "value": "5",
                                     "description": "The ID of the pedido."
                                 },
                                 {
@@ -8295,7 +8375,7 @@
                                 {
                                     "id": "pedido_id",
                                     "key": "pedido_id",
-                                    "value": "16",
+                                    "value": "5",
                                     "description": "The ID of the pedido."
                                 },
                                 {
@@ -8391,7 +8471,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"month\":\"6425-59\",\"store_id\":16,\"limit\":22,\"order\":\"desc\"}"
+                            "raw": "{\"month\":\"6425-59\",\"store_id\":16,\"limit\":22,\"order\":\"asc\"}"
                         },
                         "description": "Retorna ranking completo de vendedores ordenado por vendas no per\u00edodo.\n\n**Inclui:**\n- P\u00f3dio (top 3) em destaque\n- Ranking completo com estat\u00edsticas\n- Meta, atingimento e b\u00f4nus acumulado de cada vendedor\n\n**Quem pode usar:** Todos os usu\u00e1rios autenticados."
                     },
@@ -8614,7 +8694,7 @@
                                 {
                                     "id": "instance_id",
                                     "key": "instance_id",
-                                    "value": "16",
+                                    "value": "4",
                                     "description": "The ID of the instance."
                                 },
                                 {
@@ -8681,7 +8761,7 @@
                                 {
                                     "id": "instance_id",
                                     "key": "instance_id",
-                                    "value": "16",
+                                    "value": "4",
                                     "description": "The ID of the instance."
                                 },
                                 {
@@ -8730,7 +8810,7 @@
                                 {
                                     "id": "instance_id",
                                     "key": "instance_id",
-                                    "value": "16",
+                                    "value": "4",
                                     "description": "The ID of the instance."
                                 },
                                 {

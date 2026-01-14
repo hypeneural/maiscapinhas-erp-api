@@ -44,12 +44,14 @@ endpoints:
     responses:
       -
         custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
+        status: 404
+        content: |-
+          {
+              "message": "The route api.maiscapinhas.com.br//api/v1/rules/commission could not be found."
+          }
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          vary: Origin
         description: null
     responseFields: []
     auth:
@@ -106,7 +108,7 @@ endpoints:
         name: effective_from
         description: 'Must be a valid date.'
         required: true
-        example: '2026-01-13T20:33:54'
+        example: '2026-01-14T01:18:07'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -148,7 +150,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      effective_from: '2026-01-13T20:33:54'
+      effective_from: '2026-01-14T01:18:07'
       config_json:
         -
           min_attainment: 27
@@ -195,14 +197,14 @@ endpoints:
         name: rule_id
         description: 'The ID of the rule.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      rule_id: 16
+      rule_id: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -211,12 +213,14 @@ endpoints:
     responses:
       -
         custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
+        status: 404
+        content: |-
+          {
+              "message": "The route api.maiscapinhas.com.br//api/v1/rules/commission/1 could not be found."
+          }
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          vary: Origin
         description: null
     responseFields: []
     auth:
@@ -259,14 +263,14 @@ endpoints:
         name: rule_id
         description: 'The ID of the rule.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      rule_id: 16
+      rule_id: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
@@ -286,7 +290,7 @@ endpoints:
         name: effective_from
         description: 'Must be a valid date.'
         required: true
-        example: '2026-01-13T20:33:54'
+        example: '2026-01-14T01:18:07'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -328,7 +332,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      effective_from: '2026-01-13T20:33:54'
+      effective_from: '2026-01-14T01:18:07'
       config_json:
         -
           min_attainment: 27
@@ -375,14 +379,14 @@ endpoints:
         name: rule_id
         description: 'The ID of the rule.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      rule_id: 16
+      rule_id: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []

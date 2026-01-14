@@ -88,7 +88,7 @@ endpoints:
         name: store_id
         description: 'The ID of the store.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -106,7 +106,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      store_id: 16
+      store_id: 1
       store: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -211,7 +211,7 @@ endpoints:
         name: store_id
         description: 'The ID of the store.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -229,7 +229,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      store_id: 16
+      store_id: 1
       store: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -349,7 +349,7 @@ endpoints:
         name: store_id
         description: 'The ID of the store.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -360,7 +360,7 @@ endpoints:
         name: id
         description: 'The ID of the user.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -389,8 +389,8 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      store_id: 16
-      id: 16
+      store_id: 1
+      id: 1
       store: 1
       user: 6
     queryParameters: []
@@ -514,7 +514,7 @@ endpoints:
         name: store_id
         description: 'The ID of the store.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -525,7 +525,7 @@ endpoints:
         name: id
         description: 'The ID of the user.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -554,8 +554,8 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      store_id: 16
-      id: 16
+      store_id: 1
+      id: 1
       store: 1
       user: 8
     queryParameters: []

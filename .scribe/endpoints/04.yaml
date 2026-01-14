@@ -242,7 +242,7 @@ endpoints:
         name: status
         description: ''
         required: false
-        example: scheduled
+        example: archived
         type: string
         enumValues:
           - draft
@@ -259,7 +259,7 @@ endpoints:
         name: only_unacknowledged
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -270,7 +270,7 @@ endpoints:
         name: only_unseen
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -308,7 +308,7 @@ endpoints:
         name: scope
         description: ''
         required: false
-        example: user
+        example: global
         type: string
         enumValues:
           - global
@@ -345,7 +345,7 @@ endpoints:
         name: date_from
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-13T20:33:54'
+        example: '2026-01-14T01:18:05'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -356,7 +356,7 @@ endpoints:
         name: date_to
         description: 'Must be a valid date. Must be a date after or equal to <code>date_from</code>.'
         required: false
-        example: '2052-02-06'
+        example: '2052-02-07'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -389,7 +389,7 @@ endpoints:
         name: sort
         description: ''
         required: false
-        example: severity_desc
+        example: created_at_desc
         type: string
         enumValues:
           - starts_at_desc
@@ -402,19 +402,19 @@ endpoints:
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      status: scheduled
-      only_unacknowledged: false
-      only_unseen: false
+      status: archived
+      only_unacknowledged: true
+      only_unseen: true
       severity: info
       type: recado
-      scope: user
+      scope: global
       store_id: 16
       created_by: 16
-      date_from: '2026-01-13T20:33:54'
-      date_to: '2052-02-06'
+      date_from: '2026-01-14T01:18:05'
+      date_to: '2052-02-07'
       per_page: 22
       page: 67
-      sort: severity_desc
+      sort: created_at_desc
     fileParameters: []
     responses:
       -
@@ -594,7 +594,7 @@ endpoints:
         name: status
         description: ''
         required: false
-        example: active
+        example: scheduled
         type: string
         enumValues:
           - draft
@@ -611,7 +611,7 @@ endpoints:
         name: only_unacknowledged
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -622,7 +622,7 @@ endpoints:
         name: only_unseen
         description: ''
         required: false
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -633,7 +633,7 @@ endpoints:
         name: severity
         description: ''
         required: false
-        example: warning
+        example: info
         type: string
         enumValues:
           - info
@@ -647,7 +647,7 @@ endpoints:
         name: type
         description: ''
         required: false
-        example: advertencia
+        example: recado
         type: string
         enumValues:
           - recado
@@ -697,7 +697,7 @@ endpoints:
         name: date_from
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-13T20:33:54'
+        example: '2026-01-14T01:18:05'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -708,7 +708,7 @@ endpoints:
         name: date_to
         description: 'Must be a valid date. Must be a date after or equal to <code>date_from</code>.'
         required: false
-        example: '2052-02-06'
+        example: '2052-02-07'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -754,16 +754,16 @@ endpoints:
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      status: active
-      only_unacknowledged: false
-      only_unseen: true
-      severity: warning
-      type: advertencia
+      status: scheduled
+      only_unacknowledged: true
+      only_unseen: false
+      severity: info
+      type: recado
       scope: role
       store_id: 16
       created_by: 16
-      date_from: '2026-01-13T20:33:54'
-      date_to: '2052-02-06'
+      date_from: '2026-01-14T01:18:05'
+      date_to: '2052-02-07'
       per_page: 22
       page: 67
       sort: severity_desc
@@ -1035,7 +1035,7 @@ endpoints:
         name: pinned_until
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-13T20:33:54'
+        example: '2026-01-14T01:18:05'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1104,7 +1104,7 @@ endpoints:
       expires_at: '2026-01-20T23:59:59Z'
       repeat_every_minutes: 22
       priority: 10
-      pinned_until: '2026-01-13T20:33:54'
+      pinned_until: '2026-01-14T01:18:05'
       targets:
         - architecto
     fileParameters: []
@@ -1178,7 +1178,7 @@ endpoints:
         name: id
         description: 'The ID of the announcement.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -1196,7 +1196,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 16
+      id: 1
       announcement: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -1287,7 +1287,7 @@ endpoints:
         name: id
         description: 'The ID of the announcement.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -1305,7 +1305,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 16
+      id: 1
       announcement: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -1372,7 +1372,7 @@ endpoints:
         name: display_mode
         description: ''
         required: false
-        example: banner
+        example: modal
         type: string
         enumValues:
           - banner
@@ -1441,7 +1441,7 @@ endpoints:
         name: scope
         description: ''
         required: false
-        example: user
+        example: global
         type: string
         enumValues:
           - global
@@ -1467,7 +1467,7 @@ endpoints:
         name: starts_at
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-13T20:33:54'
+        example: '2026-01-14T01:18:06'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1478,7 +1478,7 @@ endpoints:
         name: expires_at
         description: 'Must be a valid date. Must be a date after <code>starts_at</code>.'
         required: false
-        example: '2052-02-06'
+        example: '2052-02-07'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1511,7 +1511,7 @@ endpoints:
         name: pinned_until
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-13T20:33:54'
+        example: '2026-01-14T01:18:06'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1545,7 +1545,7 @@ endpoints:
         name: 'targets[].target_type'
         description: 'This field is required when <code>targets</code> is present.'
         required: false
-        example: user
+        example: role
         type: string
         enumValues:
           - store
@@ -1571,19 +1571,19 @@ endpoints:
       excerpt: 'n'
       type: advertencia
       severity: info
-      display_mode: banner
+      display_mode: modal
       icon: g
       image_url: 'http://www.okuneva.com/fugiat-sunt-nihil-accusantium-harum-mollitia.html'
       image_alt: k
       cta_label: h
       cta_url: 'http://www.dubuque.net/quo-omnis-nostrum-aut-adipisci'
-      scope: user
+      scope: global
       require_ack: true
-      starts_at: '2026-01-13T20:33:54'
-      expires_at: '2052-02-06'
+      starts_at: '2026-01-14T01:18:06'
+      expires_at: '2052-02-07'
       repeat_every_minutes: 22
       priority: 84
-      pinned_until: '2026-01-13T20:33:54'
+      pinned_until: '2026-01-14T01:18:06'
       targets:
         - architecto
     fileParameters: []
@@ -1657,7 +1657,7 @@ endpoints:
         name: id
         description: 'The ID of the announcement.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -1675,7 +1675,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 16
+      id: 1
       announcement: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -1749,7 +1749,7 @@ endpoints:
         name: announcement_id
         description: 'The ID of the announcement.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -1767,7 +1767,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      announcement_id: 16
+      announcement_id: 1
       announcement: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -1851,7 +1851,7 @@ endpoints:
         name: announcement_id
         description: 'The ID of the announcement.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -1869,7 +1869,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      announcement_id: 16
+      announcement_id: 1
       announcement: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -1953,7 +1953,7 @@ endpoints:
         name: announcement_id
         description: 'The ID of the announcement.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -1971,7 +1971,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      announcement_id: 16
+      announcement_id: 1
       announcement: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -2055,7 +2055,7 @@ endpoints:
         name: announcement_id
         description: 'The ID of the announcement.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -2073,7 +2073,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      announcement_id: 16
+      announcement_id: 1
       announcement: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -2159,7 +2159,7 @@ endpoints:
         name: announcement_id
         description: 'The ID of the announcement.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -2177,7 +2177,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      announcement_id: 16
+      announcement_id: 1
       announcement: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -2255,7 +2255,7 @@ endpoints:
         name: announcement_id
         description: 'The ID of the announcement.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -2273,7 +2273,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      announcement_id: 16
+      announcement_id: 1
       announcement: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -2354,7 +2354,7 @@ endpoints:
         name: announcement_id
         description: 'The ID of the announcement.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -2372,7 +2372,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      announcement_id: 16
+      announcement_id: 1
       announcement: 1
     queryParameters:
       status:
@@ -2486,7 +2486,7 @@ endpoints:
         name: announcement_id
         description: 'The ID of the announcement.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -2504,7 +2504,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      announcement_id: 16
+      announcement_id: 1
       announcement: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -2587,7 +2587,7 @@ endpoints:
         name: announcement_id
         description: 'The ID of the announcement.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -2605,7 +2605,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      announcement_id: 16
+      announcement_id: 1
       announcement: 1
     queryParameters: []
     cleanQueryParameters: []

@@ -371,6 +371,101 @@ paths:
               required:
                 - email
       security: []
+  /api/v1/auth/forgot-password/whatsapp:
+    post:
+      summary: 'Solicitar recuperação de senha via WhatsApp'
+      operationId: solicitarRecuperaoDeSenhaViaWhatsApp
+      description: "Envia um código de 6 dígitos via WhatsApp para redefinir a senha.\nO código expira em 15 minutos.\n\n**Quem pode usar:** Qualquer usuário com email ou WhatsApp cadastrado.\n\n**Rate Limit:** 3 tentativas por minuto por IP."
+      parameters: []
+      responses:
+        200:
+          description: 'Código enviado'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    message: 'Código enviado via WhatsApp.'
+                    phone_masked: '****9999'
+                    expires_in_minutes: 15
+                  meta:
+                    timestamp: '2026-01-13T12:00:00Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: 'Código enviado via WhatsApp.'
+                      phone_masked:
+                        type: string
+                        example: '****9999'
+                      expires_in_minutes:
+                        type: integer
+                        example: 15
+                  meta:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        example: '2026-01-13T12:00:00Z'
+        422:
+          description: ''
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  -
+                    description: 'Usuário não encontrado'
+                    type: object
+                    example:
+                      message: 'Usuário não encontrado.'
+                    properties:
+                      message:
+                        type: string
+                        example: 'Usuário não encontrado.'
+                  -
+                    description: 'Usuário sem WhatsApp'
+                    type: object
+                    example:
+                      message: 'Usuário não possui WhatsApp cadastrado.'
+                    properties:
+                      message:
+                        type: string
+                        example: 'Usuário não possui WhatsApp cadastrado.'
+        502:
+          description: 'Falha ao enviar'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Falha ao enviar código via WhatsApp. Tente novamente.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Falha ao enviar código via WhatsApp. Tente novamente.'
+      tags:
+        - Autenticação
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 'Email cadastrado (obrigatório se whatsapp não informado).'
+                  example: joao@maiscapinhas.com.br
+                  nullable: true
+                whatsapp:
+                  type: string
+                  description: 'WhatsApp cadastrado (obrigatório se email não informado).'
+                  example: '48999999999'
+                  nullable: true
+      security: []
   /api/v1/auth/reset-password:
     post:
       summary: 'Redefinir senha'
@@ -441,6 +536,80 @@ paths:
                   example: novaSenha123
               required:
                 - token
+                - email
+                - password
+                - password_confirmation
+      security: []
+  /api/v1/auth/reset-password/code:
+    post:
+      summary: 'Redefinir senha com código WhatsApp'
+      operationId: redefinirSenhaComCdigoWhatsApp
+      description: "Redefine a senha usando o código de 6 dígitos recebido via WhatsApp.\n\n**Quem pode usar:** Qualquer usuário com código válido."
+      parameters: []
+      responses:
+        200:
+          description: 'Senha alterada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    message: 'Senha alterada com sucesso.'
+                  meta:
+                    timestamp: '2026-01-13T12:00:00Z'
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: 'Senha alterada com sucesso.'
+                  meta:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        example: '2026-01-13T12:00:00Z'
+        422:
+          description: 'Código inválido'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Código inválido ou expirado.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Código inválido ou expirado.'
+      tags:
+        - Autenticação
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                  description: 'Código de 6 dígitos recebido via WhatsApp.'
+                  example: '123456'
+                email:
+                  type: string
+                  description: 'Email do usuário.'
+                  example: joao@maiscapinhas.com.br
+                password:
+                  type: string
+                  description: 'Nova senha (mínimo 8 caracteres).'
+                  example: novaSenha123
+                password_confirmation:
+                  type: string
+                  description: 'Confirmação da nova senha.'
+                  example: novaSenha123
+              required:
+                - code
                 - email
                 - password
                 - password_confirmation
@@ -1071,7 +1240,7 @@ paths:
         in: path
         name: id
         description: 'The ID of the store.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -1175,7 +1344,7 @@ paths:
         in: path
         name: store_id
         description: 'The ID of the store.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -1243,7 +1412,7 @@ paths:
         in: path
         name: store_id
         description: 'The ID of the store.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -1430,7 +1599,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T20:33:54'
+                  example: '2026-01-14T01:18:08'
               required:
                 - store_id
   /api/v1/dashboard/conferente:
@@ -1548,7 +1717,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T20:33:54'
+                  example: '2026-01-14T01:18:08'
               required:
                 - store_id
   /api/v1/dashboard/admin:
@@ -1869,11 +2038,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T20:33:54'
+                  example: '2026-01-14T01:18:06'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T20:33:54'
+                  example: '2026-01-14T01:18:06'
                 per_page:
                   type: integer
                   description: 'Must be at least 1. Must not be greater than 100.'
@@ -2339,11 +2508,11 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T20:33:54'
+                  example: '2026-01-14T01:18:07'
                 status:
                   type: string
                   description: ''
-                  example: open
+                  example: pending
                   enum:
                     - open
                     - closed
@@ -3380,18 +3549,18 @@ paths:
       description: 'GET /api/v1/rules/bonus'
       parameters: []
       responses:
-        401:
+        404:
           description: ''
           content:
             application/json:
               schema:
                 type: object
                 example:
-                  message: Unauthenticated.
+                  message: 'The route api.maiscapinhas.com.br//api/v1/rules/bonus could not be found.'
                 properties:
                   message:
                     type: string
-                    example: Unauthenticated.
+                    example: 'The route api.maiscapinhas.com.br//api/v1/rules/bonus could not be found.'
       tags:
         - 'Regras de Bônus'
     post:
@@ -3417,7 +3586,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T20:33:54'
+                  example: '2026-01-14T01:18:07'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -3447,18 +3616,18 @@ paths:
       description: 'GET /api/v1/rules/bonus/{rule}'
       parameters: []
       responses:
-        401:
+        404:
           description: ''
           content:
             application/json:
               schema:
                 type: object
                 example:
-                  message: Unauthenticated.
+                  message: 'The route api.maiscapinhas.com.br//api/v1/rules/bonus/1 could not be found.'
                 properties:
                   message:
                     type: string
-                    example: Unauthenticated.
+                    example: 'The route api.maiscapinhas.com.br//api/v1/rules/bonus/1 could not be found.'
       tags:
         - 'Regras de Bônus'
     put:
@@ -3484,7 +3653,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T20:33:54'
+                  example: '2026-01-14T01:18:07'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -3520,7 +3689,7 @@ paths:
         in: path
         name: rule_id
         description: 'The ID of the rule.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -3531,18 +3700,18 @@ paths:
       description: 'GET /api/v1/rules/commission'
       parameters: []
       responses:
-        401:
+        404:
           description: ''
           content:
             application/json:
               schema:
                 type: object
                 example:
-                  message: Unauthenticated.
+                  message: 'The route api.maiscapinhas.com.br//api/v1/rules/commission could not be found.'
                 properties:
                   message:
                     type: string
-                    example: Unauthenticated.
+                    example: 'The route api.maiscapinhas.com.br//api/v1/rules/commission could not be found.'
       tags:
         - 'Regras de Comissão'
     post:
@@ -3568,7 +3737,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T20:33:54'
+                  example: '2026-01-14T01:18:07'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -3598,18 +3767,18 @@ paths:
       description: 'GET /api/v1/rules/commission/{rule}'
       parameters: []
       responses:
-        401:
+        404:
           description: ''
           content:
             application/json:
               schema:
                 type: object
                 example:
-                  message: Unauthenticated.
+                  message: 'The route api.maiscapinhas.com.br//api/v1/rules/commission/1 could not be found.'
                 properties:
                   message:
                     type: string
-                    example: Unauthenticated.
+                    example: 'The route api.maiscapinhas.com.br//api/v1/rules/commission/1 could not be found.'
       tags:
         - 'Regras de Comissão'
     put:
@@ -3635,7 +3804,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T20:33:54'
+                  example: '2026-01-14T01:18:07'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -3671,7 +3840,7 @@ paths:
         in: path
         name: rule_id
         description: 'The ID of the rule.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -3682,18 +3851,18 @@ paths:
       description: 'GET /api/v1/goals/monthly'
       parameters: []
       responses:
-        401:
+        404:
           description: ''
           content:
             application/json:
               schema:
                 type: object
                 example:
-                  message: Unauthenticated.
+                  message: 'The route api.maiscapinhas.com.br//api/v1/goals/monthly could not be found.'
                 properties:
                   message:
                     type: string
-                    example: Unauthenticated.
+                    example: 'The route api.maiscapinhas.com.br//api/v1/goals/monthly could not be found.'
       tags:
         - 'Metas Mensais'
     post:
@@ -3738,18 +3907,18 @@ paths:
       description: 'GET /api/v1/goals/monthly/{goal}'
       parameters: []
       responses:
-        401:
+        404:
           description: ''
           content:
             application/json:
               schema:
                 type: object
                 example:
-                  message: Unauthenticated.
+                  message: 'The route api.maiscapinhas.com.br//api/v1/goals/monthly/16 could not be found.'
                 properties:
                   message:
                     type: string
-                    example: Unauthenticated.
+                    example: 'The route api.maiscapinhas.com.br//api/v1/goals/monthly/16 could not be found.'
       tags:
         - 'Metas Mensais'
     put:
@@ -3845,18 +4014,18 @@ paths:
       description: 'GET /api/v1/finance/bonus?store_id=&from=&to='
       parameters: []
       responses:
-        401:
+        404:
           description: ''
           content:
             application/json:
               schema:
                 type: object
                 example:
-                  message: Unauthenticated.
+                  message: 'The route api.maiscapinhas.com.br//api/v1/finance/bonus could not be found.'
                 properties:
                   message:
                     type: string
-                    example: Unauthenticated.
+                    example: 'The route api.maiscapinhas.com.br//api/v1/finance/bonus could not be found.'
       tags:
         - 'Extrato Financeiro'
       requestBody:
@@ -3873,11 +4042,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T20:33:54'
+                  example: '2026-01-14T01:18:08'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T20:33:54'
+                  example: '2026-01-14T01:18:08'
                 per_page:
                   type: integer
                   description: 'Must be at least 1. Must not be greater than 100.'
@@ -4110,17 +4279,17 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T20:33:54'
+                  example: '2026-01-14T01:18:08'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T20:33:54'
+                  example: '2026-01-14T01:18:08'
     parameters:
       -
         in: path
         name: seller_id
         description: 'The ID of the seller.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -4139,18 +4308,18 @@ paths:
       description: 'GET /api/v1/finance/commission?store_id=&month='
       parameters: []
       responses:
-        401:
+        404:
           description: ''
           content:
             application/json:
               schema:
                 type: object
                 example:
-                  message: Unauthenticated.
+                  message: 'The route api.maiscapinhas.com.br//api/v1/finance/commission could not be found.'
                 properties:
                   message:
                     type: string
-                    example: Unauthenticated.
+                    example: 'The route api.maiscapinhas.com.br//api/v1/finance/commission could not be found.'
       tags:
         - 'Extrato Financeiro'
       requestBody:
@@ -4189,18 +4358,18 @@ paths:
             description: 'Mês (YYYY-MM).'
             example: 2026-01
       responses:
-        401:
+        404:
           description: ''
           content:
             application/json:
               schema:
                 type: object
                 example:
-                  message: Unauthenticated.
+                  message: 'The route api.maiscapinhas.com.br//api/v1/finance/commission/seller/1 could not be found.'
                 properties:
                   message:
                     type: string
-                    example: Unauthenticated.
+                    example: 'The route api.maiscapinhas.com.br//api/v1/finance/commission/seller/1 could not be found.'
       tags:
         - 'Extrato Financeiro'
       requestBody:
@@ -4219,7 +4388,7 @@ paths:
         in: path
         name: seller_id
         description: 'The ID of the seller.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -4366,7 +4535,7 @@ paths:
         in: path
         name: seller_id
         description: 'The ID of the seller.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -4385,18 +4554,18 @@ paths:
       description: 'GET /api/v1/analytics/people/shift?store_id=&date='
       parameters: []
       responses:
-        401:
+        404:
           description: ''
           content:
             application/json:
               schema:
                 type: object
                 example:
-                  message: Unauthenticated.
+                  message: 'The route api.maiscapinhas.com.br//api/v1/analytics/people/shift could not be found.'
                 properties:
                   message:
                     type: string
-                    example: Unauthenticated.
+                    example: 'The route api.maiscapinhas.com.br//api/v1/analytics/people/shift could not be found.'
       tags:
         - 'People Analytics'
       requestBody:
@@ -4413,7 +4582,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T20:33:54'
+                  example: '2026-01-14T01:18:08'
               required:
                 - store_id
                 - date
@@ -4439,11 +4608,11 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T20:33:54'
+                  example: '2026-01-14T01:18:08'
                 shift_code:
                   type: string
                   description: ''
-                  example: 'N'
+                  example: M
                   enum:
                     - '1'
                     - '2'
@@ -4722,11 +4891,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T20:33:55'
+                  example: '2026-01-14T01:18:10'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T20:33:55'
+                  example: '2026-01-14T01:18:10'
                 causer_id:
                   type: integer
                   description: 'The <code>id</code> of an existing record in the users table.'
@@ -4858,11 +5027,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T20:33:55'
+                  example: '2026-01-14T01:18:10'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T20:33:55'
+                  example: '2026-01-14T01:18:10'
   '/api/v1/admin/audit-logs/{auditLog_id}':
     get:
       summary: 'Ver detalhes do log'
@@ -4981,7 +5150,7 @@ paths:
         in: path
         name: auditLog_id
         description: 'The ID of the auditLog.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -5279,16 +5448,16 @@ paths:
                             type: object
                             description: ''
                             example:
-                              start: '20:33'
+                              start: '01:18'
                             properties:
                               start:
                                 type: string
                                 description: 'Must be a valid date in the format <code>H:i</code>.'
-                                example: '20:33'
+                                example: '01:18'
                               end:
                                 type: string
                                 description: 'Must be a valid date in the format <code>H:i</code>.'
-                                example: '20:33'
+                                example: '01:18'
                             required:
                               - start
                               - end
@@ -5302,7 +5471,7 @@ paths:
                           date:
                             type: string
                             description: 'Must be a valid date in the format <code>Y-m-d</code>.'
-                            example: '2026-01-13'
+                            example: '2026-01-14'
                           closed:
                             type: boolean
                             description: ''
@@ -5471,7 +5640,7 @@ paths:
                 bio_enabled:
                   type: boolean
                   description: ''
-                  example: true
+                  example: false
                 address:
                   type: string
                   description: 'Must not be greater than 255 characters.'
@@ -5572,16 +5741,16 @@ paths:
                             type: object
                             description: ''
                             example:
-                              start: '20:33'
+                              start: '01:18'
                             properties:
                               start:
                                 type: string
                                 description: 'Must be a valid date in the format <code>H:i</code>.'
-                                example: '20:33'
+                                example: '01:18'
                               end:
                                 type: string
                                 description: 'Must be a valid date in the format <code>H:i</code>.'
-                                example: '20:33'
+                                example: '01:18'
                             required:
                               - start
                               - end
@@ -5595,7 +5764,7 @@ paths:
                           date:
                             type: string
                             description: 'Must be a valid date in the format <code>Y-m-d</code>.'
-                            example: '2026-01-13'
+                            example: '2026-01-14'
                           closed:
                             type: boolean
                             description: ''
@@ -5647,7 +5816,7 @@ paths:
         in: path
         name: id
         description: 'The ID of the store.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -6245,7 +6414,7 @@ paths:
                 is_super_admin:
                   type: boolean
                   description: ''
-                  example: false
+                  example: true
                 zip_code:
                   type: string
                   description: 'Must not be greater than 8 characters.'
@@ -6361,7 +6530,7 @@ paths:
         in: path
         name: id
         description: 'The ID of the user.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -6404,7 +6573,7 @@ paths:
                       role:
                         type: string
                         description: ''
-                        example: gerente
+                        example: admin
                         enum:
                           - admin
                           - gerente
@@ -6420,7 +6589,7 @@ paths:
         in: path
         name: user_id
         description: 'The ID of the user.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -6455,7 +6624,7 @@ paths:
                       role:
                         type: string
                         description: ''
-                        example: conferente
+                        example: vendedor
                         enum:
                           - admin
                           - gerente
@@ -6526,7 +6695,7 @@ paths:
         in: path
         name: user_id
         description: 'The ID of the user.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -6679,7 +6848,7 @@ paths:
         in: path
         name: store_id
         description: 'The ID of the store.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -6806,7 +6975,7 @@ paths:
         in: path
         name: store_id
         description: 'The ID of the store.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -6814,7 +6983,7 @@ paths:
         in: path
         name: id
         description: 'The ID of the user.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -7287,7 +7456,7 @@ paths:
                 status:
                   type: string
                   description: ''
-                  example: disconnected
+                  example: connected
                   enum:
                     - unknown
                     - connected
@@ -7323,7 +7492,7 @@ paths:
         in: path
         name: id
         description: 'The ID of the instance.'
-        example: 16
+        example: 4
         required: true
         schema:
           type: integer
@@ -7377,7 +7546,7 @@ paths:
         in: path
         name: instance_id
         description: 'The ID of the instance.'
-        example: 16
+        example: 4
         required: true
         schema:
           type: integer
@@ -7423,7 +7592,7 @@ paths:
         in: path
         name: instance_id
         description: 'The ID of the instance.'
-        example: 16
+        example: 4
         required: true
         schema:
           type: integer
@@ -7469,7 +7638,7 @@ paths:
         in: path
         name: instance_id
         description: 'The ID of the instance.'
-        example: 16
+        example: 4
         required: true
         schema:
           type: integer
@@ -7563,7 +7732,7 @@ paths:
         in: path
         name: instance_id
         description: 'The ID of the instance.'
-        example: 16
+        example: 4
         required: true
         schema:
           type: integer
@@ -7617,7 +7786,7 @@ paths:
         in: path
         name: instance_id
         description: 'The ID of the instance.'
-        example: 16
+        example: 4
         required: true
         schema:
           type: integer
@@ -7663,7 +7832,7 @@ paths:
         in: path
         name: instance_id
         description: 'The ID of the instance.'
-        example: 16
+        example: 4
         required: true
         schema:
           type: integer
@@ -8193,7 +8362,7 @@ paths:
                 payday:
                   type: string
                   description: 'This field is required when <code>payed</code> is <code>true</code> or <code>1</code>. Must be a valid date.'
-                  example: '2026-01-13T20:33:54'
+                  example: '2026-01-14T01:18:09'
                   nullable: true
                 received_by_id:
                   type: integer
@@ -8203,7 +8372,7 @@ paths:
                 status:
                   type: integer
                   description: ''
-                  example: '2'
+                  example: '1'
                   enum:
                     - '1'
                     - '2'
@@ -8337,7 +8506,7 @@ paths:
                 status:
                   type: integer
                   description: ''
-                  example: '4'
+                  example: '3'
                   enum:
                     - '1'
                     - '2'
@@ -8375,7 +8544,7 @@ paths:
         in: path
         name: id
         description: 'The ID of the capas personalizada.'
-        example: 16
+        example: 31
         required: true
         schema:
           type: integer
@@ -8391,33 +8560,106 @@ paths:
     patch:
       summary: 'Atualizar status da capa'
       operationId: atualizarStatusDaCapa
-      description: "Atualiza o status de uma capa personalizada.\n\n**Quem pode usar:** Usuário com acesso à capa."
+      description: "Atualiza o status de uma capa personalizada.\nQuando o status é alterado para \"Disponível na Loja\" (3), é possível\nenviar uma notificação via WhatsApp para o cliente.\n\n**Quem pode usar:** Usuário com acesso à capa."
       parameters: []
       responses:
         200:
-          description: 'Status atualizado'
+          description: ''
           content:
             application/json:
               schema:
-                type: object
-                example:
-                  message: 'Status atualizado com sucesso.'
-                  data:
-                    id: 1
-                    status: 3
-                properties:
-                  message:
-                    type: string
-                    example: 'Status atualizado com sucesso.'
-                  data:
+                oneOf:
+                  -
+                    description: 'Status atualizado'
                     type: object
+                    example:
+                      message: 'Status atualizado com sucesso.'
+                      data:
+                        id: 1
+                        status: 3
                     properties:
-                      id:
-                        type: integer
-                        example: 1
-                      status:
-                        type: integer
-                        example: 3
+                      message:
+                        type: string
+                        example: 'Status atualizado com sucesso.'
+                      data:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          status:
+                            type: integer
+                            example: 3
+                  -
+                    description: 'Status atualizado com notificação'
+                    type: object
+                    example:
+                      message: 'Status atualizado com sucesso.'
+                      data:
+                        id: 1
+                        status: 3
+                      whatsapp_notification:
+                        sent: true
+                        phone: '****9999'
+                    properties:
+                      message:
+                        type: string
+                        example: 'Status atualizado com sucesso.'
+                      data:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          status:
+                            type: integer
+                            example: 3
+                      whatsapp_notification:
+                        type: object
+                        properties:
+                          sent:
+                            type: boolean
+                            example: true
+                          phone:
+                            type: string
+                            example: '****9999'
+                  -
+                    description: 'Notificação falhou'
+                    type: object
+                    example:
+                      message: 'Status atualizado com sucesso.'
+                      data:
+                        id: 1
+                        status: 3
+                      whatsapp_notification:
+                        sent: false
+                        phone: null
+                        error: 'Cliente não possui telefone cadastrado.'
+                    properties:
+                      message:
+                        type: string
+                        example: 'Status atualizado com sucesso.'
+                      data:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          status:
+                            type: integer
+                            example: 3
+                      whatsapp_notification:
+                        type: object
+                        properties:
+                          sent:
+                            type: boolean
+                            example: false
+                          phone:
+                            type: string
+                            example: null
+                          error:
+                            type: string
+                            example: 'Cliente não possui telefone cadastrado.'
       tags:
         - 'Capas Personalizadas'
       requestBody:
@@ -8429,8 +8671,12 @@ paths:
               properties:
                 status:
                   type: integer
-                  description: 'Novo status (1-6).'
+                  description: 'Novo status (1-7).'
                   example: 3
+                notify_whatsapp:
+                  type: boolean
+                  description: 'Enviar notificação WhatsApp ao cliente (apenas para status 3).'
+                  example: true
               required:
                 - status
     parameters:
@@ -9078,7 +9324,7 @@ paths:
         in: path
         name: id
         description: 'The ID of the phone brand.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -9449,7 +9695,7 @@ paths:
         in: path
         name: id
         description: 'The ID of the phone model.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -9882,7 +10128,7 @@ paths:
                     example: 'Você não tem permissão para acessar este cliente.'
       tags:
         - Clientes
-    patch:
+    put:
       summary: 'Atualizar cliente'
       operationId: atualizarCliente
       description: "Atualiza os dados de um cliente existente.\n\n**Quem pode usar:** Usuário com acesso ao cliente."
@@ -10011,7 +10257,7 @@ paths:
         in: path
         name: id
         description: 'The ID of the customer.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -10146,7 +10392,7 @@ paths:
         in: path
         name: customer_id
         description: 'The ID of the customer.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -10260,7 +10506,7 @@ paths:
         in: path
         name: customer_id
         description: 'The ID of the customer.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -10268,7 +10514,7 @@ paths:
         in: path
         name: id
         description: 'The ID of the device.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -10512,7 +10758,7 @@ paths:
                 status:
                   type: string
                   description: ''
-                  example: scheduled
+                  example: archived
                   enum:
                     - draft
                     - scheduled
@@ -10523,11 +10769,11 @@ paths:
                 only_unacknowledged:
                   type: boolean
                   description: ''
-                  example: false
+                  example: true
                 only_unseen:
                   type: boolean
                   description: ''
-                  example: false
+                  example: true
                 severity:
                   type: string
                   description: ''
@@ -10546,7 +10792,7 @@ paths:
                 scope:
                   type: string
                   description: ''
-                  example: user
+                  example: global
                   enum:
                     - global
                     - store
@@ -10563,11 +10809,11 @@ paths:
                 date_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T20:33:54'
+                  example: '2026-01-14T01:18:05'
                 date_to:
                   type: string
                   description: 'Must be a valid date. Must be a date after or equal to <code>date_from</code>.'
-                  example: '2052-02-06'
+                  example: '2052-02-07'
                 per_page:
                   type: integer
                   description: 'Must be at least 1. Must not be greater than 100.'
@@ -10579,7 +10825,7 @@ paths:
                 sort:
                   type: string
                   description: ''
-                  example: severity_desc
+                  example: created_at_desc
                   enum:
                     - starts_at_desc
                     - starts_at_asc
@@ -10757,7 +11003,7 @@ paths:
                 status:
                   type: string
                   description: ''
-                  example: active
+                  example: scheduled
                   enum:
                     - draft
                     - scheduled
@@ -10768,15 +11014,15 @@ paths:
                 only_unacknowledged:
                   type: boolean
                   description: ''
-                  example: false
+                  example: true
                 only_unseen:
                   type: boolean
                   description: ''
-                  example: true
+                  example: false
                 severity:
                   type: string
                   description: ''
-                  example: warning
+                  example: info
                   enum:
                     - info
                     - warning
@@ -10784,7 +11030,7 @@ paths:
                 type:
                   type: string
                   description: ''
-                  example: advertencia
+                  example: recado
                   enum:
                     - recado
                     - advertencia
@@ -10808,11 +11054,11 @@ paths:
                 date_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T20:33:54'
+                  example: '2026-01-14T01:18:05'
                 date_to:
                   type: string
                   description: 'Must be a valid date. Must be a date after or equal to <code>date_from</code>.'
-                  example: '2052-02-06'
+                  example: '2052-02-07'
                 per_page:
                   type: integer
                   description: 'Must be at least 1. Must not be greater than 100.'
@@ -10963,7 +11209,7 @@ paths:
                 pinned_until:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T20:33:54'
+                  example: '2026-01-14T01:18:05'
                   nullable: true
                 meta_json:
                   type: object
@@ -11142,7 +11388,7 @@ paths:
                 display_mode:
                   type: string
                   description: ''
-                  example: banner
+                  example: modal
                   enum:
                     - banner
                     - modal
@@ -11175,7 +11421,7 @@ paths:
                 scope:
                   type: string
                   description: ''
-                  example: user
+                  example: global
                   enum:
                     - global
                     - store
@@ -11188,12 +11434,12 @@ paths:
                 starts_at:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T20:33:54'
+                  example: '2026-01-14T01:18:06'
                   nullable: true
                 expires_at:
                   type: string
                   description: 'Must be a valid date. Must be a date after <code>starts_at</code>.'
-                  example: '2052-02-06'
+                  example: '2052-02-07'
                   nullable: true
                 repeat_every_minutes:
                   type: integer
@@ -11207,7 +11453,7 @@ paths:
                 pinned_until:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-13T20:33:54'
+                  example: '2026-01-14T01:18:06'
                   nullable: true
                 meta_json:
                   type: object
@@ -11254,7 +11500,7 @@ paths:
         in: path
         name: id
         description: 'The ID of the announcement.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -11312,7 +11558,7 @@ paths:
         in: path
         name: announcement_id
         description: 'The ID of the announcement.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -11370,7 +11616,7 @@ paths:
         in: path
         name: announcement_id
         description: 'The ID of the announcement.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -11428,7 +11674,7 @@ paths:
         in: path
         name: announcement_id
         description: 'The ID of the announcement.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -11514,7 +11760,7 @@ paths:
         in: path
         name: announcement_id
         description: 'The ID of the announcement.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -11572,7 +11818,7 @@ paths:
         in: path
         name: announcement_id
         description: 'The ID of the announcement.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -11646,7 +11892,7 @@ paths:
         in: path
         name: announcement_id
         description: 'The ID of the announcement.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -11776,7 +12022,7 @@ paths:
         in: path
         name: announcement_id
         description: 'The ID of the announcement.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -11838,7 +12084,7 @@ paths:
         in: path
         name: announcement_id
         description: 'The ID of the announcement.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -11912,7 +12158,7 @@ paths:
         in: path
         name: announcement_id
         description: 'The ID of the announcement.'
-        example: 16
+        example: 1
         required: true
         schema:
           type: integer
@@ -12123,7 +12369,7 @@ paths:
         in: path
         name: id
         description: 'The ID of the pedido.'
-        example: 16
+        example: 5
         required: true
         schema:
           type: integer
@@ -12207,7 +12453,7 @@ paths:
         in: path
         name: pedido_id
         description: 'The ID of the pedido.'
-        example: 16
+        example: 5
         required: true
         schema:
           type: integer
@@ -12278,7 +12524,7 @@ paths:
         in: path
         name: pedido_id
         description: 'The ID of the pedido.'
-        example: 16
+        example: 5
         required: true
         schema:
           type: integer
@@ -12335,7 +12581,7 @@ paths:
         in: path
         name: pedido_id
         description: 'The ID of the pedido.'
-        example: 16
+        example: 5
         required: true
         schema:
           type: integer
@@ -12362,18 +12608,18 @@ paths:
       description: "Returns statistical data about users without exposing personal information.\nUseful for dashboard cards and charts."
       parameters: []
       responses:
-        401:
+        404:
           description: ''
           content:
             application/json:
               schema:
                 type: object
                 example:
-                  message: Unauthenticated.
+                  message: 'The route api.maiscapinhas.com.br//api/v1/users/kpis could not be found.'
                 properties:
                   message:
                     type: string
-                    example: Unauthenticated.
+                    example: 'The route api.maiscapinhas.com.br//api/v1/users/kpis could not be found.'
       tags:
         - Outros
       requestBody:
@@ -12386,7 +12632,7 @@ paths:
                 active:
                   type: string
                   description: ''
-                  example: all
+                  example: '1'
                   enum:
                     - '0'
                     - '1'
@@ -12404,12 +12650,12 @@ paths:
                 date_from:
                   type: string
                   description: 'Must be a valid date in the format <code>Y-m-d</code>.'
-                  example: '2026-01-13'
+                  example: '2026-01-14'
                   nullable: true
                 date_to:
                   type: string
                   description: 'Must be a valid date in the format <code>Y-m-d</code>. Must be a date after or equal to <code>date_from</code>.'
-                  example: '2052-02-06'
+                  example: '2052-02-07'
                   nullable: true
   /api/v1/pedidos:
     get:
@@ -12898,7 +13144,7 @@ paths:
         in: path
         name: id
         description: 'The ID of the pedido.'
-        example: 16
+        example: 5
         required: true
         schema:
           type: integer
@@ -12914,33 +13160,106 @@ paths:
     patch:
       summary: 'Atualizar status do pedido'
       operationId: atualizarStatusDoPedido
-      description: "Atualiza apenas o status do pedido com registro no histórico.\n\n**Quem pode usar:** Usuário com acesso ao pedido."
+      description: "Atualiza apenas o status do pedido com registro no histórico.\nQuando o status é alterado para \"Disponível na Loja\" (3), é possível\nenviar uma notificação via WhatsApp para o cliente.\n\n**Quem pode usar:** Usuário com acesso ao pedido."
       parameters: []
       responses:
         200:
-          description: 'Status atualizado'
+          description: ''
           content:
             application/json:
               schema:
-                type: object
-                example:
-                  message: 'Status atualizado com sucesso.'
-                  data:
-                    id: 1
-                    status: 3
-                properties:
-                  message:
-                    type: string
-                    example: 'Status atualizado com sucesso.'
-                  data:
+                oneOf:
+                  -
+                    description: 'Status atualizado'
                     type: object
+                    example:
+                      message: 'Status atualizado com sucesso.'
+                      data:
+                        id: 1
+                        status: 3
                     properties:
-                      id:
-                        type: integer
-                        example: 1
-                      status:
-                        type: integer
-                        example: 3
+                      message:
+                        type: string
+                        example: 'Status atualizado com sucesso.'
+                      data:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          status:
+                            type: integer
+                            example: 3
+                  -
+                    description: 'Status atualizado com notificação'
+                    type: object
+                    example:
+                      message: 'Status atualizado com sucesso.'
+                      data:
+                        id: 1
+                        status: 3
+                      whatsapp_notification:
+                        sent: true
+                        phone: '****9999'
+                    properties:
+                      message:
+                        type: string
+                        example: 'Status atualizado com sucesso.'
+                      data:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          status:
+                            type: integer
+                            example: 3
+                      whatsapp_notification:
+                        type: object
+                        properties:
+                          sent:
+                            type: boolean
+                            example: true
+                          phone:
+                            type: string
+                            example: '****9999'
+                  -
+                    description: 'Notificação falhou'
+                    type: object
+                    example:
+                      message: 'Status atualizado com sucesso.'
+                      data:
+                        id: 1
+                        status: 3
+                      whatsapp_notification:
+                        sent: false
+                        phone: null
+                        error: 'Cliente não possui telefone cadastrado.'
+                    properties:
+                      message:
+                        type: string
+                        example: 'Status atualizado com sucesso.'
+                      data:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          status:
+                            type: integer
+                            example: 3
+                      whatsapp_notification:
+                        type: object
+                        properties:
+                          sent:
+                            type: boolean
+                            example: false
+                          phone:
+                            type: string
+                            example: null
+                          error:
+                            type: string
+                            example: 'Cliente não possui telefone cadastrado.'
       tags:
         - Pedidos
       requestBody:
@@ -12959,6 +13278,10 @@ paths:
                   description: 'Motivo da alteração.'
                   example: 'Cliente confirmou recebimento'
                   nullable: true
+                notify_whatsapp:
+                  type: boolean
+                  description: 'Enviar notificação WhatsApp ao cliente (apenas para status 3).'
+                  example: true
               required:
                 - status
     parameters:
@@ -12966,7 +13289,7 @@ paths:
         in: path
         name: pedido_id
         description: 'The ID of the pedido.'
-        example: 16
+        example: 5
         required: true
         schema:
           type: integer
@@ -13785,7 +14108,7 @@ paths:
         in: path
         name: id
         description: 'The ID of the pedido.'
-        example: 16
+        example: 5
         required: true
         schema:
           type: integer
@@ -13859,7 +14182,7 @@ paths:
         in: path
         name: pedido_id
         description: 'The ID of the pedido.'
-        example: 16
+        example: 5
         required: true
         schema:
           type: integer
@@ -13921,7 +14244,7 @@ paths:
         in: path
         name: pedido_id
         description: 'The ID of the pedido.'
-        example: 16
+        example: 5
         required: true
         schema:
           type: integer
@@ -13995,7 +14318,7 @@ paths:
         in: path
         name: pedido_id
         description: 'The ID of the pedido.'
-        example: 16
+        example: 5
         required: true
         schema:
           type: integer
@@ -14085,7 +14408,7 @@ paths:
                 order:
                   type: string
                   description: ''
-                  example: desc
+                  example: asc
                   enum:
                     - asc
                     - desc
@@ -14668,7 +14991,7 @@ paths:
         in: path
         name: instance_id
         description: 'The ID of the instance.'
-        example: 16
+        example: 4
         required: true
         schema:
           type: integer
@@ -14752,7 +15075,7 @@ paths:
         in: path
         name: instance_id
         description: 'The ID of the instance.'
-        example: 16
+        example: 4
         required: true
         schema:
           type: integer
@@ -14843,7 +15166,7 @@ paths:
         in: path
         name: instance_id
         description: 'The ID of the instance.'
-        example: 16
+        example: 4
         required: true
         schema:
           type: integer

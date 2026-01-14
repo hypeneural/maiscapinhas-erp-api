@@ -186,7 +186,7 @@ endpoints:
         name: from
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-13T20:33:55'
+        example: '2026-01-14T01:18:10'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -197,7 +197,7 @@ endpoints:
         name: to
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-13T20:33:55'
+        example: '2026-01-14T01:18:10'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -281,8 +281,8 @@ endpoints:
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      from: '2026-01-13T20:33:55'
-      to: '2026-01-13T20:33:55'
+      from: '2026-01-14T01:18:10'
+      to: '2026-01-14T01:18:10'
       causer_id: 16
       event: 'n'
       log_name: g
@@ -405,7 +405,7 @@ endpoints:
         name: from
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-13T20:33:55'
+        example: '2026-01-14T01:18:10'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -416,15 +416,15 @@ endpoints:
         name: to
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-13T20:33:55'
+        example: '2026-01-14T01:18:10'
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      from: '2026-01-13T20:33:55'
-      to: '2026-01-13T20:33:55'
+      from: '2026-01-14T01:18:10'
+      to: '2026-01-14T01:18:10'
     fileParameters: []
     responses:
       -
@@ -496,7 +496,7 @@ endpoints:
         name: auditLog_id
         description: 'The ID of the auditLog.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -514,7 +514,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      auditLog_id: 16
+      auditLog_id: 1
       id: 150
     queryParameters: []
     cleanQueryParameters: []

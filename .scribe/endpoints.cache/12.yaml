@@ -49,7 +49,7 @@ endpoints:
         name: from
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-13T20:33:54'
+        example: '2026-01-14T01:18:08'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -60,7 +60,7 @@ endpoints:
         name: to
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-13T20:33:54'
+        example: '2026-01-14T01:18:08'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -79,19 +79,21 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      from: '2026-01-13T20:33:54'
-      to: '2026-01-13T20:33:54'
+      from: '2026-01-14T01:18:08'
+      to: '2026-01-14T01:18:08'
       per_page: 22
     fileParameters: []
     responses:
       -
         custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
+        status: 404
+        content: |-
+          {
+              "message": "The route api.maiscapinhas.com.br//api/v1/finance/bonus could not be found."
+          }
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          vary: Origin
         description: null
     responseFields: []
     auth:
@@ -232,7 +234,7 @@ endpoints:
         name: seller_id
         description: 'The ID of the seller.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -250,7 +252,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      seller_id: 16
+      seller_id: 1
       seller: 5
     queryParameters:
       from:
@@ -284,7 +286,7 @@ endpoints:
         name: from
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-13T20:33:54'
+        example: '2026-01-14T01:18:08'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -295,15 +297,15 @@ endpoints:
         name: to
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-13T20:33:54'
+        example: '2026-01-14T01:18:08'
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      from: '2026-01-13T20:33:54'
-      to: '2026-01-13T20:33:54'
+      from: '2026-01-14T01:18:08'
+      to: '2026-01-14T01:18:08'
     fileParameters: []
     responses:
       -
@@ -398,12 +400,14 @@ endpoints:
     responses:
       -
         custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
+        status: 404
+        content: |-
+          {
+              "message": "The route api.maiscapinhas.com.br//api/v1/finance/commission could not be found."
+          }
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          vary: Origin
         description: null
     responseFields: []
     auth:
@@ -441,7 +445,7 @@ endpoints:
         name: seller_id
         description: 'The ID of the seller.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -459,7 +463,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      seller_id: 16
+      seller_id: 1
       seller: 5
     queryParameters:
       month:
@@ -493,12 +497,14 @@ endpoints:
     responses:
       -
         custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
+        status: 404
+        content: |-
+          {
+              "message": "The route api.maiscapinhas.com.br//api/v1/finance/commission/seller/1 could not be found."
+          }
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          vary: Origin
         description: null
     responseFields: []
     auth:
@@ -536,7 +542,7 @@ endpoints:
         name: seller_id
         description: 'The ID of the seller.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -554,7 +560,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      seller_id: 16
+      seller_id: 1
       seller: 5
     queryParameters:
       month:

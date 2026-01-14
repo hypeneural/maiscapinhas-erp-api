@@ -40,12 +40,14 @@ endpoints:
     responses:
       -
         custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
+        status: 404
+        content: |-
+          {
+              "message": "The route api.maiscapinhas.com.br//api/v1/goals/monthly could not be found."
+          }
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          vary: Origin
         description: null
     responseFields: []
     auth:
@@ -189,12 +191,14 @@ endpoints:
     responses:
       -
         custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
+        status: 404
+        content: |-
+          {
+              "message": "The route api.maiscapinhas.com.br//api/v1/goals/monthly/16 could not be found."
+          }
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          vary: Origin
         description: null
     responseFields: []
     auth:

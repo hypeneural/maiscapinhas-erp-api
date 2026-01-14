@@ -58,7 +58,7 @@ endpoints:
         name: instance_id
         description: 'The ID of the instance.'
         required: true
-        example: 16
+        example: 4
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -76,7 +76,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      instance_id: 16
+      instance_id: 4
       instance: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -197,7 +197,7 @@ endpoints:
         name: instance_id
         description: 'The ID of the instance.'
         required: true
-        example: 16
+        example: 4
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -215,7 +215,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      instance_id: 16
+      instance_id: 4
       instance: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -352,7 +352,7 @@ endpoints:
         name: instance_id
         description: 'The ID of the instance.'
         required: true
-        example: 16
+        example: 4
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -370,7 +370,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      instance_id: 16
+      instance_id: 4
       instance: 1
     queryParameters: []
     cleanQueryParameters: []

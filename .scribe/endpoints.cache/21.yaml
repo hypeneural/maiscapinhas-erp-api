@@ -446,7 +446,7 @@ endpoints:
         name: id
         description: 'The ID of the pedido.'
         required: true
-        example: 16
+        example: 5
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -464,7 +464,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 16
+      id: 5
       pedido: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -539,7 +539,7 @@ endpoints:
         name: id
         description: 'The ID of the pedido.'
         required: true
-        example: 16
+        example: 5
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -557,7 +557,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 16
+      id: 5
       pedido: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -694,7 +694,7 @@ endpoints:
         name: id
         description: 'The ID of the pedido.'
         required: true
-        example: 16
+        example: 5
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -712,7 +712,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 16
+      id: 5
       pedido: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -759,6 +759,8 @@ endpoints:
       title: 'Atualizar status do pedido'
       description: |-
         Atualiza apenas o status do pedido com registro no histórico.
+        Quando o status é alterado para "Disponível na Loja" (3), é possível
+        enviar uma notificação via WhatsApp para o cliente.
 
         **Quem pode usar:** Usuário com acesso ao pedido.
       authenticated: true
@@ -773,7 +775,7 @@ endpoints:
         name: pedido_id
         description: 'The ID of the pedido.'
         required: true
-        example: 16
+        example: 5
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -791,7 +793,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      pedido_id: 16
+      pedido_id: 5
       pedido: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -818,9 +820,21 @@ endpoints:
         exampleWasSpecified: true
         nullable: true
         deprecated: false
+      notify_whatsapp:
+        custom: []
+        name: notify_whatsapp
+        description: 'Enviar notificação WhatsApp ao cliente (apenas para status 3).'
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
     cleanBodyParameters:
       status: 3
       reason: 'Cliente confirmou recebimento'
+      notify_whatsapp: true
     fileParameters: []
     responses:
       -
@@ -833,6 +847,28 @@ endpoints:
           }
         headers: []
         description: 'Status atualizado'
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "message": "Status atualizado com sucesso.",
+            "data": {"id": 1, "status": 3},
+            "whatsapp_notification": {"sent": true, "phone": "****9999"}
+          }
+        headers: []
+        description: 'Status atualizado com notificação'
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "message": "Status atualizado com sucesso.",
+            "data": {"id": 1, "status": 3},
+            "whatsapp_notification": {"sent": false, "phone": null, "error": "Cliente não possui telefone cadastrado."}
+          }
+        headers: []
+        description: 'Notificação falhou'
     responseFields: []
     auth:
       - headers

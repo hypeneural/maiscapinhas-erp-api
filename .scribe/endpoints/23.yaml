@@ -611,7 +611,7 @@ endpoints:
         name: id
         description: 'The ID of the user.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -629,7 +629,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 16
+      id: 1
       user: 6
     queryParameters: []
     cleanQueryParameters: []
@@ -729,7 +729,7 @@ endpoints:
         name: id
         description: 'The ID of the user.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -747,7 +747,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 16
+      id: 1
       user: 6
     queryParameters: []
     cleanQueryParameters: []
@@ -801,7 +801,7 @@ endpoints:
         name: is_super_admin
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -968,7 +968,7 @@ endpoints:
       email: joao.novo@maiscapinhas.com.br
       password: novasenha123
       active: true
-      is_super_admin: false
+      is_super_admin: true
       zip_code: vdljnikh
       street: w
       number: aykcmyuwpwlvqwrs
@@ -1064,7 +1064,7 @@ endpoints:
         name: id
         description: 'The ID of the user.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -1082,7 +1082,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 16
+      id: 1
       user: 6
     queryParameters: []
     cleanQueryParameters: []
@@ -1158,14 +1158,14 @@ endpoints:
         name: user_id
         description: 'The ID of the user.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      user_id: 16
+      user_id: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
@@ -1197,7 +1197,7 @@ endpoints:
         name: 'stores[].role'
         description: ''
         required: true
-        example: gerente
+        example: admin
         type: string
         enumValues:
           - admin
@@ -1211,7 +1211,7 @@ endpoints:
       stores:
         -
           store_id: 16
-          role: gerente
+          role: admin
     fileParameters: []
     responses: []
     responseFields: []
@@ -1264,14 +1264,14 @@ endpoints:
         name: user_id
         description: 'The ID of the user.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      user_id: 16
+      user_id: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
@@ -1303,7 +1303,7 @@ endpoints:
         name: 'stores[].role'
         description: ''
         required: true
-        example: conferente
+        example: vendedor
         type: string
         enumValues:
           - admin
@@ -1317,7 +1317,7 @@ endpoints:
       stores:
         -
           store_id: 16
-          role: conferente
+          role: vendedor
     fileParameters: []
     responses: []
     responseFields: []
@@ -1370,14 +1370,14 @@ endpoints:
         name: user_id
         description: 'The ID of the user.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      user_id: 16
+      user_id: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
@@ -1464,14 +1464,14 @@ endpoints:
         name: user_id
         description: 'The ID of the user.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      user_id: 16
+      user_id: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:

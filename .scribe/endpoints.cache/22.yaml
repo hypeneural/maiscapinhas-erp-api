@@ -431,7 +431,7 @@ endpoints:
         name: payday
         description: 'This field is required when <code>payed</code> is <code>true</code> or <code>1</code>. Must be a valid date.'
         required: false
-        example: '2026-01-13T20:33:54'
+        example: '2026-01-14T01:18:09'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -453,7 +453,7 @@ endpoints:
         name: status
         description: ''
         required: false
-        example: '2'
+        example: '1'
         type: integer
         enumValues:
           - '1'
@@ -488,9 +488,9 @@ endpoints:
       qty: 1
       price: 49.9
       payed: false
-      payday: '2026-01-13T20:33:54'
+      payday: '2026-01-14T01:18:09'
       received_by_id: 16
-      status: '2'
+      status: '1'
       observation: 'Cliente quer borda preta'
     fileParameters: []
     responses:
@@ -563,7 +563,7 @@ endpoints:
         name: id
         description: 'The ID of the capas personalizada.'
         required: true
-        example: 16
+        example: 31
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -581,7 +581,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 16
+      id: 31
       capasPersonalizada: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -657,7 +657,7 @@ endpoints:
         name: id
         description: 'The ID of the capas personalizada.'
         required: true
-        example: 16
+        example: 31
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -675,7 +675,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 16
+      id: 31
       capasPersonalizada: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -762,7 +762,7 @@ endpoints:
         name: status
         description: ''
         required: false
-        example: '4'
+        example: '3'
         type: integer
         enumValues:
           - '1'
@@ -794,7 +794,7 @@ endpoints:
       obs: z
       qty: 27
       price: 59.9
-      status: '4'
+      status: '3'
       observation: 'Cliente alterou modelo'
     fileParameters: []
     responses:
@@ -861,7 +861,7 @@ endpoints:
         name: id
         description: 'The ID of the capas personalizada.'
         required: true
-        example: 16
+        example: 31
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -879,7 +879,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 16
+      id: 31
       capasPersonalizada: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -932,6 +932,8 @@ endpoints:
       title: 'Atualizar status da capa'
       description: |-
         Atualiza o status de uma capa personalizada.
+        Quando o status é alterado para "Disponível na Loja" (3), é possível
+        enviar uma notificação via WhatsApp para o cliente.
 
         **Quem pode usar:** Usuário com acesso à capa.
       authenticated: true
@@ -972,7 +974,7 @@ endpoints:
       status:
         custom: []
         name: status
-        description: 'Novo status (1-6).'
+        description: 'Novo status (1-7).'
         required: true
         example: 3
         type: integer
@@ -980,8 +982,20 @@ endpoints:
         exampleWasSpecified: true
         nullable: false
         deprecated: false
+      notify_whatsapp:
+        custom: []
+        name: notify_whatsapp
+        description: 'Enviar notificação WhatsApp ao cliente (apenas para status 3).'
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
     cleanBodyParameters:
       status: 3
+      notify_whatsapp: true
     fileParameters: []
     responses:
       -
@@ -994,6 +1008,28 @@ endpoints:
           }
         headers: []
         description: 'Status atualizado'
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "message": "Status atualizado com sucesso.",
+            "data": {"id": 1, "status": 3},
+            "whatsapp_notification": {"sent": true, "phone": "****9999"}
+          }
+        headers: []
+        description: 'Status atualizado com notificação'
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "message": "Status atualizado com sucesso.",
+            "data": {"id": 1, "status": 3},
+            "whatsapp_notification": {"sent": false, "phone": null, "error": "Cliente não possui telefone cadastrado."}
+          }
+        headers: []
+        description: 'Notificação falhou'
     responseFields: []
     auth:
       - headers

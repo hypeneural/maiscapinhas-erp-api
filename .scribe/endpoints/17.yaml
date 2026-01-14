@@ -32,7 +32,7 @@ endpoints:
         name: active
         description: ''
         required: false
-        example: all
+        example: '1'
         type: string
         enumValues:
           - '0'
@@ -68,7 +68,7 @@ endpoints:
         name: date_from
         description: 'Must be a valid date in the format <code>Y-m-d</code>.'
         required: false
-        example: '2026-01-13'
+        example: '2026-01-14'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -79,28 +79,30 @@ endpoints:
         name: date_to
         description: 'Must be a valid date in the format <code>Y-m-d</code>. Must be a date after or equal to <code>date_from</code>.'
         required: false
-        example: '2052-02-06'
+        example: '2052-02-07'
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: true
         deprecated: false
     cleanBodyParameters:
-      active: all
+      active: '1'
       state: bn
       city: g
-      date_from: '2026-01-13'
-      date_to: '2052-02-06'
+      date_from: '2026-01-14'
+      date_to: '2052-02-07'
     fileParameters: []
     responses:
       -
         custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
+        status: 404
+        content: |-
+          {
+              "message": "The route api.maiscapinhas.com.br//api/v1/users/kpis could not be found."
+          }
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          vary: Origin
         description: null
     responseFields: []
     auth:

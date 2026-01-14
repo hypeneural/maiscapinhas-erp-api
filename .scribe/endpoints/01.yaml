@@ -210,6 +210,110 @@ endpoints:
     custom: []
     httpMethods:
       - POST
+    uri: api/v1/auth/forgot-password/whatsapp
+    metadata:
+      custom: []
+      groupName: Autenticação
+      groupDescription: |-
+
+        Endpoints para recuperação e alteração de senha.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Solicitar recuperação de senha via WhatsApp'
+      description: |-
+        Envia um código de 6 dígitos via WhatsApp para redefinir a senha.
+        O código expira em 15 minutos.
+
+        **Quem pode usar:** Qualquer usuário com email ou WhatsApp cadastrado.
+
+        **Rate Limit:** 3 tentativas por minuto por IP.
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
+        custom: []
+        name: email
+        description: 'Email cadastrado (obrigatório se whatsapp não informado).'
+        required: false
+        example: joao@maiscapinhas.com.br
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      whatsapp:
+        custom: []
+        name: whatsapp
+        description: 'WhatsApp cadastrado (obrigatório se email não informado).'
+        required: false
+        example: '48999999999'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      email: joao@maiscapinhas.com.br
+      whatsapp: '48999999999'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "message": "Código enviado via WhatsApp.",
+              "phone_masked": "****9999",
+              "expires_in_minutes": 15
+            },
+            "meta": { "timestamp": "2026-01-13T12:00:00Z" }
+          }
+        headers: []
+        description: 'Código enviado'
+      -
+        custom: []
+        status: 422
+        content: |-
+          {
+            "message": "Usuário não encontrado."
+          }
+        headers: []
+        description: 'Usuário não encontrado'
+      -
+        custom: []
+        status: 422
+        content: |-
+          {
+            "message": "Usuário não possui WhatsApp cadastrado."
+          }
+        headers: []
+        description: 'Usuário sem WhatsApp'
+      -
+        custom: []
+        status: 502
+        content: |-
+          {
+            "message": "Falha ao enviar código via WhatsApp. Tente novamente."
+          }
+        headers: []
+        description: 'Falha ao enviar'
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
     uri: api/v1/auth/reset-password
     metadata:
       custom: []
@@ -304,6 +408,109 @@ endpoints:
           }
         headers: []
         description: 'Token inválido'
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/auth/reset-password/code
+    metadata:
+      custom: []
+      groupName: Autenticação
+      groupDescription: |-
+
+        Endpoints para recuperação e alteração de senha.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Redefinir senha com código WhatsApp'
+      description: |-
+        Redefine a senha usando o código de 6 dígitos recebido via WhatsApp.
+
+        **Quem pode usar:** Qualquer usuário com código válido.
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      code:
+        custom: []
+        name: code
+        description: 'Código de 6 dígitos recebido via WhatsApp.'
+        required: true
+        example: '123456'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      email:
+        custom: []
+        name: email
+        description: 'Email do usuário.'
+        required: true
+        example: joao@maiscapinhas.com.br
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      password:
+        custom: []
+        name: password
+        description: 'Nova senha (mínimo 8 caracteres).'
+        required: true
+        example: novaSenha123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      password_confirmation:
+        custom: []
+        name: password_confirmation
+        description: 'Confirmação da nova senha.'
+        required: true
+        example: novaSenha123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      code: '123456'
+      email: joao@maiscapinhas.com.br
+      password: novaSenha123
+      password_confirmation: novaSenha123
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": { "message": "Senha alterada com sucesso." },
+            "meta": { "timestamp": "2026-01-13T12:00:00Z" }
+          }
+        headers: []
+        description: 'Senha alterada'
+      -
+        custom: []
+        status: 422
+        content: |-
+          {
+            "message": "Código inválido ou expirado."
+          }
+        headers: []
+        description: 'Código inválido'
     responseFields: []
     auth: []
     controller: null

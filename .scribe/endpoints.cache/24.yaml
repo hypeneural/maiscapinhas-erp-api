@@ -535,7 +535,7 @@ endpoints:
         name: 'opening_hours.weekly[].*.start'
         description: 'Must be a valid date in the format <code>H:i</code>.'
         required: true
-        example: '20:33'
+        example: '01:18'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -546,7 +546,7 @@ endpoints:
         name: 'opening_hours.weekly[].*.end'
         description: 'Must be a valid date in the format <code>H:i</code>.'
         required: true
-        example: '20:33'
+        example: '01:18'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -557,7 +557,7 @@ endpoints:
         name: 'opening_hours.exceptions[].date'
         description: 'Must be a valid date in the format <code>Y-m-d</code>.'
         required: true
-        example: '2026-01-13'
+        example: '2026-01-14'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -607,7 +607,7 @@ endpoints:
             - []
         exceptions:
           -
-            date: '2026-01-13'
+            date: '2026-01-14'
             closed: true
             reason: o
       cnpj: tnnoqitpxntltcvi
@@ -695,7 +695,7 @@ endpoints:
         name: id
         description: 'The ID of the store.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -713,7 +713,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 16
+      id: 1
       store: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -803,7 +803,7 @@ endpoints:
         name: id
         description: 'The ID of the store.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -821,7 +821,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 16
+      id: 1
       store: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -875,7 +875,7 @@ endpoints:
         name: bio_enabled
         description: ''
         required: false
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -1140,7 +1140,7 @@ endpoints:
         name: 'opening_hours.weekly[].*.start'
         description: 'Must be a valid date in the format <code>H:i</code>.'
         required: true
-        example: '20:33'
+        example: '01:18'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1151,7 +1151,7 @@ endpoints:
         name: 'opening_hours.weekly[].*.end'
         description: 'Must be a valid date in the format <code>H:i</code>.'
         required: true
-        example: '20:33'
+        example: '01:18'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1162,7 +1162,7 @@ endpoints:
         name: 'opening_hours.exceptions[].date'
         description: 'Must be a valid date in the format <code>Y-m-d</code>.'
         required: true
-        example: '2026-01-13'
+        example: '2026-01-14'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1195,7 +1195,7 @@ endpoints:
       city: Tijucas
       active: true
       codigo: gzmiyvdljnikhway
-      bio_enabled: true
+      bio_enabled: false
       address: k
       neighborhood: c
       state: my
@@ -1212,7 +1212,7 @@ endpoints:
             - []
         exceptions:
           -
-            date: '2026-01-13'
+            date: '2026-01-14'
             closed: true
             reason: o
       cnpj: tnnoqitpxntltcvi
@@ -1301,7 +1301,7 @@ endpoints:
         name: id
         description: 'The ID of the store.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -1319,7 +1319,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 16
+      id: 1
       store: 1
     queryParameters: []
     cleanQueryParameters: []

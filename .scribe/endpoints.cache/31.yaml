@@ -456,7 +456,7 @@ endpoints:
         name: id
         description: 'The ID of the instance.'
         required: true
-        example: 16
+        example: 4
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -474,7 +474,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 16
+      id: 4
       instance: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -549,7 +549,7 @@ endpoints:
         name: id
         description: 'The ID of the instance.'
         required: true
-        example: 16
+        example: 4
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -567,7 +567,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 16
+      id: 4
       instance: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -731,7 +731,7 @@ endpoints:
         name: status
         description: ''
         required: false
-        example: disconnected
+        example: connected
         type: string
         enumValues:
           - unknown
@@ -755,7 +755,7 @@ endpoints:
       notes: 'n'
       webhook_secret: g
       webhook_url: 'http://www.okuneva.com/fugiat-sunt-nihil-accusantium-harum-mollitia.html'
-      status: disconnected
+      status: connected
     fileParameters: []
     responses:
       -
@@ -814,7 +814,7 @@ endpoints:
         name: id
         description: 'The ID of the instance.'
         required: true
-        example: 16
+        example: 4
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -832,7 +832,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 16
+      id: 4
       instance: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -898,7 +898,7 @@ endpoints:
         name: instance_id
         description: 'The ID of the instance.'
         required: true
-        example: 16
+        example: 4
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -916,7 +916,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      instance_id: 16
+      instance_id: 4
       instance: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -980,7 +980,7 @@ endpoints:
         name: instance_id
         description: 'The ID of the instance.'
         required: true
-        example: 16
+        example: 4
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -998,7 +998,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      instance_id: 16
+      instance_id: 4
       instance: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -1062,7 +1062,7 @@ endpoints:
         name: instance_id
         description: 'The ID of the instance.'
         required: true
-        example: 16
+        example: 4
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -1080,7 +1080,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      instance_id: 16
+      instance_id: 4
       instance: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -1146,7 +1146,7 @@ endpoints:
         name: instance_id
         description: 'The ID of the instance.'
         required: true
-        example: 16
+        example: 4
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -1164,7 +1164,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      instance_id: 16
+      instance_id: 4
       instance: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -1257,7 +1257,7 @@ endpoints:
         name: instance_id
         description: 'The ID of the instance.'
         required: true
-        example: 16
+        example: 4
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -1275,7 +1275,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      instance_id: 16
+      instance_id: 4
       instance: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -1344,7 +1344,7 @@ endpoints:
         name: instance_id
         description: 'The ID of the instance.'
         required: true
-        example: 16
+        example: 4
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -1362,7 +1362,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      instance_id: 16
+      instance_id: 4
       instance: 1
     queryParameters: []
     cleanQueryParameters: []
