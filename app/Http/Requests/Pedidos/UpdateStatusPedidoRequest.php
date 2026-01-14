@@ -20,6 +20,7 @@ class UpdateStatusPedidoRequest extends FormRequest
         return [
             'status' => ['required', 'integer', Rule::in(PedidoStatus::values())],
             'reason' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'notify_whatsapp' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -28,6 +29,7 @@ class UpdateStatusPedidoRequest extends FormRequest
         return [
             'status.required' => 'O status é obrigatório.',
             'status.in' => 'Status inválido.',
+            'notify_whatsapp.boolean' => 'O campo notify_whatsapp deve ser verdadeiro ou falso.',
         ];
     }
 }

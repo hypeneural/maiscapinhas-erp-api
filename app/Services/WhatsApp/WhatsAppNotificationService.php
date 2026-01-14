@@ -221,5 +221,98 @@ class WhatsAppNotificationService
 
         return $message;
     }
+
+    // ========================================
+    // Pedido Notifications
+    // ========================================
+
+    /**
+     * Send notification when pedido is available for pickup.
+     *
+     * @return array{sent: bool, phone: ?string, error: ?string}
+     */
+    public function sendPedidoAvailableNotification(
+        \App\Models\Pedido $pedido,
+        ?WhatsAppInstance $instance = null
+    ): array {
+        $customer = $pedido->customer;
+
+        if (!$customer || !$customer->phone) {
+            return [
+                'sent' => false,
+                'phone' => null,
+                'error' => 'Cliente não possui telefone cadastrado.',
+            ];
+        }
+
+        $instance = $instance ?? $this->resolveInstanceForPedido($pedido);
+        if (!$instance) {
+            return [
+                'sent' => false,
+                'phone' => null,
+                'error' => 'Nenhuma instância WhatsApp ativa disponível.',
+            ];
+        }
+
+        $phone = $this->normalizePhoneNumber($customer->phone);
+        $message = $this->buildPedidoAvailableMessage($pedido);
+
+        try {
+            $client = $this->clientFactory->make($instance);
+            $result = $client->sendText($phone, $message);
+
+            $sent = $result['ok'] ?? false;
+
+            return [
+                'sent' => $sent,
+                'phone' => $this->maskPhoneNumber($phone),
+                'error' => !$sent ? ($result['data']['message'] ?? 'Erro ao enviar mensagem.') : null,
+            ];
+        } catch (\Exception $e) {
+            return [
+                'sent' => false,
+                'phone' => $this->maskPhoneNumber($phone),
+                'error' => 'Erro de conexão com WhatsApp: ' . $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Resolve WhatsApp instance for a pedido (store -> global fallback).
+     */
+    private function resolveInstanceForPedido(\App\Models\Pedido $pedido): ?WhatsAppInstance
+    {
+        return WhatsAppInstance::resolveForContext(null, $pedido->store_id);
+    }
+
+    /**
+     * Build message for pedido available notification.
+     */
+    private function buildPedidoAvailableMessage(\App\Models\Pedido $pedido): string
+    {
+        $customerName = $pedido->customer?->name ?? 'Cliente';
+        $product = $pedido->selected_product ?? 'Produto';
+        $storeName = $pedido->store?->name ?? 'Nossa Loja';
+        $storeCity = $pedido->store?->city ?? '';
+        $sellerName = $pedido->user?->name ?? null;
+        $orderId = $pedido->id;
+
+        $storeInfo = $storeCity ? "{$storeName} - {$storeCity}" : $storeName;
+
+        $message = "Olá {$customerName}! 👋\n\n" .
+            "Seu pedido está disponível para retirada! 🎉\n\n" .
+            "📦 *Produto:* {$product}\n" .
+            "🏪 *Loja:* {$storeInfo}\n" .
+            "📋 *Pedido:* #{$orderId}\n";
+
+        if ($sellerName) {
+            $message .= "👤 *Você foi atendido por:* {$sellerName}\n";
+        }
+
+        $message .= "\nAguardamos sua visita!\n" .
+            "*+MaisCapinhas*";
+
+        return $message;
+    }
 }
 

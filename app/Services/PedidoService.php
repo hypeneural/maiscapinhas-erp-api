@@ -8,10 +8,16 @@ use App\Enums\PedidoStatus;
 use App\Models\Pedido;
 use App\Models\PedidoStatusHistory;
 use App\Models\User;
+use App\Services\WhatsApp\WhatsAppNotificationService;
 use Illuminate\Support\Facades\DB;
 
 class PedidoService
 {
+    public function __construct(
+        private readonly WhatsAppNotificationService $whatsAppService,
+    ) {
+    }
+
     /**
      * Record status change in history.
      */
@@ -70,14 +76,17 @@ class PedidoService
 
     /**
      * Update pedido status with history.
+     *
+     * @return array{pedido: Pedido, whatsapp_notification: ?array}
      */
     public function updateStatus(
         Pedido $pedido,
         int $newStatusValue,
         User $changedBy,
         ?string $reason = null,
-        string $source = 'api'
-    ): Pedido {
+        string $source = 'api',
+        bool $notifyWhatsApp = false
+    ): array {
         $oldStatus = $pedido->status;
         $newStatus = PedidoStatus::from($newStatusValue);
 
@@ -98,7 +107,20 @@ class PedidoService
             );
         }
 
-        return $pedido->fresh();
+        $pedido = $pedido->fresh();
+
+        // Send WhatsApp notification if requested and status is "Disponível na Loja"
+        $whatsappNotification = null;
+        if ($notifyWhatsApp && $newStatus === PedidoStatus::DISPONIVEL_LOJA) {
+            // Load customer, store and user (seller) relationships if not loaded
+            $pedido->loadMissing(['customer', 'store', 'user']);
+            $whatsappNotification = $this->whatsAppService->sendPedidoAvailableNotification($pedido);
+        }
+
+        return [
+            'pedido' => $pedido,
+            'whatsapp_notification' => $whatsappNotification,
+        ];
     }
 
     /**

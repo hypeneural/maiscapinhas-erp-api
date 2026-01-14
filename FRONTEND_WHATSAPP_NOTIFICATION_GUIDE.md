@@ -1,25 +1,25 @@
-# 📱 Guia de Integração Frontend: Notificação WhatsApp para Capas Personalizadas
+# 📱 Guia de Integração Frontend: Notificação WhatsApp
 
 ## 📋 Resumo das Melhorias
 
-O endpoint `PATCH /api/capas-personalizadas/{id}/status` foi melhorado para suportar **notificações automáticas via WhatsApp** quando o status é alterado para "Disponível na Loja" (status = 3).
+Os endpoints de atualização de status foram melhorados para suportar **notificações automáticas via WhatsApp** quando o status é alterado para "Disponível na Loja" (status = 3).
+
+### Endpoints com suporte a notificação WhatsApp:
+
+| Endpoint | Status para Notificação |
+|----------|------------------------|
+| `PATCH /api/v1/capas-personalizadas/{id}/status` | 3 (Disponível na Loja) |
+| `PATCH /api/v1/pedidos/{id}/status` | 3 (Disponível na Loja) |
 
 ---
 
-## 🔄 Endpoint Modificado
+## 🔄 Endpoint: Capas Personalizadas
 
 ```
 PATCH /api/v1/capas-personalizadas/{id}/status
 ```
 
-### Antes (sem mudanças no uso atual)
-```json
-{
-    "status": 3
-}
-```
-
-### Agora (com notificação opcional)
+### Request
 ```json
 {
     "status": 3,
@@ -27,17 +27,62 @@ PATCH /api/v1/capas-personalizadas/{id}/status
 }
 ```
 
+### Status Disponíveis
+
+| Valor | Nome | Cor |
+|-------|------|-----|
+| 1 | Encomenda Solicitada | blue |
+| 2 | Produto Indisponível | red |
+| **3** | **Disponível na Loja** ✅ | yellow |
+| 4 | Venda Realizada | green |
+| 5 | Cancelada | gray |
+| 6 | Enviado Produção | purple |
+| 7 | No Carrinho | slate |
+
+---
+
+## 🔄 Endpoint: Pedidos
+
+```
+PATCH /api/v1/pedidos/{id}/status
+```
+
+### Request
+```json
+{
+    "status": 3,
+    "reason": "Produto chegou",
+    "notify_whatsapp": true
+}
+```
+
+### Status Disponíveis
+
+| Valor | Nome | Cor |
+|-------|------|-----|
+| 1 | Solicitado | blue |
+| 2 | Produto Indisponível | red |
+| **3** | **Disponível na Loja** ✅ | yellow |
+| 4 | Venda Realizada | green |
+| 5 | Cancelado | gray |
+
 ---
 
 ## 📥 Schema da Request
 
 ```typescript
-interface UpdateCapaStatusRequest {
+interface UpdateStatusRequest {
     /**
-     * Novo status da capa (1-7)
+     * Novo status (1-7 para capas, 1-5 para pedidos)
      * @required
      */
-    status: CapaStatus;
+    status: number;
+    
+    /**
+     * Motivo da alteração (apenas para pedidos)
+     * @optional
+     */
+    reason?: string;
     
     /**
      * Enviar notificação WhatsApp ao cliente
@@ -46,17 +91,6 @@ interface UpdateCapaStatusRequest {
      */
     notify_whatsapp?: boolean;
 }
-
-// Valores de status
-enum CapaStatus {
-    ENCOMENDA_SOLICITADA = 1,   // blue
-    PRODUTO_INDISPONIVEL = 2,   // red
-    DISPONIVEL_LOJA = 3,        // yellow  ← Notificação disponível aqui!
-    VENDA_REALIZADA = 4,        // green
-    CANCELADA = 5,              // gray
-    ENVIADO_PRODUCAO = 6,       // purple/orange
-    NO_CARRINHO = 7             // slate
-}
 ```
 
 ---
@@ -64,9 +98,9 @@ enum CapaStatus {
 ## 📤 Schema da Response
 
 ```typescript
-interface UpdateCapaStatusResponse {
+interface UpdateStatusResponse {
     message: string;
-    data: CapaPersonalizada;
+    data: CapaPersonalizada | Pedido;
     
     /**
      * Resultado da notificação WhatsApp
@@ -89,9 +123,9 @@ interface WhatsAppNotificationResult {
 
 ---
 
-## 📊 Possíveis Retornos
+## 📊 Exemplos de Retorno
 
-### ✅ 1. Status atualizado SEM notificação (comportamento padrão)
+### ✅ 1. Status atualizado SEM notificação
 
 **Request:**
 ```json
@@ -107,18 +141,8 @@ interface WhatsAppNotificationResult {
     "data": {
         "id": 1,
         "status": 3,
-        "status_label": "Disponível na Loja",
-        "customer": {
-            "id": 1,
-            "name": "João Silva",
-            "phone": "48999999999"
-        },
-        "store": {
-            "id": 1,
-            "name": "Loja Centro",
-            "city": "Florianópolis"
-        }
-        // ... outros campos
+        "customer": { "name": "João Silva", "phone": "48999999999" },
+        "store": { "name": "Loja Centro", "city": "Florianópolis" }
     }
 }
 ```
@@ -158,14 +182,6 @@ interface WhatsAppNotificationResult {
 
 ### ⚠️ 3. Status atualizado, mas CLIENTE NÃO TEM TELEFONE
 
-**Request:**
-```json
-{
-    "status": 3,
-    "notify_whatsapp": true
-}
-```
-
 **Response (200 OK):**
 ```json
 {
@@ -183,14 +199,6 @@ interface WhatsAppNotificationResult {
 
 ### ⚠️ 4. Status atualizado, mas SEM INSTÂNCIA WHATSAPP ATIVA
 
-**Request:**
-```json
-{
-    "status": 3,
-    "notify_whatsapp": true
-}
-```
-
 **Response (200 OK):**
 ```json
 {
@@ -207,14 +215,6 @@ interface WhatsAppNotificationResult {
 ---
 
 ### ⚠️ 5. Status atualizado, mas ERRO DE CONEXÃO com WhatsApp
-
-**Request:**
-```json
-{
-    "status": 3,
-    "notify_whatsapp": true
-}
-```
 
 **Response (200 OK):**
 ```json
@@ -258,17 +258,17 @@ interface WhatsAppNotificationResult {
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                  Alterar Status da Capa                     │
+│                  Alterar Status do Pedido                   │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  Status atual: Encomenda Solicitada                         │
+│  Status atual: Solicitado                                   │
 │                                                             │
 │  Novo status: [Disponível na Loja ▼]                        │
 │                                                             │
 │  ┌─────────────────────────────────────────────────────┐   │
 │  │ ☑ Notificar cliente por WhatsApp                    │   │
-│  │   Será enviada uma mensagem informando que a capa   │   │
-│  │   está pronta para retirada.                        │   │
+│  │   Será enviada uma mensagem informando que o        │   │
+│  │   pedido/capa está pronto para retirada.            │   │
 │  └─────────────────────────────────────────────────────┘   │
 │                                                             │
 │              [Cancelar]  [Confirmar Alteração]              │
@@ -281,20 +281,22 @@ interface WhatsAppNotificationResult {
 // Mostrar checkbox apenas quando status selecionado = 3
 const showNotifyCheckbox = selectedStatus === 3;
 
-// E cliente tem telefone cadastrado
-const canNotify = capa.customer?.phone != null;
+// E cliente tem telefone cadastrado (opcional, para UX)
+const canNotify = item.customer?.phone != null;
 ```
 
 ---
 
 ## 💻 Exemplo de Implementação
 
+### Para Capas Personalizadas
+
 ```typescript
 async function updateCapaStatus(
     capaId: number, 
     newStatus: number, 
     notifyWhatsApp: boolean = false
-): Promise<UpdateCapaStatusResponse> {
+): Promise<UpdateStatusResponse> {
     const response = await api.patch(`/capas-personalizadas/${capaId}/status`, {
         status: newStatus,
         notify_whatsapp: newStatus === 3 ? notifyWhatsApp : undefined,
@@ -302,11 +304,33 @@ async function updateCapaStatus(
     
     return response.data;
 }
+```
 
-// Uso no componente
+### Para Pedidos
+
+```typescript
+async function updatePedidoStatus(
+    pedidoId: number, 
+    newStatus: number, 
+    reason?: string,
+    notifyWhatsApp: boolean = false
+): Promise<UpdateStatusResponse> {
+    const response = await api.patch(`/pedidos/${pedidoId}/status`, {
+        status: newStatus,
+        reason: reason,
+        notify_whatsapp: newStatus === 3 ? notifyWhatsApp : undefined,
+    });
+    
+    return response.data;
+}
+```
+
+### Uso no componente
+
+```typescript
 const handleStatusChange = async () => {
     try {
-        const result = await updateCapaStatus(capaId, 3, notifyByWhatsApp);
+        const result = await updatePedidoStatus(pedidoId, 3, 'Produto chegou', notifyByWhatsApp);
         
         // Verifica resultado da notificação
         if (result.whatsapp_notification) {
@@ -326,9 +350,9 @@ const handleStatusChange = async () => {
 
 ---
 
-## 📝 Mensagem Enviada ao Cliente
+## 📝 Mensagens Enviadas ao Cliente
 
-Quando a notificação é bem-sucedida, o cliente recebe:
+### Para Capas Personalizadas
 
 ```
 Olá João! 👋
@@ -338,10 +362,29 @@ Sua capa personalizada está pronta para retirada! 🎉
 📦 *Produto:* Capa Personalizada Floral
 🏪 *Loja:* Loja Centro - Florianópolis
 📋 *Pedido:* #123
+👤 *Você foi atendido por:* Maria Silva
 
 Aguardamos sua visita!
 *+MaisCapinhas*
 ```
+
+### Para Pedidos
+
+```
+Olá João! 👋
+
+Seu pedido está disponível para retirada! 🎉
+
+📦 *Produto:* Película de Vidro
+🏪 *Loja:* Loja Centro - Florianópolis
+📋 *Pedido:* #456
+👤 *Você foi atendido por:* Maria Silva
+
+Aguardamos sua visita!
+*+MaisCapinhas*
+```
+
+> 📌 **Nota:** O nome do vendedor que criou o pedido/capa é automaticamente incluído na mensagem!
 
 ---
 
@@ -358,3 +401,18 @@ R: O sistema busca nesta ordem: 1) Instância da loja → 2) Instância global p
 
 **P: Preciso mudar algo se não quiser usar notificação?**
 R: Não! O endpoint funciona exatamente como antes. O parâmetro `notify_whatsapp` é opcional.
+
+**P: O nome do vendedor sempre aparece na mensagem?**
+R: Sim, se o pedido/capa tiver um vendedor associado (user_id), o nome dele será incluído automaticamente.
+
+---
+
+## 📊 Resumo de Alterações por Endpoint
+
+| Endpoint | Parâmetro Novo | Status Afetado |
+|----------|----------------|----------------|
+| `PATCH /api/v1/capas-personalizadas/{id}/status` | `notify_whatsapp` | 3 |
+| `PATCH /api/v1/pedidos/{id}/status` | `notify_whatsapp` | 3 |
+
+Ambos os endpoints agora incluem o **nome do vendedor** na mensagem enviada ao cliente.
+

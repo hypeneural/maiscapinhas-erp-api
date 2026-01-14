@@ -258,7 +258,8 @@ class PedidoController extends Controller
 
         // If status is being updated, use service
         if (isset($data['status']) && $data['status'] !== $oldStatus->value) {
-            $this->pedidoService->updateStatus($pedido, $data['status'], $user);
+            $result = $this->pedidoService->updateStatus($pedido, $data['status'], $user);
+            $pedido = $result['pedido'];
             unset($data['status']);
         }
 
@@ -304,39 +305,63 @@ class PedidoController extends Controller
      * Atualizar status do pedido
      *
      * Atualiza apenas o status do pedido com registro no histórico.
+     * Quando o status é alterado para "Disponível na Loja" (3), é possível
+     * enviar uma notificação via WhatsApp para o cliente.
      *
      * **Quem pode usar:** Usuário com acesso ao pedido.
      *
      * @urlParam pedido integer required ID do pedido. Example: 1
      * @bodyParam status integer required Novo status. Example: 3
      * @bodyParam reason string Motivo da alteração. Example: Cliente confirmou recebimento
+     * @bodyParam notify_whatsapp boolean Enviar notificação WhatsApp ao cliente (apenas para status 3). Example: true
      *
      * @response 200 scenario="Status atualizado" {
      *   "message": "Status atualizado com sucesso.",
      *   "data": {"id": 1, "status": 3}
+     * }
+     *
+     * @response 200 scenario="Status atualizado com notificação" {
+     *   "message": "Status atualizado com sucesso.",
+     *   "data": {"id": 1, "status": 3},
+     *   "whatsapp_notification": {"sent": true, "phone": "****9999"}
+     * }
+     *
+     * @response 200 scenario="Notificação falhou" {
+     *   "message": "Status atualizado com sucesso.",
+     *   "data": {"id": 1, "status": 3},
+     *   "whatsapp_notification": {"sent": false, "phone": null, "error": "Cliente não possui telefone cadastrado."}
      * }
      */
     public function updateStatus(UpdateStatusPedidoRequest $request, Pedido $pedido): JsonResponse
     {
         $this->authorizeAccess($request, $pedido);
 
-        $pedido = $this->pedidoService->updateStatus(
+        $result = $this->pedidoService->updateStatus(
             $pedido,
             $request->validated()['status'],
             $request->user(),
-            $request->input('reason')
+            $request->input('reason'),
+            'api',
+            $request->boolean('notify_whatsapp', false)
         );
 
-        return response()->json([
+        $response = [
             'message' => 'Status atualizado com sucesso.',
-            'data' => new PedidoResource($pedido->load([
+            'data' => new PedidoResource($result['pedido']->load([
                 'store',
                 'user',
                 'customer',
                 'customerDevice.phoneModel.brand',
                 'statusHistory.changedBy'
             ])),
-        ]);
+        ];
+
+        // Include WhatsApp notification result if requested
+        if ($result['whatsapp_notification'] !== null) {
+            $response['whatsapp_notification'] = $result['whatsapp_notification'];
+        }
+
+        return response()->json($response);
     }
 
     /**
