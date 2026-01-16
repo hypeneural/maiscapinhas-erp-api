@@ -482,6 +482,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/{module}/stores/{store}/deactivate', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'deactivateForStore'])->name('stores.deactivate');
 
             // Phase 2: Granular editing endpoints
+            Route::get('/{module}/texts', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'getTexts'])->name('texts.show');
             Route::put('/{module}/texts', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'updateTexts'])->name('texts.update');
             Route::put('/{module}/actions/{action}', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'updateAction'])->name('actions.update');
             Route::post('/{module}/actions', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'createAction'])->name('actions.create');

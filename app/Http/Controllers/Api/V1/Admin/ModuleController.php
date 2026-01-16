@@ -347,6 +347,72 @@ class ModuleController extends Controller
     }
 
     /**
+     * Get module texts.
+     *
+     * Returns current text values (merged with defaults), original defaults
+     * for reset functionality, and schema for validation.
+     *
+     * @urlParam module string required The module ID. Example: pedidos-simples
+     *
+     * @response 200 scenario="success" {
+     *   "module_id": "pedidos-simples",
+     *   "texts": {
+     *     "menu_label": "Pedidos Personalizados",
+     *     "page_title": "Lista de Pedidos"
+     *   },
+     *   "defaults": {
+     *     "menu_label": "Pedidos Simples",
+     *     "page_title": "Pedidos Simples"
+     *   },
+     *   "schema": {
+     *     "menu_label": {"type": "string", "max": 100},
+     *     "page_title": {"type": "string", "max": 100}
+     *   },
+     *   "has_custom_texts": true
+     * }
+     */
+    public function getTexts(string $moduleId): JsonResponse
+    {
+        $dbModule = Module::find($moduleId);
+
+        $registry = ModuleRegistry::getInstance();
+        $registry->boot();
+        $module = $registry->get($moduleId);
+
+        if (!$module) {
+            return response()->json(['message' => 'Módulo não encontrado.'], 404);
+        }
+
+        $defaults = $module->getTexts();
+        $overrides = $dbModule?->text_overrides ?? [];
+        $mergedTexts = array_merge($defaults, $overrides);
+
+        // Schema for validation
+        $schema = [
+            'menu_label' => ['type' => 'string', 'max' => 100, 'description' => 'Label no menu lateral'],
+            'menu_tooltip' => ['type' => 'string', 'max' => 255, 'description' => 'Tooltip ao passar mouse no menu'],
+            'page_title' => ['type' => 'string', 'max' => 100, 'description' => 'Título da página principal'],
+            'page_description' => ['type' => 'string', 'max' => 500, 'description' => 'Descrição abaixo do título'],
+            'create_button' => ['type' => 'string', 'max' => 50, 'description' => 'Texto do botão criar'],
+            'empty_state' => ['type' => 'string', 'max' => 255, 'description' => 'Mensagem quando lista vazia'],
+            'loading_title' => ['type' => 'string', 'max' => 100, 'description' => 'Título ao carregar'],
+            'loading_description' => ['type' => 'string', 'max' => 255, 'description' => 'Descrição ao carregar'],
+            'error_title' => ['type' => 'string', 'max' => 100, 'description' => 'Título de erro'],
+            'error_description' => ['type' => 'string', 'max' => 255, 'description' => 'Descrição de erro'],
+            'retry_button' => ['type' => 'string', 'max' => 50, 'description' => 'Botão tentar novamente'],
+        ];
+
+        return response()->json([
+            'module_id' => $moduleId,
+            'module_name' => $module->getName(),
+            'texts' => $mergedTexts,
+            'defaults' => $defaults,
+            'schema' => $schema,
+            'has_custom_texts' => !empty($overrides),
+        ]);
+    }
+
+    /**
      * Update module texts.
      * Allows Super Admin to customize UI labels, messages, etc.
      */
