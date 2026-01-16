@@ -106,6 +106,7 @@ class ModuleRegistry
         $coreModules = [
             \App\Modules\PedidosSimples\PedidosSimplesModule::class,
             \App\Modules\CapasPersonalizadas\CapasPersonalizadasModule::class,
+            \App\Modules\Fabrica\FabricaModule::class,
         ];
 
         foreach ($coreModules as $moduleClass) {

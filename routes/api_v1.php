@@ -375,6 +375,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/{pedido}', [FabricaPedidoController::class, 'show'])->name('show');
             Route::patch('/{pedido}/aceitar', [FabricaPedidoController::class, 'accept'])->name('aceitar');
             Route::patch('/{pedido}/despachar', [FabricaPedidoController::class, 'dispatch'])->name('despachar');
+            Route::post('/{pedido}/recusar-itens', [FabricaPedidoController::class, 'rejectItems'])->name('recusar-itens');
             Route::get('/{pedido}/itens/{item}/foto', [FabricaPedidoController::class, 'downloadPhoto'])->name('item.foto');
         });
     });

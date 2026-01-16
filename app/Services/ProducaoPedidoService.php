@@ -53,6 +53,7 @@ class ProducaoPedidoService
 
     /**
      * Factory accepts the order and sets total price.
+     * Syncs all capas to EM_PRODUCAO status.
      */
     public function accept(ProducaoPedido $pedido, float $factoryTotal, ?string $notes = null): ProducaoPedido
     {
@@ -72,6 +73,16 @@ class ProducaoPedidoService
                 'accepted_at' => now(),
             ]);
 
+            // Sync all capas to EM_PRODUCAO
+            foreach ($pedido->itens as $item) {
+                $capa = $item->capaPersonalizada;
+                if ($capa) {
+                    $capa->update([
+                        'status' => CapaPersonalizadaStatus::EM_PRODUCAO,
+                    ]);
+                }
+            }
+
             $this->eventoService->logPedidoAceito($pedido->id, $factoryTotal, $user);
 
             return $pedido->fresh();
@@ -80,6 +91,7 @@ class ProducaoPedidoService
 
     /**
      * Factory dispatches the order.
+     * Syncs all capas to DESPACHADO status.
      */
     public function dispatch(ProducaoPedido $pedido, ?string $trackingCode = null, ?string $notes = null): ProducaoPedido
     {
@@ -104,6 +116,16 @@ class ProducaoPedidoService
             }
 
             $pedido->update($updateData);
+
+            // Sync all capas to DESPACHADO
+            foreach ($pedido->itens as $item) {
+                $capa = $item->capaPersonalizada;
+                if ($capa) {
+                    $capa->update([
+                        'status' => CapaPersonalizadaStatus::DESPACHADO,
+                    ]);
+                }
+            }
 
             $this->eventoService->logPedidoDespachado($pedido->id, $trackingCode, $user);
 
@@ -189,4 +211,77 @@ class ProducaoPedidoService
             return $pedido->fresh();
         });
     }
+
+    /**
+     * Factory rejects individual items with justification.
+     * Each rejected capa is set to RECUSADA_FABRICA status.
+     *
+     * @param array<int, string> $rejections Map of item_id => reason
+     */
+    public function rejectItems(ProducaoPedido $pedido, array $rejections): ProducaoPedido
+    {
+        if (
+            !in_array($pedido->status, [
+                ProducaoPedidoStatus::ENCOMENDA_REALIZADA,
+                ProducaoPedidoStatus::PEDIDO_ACEITO,
+            ])
+        ) {
+            throw ValidationException::withMessages([
+                'status' => ['Itens não podem ser recusados no status atual.'],
+            ]);
+        }
+
+        return DB::transaction(function () use ($pedido, $rejections) {
+            $user = Auth::user();
+            $rejectedCount = 0;
+
+            foreach ($rejections as $itemId => $reason) {
+                $item = $pedido->itens()->find($itemId);
+                if (!$item)
+                    continue;
+
+                $capa = $item->capaPersonalizada;
+                if ($capa) {
+                    $capa->update([
+                        'status' => CapaPersonalizadaStatus::RECUSADA_FABRICA,
+                        'sended_to_production_at' => null,
+                        'producao_pedido_id' => null,
+                    ]);
+
+                    // Log rejection event
+                    $this->eventoService->log(
+                        'capa_personalizada',
+                        $capa->id,
+                        'item_recusado',
+                        $capa->status->value,
+                        CapaPersonalizadaStatus::RECUSADA_FABRICA->value,
+                        ['reason' => $reason, 'producao_pedido_id' => $pedido->id],
+                        $user
+                    );
+
+                    $rejectedCount++;
+                }
+
+                // Remove item from pedido
+                $item->delete();
+            }
+
+            // Recalculate totals
+            $pedido->recalculateTotals();
+
+            // Log event
+            $this->eventoService->log(
+                'producao_pedido',
+                $pedido->id,
+                'itens_recusados',
+                $pedido->status->value,
+                $pedido->status->value,
+                ['rejected_count' => $rejectedCount, 'item_ids' => array_keys($rejections)],
+                $user
+            );
+
+            return $pedido->fresh(['itens']);
+        });
+    }
 }
+

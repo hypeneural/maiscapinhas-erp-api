@@ -216,5 +216,46 @@ class FabricaPedidoController extends Controller
 
         return Storage::disk('public')->download($photoPath, 'capa_' . $item->capa_personalizada_id . '.jpg');
     }
+
+    /**
+     * Recusar itens do pedido
+     *
+     * A fábrica recusa um ou mais itens do pedido, informando justificativa para cada.
+     * As capas recusadas são removidas do pedido e voltam para status "Recusada pela Fábrica".
+     *
+     * **Quem pode usar:** Usuários da fábrica.
+     *
+     * **Regras de negócio:**
+     * - Apenas pedidos com status `pending` ou `accepted` podem ter itens recusados
+     * - Cada item recusado deve ter uma justificativa
+     * - As capas recusadas voltam ao admin para reprocessamento
+     *
+     * @urlParam pedido integer required ID do pedido. Example: 1
+     * @bodyParam rejections object required Mapa de item_id => motivo da recusa.
+     * @bodyParam rejections.* string Motivo da recusa para o item. Example: Imagem com baixa resolução
+     *
+     * @response 200 scenario="Itens recusados" {
+     *   "message": "2 item(ns) recusado(s) com sucesso.",
+     *   "data": {"id": 1, "total_itens": 8, "rejected_count": 2}
+     * }
+     *
+     * @response 422 scenario="Status inválido" {"message": "Itens não podem ser recusados no status atual."}
+     */
+    public function rejectItems(Request $request, ProducaoPedido $pedido): JsonResponse
+    {
+        $validated = $request->validate([
+            'rejections' => ['required', 'array', 'min:1'],
+            'rejections.*' => ['required', 'string', 'min:5', 'max:500'],
+        ]);
+
+        $rejectedCount = count($validated['rejections']);
+        $pedido = $this->pedidoService->rejectItems($pedido, $validated['rejections']);
+
+        return response()->json([
+            'message' => "{$rejectedCount} item(ns) recusado(s) com sucesso.",
+            'data' => new ProducaoPedidoResource($pedido->load(['itens', 'eventos'])),
+            'rejected_count' => $rejectedCount,
+        ]);
+    }
 }
 

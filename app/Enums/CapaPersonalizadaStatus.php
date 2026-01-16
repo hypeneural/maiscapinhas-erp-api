@@ -13,6 +13,9 @@ enum CapaPersonalizadaStatus: int
     case CANCELADA = 5;
     case ENVIADO_PRODUCAO = 6;
     case NO_CARRINHO = 7;
+    case EM_PRODUCAO = 8;
+    case DESPACHADO = 9;
+    case RECUSADA_FABRICA = 10;
 
     public function label(): string
     {
@@ -24,6 +27,9 @@ enum CapaPersonalizadaStatus: int
             self::CANCELADA => 'Cancelada',
             self::ENVIADO_PRODUCAO => 'Encomendado à Fábrica',
             self::NO_CARRINHO => 'No Carrinho de Produção',
+            self::EM_PRODUCAO => 'Em Produção',
+            self::DESPACHADO => 'Despachado',
+            self::RECUSADA_FABRICA => 'Recusada pela Fábrica',
         };
     }
 
@@ -37,6 +43,9 @@ enum CapaPersonalizadaStatus: int
             self::CANCELADA => 'gray',
             self::ENVIADO_PRODUCAO => 'orange',
             self::NO_CARRINHO => 'slate',
+            self::EM_PRODUCAO => 'teal',
+            self::DESPACHADO => 'indigo',
+            self::RECUSADA_FABRICA => 'red',
         };
     }
 
@@ -50,12 +59,15 @@ enum CapaPersonalizadaStatus: int
             self::CANCELADA => 'x-circle',
             self::ENVIADO_PRODUCAO => 'send',
             self::NO_CARRINHO => 'shopping-cart',
+            self::EM_PRODUCAO => 'settings',
+            self::DESPACHADO => 'truck',
+            self::RECUSADA_FABRICA => 'x-octagon',
         };
     }
 
     public function isFinal(): bool
     {
-        return in_array($this, [self::VENDA_REALIZADA, self::CANCELADA]);
+        return in_array($this, [self::VENDA_REALIZADA, self::CANCELADA, self::RECUSADA_FABRICA]);
     }
 
     /**
@@ -71,7 +83,7 @@ enum CapaPersonalizadaStatus: int
      */
     public function isInProductionFlow(): bool
     {
-        return in_array($this, [self::NO_CARRINHO, self::ENVIADO_PRODUCAO]);
+        return in_array($this, [self::NO_CARRINHO, self::ENVIADO_PRODUCAO, self::EM_PRODUCAO, self::DESPACHADO]);
     }
 
     public static function values(): array
@@ -79,3 +91,4 @@ enum CapaPersonalizadaStatus: int
         return array_column(self::cases(), 'value');
     }
 }
+
