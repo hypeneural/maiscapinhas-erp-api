@@ -30,12 +30,15 @@ use App\Http\Controllers\Api\V1\CustomerController;
 use App\Http\Controllers\Api\V1\PhoneBrandController;
 use App\Http\Controllers\Api\V1\PhoneModelController;
 use App\Http\Controllers\Api\V1\PedidoController;
+use App\Http\Controllers\Api\V1\PaymentMethodController;
 use App\Http\Controllers\Api\V1\CapaPersonalizadaController;
 use App\Http\Controllers\Api\V1\AnnouncementController;
 use App\Http\Controllers\Api\V1\ProducaoCarrinhoController;
 use App\Http\Controllers\Api\V1\ProducaoPedidoController;
 use App\Http\Controllers\Api\V1\ProducaoAdminController;
 use App\Http\Controllers\Api\V1\FabricaPedidoController;
+use App\Http\Controllers\Api\V1\Admin\RoleController as AdminRoleController;
+use App\Http\Controllers\Api\V1\Admin\PermissionController as AdminPermissionController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -102,20 +105,20 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Announcement CRUD and actions
     Route::prefix('announcements')->name('announcements.')->group(function () {
-        Route::get('/', [AnnouncementController::class, 'adminIndex'])->name('index');
-        Route::post('/', [AnnouncementController::class, 'store'])->name('store');
-        Route::get('/{announcement}', [AnnouncementController::class, 'show'])->name('show');
-        Route::put('/{announcement}', [AnnouncementController::class, 'update'])->name('update');
-        Route::delete('/{announcement}', [AnnouncementController::class, 'destroy'])->name('destroy');
+        Route::get('/', [AnnouncementController::class, 'adminIndex'])->name('index')->middleware('permission:announcements.view');
+        Route::post('/', [AnnouncementController::class, 'store'])->name('store')->middleware('permission:announcements.create');
+        Route::get('/{announcement}', [AnnouncementController::class, 'show'])->name('show')->middleware('permission:announcements.view');
+        Route::put('/{announcement}', [AnnouncementController::class, 'update'])->name('update')->middleware('permission:announcements.update');
+        Route::delete('/{announcement}', [AnnouncementController::class, 'destroy'])->name('destroy')->middleware('permission:announcements.delete');
         Route::post('/{announcement}/seen', [AnnouncementController::class, 'seen'])->name('seen');
         Route::post('/{announcement}/ack', [AnnouncementController::class, 'ack'])->name('ack');
         Route::post('/{announcement}/dismiss', [AnnouncementController::class, 'dismiss'])->name('dismiss');
-        Route::post('/{announcement}/publish', [AnnouncementController::class, 'publish'])->name('publish');
-        Route::post('/{announcement}/archive', [AnnouncementController::class, 'archive'])->name('archive');
-        Route::get('/{announcement}/stats', [AnnouncementController::class, 'stats'])->name('stats');
-        Route::get('/{announcement}/receipts', [AnnouncementController::class, 'receipts'])->name('receipts');
-        Route::post('/{announcement}/duplicate', [AnnouncementController::class, 'duplicate'])->name('duplicate');
-        Route::post('/{announcement}/republish', [AnnouncementController::class, 'republish'])->name('republish');
+        Route::post('/{announcement}/publish', [AnnouncementController::class, 'publish'])->name('publish')->middleware('permission:announcements.update');
+        Route::post('/{announcement}/archive', [AnnouncementController::class, 'archive'])->name('archive')->middleware('permission:announcements.update');
+        Route::get('/{announcement}/stats', [AnnouncementController::class, 'stats'])->name('stats')->middleware('permission:announcements.view');
+        Route::get('/{announcement}/receipts', [AnnouncementController::class, 'receipts'])->name('receipts')->middleware('permission:announcements.view');
+        Route::post('/{announcement}/duplicate', [AnnouncementController::class, 'duplicate'])->name('duplicate')->middleware('permission:announcements.create');
+        Route::post('/{announcement}/republish', [AnnouncementController::class, 'republish'])->name('republish')->middleware('permission:announcements.update');
     });
 
     // Stores (user's stores)
@@ -137,32 +140,32 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Sales (CRUD)
     Route::prefix('sales')->name('sales.')->group(function () {
-        Route::get('/', [SaleController::class, 'index'])->name('index');
-        Route::post('/', [SaleController::class, 'store'])->name('store');
-        Route::get('/{sale}', [SaleController::class, 'show'])->name('show');
-        Route::put('/{sale}', [SaleController::class, 'update'])->name('update');
-        Route::delete('/{sale}', [SaleController::class, 'destroy'])->name('destroy');
+        Route::get('/', [SaleController::class, 'index'])->name('index')->middleware('permission:sales.view');
+        Route::post('/', [SaleController::class, 'store'])->name('store')->middleware('permission:sales.create');
+        Route::get('/{sale}', [SaleController::class, 'show'])->name('show')->middleware('permission:sales.view');
+        Route::put('/{sale}', [SaleController::class, 'update'])->name('update')->middleware('permission:sales.update');
+        Route::delete('/{sale}', [SaleController::class, 'destroy'])->name('destroy')->middleware('permission:sales.delete');
     });
 
     // Cash Management
     Route::prefix('cash')->name('cash.')->group(function () {
         // Shifts
         Route::prefix('shifts')->name('shifts.')->group(function () {
-            Route::get('/', [CashShiftController::class, 'index'])->name('index');
-            Route::get('/pending', [CashShiftController::class, 'pending'])->name('pending');
-            Route::get('/divergent', [CashShiftController::class, 'divergent'])->name('divergent');
-            Route::post('/', [CashShiftController::class, 'store'])->name('store');
-            Route::get('/{shift}', [CashShiftController::class, 'show'])->name('show');
+            Route::get('/', [CashShiftController::class, 'index'])->name('index')->middleware('permission:caixa.view');
+            Route::get('/pending', [CashShiftController::class, 'pending'])->name('pending')->middleware('permission:caixa.closing.approve');
+            Route::get('/divergent', [CashShiftController::class, 'divergent'])->name('divergent')->middleware('permission:caixa.closing.approve');
+            Route::post('/', [CashShiftController::class, 'store'])->name('store')->middleware('permission:caixa.shift.open');
+            Route::get('/{shift}', [CashShiftController::class, 'show'])->name('show')->middleware('permission:caixa.view');
         });
 
         // Closings (actions on shifts)
         Route::prefix('closings')->name('closings.')->group(function () {
-            Route::get('/{shift}', [CashClosingController::class, 'show'])->name('show');
-            Route::post('/{shift}', [CashClosingController::class, 'store'])->name('store');
-            Route::put('/{shift}', [CashClosingController::class, 'update'])->name('update');
-            Route::post('/{shift}/submit', [CashClosingController::class, 'submit'])->name('submit');
-            Route::post('/{shift}/approve', [CashClosingController::class, 'approve'])->name('approve');
-            Route::post('/{shift}/reject', [CashClosingController::class, 'reject'])->name('reject');
+            Route::get('/{shift}', [CashClosingController::class, 'show'])->name('show')->middleware('permission:caixa.view');
+            Route::post('/{shift}', [CashClosingController::class, 'store'])->name('store')->middleware('permission:caixa.closing.create');
+            Route::put('/{shift}', [CashClosingController::class, 'update'])->name('update')->middleware('permission:caixa.closing.create');
+            Route::post('/{shift}/submit', [CashClosingController::class, 'submit'])->name('submit')->middleware('permission:caixa.closing.create');
+            Route::post('/{shift}/approve', [CashClosingController::class, 'approve'])->name('approve')->middleware('permission:caixa.closing.approve');
+            Route::post('/{shift}/reject', [CashClosingController::class, 'reject'])->name('reject')->middleware('permission:caixa.closing.reject');
         });
     });
 
@@ -238,17 +241,17 @@ Route::middleware('auth:sanctum')->group(function () {
     // Customers (CRUD + devices)
     // ============================================
     Route::prefix('customers')->name('customers.')->group(function () {
-        Route::get('/', [CustomerController::class, 'index'])->name('index');
-        Route::post('/', [CustomerController::class, 'store'])->name('store');
-        Route::get('/{customer}', [CustomerController::class, 'show'])->name('show');
-        Route::match(['put', 'patch'], '/{customer}', [CustomerController::class, 'update'])->name('update');
-        Route::delete('/{customer}', [CustomerController::class, 'destroy'])->name('destroy');
+        Route::get('/', [CustomerController::class, 'index'])->name('index')->middleware('permission:customers.view');
+        Route::post('/', [CustomerController::class, 'store'])->name('store')->middleware('permission:customers.create');
+        Route::get('/{customer}', [CustomerController::class, 'show'])->name('show')->middleware('permission:customers.view');
+        Route::match(['put', 'patch'], '/{customer}', [CustomerController::class, 'update'])->name('update')->middleware('permission:customers.update');
+        Route::delete('/{customer}', [CustomerController::class, 'destroy'])->name('destroy')->middleware('permission:customers.delete');
 
         // Customer Devices
-        Route::get('/{customer}/devices', [CustomerController::class, 'devices'])->name('devices.index');
-        Route::post('/{customer}/devices', [CustomerController::class, 'storeDevice'])->name('devices.store');
-        Route::patch('/{customer}/devices/{device}', [CustomerController::class, 'updateDevice'])->name('devices.update');
-        Route::delete('/{customer}/devices/{device}', [CustomerController::class, 'destroyDevice'])->name('devices.destroy');
+        Route::get('/{customer}/devices', [CustomerController::class, 'devices'])->name('devices.index')->middleware('permission:customers.view');
+        Route::post('/{customer}/devices', [CustomerController::class, 'storeDevice'])->name('devices.store')->middleware('permission:customers.update');
+        Route::patch('/{customer}/devices/{device}', [CustomerController::class, 'updateDevice'])->name('devices.update')->middleware('permission:customers.update');
+        Route::delete('/{customer}/devices/{device}', [CustomerController::class, 'destroyDevice'])->name('devices.destroy')->middleware('permission:customers.update');
     });
 
     // ============================================
@@ -258,34 +261,39 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('phone-models', PhoneModelController::class);
 
     // ============================================
+    // Payment Methods (Formas de Pagamento)
+    // ============================================
+    Route::apiResource('payment-methods', PaymentMethodController::class);
+
+    // ============================================
     // Pedidos (CRUD + status management)
     // ============================================
     Route::prefix('pedidos')->name('pedidos.')->group(function () {
-        Route::get('/', [PedidoController::class, 'index'])->name('index');
-        Route::post('/', [PedidoController::class, 'store'])->name('store');
-        Route::get('/{pedido}', [PedidoController::class, 'show'])->name('show');
-        Route::patch('/{pedido}', [PedidoController::class, 'update'])->name('update');
-        Route::delete('/{pedido}', [PedidoController::class, 'destroy'])->name('destroy');
-        Route::patch('/{pedido}/status', [PedidoController::class, 'updateStatus'])->name('status');
-        Route::post('/bulk-status', [PedidoController::class, 'bulkStatus'])->name('bulk-status');
+        Route::get('/', [PedidoController::class, 'index'])->name('index')->middleware('permission:pedidos.view');
+        Route::post('/', [PedidoController::class, 'store'])->name('store')->middleware('permission:pedidos.create');
+        Route::get('/{pedido}', [PedidoController::class, 'show'])->name('show')->middleware('permission:pedidos.view');
+        Route::patch('/{pedido}', [PedidoController::class, 'update'])->name('update')->middleware('permission:pedidos.update');
+        Route::delete('/{pedido}', [PedidoController::class, 'destroy'])->name('destroy')->middleware('permission:pedidos.delete');
+        Route::patch('/{pedido}/status', [PedidoController::class, 'updateStatus'])->name('status')->middleware('permission:pedidos.status.update');
+        Route::post('/bulk-status', [PedidoController::class, 'bulkStatus'])->name('bulk-status')->middleware('permission:pedidos.bulk-status');
     });
 
     // ============================================
     // Capas Personalizadas (CRUD + status + production + payment + photo)
     // ============================================
     Route::prefix('capas-personalizadas')->name('capas-personalizadas.')->group(function () {
-        Route::get('/', [CapaPersonalizadaController::class, 'index'])->name('index');
-        Route::post('/', [CapaPersonalizadaController::class, 'store'])->name('store');
-        Route::get('/{capas_personalizada}', [CapaPersonalizadaController::class, 'show'])->name('show');
-        Route::patch('/{capas_personalizada}', [CapaPersonalizadaController::class, 'update'])->name('update');
-        Route::delete('/{capas_personalizada}', [CapaPersonalizadaController::class, 'destroy'])->name('destroy');
-        Route::patch('/{capas_personalizada}/status', [CapaPersonalizadaController::class, 'updateStatus'])->name('status');
-        Route::post('/bulk-status', [CapaPersonalizadaController::class, 'bulkStatus'])->name('bulk-status');
-        Route::post('/send-to-production', [CapaPersonalizadaController::class, 'sendToProduction'])->name('send-to-production');
-        Route::patch('/{capas_personalizada}/payment', [CapaPersonalizadaController::class, 'payment'])->name('payment');
-        Route::post('/{capas_personalizada}/photo', [CapaPersonalizadaController::class, 'uploadPhoto'])->name('photo');
-        Route::delete('/{capas_personalizada}/photo', [CapaPersonalizadaController::class, 'deletePhoto'])->name('photo.delete');
-        Route::post('/{capas_personalizada}/gerar-token-upload', [CapaPersonalizadaController::class, 'gerarTokenUpload'])->name('gerar-token-upload');
+        Route::get('/', [CapaPersonalizadaController::class, 'index'])->name('index')->middleware('permission:capas.view');
+        Route::post('/', [CapaPersonalizadaController::class, 'store'])->name('store')->middleware('permission:capas.create');
+        Route::get('/{capas_personalizada}', [CapaPersonalizadaController::class, 'show'])->name('show')->middleware('permission:capas.view');
+        Route::patch('/{capas_personalizada}', [CapaPersonalizadaController::class, 'update'])->name('update')->middleware('permission:capas.update');
+        Route::delete('/{capas_personalizada}', [CapaPersonalizadaController::class, 'destroy'])->name('destroy')->middleware('permission:capas.delete');
+        Route::patch('/{capas_personalizada}/status', [CapaPersonalizadaController::class, 'updateStatus'])->name('status')->middleware('permission:capas.status.update');
+        Route::post('/bulk-status', [CapaPersonalizadaController::class, 'bulkStatus'])->name('bulk-status')->middleware('permission:capas.bulk-status');
+        Route::post('/send-to-production', [CapaPersonalizadaController::class, 'sendToProduction'])->name('send-to-production')->middleware('permission:capas.send-production');
+        Route::patch('/{capas_personalizada}/payment', [CapaPersonalizadaController::class, 'payment'])->name('payment')->middleware('permission:capas.payment.update');
+        Route::post('/{capas_personalizada}/photo', [CapaPersonalizadaController::class, 'uploadPhoto'])->name('photo')->middleware('permission:capas.update');
+        Route::delete('/{capas_personalizada}/photo', [CapaPersonalizadaController::class, 'deletePhoto'])->name('photo.delete')->middleware('permission:capas.update');
+        Route::post('/{capas_personalizada}/gerar-token-upload', [CapaPersonalizadaController::class, 'gerarTokenUpload'])->name('gerar-token-upload')->middleware('permission:capas.update');
     });
 
     // ============================================
@@ -388,6 +396,73 @@ Route::middleware('auth:sanctum')->group(function () {
             ->name('instances.connect');
         Route::post('instances/{instance}/test', [\App\Http\Controllers\Api\V1\Admin\WhatsAppInstanceController::class, 'test'])
             ->name('instances.test');
+    });
+
+    // ============================================
+    // Roles & Permissions (Super Admin only)
+    // ============================================
+    Route::prefix('admin')->name('admin.')->middleware('super-admin')->group(function () {
+        // Roles CRUD
+        Route::apiResource('roles', AdminRoleController::class);
+        Route::post('roles/{role}/permissions', [AdminRoleController::class, 'syncPermissions'])
+            ->name('roles.sync-permissions');
+
+        // Permissions (Full CRUD + utilities)
+        Route::get('permissions', [AdminPermissionController::class, 'index'])->name('permissions.index');
+        Route::post('permissions', [AdminPermissionController::class, 'store'])->name('permissions.store');
+        Route::get('permissions/grouped', [AdminPermissionController::class, 'grouped'])->name('permissions.grouped');
+        Route::get('permissions/by-type', [AdminPermissionController::class, 'byType'])->name('permissions.by-type');
+        Route::get('permissions/modules', [AdminPermissionController::class, 'modules'])->name('permissions.modules');
+        Route::get('permissions/conventions', [AdminPermissionController::class, 'conventions'])->name('permissions.conventions');
+        Route::post('permissions/bulk', [AdminPermissionController::class, 'bulkStore'])->name('permissions.bulk');
+        Route::get('permissions/{permission}', [AdminPermissionController::class, 'show'])->name('permissions.show');
+        Route::put('permissions/{permission}', [AdminPermissionController::class, 'update'])->name('permissions.update');
+        Route::delete('permissions/{permission}', [AdminPermissionController::class, 'destroy'])->name('permissions.destroy');
+
+        // User Permission Overrides
+        Route::prefix('users/{user}/permission-overrides')->name('users.permission-overrides.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\Admin\UserPermissionOverrideController::class, 'index'])->name('index');
+            Route::post('/', [\App\Http\Controllers\Api\V1\Admin\UserPermissionOverrideController::class, 'store'])->name('store');
+            Route::post('/bulk', [\App\Http\Controllers\Api\V1\Admin\UserPermissionOverrideController::class, 'bulkStore'])->name('bulk');
+            Route::delete('/clear', [\App\Http\Controllers\Api\V1\Admin\UserPermissionOverrideController::class, 'clear'])->name('clear');
+            Route::get('/effective', [\App\Http\Controllers\Api\V1\Admin\UserPermissionOverrideController::class, 'effective'])->name('effective');
+            Route::put('/{override}', [\App\Http\Controllers\Api\V1\Admin\UserPermissionOverrideController::class, 'update'])->name('update');
+            Route::delete('/{override}', [\App\Http\Controllers\Api\V1\Admin\UserPermissionOverrideController::class, 'destroy'])->name('destroy');
+        });
+
+        // Store Permission Overrides
+        Route::prefix('stores/{store}/permission-overrides')->name('stores.permission-overrides.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\Admin\StorePermissionOverrideController::class, 'index'])->name('index');
+            Route::post('/', [\App\Http\Controllers\Api\V1\Admin\StorePermissionOverrideController::class, 'store'])->name('store');
+            Route::post('/bulk', [\App\Http\Controllers\Api\V1\Admin\StorePermissionOverrideController::class, 'bulkStore'])->name('bulk');
+            Route::delete('/clear', [\App\Http\Controllers\Api\V1\Admin\StorePermissionOverrideController::class, 'clear'])->name('clear');
+            Route::put('/{override}', [\App\Http\Controllers\Api\V1\Admin\StorePermissionOverrideController::class, 'update'])->name('update');
+            Route::delete('/{override}', [\App\Http\Controllers\Api\V1\Admin\StorePermissionOverrideController::class, 'destroy'])->name('destroy');
+        });
+
+        // User Role Assignments
+        Route::get('roles/available', [\App\Http\Controllers\Api\V1\Admin\UserRoleController::class, 'availableRoles'])
+            ->name('roles.available');
+        Route::prefix('users/{user}/roles')->name('users.roles.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\Admin\UserRoleController::class, 'index'])->name('index');
+            Route::post('/', [\App\Http\Controllers\Api\V1\Admin\UserRoleController::class, 'store'])->name('store');
+            Route::put('/sync', [\App\Http\Controllers\Api\V1\Admin\UserRoleController::class, 'sync'])->name('sync');
+            Route::delete('/{assignment}', [\App\Http\Controllers\Api\V1\Admin\UserRoleController::class, 'destroy'])->name('destroy');
+        });
+
+        // Modules Management
+        Route::prefix('modules')->name('modules.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'index'])->name('index');
+            Route::get('/{module}', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'show'])->name('show');
+            Route::get('/{module}/full', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'full'])->name('full');
+            Route::post('/{module}/install', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'install'])->name('install');
+            Route::post('/{module}/activate', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'activate'])->name('activate');
+            Route::post('/{module}/deactivate', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'deactivate'])->name('deactivate');
+            Route::get('/{module}/transitions', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'transitions'])->name('transitions');
+            Route::put('/{module}/transitions', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'updateTransitions'])->name('transitions.update');
+            Route::post('/{module}/stores/{store}/activate', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'activateForStore'])->name('stores.activate');
+            Route::post('/{module}/stores/{store}/deactivate', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'deactivateForStore'])->name('stores.deactivate');
+        });
     });
 
     // ============================================
