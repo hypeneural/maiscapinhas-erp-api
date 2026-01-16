@@ -381,6 +381,17 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // ============================================
+    // Comunicados - Comunicados Internos
+    // ============================================
+    Route::prefix('comunicados')->name('comunicados.')->middleware('admin')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\V1\ComunicadosController::class, 'index'])->name('index');
+        Route::post('/', [\App\Http\Controllers\Api\V1\ComunicadosController::class, 'store'])->name('store');
+        Route::get('/{comunicado}', [\App\Http\Controllers\Api\V1\ComunicadosController::class, 'show'])->name('show');
+        Route::patch('/{comunicado}', [\App\Http\Controllers\Api\V1\ComunicadosController::class, 'update'])->name('update');
+        Route::delete('/{comunicado}', [\App\Http\Controllers\Api\V1\ComunicadosController::class, 'destroy'])->name('destroy');
+    });
+
+    // ============================================
     // WhatsApp - Administração (Super Admin only)
     // ============================================
     Route::prefix('admin/whatsapp')->name('admin.whatsapp.')->middleware('super-admin')->group(function () {
