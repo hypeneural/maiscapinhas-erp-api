@@ -393,22 +393,10 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // ============================================
-    // WhatsApp - Administração (Super Admin only)
+    // WhatsApp Module (Instances & Messages)
     // ============================================
-    Route::prefix('admin/whatsapp')->name('admin.whatsapp.')->middleware('super-admin')->group(function () {
-        Route::apiResource('instances', \App\Http\Controllers\Api\V1\Admin\WhatsAppInstanceController::class);
-        Route::post('instances/{instance}/set-default', [\App\Http\Controllers\Api\V1\Admin\WhatsAppInstanceController::class, 'setDefault'])
-            ->name('instances.set-default');
-        Route::delete('instances/{instance}/secrets/api-key', [\App\Http\Controllers\Api\V1\Admin\WhatsAppInstanceController::class, 'clearApiKey'])
-            ->name('instances.clear-api-key');
-        Route::delete('instances/{instance}/secrets/token', [\App\Http\Controllers\Api\V1\Admin\WhatsAppInstanceController::class, 'clearToken'])
-            ->name('instances.clear-token');
-        Route::get('instances/{instance}/state', [\App\Http\Controllers\Api\V1\Admin\WhatsAppInstanceController::class, 'state'])
-            ->name('instances.state');
-        Route::get('instances/{instance}/connect', [\App\Http\Controllers\Api\V1\Admin\WhatsAppInstanceController::class, 'connect'])
-            ->name('instances.connect');
-        Route::post('instances/{instance}/test', [\App\Http\Controllers\Api\V1\Admin\WhatsAppInstanceController::class, 'test'])
-            ->name('instances.test');
+    Route::prefix('whatsapp')->name('whatsapp.')->group(function () {
+        require app_path('Modules/WhatsAppInstances/routes.php');
     });
 
     // ============================================
@@ -526,16 +514,6 @@ Route::middleware('auth:sanctum')->group(function () {
         });
     });
 
-    // ============================================
-    // WhatsApp - Mensagens (authenticated users)
-    // ============================================
-    Route::prefix('whatsapp')->name('whatsapp.')->group(function () {
-        Route::post('instances/{instance}/messages/text', [\App\Http\Controllers\Api\V1\WhatsAppMessageController::class, 'sendText'])
-            ->name('messages.text');
-        Route::post('instances/{instance}/messages/media', [\App\Http\Controllers\Api\V1\WhatsAppMessageController::class, 'sendMedia'])
-            ->name('messages.media');
-        Route::post('instances/{instance}/numbers/check', [\App\Http\Controllers\Api\V1\WhatsAppMessageController::class, 'checkNumbers'])
-            ->name('numbers.check');
-    });
+
 
 });
