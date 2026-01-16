@@ -111,6 +111,7 @@ class ModuleRegistry
             \App\Modules\CatalogoAparelhos\CatalogoAparelhosModule::class,
             \App\Modules\WhatsAppInstances\WhatsAppInstancesModule::class,
             \App\Modules\ConferenciaCaixa\ConferenciaCaixaModule::class,
+            \App\Modules\Comemoracoes\ComemoracoesModule::class,
         ];
 
         foreach ($coreModules as $moduleClass) {

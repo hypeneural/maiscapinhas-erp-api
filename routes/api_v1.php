@@ -156,6 +156,13 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // ============================================
+    // Comemorações Module
+    // ============================================
+    Route::prefix('celebrations')->name('celebrations.')->group(function () {
+        require app_path('Modules/Comemoracoes/routes.php');
+    });
+
+    // ============================================
     // Rules (CRUD - admin/gerente only)
     // ============================================
     Route::prefix('rules')->name('rules.')->group(function () {
