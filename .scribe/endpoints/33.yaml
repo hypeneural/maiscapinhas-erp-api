@@ -1,0 +1,580 @@
+name: 'Admin - Roles'
+description: ''
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/admin/roles
+    metadata:
+      custom: []
+      groupName: 'Admin - Roles'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List all roles.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 404
+        content: |-
+          {
+              "message": "The route api.maiscapinhas.com.br//api/v1/admin/roles could not be found."
+          }
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/admin/roles
+    metadata:
+      custom: []
+      groupName: 'Admin - Roles'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Create a new role.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      name:
+        custom: []
+        name: name
+        description: 'Must not be greater than 50 characters.'
+        required: true
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      display_name:
+        custom: []
+        name: display_name
+        description: 'Must not be greater than 100 characters.'
+        required: true
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      description:
+        custom: []
+        name: description
+        description: 'Must not be greater than 500 characters.'
+        required: false
+        example: 'Animi quos velit et fugiat.'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      level:
+        custom: []
+        name: level
+        description: 'Must be at least 1. Must not be greater than 99.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      permission_ids:
+        custom: []
+        name: permission_ids
+        description: 'The <code>id</code> of an existing record in the permissions table.'
+        required: false
+        example:
+          - 16
+        type: 'integer[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      name: b
+      display_name: 'n'
+      description: 'Animi quos velit et fugiat.'
+      level: 1
+      permission_ids:
+        - 16
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/admin/roles/{id}'
+    metadata:
+      custom: []
+      groupName: 'Admin - Roles'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get a specific role with permissions.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the role.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 404
+        content: |-
+          {
+              "message": "The route api.maiscapinhas.com.br//api/v1/admin/roles/1 could not be found."
+          }
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+      - PATCH
+    uri: 'api/v1/admin/roles/{id}'
+    metadata:
+      custom: []
+      groupName: 'Admin - Roles'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Update a role.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the role.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      name:
+        custom: []
+        name: name
+        description: 'Must not be greater than 50 characters.'
+        required: false
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      display_name:
+        custom: []
+        name: display_name
+        description: 'Must not be greater than 100 characters.'
+        required: false
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      description:
+        custom: []
+        name: description
+        description: 'Must not be greater than 500 characters.'
+        required: false
+        example: 'Animi quos velit et fugiat.'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      level:
+        custom: []
+        name: level
+        description: 'Must be at least 1. Must not be greater than 99.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      permission_ids:
+        custom: []
+        name: permission_ids
+        description: 'The <code>id</code> of an existing record in the permissions table.'
+        required: false
+        example:
+          - 16
+        type: 'integer[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      name: b
+      display_name: 'n'
+      description: 'Animi quos velit et fugiat.'
+      level: 1
+      permission_ids:
+        - 16
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/v1/admin/roles/{id}'
+    metadata:
+      custom: []
+      groupName: 'Admin - Roles'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Delete a role.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the role.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/admin/roles/{role_id}/permissions'
+    metadata:
+      custom: []
+      groupName: 'Admin - Roles'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Sync permissions for a role.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      role_id:
+        custom: []
+        name: role_id
+        description: 'The ID of the role.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      role_id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      permission_ids:
+        custom: []
+        name: permission_ids
+        description: 'The <code>id</code> of an existing record in the permissions table.'
+        required: false
+        example:
+          - 16
+        type: 'integer[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      permission_ids:
+        - 16
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/admin/roles/{role_id}/clone'
+    metadata:
+      custom: []
+      groupName: 'Admin - Roles'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Clone a role.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      role_id:
+        custom: []
+        name: role_id
+        description: 'The ID of the role.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      role_id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      name:
+        custom: []
+        name: name
+        description: 'Must match the regex /^[a-z-]+$/. Must not be greater than 50 characters.'
+        required: true
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      display_name:
+        custom: []
+        name: display_name
+        description: 'Must not be greater than 100 characters.'
+        required: true
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      description:
+        custom: []
+        name: description
+        description: 'Must not be greater than 500 characters.'
+        required: false
+        example: 'Animi quos velit et fugiat.'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      name: b
+      display_name: 'n'
+      description: 'Animi quos velit et fugiat.'
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+    uri: 'api/v1/admin/roles/{role_id}/permissions'
+    metadata:
+      custom: []
+      groupName: 'Admin - Roles'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Update permissions with add/remove support.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      role_id:
+        custom: []
+        name: role_id
+        description: 'The ID of the role.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      role_id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      add:
+        custom: []
+        name: add
+        description: 'The <code>name</code> of an existing record in the permissions table.'
+        required: false
+        example:
+          - architecto
+        type: 'string[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      remove:
+        custom: []
+        name: remove
+        description: 'The <code>name</code> of an existing record in the permissions table.'
+        required: false
+        example:
+          - architecto
+        type: 'string[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      add:
+        - architecto
+      remove:
+        - architecto
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

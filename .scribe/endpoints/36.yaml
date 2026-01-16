@@ -1,0 +1,394 @@
+name: 'Admin - Store Permission Overrides'
+description: ''
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/admin/stores/{store_id}/permission-overrides'
+    metadata:
+      custom: []
+      groupName: 'Admin - Store Permission Overrides'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List all overrides for a store.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'The ID of the store.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      store_id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 404
+        content: |-
+          {
+              "message": "The route api.maiscapinhas.com.br//api/v1/admin/stores/1/permission-overrides could not be found."
+          }
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/admin/stores/{store_id}/permission-overrides'
+    metadata:
+      custom: []
+      groupName: 'Admin - Store Permission Overrides'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Grant or deny a permission for all users in a store.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'The ID of the store.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      store_id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      permission_id:
+        custom: []
+        name: permission_id
+        description: 'The <code>id</code> of an existing record in the permissions table.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      granted:
+        custom: []
+        name: granted
+        description: ''
+        required: true
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      permission_id: architecto
+      granted: true
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/admin/stores/{store_id}/permission-overrides/bulk'
+    metadata:
+      custom: []
+      groupName: 'Admin - Store Permission Overrides'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Bulk grant/deny permissions for a store.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'The ID of the store.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      store_id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      overrides:
+        custom: []
+        name: overrides
+        description: 'Must have at least 1 items.'
+        required: true
+        example:
+          - []
+        type: 'object[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'overrides[].permission_id':
+        custom: []
+        name: 'overrides[].permission_id'
+        description: 'The <code>id</code> of an existing record in the permissions table.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'overrides[].granted':
+        custom: []
+        name: 'overrides[].granted'
+        description: ''
+        required: true
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      overrides:
+        -
+          permission_id: architecto
+          granted: true
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/v1/admin/stores/{store_id}/permission-overrides/clear'
+    metadata:
+      custom: []
+      groupName: 'Admin - Store Permission Overrides'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Remove all overrides for a store.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'The ID of the store.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      store_id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+    uri: 'api/v1/admin/stores/{store_id}/permission-overrides/{override}'
+    metadata:
+      custom: []
+      groupName: 'Admin - Store Permission Overrides'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Update an existing store override.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'The ID of the store.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      override:
+        custom: []
+        name: override
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      store_id: 1
+      override: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      granted:
+        custom: []
+        name: granted
+        description: ''
+        required: true
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      granted: true
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/v1/admin/stores/{store_id}/permission-overrides/{override}'
+    metadata:
+      custom: []
+      groupName: 'Admin - Store Permission Overrides'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Remove an override (reverts to role-based permission).'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'The ID of the store.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      override:
+        custom: []
+        name: override
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      store_id: 1
+      override: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

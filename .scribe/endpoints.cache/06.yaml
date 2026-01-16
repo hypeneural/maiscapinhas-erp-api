@@ -180,7 +180,7 @@ endpoints:
         name: from
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-14T01:18:06'
+        example: '2026-01-16T19:10:25'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -191,7 +191,7 @@ endpoints:
         name: to
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-14T01:18:06'
+        example: '2026-01-16T19:10:25'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -211,8 +211,8 @@ endpoints:
     cleanBodyParameters:
       store_id: 16
       seller_id: 16
-      from: '2026-01-14T01:18:06'
-      to: '2026-01-14T01:18:06'
+      from: '2026-01-16T19:10:25'
+      to: '2026-01-16T19:10:25'
       per_page: 22
     fileParameters: []
     responses:

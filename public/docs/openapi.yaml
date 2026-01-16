@@ -47,6 +47,27 @@ tags:
     name: 'People Analytics'
     description: "\nEndpoints para consultar e inserir KPIs de fluxo de pessoas por turno.\nDados podem vir de sincronização com FastAPI ou inserção manual."
   -
+    name: 'Admin - Graph Visualization'
+    description: ''
+  -
+    name: 'Admin - Modules'
+    description: ''
+  -
+    name: 'Admin - Permissions'
+    description: ''
+  -
+    name: 'Admin - Roles'
+    description: ''
+  -
+    name: 'Admin - Store Permission Overrides'
+    description: ''
+  -
+    name: 'Admin - User Permission Overrides'
+    description: ''
+  -
+    name: 'Admin - User Role Assignments'
+    description: ''
+  -
     name: 'Administração - Logs de Auditoria'
     description: "\nConsulta de logs de auditoria do sistema.\n\nEste endpoint permite que administradores visualizem todas as\nações registradas no sistema para fins de auditoria e compliance.\n\n**Tipos de eventos registrados:**\n| Domínio | Eventos |\n|---------|---------|\n| `auth` | login, logout, login_failed |\n| `cash` | cash_closing.submit, approve, reject |\n| `rules` | bonus/commission create, update, delete |\n| `goals` | monthly.create, update, splits.set |\n| `sales` | create, update, delete |\n| `admin` | user/store create, update, delete |\n\n**Quem pode usar:** Apenas administradores."
   -
@@ -79,6 +100,9 @@ tags:
   -
     name: 'Comunicação Interna - Avisos'
     description: "\nEndpoints para gerenciamento de avisos e comunicados internos.\nO sistema permite criar, publicar e acompanhar avisos direcionados a:\n- **Todos os usuários** (scope global)\n- **Lojas específicas** (scope store)\n- **Usuários específicos** (scope user)\n- **Cargos específicos** (scope role)\n\n**Funcionalidades:**\n- Criação e edição de avisos com suporte a imagens e call-to-action\n- Publicação imediata ou agendada\n- Controle de leitura (seen), confirmação (ack) e dispensa (dismiss)\n- Estatísticas de engajamento em tempo real\n- Duplicação e republicação de avisos arquivados\n\n**Níveis de severidade:** `info`, `warning`, `danger`\n\n**Permissões:** Apenas administradores e gerentes podem criar e gerenciar avisos."
+  -
+    name: 'Formas de Pagamento'
+    description: "\nGestão de formas de pagamento do sistema.\nFormas de pagamento disponíveis: Dinheiro, Pix, Débito, Crédito, etc.\n\n**Leitura:** Todos os usuários autenticados.\n**Escrita:** Apenas Super Admin e Admin Global."
   -
     name: 'Fábrica - Pedidos de Produção'
     description: "\nPortal da fábrica para gestão de pedidos de produção de capas personalizadas.\nEstes endpoints são exclusivos para usuários com papel de fábrica (middleware `fabrica`).\n\n**Fluxo de produção:**\n1. Admin envia capas para produção → Pedido criado com status `pending`\n2. Fábrica aceita pedido (informa valor) → Status `accepted`\n3. Fábrica despacha pedido (informa rastreio) → Status `dispatched`\n4. Admin recebe pedido → Status `received`\n\n**Permissões:** Apenas usuários com papel de fábrica."
@@ -1599,7 +1623,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-14T01:18:08'
+                  example: '2026-01-16T19:10:27'
               required:
                 - store_id
   /api/v1/dashboard/conferente:
@@ -1717,7 +1741,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-14T01:18:08'
+                  example: '2026-01-16T19:10:27'
               required:
                 - store_id
   /api/v1/dashboard/admin:
@@ -2038,11 +2062,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-14T01:18:06'
+                  example: '2026-01-16T19:10:25'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-14T01:18:06'
+                  example: '2026-01-16T19:10:25'
                 per_page:
                   type: integer
                   description: 'Must be at least 1. Must not be greater than 100.'
@@ -2508,7 +2532,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-14T01:18:07'
+                  example: '2026-01-16T19:10:25'
                 status:
                   type: string
                   description: ''
@@ -3586,7 +3610,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-14T01:18:07'
+                  example: '2026-01-16T19:10:26'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -3653,7 +3677,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-14T01:18:07'
+                  example: '2026-01-16T19:10:26'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -3737,7 +3761,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-14T01:18:07'
+                  example: '2026-01-16T19:10:26'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -3804,7 +3828,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-14T01:18:07'
+                  example: '2026-01-16T19:10:26'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -3895,7 +3919,7 @@ paths:
                 active:
                   type: boolean
                   description: ''
-                  example: true
+                  example: false
               required:
                 - store_id
                 - month
@@ -3943,7 +3967,7 @@ paths:
                 active:
                   type: boolean
                   description: ''
-                  example: true
+                  example: false
     delete:
       summary: 'Delete a monthly goal.'
       operationId: deleteAMonthlyGoal
@@ -4042,11 +4066,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-14T01:18:08'
+                  example: '2026-01-16T19:10:27'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-14T01:18:08'
+                  example: '2026-01-16T19:10:27'
                 per_page:
                   type: integer
                   description: 'Must be at least 1. Must not be greater than 100.'
@@ -4279,11 +4303,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-14T01:18:08'
+                  example: '2026-01-16T19:10:27'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-14T01:18:08'
+                  example: '2026-01-16T19:10:27'
     parameters:
       -
         in: path
@@ -4582,7 +4606,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-14T01:18:08'
+                  example: '2026-01-16T19:10:27'
               required:
                 - store_id
                 - date
@@ -4608,11 +4632,11 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-14T01:18:08'
+                  example: '2026-01-16T19:10:27'
                 shift_code:
                   type: string
                   description: ''
-                  example: M
+                  example: 'N'
                   enum:
                     - '1'
                     - '2'
@@ -4642,6 +4666,3139 @@ paths:
                 - shift_code
                 - in_count
                 - out_count
+  /api/v1/admin/graph/overview:
+    get:
+      summary: 'Get system overview graph.'
+      operationId: getSystemOverviewGraph
+      description: 'Shows role hierarchy, modules, and high-level stats.'
+      parameters:
+        -
+          in: query
+          name: depth
+          description: 'Max depth to traverse. Default: 3'
+          example: 16
+          required: false
+          schema:
+            type: integer
+            description: 'Max depth to traverse. Default: 3'
+            example: 16
+        -
+          in: query
+          name: include_users
+          description: 'Include user nodes. Default: false'
+          example: false
+          required: false
+          schema:
+            type: boolean
+            description: 'Include user nodes. Default: false'
+            example: false
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/graph/overview could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/graph/overview could not be found.'
+      tags:
+        - 'Admin - Graph Visualization'
+  '/api/v1/admin/graph/role/{role}':
+    get:
+      summary: 'Get graph for a specific role.'
+      operationId: getGraphForASpecificRole
+      description: 'Shows modules, permissions, and optionally users.'
+      parameters:
+        -
+          in: query
+          name: include_users
+          description: 'Include users with this role. Default: false'
+          example: false
+          required: false
+          schema:
+            type: boolean
+            description: 'Include users with this role. Default: false'
+            example: false
+        -
+          in: query
+          name: include_permissions
+          description: 'Include individual permissions. Default: true'
+          example: false
+          required: false
+          schema:
+            type: boolean
+            description: 'Include individual permissions. Default: true'
+            example: false
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/graph/role/1 could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/graph/role/1 could not be found.'
+      tags:
+        - 'Admin - Graph Visualization'
+    parameters:
+      -
+        in: path
+        name: role
+        description: 'The role.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/graph/user/{user}':
+    get:
+      summary: 'Get graph for a specific user.'
+      operationId: getGraphForASpecificUser
+      description: 'Shows all permissions from roles and overrides.'
+      parameters:
+        -
+          in: query
+          name: include_inherited
+          description: 'Show where each permission comes from. Default: true'
+          example: false
+          required: false
+          schema:
+            type: boolean
+            description: 'Show where each permission comes from. Default: true'
+            example: false
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/graph/user/1 could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/graph/user/1 could not be found.'
+      tags:
+        - 'Admin - Graph Visualization'
+    parameters:
+      -
+        in: path
+        name: user
+        description: 'The user.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/graph/store/{store}':
+    get:
+      summary: 'Get graph for a specific store.'
+      operationId: getGraphForASpecificStore
+      description: ''
+      parameters:
+        -
+          in: query
+          name: include_users
+          description: 'Include users in this store. Default: true'
+          example: false
+          required: false
+          schema:
+            type: boolean
+            description: 'Include users in this store. Default: true'
+            example: false
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/graph/store/1 could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/graph/store/1 could not be found.'
+      tags:
+        - 'Admin - Graph Visualization'
+    parameters:
+      -
+        in: path
+        name: store
+        description: 'The store.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/graph/module/{module}':
+    get:
+      summary: 'Get graph for a specific module.'
+      operationId: getGraphForASpecificModule
+      description: 'Shows all roles and users with access.'
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/graph/module/architecto could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/graph/module/architecto could not be found.'
+      tags:
+        - 'Admin - Graph Visualization'
+    parameters:
+      -
+        in: path
+        name: module
+        description: 'The module.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+  /api/v1/admin/modules:
+    get:
+      summary: 'List all modules.'
+      operationId: listAllModules
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/modules could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/modules could not be found.'
+      tags:
+        - 'Admin - Modules'
+  '/api/v1/admin/modules/{id}':
+    get:
+      summary: 'Get module details.'
+      operationId: getModuleDetails
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/modules/architecto could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/modules/architecto could not be found.'
+      tags:
+        - 'Admin - Modules'
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the module.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+  '/api/v1/admin/modules/{module}/full':
+    get:
+      summary: 'Get full module configuration (for frontend).'
+      operationId: getFullModuleConfigurationforFrontend
+      description: 'Returns everything needed to render the module UI.'
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/modules/architecto/full could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/modules/architecto/full could not be found.'
+      tags:
+        - 'Admin - Modules'
+    parameters:
+      -
+        in: path
+        name: module
+        description: 'The module.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+  '/api/v1/admin/modules/{module}/install':
+    post:
+      summary: 'Install a module.'
+      operationId: installAModule
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Modules'
+    parameters:
+      -
+        in: path
+        name: module
+        description: 'The module.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+  '/api/v1/admin/modules/{module}/activate':
+    post:
+      summary: 'Activate module globally.'
+      operationId: activateModuleGlobally
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Modules'
+    parameters:
+      -
+        in: path
+        name: module
+        description: 'The module.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+  '/api/v1/admin/modules/{module}/deactivate':
+    post:
+      summary: 'Deactivate module globally.'
+      operationId: deactivateModuleGlobally
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Modules'
+    parameters:
+      -
+        in: path
+        name: module
+        description: 'The module.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+  '/api/v1/admin/modules/{module}/transitions':
+    get:
+      summary: 'Get transition role matrix for a module.'
+      operationId: getTransitionRoleMatrixForAModule
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/modules/architecto/transitions could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/modules/architecto/transitions could not be found.'
+      tags:
+        - 'Admin - Modules'
+    parameters:
+      -
+        in: path
+        name: module
+        description: 'The module.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+  '/api/v1/admin/modules/{module_id}/transitions':
+    put:
+      summary: 'Update transition role matrix.'
+      operationId: updateTransitionRoleMatrix
+      description: 'Allows Super Admin to customize who can make which transitions.'
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Modules'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                transitions:
+                  type: array
+                  description: ''
+                  example: null
+                  items:
+                    type: array
+                    description: ''
+                    example: null
+                    items:
+                      type: object
+    parameters:
+      -
+        in: path
+        name: module_id
+        description: 'The ID of the module.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+  '/api/v1/admin/modules/{module_id}/stores':
+    get:
+      summary: 'List all stores with module activation status.'
+      operationId: listAllStoresWithModuleActivationStatus
+      description: 'Shows which stores have this module active/inactive.'
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/modules/architecto/stores could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/modules/architecto/stores could not be found.'
+      tags:
+        - 'Admin - Modules'
+    parameters:
+      -
+        in: path
+        name: module_id
+        description: 'The ID of the module.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+  '/api/v1/admin/modules/{module}/stores/{store}/activate':
+    post:
+      summary: 'Activate module for a specific store.'
+      operationId: activateModuleForASpecificStore
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Modules'
+    parameters:
+      -
+        in: path
+        name: module
+        description: 'The module.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+      -
+        in: path
+        name: store
+        description: 'The store.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/modules/{module}/stores/{store}/deactivate':
+    post:
+      summary: 'Deactivate module for a specific store.'
+      operationId: deactivateModuleForASpecificStore
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Modules'
+    parameters:
+      -
+        in: path
+        name: module
+        description: 'The module.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+      -
+        in: path
+        name: store
+        description: 'The store.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/modules/{module_id}/texts':
+    put:
+      summary: 'Update module texts.'
+      operationId: updateModuleTexts
+      description: 'Allows Super Admin to customize UI labels, messages, etc.'
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Modules'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                texts:
+                  type: object
+                  description: ''
+                  example: []
+                  properties:
+                    menu_label:
+                      type: string
+                      description: 'Must not be greater than 100 characters.'
+                      example: b
+                    menu_tooltip:
+                      type: string
+                      description: 'Must not be greater than 255 characters.'
+                      example: 'n'
+                    page_title:
+                      type: string
+                      description: 'Must not be greater than 100 characters.'
+                      example: g
+                    page_description:
+                      type: string
+                      description: 'Must not be greater than 500 characters.'
+                      example: z
+                    create_button:
+                      type: string
+                      description: 'Must not be greater than 50 characters.'
+                      example: m
+                    empty_state:
+                      type: string
+                      description: 'Must not be greater than 255 characters.'
+                      example: i
+                    loading_title:
+                      type: string
+                      description: 'Must not be greater than 100 characters.'
+                      example: 'y'
+                    loading_description:
+                      type: string
+                      description: 'Must not be greater than 255 characters.'
+                      example: v
+                    error_title:
+                      type: string
+                      description: 'Must not be greater than 100 characters.'
+                      example: d
+                    error_description:
+                      type: string
+                      description: 'Must not be greater than 255 characters.'
+                      example: l
+                    retry_button:
+                      type: string
+                      description: 'Must not be greater than 50 characters.'
+                      example: j
+              required:
+                - texts
+    parameters:
+      -
+        in: path
+        name: module_id
+        description: 'The ID of the module.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+  '/api/v1/admin/modules/{module_id}/actions/{id}':
+    put:
+      summary: 'Update a specific action.'
+      operationId: updateASpecificAction
+      description: 'Allows Super Admin to customize action labels, icons, confirmations, etc.'
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Modules'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                label:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: b
+                icon:
+                  type: string
+                  description: 'Must not be greater than 50 characters.'
+                  example: 'n'
+                tooltip:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: g
+                shortcut:
+                  type: string
+                  description: 'Must not be greater than 10 characters.'
+                  example: zmiyvd
+                  nullable: true
+                shortcut_modifier:
+                  type: string
+                  description: ''
+                  example: meta
+                  enum:
+                    - ctrl
+                    - alt
+                    - shift
+                    - meta
+                  nullable: true
+                confirm:
+                  type: boolean
+                  description: ''
+                  example: true
+                confirm_title:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: l
+                confirm_message:
+                  type: string
+                  description: 'Must not be greater than 500 characters.'
+                  example: j
+                confirm_button:
+                  type: string
+                  description: 'Must not be greater than 50 characters.'
+                  example: 'n'
+                cancel_button:
+                  type: string
+                  description: 'Must not be greater than 50 characters.'
+                  example: i
+                confirm_variant:
+                  type: string
+                  description: ''
+                  example: default
+                  enum:
+                    - default
+                    - destructive
+                    - warning
+                is_active:
+                  type: boolean
+                  description: ''
+                  example: false
+    parameters:
+      -
+        in: path
+        name: module_id
+        description: 'The ID of the module.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+      -
+        in: path
+        name: id
+        description: 'The ID of the action.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+  '/api/v1/admin/modules/{module}/actions':
+    post:
+      summary: 'Create a custom action.'
+      operationId: createACustomAction
+      description: 'Allows Super Admin to add new actions to a module.'
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Modules'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: 'Must match the regex /^[a-z_]+$/. Must not be greater than 50 characters.'
+                  example: b
+                label:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: 'n'
+                icon:
+                  type: string
+                  description: 'Must not be greater than 50 characters.'
+                  example: g
+                tooltip:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: z
+                shortcut:
+                  type: string
+                  description: 'Must not be greater than 10 characters.'
+                  example: miyvdl
+                  nullable: true
+                shortcut_modifier:
+                  type: string
+                  description: ''
+                  example: ctrl
+                  enum:
+                    - ctrl
+                    - alt
+                    - shift
+                    - meta
+                  nullable: true
+                confirm:
+                  type: boolean
+                  description: ''
+                  example: false
+                confirm_title:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: j
+                confirm_message:
+                  type: string
+                  description: 'Must not be greater than 500 characters.'
+                  example: 'n'
+                confirm_button:
+                  type: string
+                  description: 'Must not be greater than 50 characters.'
+                  example: i
+                cancel_button:
+                  type: string
+                  description: 'Must not be greater than 50 characters.'
+                  example: k
+                confirm_variant:
+                  type: string
+                  description: ''
+                  example: warning
+                  enum:
+                    - default
+                    - destructive
+                    - warning
+                permission:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: h
+                available_in_status:
+                  type: array
+                  description: ''
+                  example:
+                    - 16
+                  items:
+                    type: integer
+                api_endpoint:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: 'n'
+                api_method:
+                  type: string
+                  description: ''
+                  example: DELETE
+                  enum:
+                    - GET
+                    - POST
+                    - PUT
+                    - PATCH
+                    - DELETE
+              required:
+                - id
+                - label
+                - icon
+    parameters:
+      -
+        in: path
+        name: module
+        description: 'The module.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+  '/api/v1/admin/modules/{module}/actions/{action}':
+    delete:
+      summary: 'Delete a custom action.'
+      operationId: deleteACustomAction
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Modules'
+    parameters:
+      -
+        in: path
+        name: module
+        description: 'The module.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+      -
+        in: path
+        name: action
+        description: 'The action.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+  '/api/v1/admin/modules/{module}/audit-log':
+    get:
+      summary: 'Get module audit log.'
+      operationId: getModuleAuditLog
+      description: 'Returns history of changes made to the module configuration.'
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/modules/architecto/audit-log could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/modules/architecto/audit-log could not be found.'
+      tags:
+        - 'Admin - Modules'
+    parameters:
+      -
+        in: path
+        name: module
+        description: 'The module.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+  '/api/v1/admin/modules/{module_id}/config':
+    get:
+      summary: 'Get module config with schema.'
+      operationId: getModuleConfigWithSchema
+      description: "Returns the current configuration values, default values, and a dynamic schema\nthat describes each configurable field. The schema is organized in sections\n(e.g., notifications, deadlines, requirements) with field types and validation rules.\n\n**Schema Structure:**\n- `sections`: Grouped configuration fields by category\n- `sections.{key}.fields`: Individual field definitions with type, label, hint, options\n- `defaults`: Default values for all fields\n\n**Field Types:**\n- `switch`: Boolean toggle\n- `number`: Integer with min/max\n- `select`: Dropdown with predefined options\n- `text`/`textarea`: String input\n\n**Conditional Fields:**\nFields with `depends_on` should only be shown when the referenced field is true."
+      parameters: []
+      responses:
+        200:
+          description: success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  module_id: pedidos-simples
+                  module_name: 'Pedidos Simples'
+                  config:
+                    notify_on_status_change: false
+                    notification_channel: whatsapp
+                    warning_after_days: 5
+                    auto_cancel_days: 20
+                    require_customer_phone: true
+                    require_notes: false
+                  schema:
+                    sections:
+                      notifications:
+                        label: Notificações
+                        icon: Bell
+                        description: 'Configurações de notificação ao cliente'
+                        fields:
+                          notify_on_status_change:
+                            type: switch
+                            label: 'Notificar ao mudar status'
+                            hint: 'Enviar notificação WhatsApp quando o status mudar'
+                            default: false
+                          notification_channel:
+                            type: select
+                            label: 'Canal de notificação'
+                            options:
+                              whatsapp: WhatsApp
+                              email: E-mail
+                              both: Ambos
+                            default: whatsapp
+                            depends_on: notify_on_status_change
+                    defaults: {  }
+                  has_custom_config: false
+                properties:
+                  module_id:
+                    type: string
+                    example: pedidos-simples
+                    description: 'The module identifier.'
+                    enum: []
+                  module_name:
+                    type: string
+                    example: 'Pedidos Simples'
+                    description: 'Human-readable module name.'
+                    enum: []
+                  config:
+                    type: object
+                    properties:
+                      notify_on_status_change:
+                        type: boolean
+                        example: false
+                      notification_channel:
+                        type: string
+                        example: whatsapp
+                      warning_after_days:
+                        type: integer
+                        example: 5
+                      auto_cancel_days:
+                        type: integer
+                        example: 20
+                      require_customer_phone:
+                        type: boolean
+                        example: true
+                      require_notes:
+                        type: boolean
+                        example: false
+                    description: 'Current merged configuration (defaults + custom).'
+                  schema:
+                    type: object
+                    properties:
+                      sections:
+                        type: object
+                        properties:
+                          notifications:
+                            type: object
+                            properties:
+                              label:
+                                type: string
+                                example: Notificações
+                              icon:
+                                type: string
+                                example: Bell
+                              description:
+                                type: string
+                                example: 'Configurações de notificação ao cliente'
+                              fields:
+                                type: object
+                                properties:
+                                  notify_on_status_change:
+                                    type: object
+                                    properties:
+                                      type: { type: string, example: switch }
+                                      label: { type: string, example: 'Notificar ao mudar status' }
+                                      hint: { type: string, example: 'Enviar notificação WhatsApp quando o status mudar' }
+                                      default: { type: boolean, example: false }
+                                  notification_channel:
+                                    type: object
+                                    properties:
+                                      type: { type: string, example: select }
+                                      label: { type: string, example: 'Canal de notificação' }
+                                      options: { type: object, properties: { whatsapp: { type: string, example: WhatsApp }, email: { type: string, example: E-mail }, both: { type: string, example: Ambos } } }
+                                      default: { type: string, example: whatsapp }
+                                      depends_on: { type: string, example: notify_on_status_change }
+                      defaults:
+                        type: object
+                        properties: {  }
+                    description: 'Dynamic schema for UI rendering with sections and field definitions.'
+                  has_custom_config:
+                    type: boolean
+                    example: false
+                    description: 'Whether any custom config has been saved.'
+                    enum: []
+        404:
+          description: 'module not found'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Módulo não encontrado.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Módulo não encontrado.'
+      tags:
+        - 'Admin - Modules'
+    patch:
+      summary: 'Update module config.'
+      operationId: updateModuleConfig
+      description: "Updates the global configuration for a module. Only fields defined in the\nmodule's config schema can be updated. Validation is automatically applied\nbased on field types (switch=boolean, number=integer with min/max, etc.).\n\nThe update is merged with existing config, so you only need to send changed fields.\nAll changes are logged in the module's audit log."
+      parameters: []
+      responses:
+        200:
+          description: success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Configurações atualizadas.'
+                  config:
+                    notify_on_status_change: true
+                    notification_channel: whatsapp
+                    warning_after_days: 3
+                    auto_cancel_days: 20
+                    require_customer_phone: true
+                    require_notes: false
+                properties:
+                  message:
+                    type: string
+                    example: 'Configurações atualizadas.'
+                  config:
+                    type: object
+                    properties:
+                      notify_on_status_change:
+                        type: boolean
+                        example: true
+                      notification_channel:
+                        type: string
+                        example: whatsapp
+                      warning_after_days:
+                        type: integer
+                        example: 3
+                      auto_cancel_days:
+                        type: integer
+                        example: 20
+                      require_customer_phone:
+                        type: boolean
+                        example: true
+                      require_notes:
+                        type: boolean
+                        example: false
+        404:
+          description: 'module not found'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Módulo não encontrado.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Módulo não encontrado.'
+        422:
+          description: 'validation error'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The warning_after_days field must be at least 1.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The warning_after_days field must be at least 1.'
+      tags:
+        - 'Admin - Modules'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                notify_on_status_change:
+                  type: boolean
+                  description: 'Enable status change notifications.'
+                  example: true
+                notification_channel:
+                  type: string
+                  description: 'Notification channel: whatsapp, email, or both.'
+                  example: whatsapp
+                warning_after_days:
+                  type: integer
+                  description: 'Days before warning alert (1-60).'
+                  example: 3
+                auto_cancel_days:
+                  type: integer
+                  description: 'Days before auto-cancel (0-90, 0=disabled).'
+                  example: 20
+                require_customer_phone:
+                  type: boolean
+                  description: 'Require customer phone on creation.'
+                  example: true
+                require_notes:
+                  type: boolean
+                  description: 'Require notes field.'
+                  example: false
+    parameters:
+      -
+        in: path
+        name: module_id
+        description: 'The ID of the module.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+      -
+        in: path
+        name: module
+        description: 'The module ID.'
+        example: pedidos-simples
+        required: true
+        schema:
+          type: string
+  '/api/v1/admin/modules/{module}/config/reset':
+    post:
+      summary: 'Reset module config to defaults.'
+      operationId: resetModuleConfigToDefaults
+      description: "Removes all custom configuration and restores the module to its default\nsettings as defined in the module class. This action is logged in the\naudit trail with the previous configuration values."
+      parameters: []
+      responses:
+        200:
+          description: success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Configurações restauradas para os valores padrão.'
+                  config:
+                    notify_on_status_change: false
+                    notification_channel: whatsapp
+                    warning_after_days: 5
+                    auto_cancel_days: 20
+                    require_customer_phone: true
+                    require_notes: false
+                properties:
+                  message:
+                    type: string
+                    example: 'Configurações restauradas para os valores padrão.'
+                  config:
+                    type: object
+                    properties:
+                      notify_on_status_change:
+                        type: boolean
+                        example: false
+                      notification_channel:
+                        type: string
+                        example: whatsapp
+                      warning_after_days:
+                        type: integer
+                        example: 5
+                      auto_cancel_days:
+                        type: integer
+                        example: 20
+                      require_customer_phone:
+                        type: boolean
+                        example: true
+                      require_notes:
+                        type: boolean
+                        example: false
+        404:
+          description: 'module not found'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Módulo não encontrado.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Módulo não encontrado.'
+      tags:
+        - 'Admin - Modules'
+    parameters:
+      -
+        in: path
+        name: module
+        description: 'The module ID.'
+        example: pedidos-simples
+        required: true
+        schema:
+          type: string
+  '/api/v1/admin/modules/{module_id}/stores/{store}/config':
+    get:
+      summary: 'Get store-specific config.'
+      operationId: getStoreSpecificConfig
+      description: "Returns the configuration for a module on a specific store. Store config\noverrides global config. The response includes both the global config,\nstore-specific overrides, and the effective (merged) configuration.\n\n**Config Hierarchy:**\n1. Module defaults (from code)\n2. Global config (from modules table)\n3. Store config (from module_store pivot) - highest priority"
+      parameters: []
+      responses:
+        200:
+          description: success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  module_id: pedidos-simples
+                  store_id: 1
+                  global_config:
+                    notify_on_status_change: true
+                    warning_after_days: 5
+                  store_config:
+                    warning_after_days: 2
+                  effective_config:
+                    notify_on_status_change: true
+                    warning_after_days: 2
+                  schema: {  }
+                properties:
+                  module_id:
+                    type: string
+                    example: pedidos-simples
+                  store_id:
+                    type: integer
+                    example: 1
+                  global_config:
+                    type: object
+                    properties:
+                      notify_on_status_change:
+                        type: boolean
+                        example: true
+                      warning_after_days:
+                        type: integer
+                        example: 5
+                  store_config:
+                    type: object
+                    properties:
+                      warning_after_days:
+                        type: integer
+                        example: 2
+                  effective_config:
+                    type: object
+                    properties:
+                      notify_on_status_change:
+                        type: boolean
+                        example: true
+                      warning_after_days:
+                        type: integer
+                        example: 2
+                  schema:
+                    type: object
+                    properties: {  }
+        404:
+          description: 'module not active for store'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Módulo não ativo para esta loja.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Módulo não ativo para esta loja.'
+      tags:
+        - 'Admin - Modules'
+    patch:
+      summary: 'Update store-specific config.'
+      operationId: updateStoreSpecificConfig
+      description: "Updates the configuration for a module on a specific store. These settings\noverride the global module configuration for this store only.\n\nUse this endpoint when a store needs different settings than the default.\nFor example, one store might need shorter warning periods or different\nnotification settings."
+      parameters: []
+      responses:
+        200:
+          description: success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Configurações da loja #1 atualizadas.'
+                  store_config:
+                    warning_after_days: 2
+                    notify_on_status_change: true
+                properties:
+                  message:
+                    type: string
+                    example: 'Configurações da loja #1 atualizadas.'
+                  store_config:
+                    type: object
+                    properties:
+                      warning_after_days:
+                        type: integer
+                        example: 2
+                      notify_on_status_change:
+                        type: boolean
+                        example: true
+        404:
+          description: 'module not found'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Módulo não encontrado.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Módulo não encontrado.'
+      tags:
+        - 'Admin - Modules'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                warning_after_days:
+                  type: integer
+                  description: 'Days before warning (overrides global).'
+                  example: 2
+                notify_on_status_change:
+                  type: boolean
+                  description: 'Enable notifications (overrides global).'
+                  example: true
+    parameters:
+      -
+        in: path
+        name: module_id
+        description: 'The ID of the module.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+      -
+        in: path
+        name: store
+        description: 'The store ID.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: module
+        description: 'The module ID.'
+        example: pedidos-simples
+        required: true
+        schema:
+          type: string
+  '/api/v1/admin/modules/{module}/schema':
+    get:
+      summary: 'Get validation schema.'
+      operationId: getValidationSchema
+      description: "Returns the complete validation schema for editing module components:\ntexts, statuses, and actions. This schema allows the frontend to render\ndynamic forms with proper validation before submission.\n\n**Included Data:**\n- `schema.texts`: Validation rules for text/label fields\n- `schema.status`: Validation rules for status editing\n- `schema.action`: Validation rules for action editing\n- `allowed_values`: Lists of valid icons, colors, badge variants"
+      parameters: []
+      responses:
+        200:
+          description: success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  module_id: pedidos-simples
+                  schema:
+                    texts:
+                      menu_label:
+                        type: string
+                        required: false
+                        min: 1
+                        max: 100
+                    status:
+                      name:
+                        type: string
+                        required: true
+                        pattern: '^[a-z_]+$'
+                        max: 50
+                      label:
+                        type: string
+                        required: true
+                        min: 2
+                        max: 50
+                      color:
+                        type: enum
+                        allowed:
+                          - blue
+                          - red
+                          - yellow
+                          - green
+                      icon:
+                        type: enum
+                        allowed:
+                          - FileCheck
+                          - Truck
+                          - Store
+                  allowed_values:
+                    icons:
+                      - FileCheck
+                      - Truck
+                      - Store
+                      - Bell
+                    colors:
+                      - blue
+                      - red
+                      - yellow
+                      - green
+                    badge_variants:
+                      - default
+                      - destructive
+                      - outline
+                properties:
+                  module_id:
+                    type: string
+                    example: pedidos-simples
+                  schema:
+                    type: object
+                    properties:
+                      texts:
+                        type: object
+                        properties:
+                          menu_label:
+                            type: object
+                            properties:
+                              type:
+                                type: string
+                                example: string
+                              required:
+                                type: boolean
+                                example: false
+                              min:
+                                type: integer
+                                example: 1
+                              max:
+                                type: integer
+                                example: 100
+                      status:
+                        type: object
+                        properties:
+                          name:
+                            type: object
+                            properties:
+                              type:
+                                type: string
+                                example: string
+                              required:
+                                type: boolean
+                                example: true
+                              pattern:
+                                type: string
+                                example: '^[a-z_]+$'
+                              max:
+                                type: integer
+                                example: 50
+                          label:
+                            type: object
+                            properties:
+                              type:
+                                type: string
+                                example: string
+                              required:
+                                type: boolean
+                                example: true
+                              min:
+                                type: integer
+                                example: 2
+                              max:
+                                type: integer
+                                example: 50
+                          color:
+                            type: object
+                            properties:
+                              type:
+                                type: string
+                                example: enum
+                              allowed:
+                                type: array
+                                example:
+                                  - blue
+                                  - red
+                                  - yellow
+                                  - green
+                                items:
+                                  type: string
+                          icon:
+                            type: object
+                            properties:
+                              type:
+                                type: string
+                                example: enum
+                              allowed:
+                                type: array
+                                example:
+                                  - FileCheck
+                                  - Truck
+                                  - Store
+                                items:
+                                  type: string
+                  allowed_values:
+                    type: object
+                    properties:
+                      icons:
+                        type: array
+                        example:
+                          - FileCheck
+                          - Truck
+                          - Store
+                          - Bell
+                        items:
+                          type: string
+                      colors:
+                        type: array
+                        example:
+                          - blue
+                          - red
+                          - yellow
+                          - green
+                        items:
+                          type: string
+                      badge_variants:
+                        type: array
+                        example:
+                          - default
+                          - destructive
+                          - outline
+                        items:
+                          type: string
+        404:
+          description: 'module not found'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Módulo não encontrado.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Módulo não encontrado.'
+      tags:
+        - 'Admin - Modules'
+    parameters:
+      -
+        in: path
+        name: module
+        description: 'The module ID.'
+        example: pedidos-simples
+        required: true
+        schema:
+          type: string
+  '/api/v1/admin/modules/{module_id}/statuses/{id}':
+    patch:
+      summary: 'Update status configuration.'
+      operationId: updateStatusConfiguration
+      description: "Allows Super Admin to customize status properties like labels, colors,\nicons, and tooltips. Changes are stored as overrides and merged with\nthe base module definition.\n\n**Editable Fields:**\n- `label`: Display name (2-50 chars)\n- `description`: Status description\n- `color`: Visual color (blue, red, yellow, etc.)\n- `icon`: Lucide icon name\n- `badge_variant`: Shadcn badge variant\n- `can_edit`: Whether records in this status can be edited\n- `final`: Whether this is a terminal status\n- `tooltip`, `help_text`: UI guidance"
+      parameters: []
+      responses:
+        200:
+          description: success
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: "Status '3' atualizado."
+                  data:
+                    name: disponivel
+                    label: 'Disponível para Retirada'
+                    color: green
+                    icon: CheckCircle
+                properties:
+                  message:
+                    type: string
+                    example: "Status '3' atualizado."
+                  data:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        example: disponivel
+                      label:
+                        type: string
+                        example: 'Disponível para Retirada'
+                      color:
+                        type: string
+                        example: green
+                      icon:
+                        type: string
+                        example: CheckCircle
+        404:
+          description: 'status not found'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Status não encontrado.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Status não encontrado.'
+      tags:
+        - 'Admin - Modules'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                label:
+                  type: string
+                  description: 'The display label.'
+                  example: 'Disponível para Retirada'
+                description:
+                  type: string
+                  description: 'Status description.'
+                  example: 'Produto pronto para retirada'
+                color:
+                  type: string
+                  description: 'Color: blue,red,yellow,green,purple,gray,orange,cyan,pink.'
+                  example: green
+                icon:
+                  type: string
+                  description: 'Lucide icon name.'
+                  example: CheckCircle
+                badge_variant:
+                  type: string
+                  description: 'Variant: default,destructive,outline,secondary,success,warning.'
+                  example: success
+                can_edit:
+                  type: boolean
+                  description: 'Can records be edited in this status.'
+                  example: false
+                final:
+                  type: boolean
+                  description: 'Is this a terminal status.'
+                  example: false
+                tooltip:
+                  type: string
+                  description: 'Tooltip for UI.'
+                  example: 'Produto pronto'
+                help_text:
+                  type: string
+                  description: 'Help text for admins.'
+                  example: 'O vendedor deve notificar o cliente'
+    parameters:
+      -
+        in: path
+        name: module_id
+        description: 'The ID of the module.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+      -
+        in: path
+        name: id
+        description: 'The ID of the status.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+      -
+        in: path
+        name: module
+        description: 'The module ID.'
+        example: pedidos-simples
+        required: true
+        schema:
+          type: string
+      -
+        in: path
+        name: status
+        description: 'The status key.'
+        example: '3'
+        required: true
+        schema:
+          type: string
+  '/api/v1/admin/modules/{module}/statuses':
+    post:
+      summary: 'Create a custom status.'
+      operationId: createACustomStatus
+      description: 'Allows Super Admin to add new statuses to a module.'
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Modules'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                key:
+                  type: string
+                  description: 'Must match the regex /^[a-z0-9_]+$/. Must not be greater than 50 characters.'
+                  example: b
+                status:
+                  type: object
+                  description: ''
+                  example: []
+                  properties:
+                    name:
+                      type: string
+                      description: 'Must match the regex /^[a-z_]+$/. Must not be greater than 50 characters.'
+                      example: b
+                    label:
+                      type: string
+                      description: 'Must be at least 2 characters. Must not be greater than 50 characters.'
+                      example: 'n'
+                    description:
+                      type: string
+                      description: 'Must not be greater than 255 characters.'
+                      example: 'Animi quos velit et fugiat.'
+                    color:
+                      type: string
+                      description: ''
+                      example: purple
+                      enum:
+                        - blue
+                        - red
+                        - yellow
+                        - green
+                        - purple
+                        - gray
+                        - orange
+                        - cyan
+                        - pink
+                    icon:
+                      type: string
+                      description: 'Must not be greater than 50 characters.'
+                      example: d
+                    badge_variant:
+                      type: string
+                      description: ''
+                      example: destructive
+                      enum:
+                        - default
+                        - destructive
+                        - outline
+                        - secondary
+                        - success
+                        - warning
+                    can_edit:
+                      type: boolean
+                      description: ''
+                      example: true
+                    final:
+                      type: boolean
+                      description: ''
+                      example: true
+                    tooltip:
+                      type: string
+                      description: 'Must not be greater than 255 characters.'
+                      example: l
+                    help_text:
+                      type: string
+                      description: 'Must not be greater than 500 characters.'
+                      example: j
+                  required:
+                    - name
+                    - label
+                    - color
+                    - icon
+                transitions_to:
+                  type: array
+                  description: ''
+                  example:
+                    - architecto
+                  items:
+                    type: string
+                transitions_from:
+                  type: array
+                  description: ''
+                  example:
+                    - architecto
+                  items:
+                    type: string
+              required:
+                - key
+                - status
+    parameters:
+      -
+        in: path
+        name: module
+        description: 'The module.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+  '/api/v1/admin/modules/{module}/statuses/{status}':
+    delete:
+      summary: 'Delete a custom status.'
+      operationId: deleteACustomStatus
+      description: 'Only custom statuses can be deleted.'
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Modules'
+    parameters:
+      -
+        in: path
+        name: module
+        description: 'The module.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+      -
+        in: path
+        name: status
+        description: 'The status.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+  '/api/v1/admin/modules/{module}/preview-impact':
+    post:
+      summary: 'Preview impact of a proposed change.'
+      operationId: previewImpactOfAProposedChange
+      description: 'Helps admin understand consequences before confirming.'
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Modules'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  description: ''
+                  example: update_status
+                  enum:
+                    - delete_status
+                    - update_status
+                    - update_transition
+                    - delete_action
+                status_key:
+                  type: string
+                  description: 'This field is required when <code>action</code> is <code>delete_status</code> or <code>update_status</code>.'
+                  example: architecto
+                changes:
+                  type: object
+                  description: ''
+                  example: null
+                  properties: {  }
+              required:
+                - action
+    parameters:
+      -
+        in: path
+        name: module
+        description: 'The module.'
+        example: architecto
+        required: true
+        schema:
+          type: string
+  /api/v1/admin/permissions:
+    get:
+      summary: 'List all permissions with filtering and grouping options.'
+      operationId: listAllPermissionsWithFilteringAndGroupingOptions
+      description: ''
+      parameters:
+        -
+          in: query
+          name: type
+          description: 'Filter by type: ability, screen, feature'
+          example: architecto
+          required: false
+          schema:
+            type: string
+            description: 'Filter by type: ability, screen, feature'
+            example: architecto
+        -
+          in: query
+          name: module
+          description: 'Filter by module name'
+          example: architecto
+          required: false
+          schema:
+            type: string
+            description: 'Filter by module name'
+            example: architecto
+        -
+          in: query
+          name: search
+          description: 'Search in name or display_name'
+          example: architecto
+          required: false
+          schema:
+            type: string
+            description: 'Search in name or display_name'
+            example: architecto
+        -
+          in: query
+          name: group_by
+          description: 'Group results by: module, type'
+          example: architecto
+          required: false
+          schema:
+            type: string
+            description: 'Group results by: module, type'
+            example: architecto
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/permissions could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/permissions could not be found.'
+      tags:
+        - 'Admin - Permissions'
+    post:
+      summary: 'Create a new permission.'
+      operationId: createANewPermission
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Permissions'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Must match the regex /^[a-z0-9\-\.]+$/. Must not be greater than 100 characters.'
+                  example: b
+                display_name:
+                  type: string
+                  description: 'Must not be greater than 150 characters.'
+                  example: 'n'
+                type:
+                  type: string
+                  description: ''
+                  example: architecto
+                module:
+                  type: string
+                  description: 'Must not be greater than 50 characters.'
+                  example: 'n'
+                description:
+                  type: string
+                  description: 'Must not be greater than 500 characters.'
+                  example: 'Animi quos velit et fugiat.'
+                  nullable: true
+                sort_order:
+                  type: integer
+                  description: 'Must be at least 0.'
+                  example: 42
+                  nullable: true
+              required:
+                - name
+                - display_name
+                - type
+                - module
+  /api/v1/admin/permissions/grouped:
+    get:
+      summary: 'Get permissions grouped by module (optimized for frontend).'
+      operationId: getPermissionsGroupedByModuleoptimizedForFrontend
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/permissions/grouped could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/permissions/grouped could not be found.'
+      tags:
+        - 'Admin - Permissions'
+  /api/v1/admin/permissions/by-type:
+    get:
+      summary: 'Get permissions organized by type (abilities, screens, features).'
+      operationId: getPermissionsOrganizedByTypeabilitiesScreensFeatures
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/permissions/by-type could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/permissions/by-type could not be found.'
+      tags:
+        - 'Admin - Permissions'
+  /api/v1/admin/permissions/modules:
+    get:
+      summary: 'Get list of available modules.'
+      operationId: getListOfAvailableModules
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/permissions/modules could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/permissions/modules could not be found.'
+      tags:
+        - 'Admin - Permissions'
+  /api/v1/admin/permissions/conventions:
+    get:
+      summary: 'Get permission naming conventions and examples.'
+      operationId: getPermissionNamingConventionsAndExamples
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/permissions/conventions could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/permissions/conventions could not be found.'
+      tags:
+        - 'Admin - Permissions'
+  /api/v1/admin/permissions/bulk:
+    post:
+      summary: 'Bulk create permissions.'
+      operationId: bulkCreatePermissions
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Permissions'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                permissions:
+                  type: array
+                  description: 'Must have at least 1 items.'
+                  example:
+                    - []
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        description: 'Must match the regex /^[a-z0-9\-\.]+$/. Must not be greater than 100 characters.'
+                        example: b
+                      display_name:
+                        type: string
+                        description: 'Must not be greater than 150 characters.'
+                        example: 'n'
+                      type:
+                        type: string
+                        description: ''
+                        example: architecto
+                      module:
+                        type: string
+                        description: 'Must not be greater than 50 characters.'
+                        example: 'n'
+                      description:
+                        type: string
+                        description: 'Must not be greater than 500 characters.'
+                        example: 'Animi quos velit et fugiat.'
+                        nullable: true
+                    required:
+                      - name
+                      - display_name
+                      - type
+                      - module
+              required:
+                - permissions
+  /api/v1/admin/permissions/preview:
+    post:
+      summary: 'Preview permission changes before applying.'
+      operationId: previewPermissionChangesBeforeApplying
+      description: 'Shows what permissions will be added/removed.'
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Permissions'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+                  description: 'The <code>id</code> of an existing record in the users table.'
+                  example: 16
+                add_permissions:
+                  type: array
+                  description: 'The <code>name</code> of an existing record in the permissions table.'
+                  example:
+                    - architecto
+                  items:
+                    type: string
+                remove_permissions:
+                  type: array
+                  description: 'The <code>name</code> of an existing record in the permissions table.'
+                  example:
+                    - architecto
+                  items:
+                    type: string
+              required:
+                - user_id
+  /api/v1/admin/permissions/bulk-grant:
+    post:
+      summary: 'Bulk grant permissions to multiple users.'
+      operationId: bulkGrantPermissionsToMultipleUsers
+      description: 'Limited to 10 users per request for safety.'
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Permissions'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_ids:
+                  type: array
+                  description: 'The <code>id</code> of an existing record in the users table.'
+                  example:
+                    - 16
+                  items:
+                    type: integer
+                permissions:
+                  type: array
+                  description: 'The <code>name</code> of an existing record in the permissions table.'
+                  example:
+                    - architecto
+                  items:
+                    type: string
+                expires_at:
+                  type: string
+                  description: 'Must be a valid date. Must be a date after <code>now</code>.'
+                  example: '2052-02-10'
+                  nullable: true
+                reason:
+                  type: string
+                  description: 'Must not be greater than 500 characters.'
+                  example: 'n'
+                  nullable: true
+  /api/v1/admin/permissions/most-granted:
+    get:
+      summary: 'Get most granted permissions via overrides.'
+      operationId: getMostGrantedPermissionsViaOverrides
+      description: 'Useful for UX: show popular permissions when adding overrides.'
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/permissions/most-granted could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/permissions/most-granted could not be found.'
+      tags:
+        - 'Admin - Permissions'
+  '/api/v1/admin/permissions/{id}':
+    get:
+      summary: 'Get a specific permission.'
+      operationId: getASpecificPermission
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/permissions/1 could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/permissions/1 could not be found.'
+      tags:
+        - 'Admin - Permissions'
+    put:
+      summary: 'Update a permission.'
+      operationId: updateAPermission
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Permissions'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Must match the regex /^[a-z0-9\-\.]+$/. Must not be greater than 100 characters.'
+                  example: b
+                display_name:
+                  type: string
+                  description: 'Must not be greater than 150 characters.'
+                  example: 'n'
+                type:
+                  type: string
+                  description: ''
+                  example: null
+                module:
+                  type: string
+                  description: 'Must not be greater than 50 characters.'
+                  example: g
+                description:
+                  type: string
+                  description: 'Must not be greater than 500 characters.'
+                  example: 'Quos velit et fugiat sunt nihil accusantium harum.'
+                  nullable: true
+                sort_order:
+                  type: integer
+                  description: 'Must be at least 0.'
+                  example: 8
+                  nullable: true
+    delete:
+      summary: 'Delete a permission.'
+      operationId: deleteAPermission
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Permissions'
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the permission.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/permissions/{permission}/users':
+    get:
+      summary: 'Get users who have a specific permission.'
+      operationId: getUsersWhoHaveASpecificPermission
+      description: 'Useful for audit: "Who can delete orders?"'
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/permissions/1/users could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/permissions/1/users could not be found.'
+      tags:
+        - 'Admin - Permissions'
+    parameters:
+      -
+        in: path
+        name: permission
+        description: 'The permission.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/users/{user}/permissions/copy-from/{source}':
+    post:
+      summary: 'Copy permissions from one user to another.'
+      operationId: copyPermissionsFromOneUserToAnother
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Permissions'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                include_temporary:
+                  type: boolean
+                  description: ''
+                  example: true
+                expires_at:
+                  type: string
+                  description: 'Must be a valid date. Must be a date after <code>now</code>.'
+                  example: '2052-02-10'
+                  nullable: true
+    parameters:
+      -
+        in: path
+        name: user
+        description: 'The user.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: source
+        description: ''
+        example: architecto
+        required: true
+        schema:
+          type: string
+  '/api/v1/admin/users/{user}/permissions/audit-log':
+    get:
+      summary: "Get audit log for a user's permissions."
+      operationId: getAuditLogForAUsersPermissions
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/users/1/permissions/audit-log could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/users/1/permissions/audit-log could not be found.'
+      tags:
+        - 'Admin - Permissions'
+    parameters:
+      -
+        in: path
+        name: user
+        description: 'The user.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/v1/admin/roles:
+    get:
+      summary: 'List all roles.'
+      operationId: listAllRoles
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/roles could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/roles could not be found.'
+      tags:
+        - 'Admin - Roles'
+    post:
+      summary: 'Create a new role.'
+      operationId: createANewRole
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Roles'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Must not be greater than 50 characters.'
+                  example: b
+                display_name:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: 'n'
+                description:
+                  type: string
+                  description: 'Must not be greater than 500 characters.'
+                  example: 'Animi quos velit et fugiat.'
+                  nullable: true
+                level:
+                  type: integer
+                  description: 'Must be at least 1. Must not be greater than 99.'
+                  example: 1
+                permission_ids:
+                  type: array
+                  description: 'The <code>id</code> of an existing record in the permissions table.'
+                  example:
+                    - 16
+                  items:
+                    type: integer
+              required:
+                - name
+                - display_name
+                - level
+  '/api/v1/admin/roles/{id}':
+    get:
+      summary: 'Get a specific role with permissions.'
+      operationId: getASpecificRoleWithPermissions
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/roles/1 could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/roles/1 could not be found.'
+      tags:
+        - 'Admin - Roles'
+    put:
+      summary: 'Update a role.'
+      operationId: updateARole
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Roles'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Must not be greater than 50 characters.'
+                  example: b
+                display_name:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: 'n'
+                description:
+                  type: string
+                  description: 'Must not be greater than 500 characters.'
+                  example: 'Animi quos velit et fugiat.'
+                  nullable: true
+                level:
+                  type: integer
+                  description: 'Must be at least 1. Must not be greater than 99.'
+                  example: 1
+                permission_ids:
+                  type: array
+                  description: 'The <code>id</code> of an existing record in the permissions table.'
+                  example:
+                    - 16
+                  items:
+                    type: integer
+    delete:
+      summary: 'Delete a role.'
+      operationId: deleteARole
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Roles'
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the role.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/roles/{role_id}/permissions':
+    post:
+      summary: 'Sync permissions for a role.'
+      operationId: syncPermissionsForARole
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Roles'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                permission_ids:
+                  type: array
+                  description: 'The <code>id</code> of an existing record in the permissions table.'
+                  example:
+                    - 16
+                  items:
+                    type: integer
+    put:
+      summary: 'Update permissions with add/remove support.'
+      operationId: updatePermissionsWithAddremoveSupport
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Roles'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                add:
+                  type: array
+                  description: 'The <code>name</code> of an existing record in the permissions table.'
+                  example:
+                    - architecto
+                  items:
+                    type: string
+                remove:
+                  type: array
+                  description: 'The <code>name</code> of an existing record in the permissions table.'
+                  example:
+                    - architecto
+                  items:
+                    type: string
+    parameters:
+      -
+        in: path
+        name: role_id
+        description: 'The ID of the role.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/roles/{role_id}/clone':
+    post:
+      summary: 'Clone a role.'
+      operationId: cloneARole
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Roles'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Must match the regex /^[a-z-]+$/. Must not be greater than 50 characters.'
+                  example: b
+                display_name:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: 'n'
+                description:
+                  type: string
+                  description: 'Must not be greater than 500 characters.'
+                  example: 'Animi quos velit et fugiat.'
+                  nullable: true
+              required:
+                - name
+                - display_name
+    parameters:
+      -
+        in: path
+        name: role_id
+        description: 'The ID of the role.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/stores/{store_id}/permission-overrides':
+    get:
+      summary: 'List all overrides for a store.'
+      operationId: listAllOverridesForAStore
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/stores/1/permission-overrides could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/stores/1/permission-overrides could not be found.'
+      tags:
+        - 'Admin - Store Permission Overrides'
+    post:
+      summary: 'Grant or deny a permission for all users in a store.'
+      operationId: grantOrDenyAPermissionForAllUsersInAStore
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Store Permission Overrides'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                permission_id:
+                  type: string
+                  description: 'The <code>id</code> of an existing record in the permissions table.'
+                  example: architecto
+                granted:
+                  type: boolean
+                  description: ''
+                  example: true
+              required:
+                - permission_id
+                - granted
+    parameters:
+      -
+        in: path
+        name: store_id
+        description: 'The ID of the store.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/stores/{store_id}/permission-overrides/bulk':
+    post:
+      summary: 'Bulk grant/deny permissions for a store.'
+      operationId: bulkGrantdenyPermissionsForAStore
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Store Permission Overrides'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                overrides:
+                  type: array
+                  description: 'Must have at least 1 items.'
+                  example:
+                    - []
+                  items:
+                    type: object
+                    properties:
+                      permission_id:
+                        type: string
+                        description: 'The <code>id</code> of an existing record in the permissions table.'
+                        example: architecto
+                      granted:
+                        type: boolean
+                        description: ''
+                        example: true
+                    required:
+                      - permission_id
+                      - granted
+              required:
+                - overrides
+    parameters:
+      -
+        in: path
+        name: store_id
+        description: 'The ID of the store.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/stores/{store_id}/permission-overrides/clear':
+    delete:
+      summary: 'Remove all overrides for a store.'
+      operationId: removeAllOverridesForAStore
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Store Permission Overrides'
+    parameters:
+      -
+        in: path
+        name: store_id
+        description: 'The ID of the store.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/stores/{store_id}/permission-overrides/{override}':
+    put:
+      summary: 'Update an existing store override.'
+      operationId: updateAnExistingStoreOverride
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Store Permission Overrides'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                granted:
+                  type: boolean
+                  description: ''
+                  example: true
+              required:
+                - granted
+    delete:
+      summary: 'Remove an override (reverts to role-based permission).'
+      operationId: removeAnOverriderevertsToRoleBasedPermission
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - Store Permission Overrides'
+    parameters:
+      -
+        in: path
+        name: store_id
+        description: 'The ID of the store.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: override
+        description: ''
+        example: architecto
+        required: true
+        schema:
+          type: string
+  '/api/v1/admin/users/{user_id}/permission-overrides':
+    get:
+      summary: 'List all overrides for a user.'
+      operationId: listAllOverridesForAUser
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/users/1/permission-overrides could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/users/1/permission-overrides could not be found.'
+      tags:
+        - 'Admin - User Permission Overrides'
+    post:
+      summary: 'Grant or deny a permission to a user.'
+      operationId: grantOrDenyAPermissionToAUser
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - User Permission Overrides'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                permission_id:
+                  type: string
+                  description: 'The <code>id</code> of an existing record in the permissions table.'
+                  example: architecto
+                store_id:
+                  type: string
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: null
+                  nullable: true
+                granted:
+                  type: boolean
+                  description: ''
+                  example: true
+                expires_at:
+                  type: string
+                  description: 'Must be a valid date. Must be a date after <code>now</code>.'
+                  example: '2052-02-10'
+                  nullable: true
+                reason:
+                  type: string
+                  description: 'Must not be greater than 500 characters.'
+                  example: 'n'
+                  nullable: true
+              required:
+                - permission_id
+                - granted
+    parameters:
+      -
+        in: path
+        name: user_id
+        description: 'The ID of the user.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/users/{user_id}/permission-overrides/bulk':
+    post:
+      summary: 'Bulk grant/deny permissions.'
+      operationId: bulkGrantdenyPermissions
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - User Permission Overrides'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                overrides:
+                  type: array
+                  description: 'Must have at least 1 items.'
+                  example:
+                    - []
+                  items:
+                    type: object
+                    properties:
+                      permission_id:
+                        type: string
+                        description: 'The <code>id</code> of an existing record in the permissions table.'
+                        example: architecto
+                      store_id:
+                        type: string
+                        description: 'The <code>id</code> of an existing record in the stores table.'
+                        example: null
+                        nullable: true
+                      granted:
+                        type: boolean
+                        description: ''
+                        example: true
+                      expires_at:
+                        type: string
+                        description: 'Must be a valid date. Must be a date after <code>now</code>.'
+                        example: '2052-02-10'
+                        nullable: true
+                      reason:
+                        type: string
+                        description: 'Must not be greater than 500 characters.'
+                        example: 'n'
+                        nullable: true
+                    required:
+                      - permission_id
+                      - granted
+              required:
+                - overrides
+    parameters:
+      -
+        in: path
+        name: user_id
+        description: 'The ID of the user.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/users/{user_id}/permission-overrides/clear':
+    delete:
+      summary: 'Remove all overrides for a user (optionally filtered by store).'
+      operationId: removeAllOverridesForAUseroptionallyFilteredByStore
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - User Permission Overrides'
+    parameters:
+      -
+        in: path
+        name: user_id
+        description: 'The ID of the user.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/users/{user_id}/permission-overrides/effective':
+    get:
+      summary: 'Get effective permissions for a user with source information.'
+      operationId: getEffectivePermissionsForAUserWithSourceInformation
+      description: "This endpoint shows the final resolved state of all permissions\nfor a user, including where each permission comes from (role, store override, user override)."
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/users/1/permission-overrides/effective could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/users/1/permission-overrides/effective could not be found.'
+      tags:
+        - 'Admin - User Permission Overrides'
+    parameters:
+      -
+        in: path
+        name: user_id
+        description: 'The ID of the user.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/users/{user_id}/permission-overrides/{override_id}':
+    put:
+      summary: 'Update an existing override.'
+      operationId: updateAnExistingOverride
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - User Permission Overrides'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                granted:
+                  type: boolean
+                  description: ''
+                  example: false
+                expires_at:
+                  type: string
+                  description: 'Must be a valid date. Must be a date after <code>now</code>.'
+                  example: '2052-02-10'
+                  nullable: true
+                reason:
+                  type: string
+                  description: 'Must not be greater than 500 characters.'
+                  example: 'n'
+                  nullable: true
+    delete:
+      summary: 'Remove an override (reverts to role-based permission).'
+      operationId: removeAnOverriderevertsToRoleBasedPermission
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - User Permission Overrides'
+    parameters:
+      -
+        in: path
+        name: user_id
+        description: 'The ID of the user.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: override_id
+        description: 'The ID of the override.'
+        example: 16
+        required: true
+        schema:
+          type: integer
+  /api/v1/admin/roles/available:
+    get:
+      summary: 'List available roles for assignment.'
+      operationId: listAvailableRolesForAssignment
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/roles/available could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/roles/available could not be found.'
+      tags:
+        - 'Admin - User Role Assignments'
+  '/api/v1/admin/users/{user_id}/roles':
+    get:
+      summary: 'List all role assignments for a user.'
+      operationId: listAllRoleAssignmentsForAUser
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api.maiscapinhas.com.br//api/v1/admin/users/1/roles could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api.maiscapinhas.com.br//api/v1/admin/users/1/roles could not be found.'
+      tags:
+        - 'Admin - User Role Assignments'
+    post:
+      summary: 'Assign a role to a user (global or store-specific).'
+      operationId: assignARoleToAUserglobalOrStoreSpecific
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - User Role Assignments'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role_id:
+                  type: string
+                  description: 'The <code>id</code> of an existing record in the roles table.'
+                  example: architecto
+                store_id:
+                  type: string
+                  description: 'The <code>id</code> of an existing record in the stores table.'
+                  example: null
+                  nullable: true
+              required:
+                - role_id
+    parameters:
+      -
+        in: path
+        name: user_id
+        description: 'The ID of the user.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/users/{user_id}/roles/sync':
+    put:
+      summary: 'Sync roles for a user (replaces all current assignments).'
+      operationId: syncRolesForAUserreplacesAllCurrentAssignments
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - User Role Assignments'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                assignments:
+                  type: array
+                  description: ''
+                  example:
+                    - []
+                  items:
+                    type: object
+                    properties:
+                      role_id:
+                        type: string
+                        description: 'The <code>id</code> of an existing record in the roles table.'
+                        example: architecto
+                      store_id:
+                        type: string
+                        description: 'The <code>id</code> of an existing record in the stores table.'
+                        example: null
+                        nullable: true
+                    required:
+                      - role_id
+              required:
+                - assignments
+    parameters:
+      -
+        in: path
+        name: user_id
+        description: 'The ID of the user.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  '/api/v1/admin/users/{user_id}/roles/{assignment}':
+    delete:
+      summary: 'Remove a role assignment from a user.'
+      operationId: removeARoleAssignmentFromAUser
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - 'Admin - User Role Assignments'
+    parameters:
+      -
+        in: path
+        name: user_id
+        description: 'The ID of the user.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: assignment
+        description: ''
+        example: 1
+        required: true
+        schema:
+          type: integer
   /api/v1/admin/audit-logs:
     get:
       summary: 'Listar logs de auditoria'
@@ -4891,11 +8048,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-14T01:18:10'
+                  example: '2026-01-16T19:10:30'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-14T01:18:10'
+                  example: '2026-01-16T19:10:30'
                 causer_id:
                   type: integer
                   description: 'The <code>id</code> of an existing record in the users table.'
@@ -5027,11 +8184,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-14T01:18:10'
+                  example: '2026-01-16T19:10:30'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-14T01:18:10'
+                  example: '2026-01-16T19:10:30'
   '/api/v1/admin/audit-logs/{auditLog_id}':
     get:
       summary: 'Ver detalhes do log'
@@ -5448,16 +8605,16 @@ paths:
                             type: object
                             description: ''
                             example:
-                              start: '01:18'
+                              start: '19:10'
                             properties:
                               start:
                                 type: string
                                 description: 'Must be a valid date in the format <code>H:i</code>.'
-                                example: '01:18'
+                                example: '19:10'
                               end:
                                 type: string
                                 description: 'Must be a valid date in the format <code>H:i</code>.'
-                                example: '01:18'
+                                example: '19:10'
                             required:
                               - start
                               - end
@@ -5471,11 +8628,11 @@ paths:
                           date:
                             type: string
                             description: 'Must be a valid date in the format <code>Y-m-d</code>.'
-                            example: '2026-01-14'
+                            example: '2026-01-16'
                           closed:
                             type: boolean
                             description: ''
-                            example: true
+                            example: false
                           reason:
                             type: string
                             description: 'Must not be greater than 100 characters.'
@@ -5741,16 +8898,16 @@ paths:
                             type: object
                             description: ''
                             example:
-                              start: '01:18'
+                              start: '19:10'
                             properties:
                               start:
                                 type: string
                                 description: 'Must be a valid date in the format <code>H:i</code>.'
-                                example: '01:18'
+                                example: '19:10'
                               end:
                                 type: string
                                 description: 'Must be a valid date in the format <code>H:i</code>.'
-                                example: '01:18'
+                                example: '19:10'
                             required:
                               - start
                               - end
@@ -5764,7 +8921,7 @@ paths:
                           date:
                             type: string
                             description: 'Must be a valid date in the format <code>Y-m-d</code>.'
-                            example: '2026-01-14'
+                            example: '2026-01-16'
                           closed:
                             type: boolean
                             description: ''
@@ -6185,7 +9342,7 @@ paths:
                 is_super_admin:
                   type: boolean
                   description: ''
-                  example: false
+                  example: true
                 zip_code:
                   type: string
                   description: 'Must not be greater than 8 characters.'
@@ -6224,12 +9381,12 @@ paths:
                 birth_date:
                   type: string
                   description: 'Must be a valid date. Must be a date before <code>today</code>.'
-                  example: '2022-02-06'
+                  example: '2022-02-09'
                   nullable: true
                 hire_date:
                   type: string
                   description: 'Must be a valid date. Must be a date before or equal to <code>today</code>.'
-                  example: '2022-02-06'
+                  example: '2022-02-09'
                   nullable: true
                 whatsapp:
                   type: string
@@ -6453,12 +9610,12 @@ paths:
                 birth_date:
                   type: string
                   description: 'Must be a valid date. Must be a date before <code>today</code>.'
-                  example: '2022-02-06'
+                  example: '2022-02-09'
                   nullable: true
                 hire_date:
                   type: string
                   description: 'Must be a valid date. Must be a date before or equal to <code>today</code>.'
-                  example: '2022-02-06'
+                  example: '2022-02-09'
                   nullable: true
                 whatsapp:
                   type: string
@@ -6573,7 +9730,7 @@ paths:
                       role:
                         type: string
                         description: ''
-                        example: admin
+                        example: gerente
                         enum:
                           - admin
                           - gerente
@@ -6624,7 +9781,7 @@ paths:
                       role:
                         type: string
                         description: ''
-                        example: vendedor
+                        example: admin
                         enum:
                           - admin
                           - gerente
@@ -6653,7 +9810,7 @@ paths:
                 role:
                   type: string
                   description: ''
-                  example: conferente
+                  example: admin
                   enum:
                     - admin
                     - gerente
@@ -7431,7 +10588,7 @@ paths:
                 is_active:
                   type: boolean
                   description: ''
-                  example: true
+                  example: false
                 notes:
                   type: string
                   description: 'Must not be greater than 1000 characters.'
@@ -7456,7 +10613,7 @@ paths:
                 status:
                   type: string
                   description: ''
-                  example: connected
+                  example: disconnected
                   enum:
                     - unknown
                     - connected
@@ -8362,7 +11519,7 @@ paths:
                 payday:
                   type: string
                   description: 'This field is required when <code>payed</code> is <code>true</code> or <code>1</code>. Must be a valid date.'
-                  example: '2026-01-14T01:18:09'
+                  example: '2026-01-16T19:10:29'
                   nullable: true
                 received_by_id:
                   type: integer
@@ -8372,7 +11529,7 @@ paths:
                 status:
                   type: integer
                   description: ''
-                  example: '1'
+                  example: '6'
                   enum:
                     - '1'
                     - '2'
@@ -8506,7 +11663,7 @@ paths:
                 status:
                   type: integer
                   description: ''
-                  example: '3'
+                  example: '4'
                   enum:
                     - '1'
                     - '2'
@@ -10039,7 +13196,7 @@ paths:
                 birth_date:
                   type: string
                   description: 'Must be a valid date. Must be a date before <code>today</code>.'
-                  example: '2022-02-06'
+                  example: '2022-02-09'
                   nullable: true
                 address:
                   type: string
@@ -10218,7 +13375,7 @@ paths:
                 birth_date:
                   type: string
                   description: 'Must be a valid date. Must be a date before <code>today</code>.'
-                  example: '2022-02-06'
+                  example: '2022-02-09'
                   nullable: true
     delete:
       summary: 'Excluir cliente'
@@ -10758,7 +13915,7 @@ paths:
                 status:
                   type: string
                   description: ''
-                  example: archived
+                  example: scheduled
                   enum:
                     - draft
                     - scheduled
@@ -10773,11 +13930,11 @@ paths:
                 only_unseen:
                   type: boolean
                   description: ''
-                  example: true
+                  example: false
                 severity:
                   type: string
                   description: ''
-                  example: info
+                  example: danger
                   enum:
                     - info
                     - warning
@@ -10809,11 +13966,11 @@ paths:
                 date_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-14T01:18:05'
+                  example: '2026-01-16T19:10:23'
                 date_to:
                   type: string
                   description: 'Must be a valid date. Must be a date after or equal to <code>date_from</code>.'
-                  example: '2052-02-07'
+                  example: '2052-02-09'
                 per_page:
                   type: integer
                   description: 'Must be at least 1. Must not be greater than 100.'
@@ -10825,7 +13982,7 @@ paths:
                 sort:
                   type: string
                   description: ''
-                  example: created_at_desc
+                  example: starts_at_desc
                   enum:
                     - starts_at_desc
                     - starts_at_asc
@@ -11003,7 +14160,7 @@ paths:
                 status:
                   type: string
                   description: ''
-                  example: scheduled
+                  example: draft
                   enum:
                     - draft
                     - scheduled
@@ -11018,11 +14175,11 @@ paths:
                 only_unseen:
                   type: boolean
                   description: ''
-                  example: false
+                  example: true
                 severity:
                   type: string
                   description: ''
-                  example: info
+                  example: warning
                   enum:
                     - info
                     - warning
@@ -11037,7 +14194,7 @@ paths:
                 scope:
                   type: string
                   description: ''
-                  example: role
+                  example: store
                   enum:
                     - global
                     - store
@@ -11054,11 +14211,11 @@ paths:
                 date_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-14T01:18:05'
+                  example: '2026-01-16T19:10:23'
                 date_to:
                   type: string
                   description: 'Must be a valid date. Must be a date after or equal to <code>date_from</code>.'
-                  example: '2052-02-07'
+                  example: '2052-02-09'
                 per_page:
                   type: integer
                   description: 'Must be at least 1. Must not be greater than 100.'
@@ -11070,7 +14227,7 @@ paths:
                 sort:
                   type: string
                   description: ''
-                  example: severity_desc
+                  example: starts_at_desc
                   enum:
                     - starts_at_desc
                     - starts_at_asc
@@ -11209,7 +14366,7 @@ paths:
                 pinned_until:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-14T01:18:05'
+                  example: '2026-01-16T19:10:23'
                   nullable: true
                 meta_json:
                   type: object
@@ -11388,7 +14545,7 @@ paths:
                 display_mode:
                   type: string
                   description: ''
-                  example: modal
+                  example: both
                   enum:
                     - banner
                     - modal
@@ -11421,7 +14578,7 @@ paths:
                 scope:
                   type: string
                   description: ''
-                  example: global
+                  example: store
                   enum:
                     - global
                     - store
@@ -11434,12 +14591,12 @@ paths:
                 starts_at:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-14T01:18:06'
+                  example: '2026-01-16T19:10:24'
                   nullable: true
                 expires_at:
                   type: string
                   description: 'Must be a valid date. Must be a date after <code>starts_at</code>.'
-                  example: '2052-02-07'
+                  example: '2052-02-09'
                   nullable: true
                 repeat_every_minutes:
                   type: integer
@@ -11453,7 +14610,7 @@ paths:
                 pinned_until:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-01-14T01:18:06'
+                  example: '2026-01-16T19:10:24'
                   nullable: true
                 meta_json:
                   type: object
@@ -12170,6 +15327,357 @@ paths:
         required: true
         schema:
           type: integer
+  /api/v1/payment-methods:
+    get:
+      summary: 'Listar formas de pagamento'
+      operationId: listarFormasDePagamento
+      description: "Retorna lista paginada de formas de pagamento com filtros.\n\n**Quem pode usar:** Todos os usuários autenticados."
+      parameters:
+        -
+          in: query
+          name: search
+          description: 'Buscar por nome ou slug.'
+          example: pix
+          required: false
+          schema:
+            type: string
+            description: 'Buscar por nome ou slug.'
+            example: pix
+        -
+          in: query
+          name: is_active
+          description: 'Filtrar por status ativo.'
+          example: true
+          required: false
+          schema:
+            type: boolean
+            description: 'Filtrar por status ativo.'
+            example: true
+        -
+          in: query
+          name: sort
+          description: 'Campo para ordenação.'
+          example: sort_order
+          required: false
+          schema:
+            type: string
+            description: 'Campo para ordenação.'
+            example: sort_order
+        -
+          in: query
+          name: direction
+          description: 'Direção: `asc` ou `desc`.'
+          example: asc
+          required: false
+          schema:
+            type: string
+            description: 'Direção: `asc` ou `desc`.'
+            example: asc
+        -
+          in: query
+          name: per_page
+          description: 'Itens por página (máx 100).'
+          example: 50
+          required: false
+          schema:
+            type: integer
+            description: 'Itens por página (máx 100).'
+            example: 50
+      responses:
+        200:
+          description: 'Lista de formas de pagamento'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    -
+                      id: 1
+                      name: Dinheiro
+                      slug: dinheiro
+                      is_active: true
+                      sort_order: 1
+                    -
+                      id: 2
+                      name: Pix
+                      slug: pix
+                      is_active: true
+                      sort_order: 2
+                  meta:
+                    current_page: 1
+                    total: 4
+                properties:
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        name: Dinheiro
+                        slug: dinheiro
+                        is_active: true
+                        sort_order: 1
+                      -
+                        id: 2
+                        name: Pix
+                        slug: pix
+                        is_active: true
+                        sort_order: 2
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: Dinheiro
+                        slug:
+                          type: string
+                          example: dinheiro
+                        is_active:
+                          type: boolean
+                          example: true
+                        sort_order:
+                          type: integer
+                          example: 1
+                  meta:
+                    type: object
+                    properties:
+                      current_page:
+                        type: integer
+                        example: 1
+                      total:
+                        type: integer
+                        example: 4
+      tags:
+        - 'Formas de Pagamento'
+    post:
+      summary: 'Criar forma de pagamento'
+      operationId: criarFormaDePagamento
+      description: "Cria uma nova forma de pagamento.\n\n**Quem pode usar:** Apenas Super Admin e Admin Global."
+      parameters: []
+      responses:
+        201:
+          description: 'Forma de pagamento criada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Forma de pagamento criada com sucesso.'
+                  data:
+                    id: 5
+                    name: Boleto
+                    slug: boleto
+                    is_active: true
+                properties:
+                  message:
+                    type: string
+                    example: 'Forma de pagamento criada com sucesso.'
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 5
+                      name:
+                        type: string
+                        example: Boleto
+                      slug:
+                        type: string
+                        example: boleto
+                      is_active:
+                        type: boolean
+                        example: true
+        403:
+          description: 'Sem permissão'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Apenas administradores podem gerenciar formas de pagamento.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Apenas administradores podem gerenciar formas de pagamento.'
+      tags:
+        - 'Formas de Pagamento'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Nome da forma de pagamento.'
+                  example: Boleto
+                slug:
+                  type: string
+                  description: 'Slug (gerado automaticamente se não informado).'
+                  example: boleto
+                  nullable: true
+                description:
+                  type: string
+                  description: 'Descrição opcional.'
+                  example: 'Pagamento via boleto bancário'
+                  nullable: true
+                is_active:
+                  type: boolean
+                  description: 'Status ativo.'
+                  example: true
+                sort_order:
+                  type: integer
+                  description: 'Ordem de exibição.'
+                  example: 5
+              required:
+                - name
+  '/api/v1/payment-methods/{id}':
+    get:
+      summary: 'Detalhes da forma de pagamento'
+      operationId: detalhesDaFormaDePagamento
+      description: "Retorna detalhes de uma forma de pagamento específica.\n\n**Quem pode usar:** Todos os usuários autenticados."
+      parameters: []
+      responses:
+        200:
+          description: 'Detalhes da forma de pagamento'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    id: 1
+                    name: Dinheiro
+                    slug: dinheiro
+                    is_active: true
+                    sort_order: 1
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: Dinheiro
+                      slug:
+                        type: string
+                        example: dinheiro
+                      is_active:
+                        type: boolean
+                        example: true
+                      sort_order:
+                        type: integer
+                        example: 1
+      tags:
+        - 'Formas de Pagamento'
+    put:
+      summary: 'Atualizar forma de pagamento'
+      operationId: atualizarFormaDePagamento
+      description: "Atualiza dados de uma forma de pagamento existente.\n\n**Quem pode usar:** Apenas Super Admin e Admin Global."
+      parameters: []
+      responses:
+        200:
+          description: 'Forma de pagamento atualizada'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Forma de pagamento atualizada com sucesso.'
+                  data:
+                    id: 1
+                    name: Dinheiro
+                    is_active: false
+                properties:
+                  message:
+                    type: string
+                    example: 'Forma de pagamento atualizada com sucesso.'
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: Dinheiro
+                      is_active:
+                        type: boolean
+                        example: false
+      tags:
+        - 'Formas de Pagamento'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Nome da forma de pagamento.'
+                  example: Dinheiro
+                slug:
+                  type: string
+                  description: 'Must not be greater than 100 characters.'
+                  example: 'n'
+                  nullable: true
+                description:
+                  type: string
+                  description: 'Must not be greater than 1000 characters.'
+                  example: 'Animi quos velit et fugiat.'
+                  nullable: true
+                is_active:
+                  type: boolean
+                  description: 'Status ativo.'
+                  example: false
+                sort_order:
+                  type: integer
+                  description: 'Ordem de exibição.'
+                  example: 1
+    delete:
+      summary: 'Excluir forma de pagamento'
+      operationId: excluirFormaDePagamento
+      description: "Remove uma forma de pagamento do sistema.\n\n**Quem pode usar:** Apenas Super Admin e Admin Global."
+      parameters: []
+      responses:
+        200:
+          description: 'Forma de pagamento excluída'
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Forma de pagamento excluída com sucesso.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Forma de pagamento excluída com sucesso.'
+      tags:
+        - 'Formas de Pagamento'
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the payment method.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+      -
+        in: path
+        name: payment_method
+        description: 'ID da forma de pagamento.'
+        example: 1
+        required: true
+        schema:
+          type: integer
   /api/v1/fabrica/pedidos:
     get:
       summary: 'Listar pedidos de produção'
@@ -12632,7 +16140,7 @@ paths:
                 active:
                   type: string
                   description: ''
-                  example: '1'
+                  example: '0'
                   enum:
                     - '0'
                     - '1'
@@ -12650,12 +16158,12 @@ paths:
                 date_from:
                   type: string
                   description: 'Must be a valid date in the format <code>Y-m-d</code>.'
-                  example: '2026-01-14'
+                  example: '2026-01-16'
                   nullable: true
                 date_to:
                   type: string
                   description: 'Must be a valid date in the format <code>Y-m-d</code>. Must be a date after or equal to <code>date_from</code>.'
-                  example: '2052-02-07'
+                  example: '2052-02-09'
                   nullable: true
   /api/v1/pedidos:
     get:
@@ -12960,7 +16468,7 @@ paths:
                 status:
                   type: integer
                   description: ''
-                  example: '3'
+                  example: '1'
                   enum:
                     - '1'
                     - '2'

@@ -1,36 +1,46 @@
-name: 'Produção - Administração'
+name: 'Produção - Pedidos (Admin)'
 description: |-
 
-  Ações administrativas do sistema de produção.
+  Gestão de pedidos de produção pelo administrador.
+  Estes endpoints são utilizados após o fechamento do carrinho de produção.
 
-  **Permissões:** Apenas super administradores.
+  **Fluxo do pedido:**
+  1. Pedido criado ao fechar carrinho → Status `pending`
+  2. Fábrica aceita → Status `accepted`
+  3. Fábrica despacha → Status `dispatched`
+  4. Admin recebe → Status `received` (este controller)
+  5. Ou Admin cancela → Status `cancelled`
+
+  **Permissões:** Administradores e gerentes.
 endpoints:
   -
     custom: []
     httpMethods:
-      - POST
-    uri: api/v1/producao/admin/limpar-itens-cancelados
+      - GET
+    uri: api/v1/producao/pedidos
     metadata:
       custom: []
-      groupName: 'Produção - Administração'
+      groupName: 'Produção - Pedidos (Admin)'
       groupDescription: |-
 
-        Ações administrativas do sistema de produção.
+        Gestão de pedidos de produção pelo administrador.
+        Estes endpoints são utilizados após o fechamento do carrinho de produção.
 
-        **Permissões:** Apenas super administradores.
+        **Fluxo do pedido:**
+        1. Pedido criado ao fechar carrinho → Status `pending`
+        2. Fábrica aceita → Status `accepted`
+        3. Fábrica despacha → Status `dispatched`
+        4. Admin recebe → Status `received` (este controller)
+        5. Ou Admin cancela → Status `cancelled`
+
+        **Permissões:** Administradores e gerentes.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Limpar capas órfãs'
+      title: 'Listar pedidos de produção'
       description: |-
-        Libera capas que ficaram presas em pedidos cancelados, retornando-as ao status
-        "Encomenda Solicitada" para poderem ser adicionadas a novos pedidos.
+        Retorna lista paginada de pedidos de produção com filtros.
 
-        **Quem pode usar:** Super administradores.
-
-        **Quando usar:**
-        - Após cancelamento manual de pedidos
-        - Se houver capas em status inconsistente
-        - Manutenção periódica do sistema
+        **Quem pode usar:** Administradores e gerentes.
       authenticated: true
       deprecated: false
     headers:
@@ -39,6 +49,145 @@ endpoints:
       Accept: application/json
     urlParameters: []
     cleanUrlParameters: []
+    queryParameters:
+      status:
+        custom: []
+        name: status
+        description: 'Filtrar por status: `cart`, `pending`, `accepted`, `dispatched`, `received`, `cancelled`.'
+        required: false
+        example: pending
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      initial_date:
+        custom: []
+        name: initial_date
+        description: 'Data inicial (ISO 8601).'
+        required: false
+        example: '2026-01-01'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      final_date:
+        custom: []
+        name: final_date
+        description: 'Data final (ISO 8601).'
+        required: false
+        example: '2026-01-31'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      per_page:
+        custom: []
+        name: per_page
+        description: 'Itens por página (máx 100).'
+        required: false
+        example: 15
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      status: pending
+      initial_date: '2026-01-01'
+      final_date: '2026-01-31'
+      per_page: 15
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": [{
+              "id": 1,
+              "status": "dispatched",
+              "items_count": 10,
+              "factory_total": 150.00,
+              "tracking_code": "BR123456789XX",
+              "created_at": "2026-01-13T15:00:00+00:00"
+            }],
+            "meta": {"current_page": 1, "total": 25}
+          }
+        headers: []
+        description: 'Lista de pedidos'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/producao/pedidos/{id}'
+    metadata:
+      custom: []
+      groupName: 'Produção - Pedidos (Admin)'
+      groupDescription: |-
+
+        Gestão de pedidos de produção pelo administrador.
+        Estes endpoints são utilizados após o fechamento do carrinho de produção.
+
+        **Fluxo do pedido:**
+        1. Pedido criado ao fechar carrinho → Status `pending`
+        2. Fábrica aceita → Status `accepted`
+        3. Fábrica despacha → Status `dispatched`
+        4. Admin recebe → Status `received` (este controller)
+        5. Ou Admin cancela → Status `cancelled`
+
+        **Permissões:** Administradores e gerentes.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Detalhes do pedido'
+      description: |-
+        Retorna detalhes completos do pedido com itens e timeline de eventos.
+
+        **Quem pode usar:** Administradores e gerentes.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the pedido.'
+        required: true
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      pedido:
+        custom: []
+        name: pedido
+        description: 'ID do pedido.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 5
+      pedido: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -50,21 +199,317 @@ endpoints:
         status: 200
         content: |-
           {
-            "message": "5 capa(s) liberada(s) de pedidos cancelados.",
-            "data": {"released_count": 5}
+            "data": {
+              "id": 1,
+              "status": "dispatched",
+              "items": [{"id": 1, "capa_id": 10, "customer_name": "João"}],
+              "events": [{"type": "dispatched", "created_at": "2026-01-13T15:00:00+00:00"}],
+              "factory_total": 150.00,
+              "tracking_code": "BR123456789XX"
+            }
           }
         headers: []
-        description: 'Capas liberadas'
+        description: 'Detalhes do pedido'
+      -
+        custom: []
+        status: 404
+        content: '{"message": "Not found."}'
+        headers: []
+        description: 'Não encontrado'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/producao/pedidos/{pedido_id}/timeline'
+    metadata:
+      custom: []
+      groupName: 'Produção - Pedidos (Admin)'
+      groupDescription: |-
+
+        Gestão de pedidos de produção pelo administrador.
+        Estes endpoints são utilizados após o fechamento do carrinho de produção.
+
+        **Fluxo do pedido:**
+        1. Pedido criado ao fechar carrinho → Status `pending`
+        2. Fábrica aceita → Status `accepted`
+        3. Fábrica despacha → Status `dispatched`
+        4. Admin recebe → Status `received` (este controller)
+        5. Ou Admin cancela → Status `cancelled`
+
+        **Permissões:** Administradores e gerentes.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Timeline do pedido'
+      description: |-
+        Retorna apenas a timeline de eventos do pedido, ordenada do mais recente.
+
+        **Quem pode usar:** Administradores e gerentes.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      pedido_id:
+        custom: []
+        name: pedido_id
+        description: 'The ID of the pedido.'
+        required: true
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      pedido:
+        custom: []
+        name: pedido
+        description: 'ID do pedido.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      pedido_id: 5
+      pedido: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
       -
         custom: []
         status: 200
         content: |-
           {
-            "message": "0 capa(s) liberada(s) de pedidos cancelados.",
-            "data": {"released_count": 0}
+            "data": [
+              {"type": "dispatched", "description": "Pedido despachado", "created_at": "2026-01-15T10:00:00+00:00"},
+              {"type": "accepted", "description": "Pedido aceito pela fábrica", "created_at": "2026-01-14T10:00:00+00:00"},
+              {"type": "created", "description": "Pedido criado", "created_at": "2026-01-13T15:00:00+00:00"}
+            ]
           }
         headers: []
-        description: 'Nenhuma capa órfã'
+        description: Timeline
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: 'api/v1/producao/pedidos/{pedido_id}/receber'
+    metadata:
+      custom: []
+      groupName: 'Produção - Pedidos (Admin)'
+      groupDescription: |-
+
+        Gestão de pedidos de produção pelo administrador.
+        Estes endpoints são utilizados após o fechamento do carrinho de produção.
+
+        **Fluxo do pedido:**
+        1. Pedido criado ao fechar carrinho → Status `pending`
+        2. Fábrica aceita → Status `accepted`
+        3. Fábrica despacha → Status `dispatched`
+        4. Admin recebe → Status `received` (este controller)
+        5. Ou Admin cancela → Status `cancelled`
+
+        **Permissões:** Administradores e gerentes.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Receber pedido'
+      description: |-
+        Registra o recebimento do pedido da fábrica.
+        O status do pedido muda de `dispatched` para `received`.
+
+        **Quem pode usar:** Administradores e gerentes.
+
+        **Regras de negócio:**
+        - Apenas pedidos com status `dispatched` podem ser recebidos
+        - As capas do pedido são atualizadas para "Pronta para entrega"
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      pedido_id:
+        custom: []
+        name: pedido_id
+        description: 'The ID of the pedido.'
+        required: true
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      pedido:
+        custom: []
+        name: pedido
+        description: 'ID do pedido.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      pedido_id: 5
+      pedido: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      observation:
+        custom: []
+        name: observation
+        description: 'Observações do recebimento.'
+        required: false
+        example: 'Recebido em bom estado'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      observation: 'Recebido em bom estado'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "message": "Pedido recebido com sucesso.",
+            "data": {"id": 1, "status": "received"}
+          }
+        headers: []
+        description: 'Pedido recebido'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/v1/producao/pedidos/{pedido_id}'
+    metadata:
+      custom: []
+      groupName: 'Produção - Pedidos (Admin)'
+      groupDescription: |-
+
+        Gestão de pedidos de produção pelo administrador.
+        Estes endpoints são utilizados após o fechamento do carrinho de produção.
+
+        **Fluxo do pedido:**
+        1. Pedido criado ao fechar carrinho → Status `pending`
+        2. Fábrica aceita → Status `accepted`
+        3. Fábrica despacha → Status `dispatched`
+        4. Admin recebe → Status `received` (este controller)
+        5. Ou Admin cancela → Status `cancelled`
+
+        **Permissões:** Administradores e gerentes.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Cancelar pedido'
+      description: |-
+        Cancela um pedido de produção. As capas são liberadas e voltam ao status anterior.
+
+        **Quem pode usar:** Administradores e gerentes.
+
+        **Regras de negócio:**
+        - Apenas pedidos com status `pending` ou `cart` podem ser cancelados
+        - A fábrica deve ser notificada manualmente se necessário
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      pedido_id:
+        custom: []
+        name: pedido_id
+        description: 'The ID of the pedido.'
+        required: true
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      pedido:
+        custom: []
+        name: pedido
+        description: 'ID do pedido.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      pedido_id: 5
+      pedido: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      reason:
+        custom: []
+        name: reason
+        description: 'Motivo do cancelamento.'
+        required: false
+        example: 'Cliente desistiu'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      reason: 'Cliente desistiu'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "message": "Pedido cancelado.",
+            "data": {"id": 1, "status": "cancelled"}
+          }
+        headers: []
+        description: 'Pedido cancelado'
+      -
+        custom: []
+        status: 422
+        content: '{"message": "Pedido não pode ser cancelado neste status."}'
+        headers: []
+        description: 'Não pode cancelar'
     responseFields: []
     auth:
       - headers

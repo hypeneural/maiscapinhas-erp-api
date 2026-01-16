@@ -578,8 +578,73 @@ class ModuleController extends Controller
     // ========================================
 
     /**
-     * Get module configuration with schema.
-     * Returns current config values, defaults, and field schema for UI rendering.
+     * Get module config with schema.
+     *
+     * Returns the current configuration values, default values, and a dynamic schema
+     * that describes each configurable field. The schema is organized in sections
+     * (e.g., notifications, deadlines, requirements) with field types and validation rules.
+     *
+     * **Schema Structure:**
+     * - `sections`: Grouped configuration fields by category
+     * - `sections.{key}.fields`: Individual field definitions with type, label, hint, options
+     * - `defaults`: Default values for all fields
+     *
+     * **Field Types:**
+     * - `switch`: Boolean toggle
+     * - `number`: Integer with min/max
+     * - `select`: Dropdown with predefined options
+     * - `text`/`textarea`: String input
+     *
+     * **Conditional Fields:**
+     * Fields with `depends_on` should only be shown when the referenced field is true.
+     *
+     * @urlParam module string required The module ID. Example: pedidos-simples
+     *
+     * @response 200 scenario="success" {
+     *   "module_id": "pedidos-simples",
+     *   "module_name": "Pedidos Simples",
+     *   "config": {
+     *     "notify_on_status_change": false,
+     *     "notification_channel": "whatsapp",
+     *     "warning_after_days": 5,
+     *     "auto_cancel_days": 20,
+     *     "require_customer_phone": true,
+     *     "require_notes": false
+     *   },
+     *   "schema": {
+     *     "sections": {
+     *       "notifications": {
+     *         "label": "Notificações",
+     *         "icon": "Bell",
+     *         "description": "Configurações de notificação ao cliente",
+     *         "fields": {
+     *           "notify_on_status_change": {
+     *             "type": "switch",
+     *             "label": "Notificar ao mudar status",
+     *             "hint": "Enviar notificação WhatsApp quando o status mudar",
+     *             "default": false
+     *           },
+     *           "notification_channel": {
+     *             "type": "select",
+     *             "label": "Canal de notificação",
+     *             "options": {"whatsapp": "WhatsApp", "email": "E-mail", "both": "Ambos"},
+     *             "default": "whatsapp",
+     *             "depends_on": "notify_on_status_change"
+     *           }
+     *         }
+     *       }
+     *     },
+     *     "defaults": {}
+     *   },
+     *   "has_custom_config": false
+     * }
+     * @response 404 scenario="module not found" {"message": "Módulo não encontrado."}
+     *
+     * @responseField module_id string The module identifier.
+     * @responseField module_name string Human-readable module name.
+     * @responseField config object Current merged configuration (defaults + custom).
+     * @responseField schema object Dynamic schema for UI rendering with sections and field definitions.
+     * @responseField has_custom_config boolean Whether any custom config has been saved.
      */
     public function getConfig(string $moduleId): JsonResponse
     {
@@ -610,8 +675,37 @@ class ModuleController extends Controller
     }
 
     /**
-     * Update module configuration.
-     * Validates against schema and merges with existing config.
+     * Update module config.
+     *
+     * Updates the global configuration for a module. Only fields defined in the
+     * module's config schema can be updated. Validation is automatically applied
+     * based on field types (switch=boolean, number=integer with min/max, etc.).
+     *
+     * The update is merged with existing config, so you only need to send changed fields.
+     * All changes are logged in the module's audit log.
+     *
+     * @urlParam module string required The module ID. Example: pedidos-simples
+     *
+     * @bodyParam notify_on_status_change boolean Enable status change notifications. Example: true
+     * @bodyParam notification_channel string Notification channel: whatsapp, email, or both. Example: whatsapp
+     * @bodyParam warning_after_days integer Days before warning alert (1-60). Example: 3
+     * @bodyParam auto_cancel_days integer Days before auto-cancel (0-90, 0=disabled). Example: 20
+     * @bodyParam require_customer_phone boolean Require customer phone on creation. Example: true
+     * @bodyParam require_notes boolean Require notes field. Example: false
+     *
+     * @response 200 scenario="success" {
+     *   "message": "Configurações atualizadas.",
+     *   "config": {
+     *     "notify_on_status_change": true,
+     *     "notification_channel": "whatsapp",
+     *     "warning_after_days": 3,
+     *     "auto_cancel_days": 20,
+     *     "require_customer_phone": true,
+     *     "require_notes": false
+     *   }
+     * }
+     * @response 404 scenario="module not found" {"message": "Módulo não encontrado."}
+     * @response 422 scenario="validation error" {"message": "The warning_after_days field must be at least 1."}
      */
     public function updateConfig(Request $request, string $moduleId): JsonResponse
     {
@@ -687,7 +781,26 @@ class ModuleController extends Controller
     }
 
     /**
-     * Reset module configuration to defaults.
+     * Reset module config to defaults.
+     *
+     * Removes all custom configuration and restores the module to its default
+     * settings as defined in the module class. This action is logged in the
+     * audit trail with the previous configuration values.
+     *
+     * @urlParam module string required The module ID. Example: pedidos-simples
+     *
+     * @response 200 scenario="success" {
+     *   "message": "Configurações restauradas para os valores padrão.",
+     *   "config": {
+     *     "notify_on_status_change": false,
+     *     "notification_channel": "whatsapp",
+     *     "warning_after_days": 5,
+     *     "auto_cancel_days": 20,
+     *     "require_customer_phone": true,
+     *     "require_notes": false
+     *   }
+     * }
+     * @response 404 scenario="module not found" {"message": "Módulo não encontrado."}
      */
     public function resetConfig(string $moduleId): JsonResponse
     {
@@ -716,7 +829,37 @@ class ModuleController extends Controller
     }
 
     /**
-     * Get config for specific store (if module supports per-store config).
+     * Get store-specific config.
+     *
+     * Returns the configuration for a module on a specific store. Store config
+     * overrides global config. The response includes both the global config,
+     * store-specific overrides, and the effective (merged) configuration.
+     *
+     * **Config Hierarchy:**
+     * 1. Module defaults (from code)
+     * 2. Global config (from modules table)
+     * 3. Store config (from module_store pivot) - highest priority
+     *
+     * @urlParam module string required The module ID. Example: pedidos-simples
+     * @urlParam store integer required The store ID. Example: 1
+     *
+     * @response 200 scenario="success" {
+     *   "module_id": "pedidos-simples",
+     *   "store_id": 1,
+     *   "global_config": {
+     *     "notify_on_status_change": true,
+     *     "warning_after_days": 5
+     *   },
+     *   "store_config": {
+     *     "warning_after_days": 2
+     *   },
+     *   "effective_config": {
+     *     "notify_on_status_change": true,
+     *     "warning_after_days": 2
+     *   },
+     *   "schema": {}
+     * }
+     * @response 404 scenario="module not active for store" {"message": "Módulo não ativo para esta loja."}
      */
     public function getStoreConfig(string $moduleId, int $storeId): JsonResponse
     {
@@ -752,7 +895,29 @@ class ModuleController extends Controller
     }
 
     /**
-     * Update config for specific store.
+     * Update store-specific config.
+     *
+     * Updates the configuration for a module on a specific store. These settings
+     * override the global module configuration for this store only.
+     *
+     * Use this endpoint when a store needs different settings than the default.
+     * For example, one store might need shorter warning periods or different
+     * notification settings.
+     *
+     * @urlParam module string required The module ID. Example: pedidos-simples
+     * @urlParam store integer required The store ID. Example: 1
+     *
+     * @bodyParam warning_after_days integer Days before warning (overrides global). Example: 2
+     * @bodyParam notify_on_status_change boolean Enable notifications (overrides global). Example: true
+     *
+     * @response 200 scenario="success" {
+     *   "message": "Configurações da loja #1 atualizadas.",
+     *   "store_config": {
+     *     "warning_after_days": 2,
+     *     "notify_on_status_change": true
+     *   }
+     * }
+     * @response 404 scenario="module not found" {"message": "Módulo não encontrado."}
      */
     public function updateStoreConfig(Request $request, string $moduleId, int $storeId): JsonResponse
     {
@@ -823,8 +988,40 @@ class ModuleController extends Controller
     // ========================================
 
     /**
-     * Get validation schema for module fields.
-     * Returns validation rules for texts, statuses, actions.
+     * Get validation schema.
+     *
+     * Returns the complete validation schema for editing module components:
+     * texts, statuses, and actions. This schema allows the frontend to render
+     * dynamic forms with proper validation before submission.
+     *
+     * **Included Data:**
+     * - `schema.texts`: Validation rules for text/label fields
+     * - `schema.status`: Validation rules for status editing
+     * - `schema.action`: Validation rules for action editing
+     * - `allowed_values`: Lists of valid icons, colors, badge variants
+     *
+     * @urlParam module string required The module ID. Example: pedidos-simples
+     *
+     * @response 200 scenario="success" {
+     *   "module_id": "pedidos-simples",
+     *   "schema": {
+     *     "texts": {
+     *       "menu_label": {"type": "string", "required": false, "min": 1, "max": 100}
+     *     },
+     *     "status": {
+     *       "name": {"type": "string", "required": true, "pattern": "^[a-z_]+$", "max": 50},
+     *       "label": {"type": "string", "required": true, "min": 2, "max": 50},
+     *       "color": {"type": "enum", "allowed": ["blue", "red", "yellow", "green"]},
+     *       "icon": {"type": "enum", "allowed": ["FileCheck", "Truck", "Store"]}
+     *     }
+     *   },
+     *   "allowed_values": {
+     *     "icons": ["FileCheck", "Truck", "Store", "Bell"],
+     *     "colors": ["blue", "red", "yellow", "green"],
+     *     "badge_variants": ["default", "destructive", "outline"]
+     *   }
+     * }
+     * @response 404 scenario="module not found" {"message": "Módulo não encontrado."}
      */
     public function getSchema(string $moduleId): JsonResponse
     {
@@ -913,8 +1110,45 @@ class ModuleController extends Controller
     }
 
     /**
-     * Update a status configuration.
-     * Allows Super Admin to customize status labels, colors, icons, etc.
+     * Update status configuration.
+     *
+     * Allows Super Admin to customize status properties like labels, colors,
+     * icons, and tooltips. Changes are stored as overrides and merged with
+     * the base module definition.
+     *
+     * **Editable Fields:**
+     * - `label`: Display name (2-50 chars)
+     * - `description`: Status description
+     * - `color`: Visual color (blue, red, yellow, etc.)
+     * - `icon`: Lucide icon name
+     * - `badge_variant`: Shadcn badge variant
+     * - `can_edit`: Whether records in this status can be edited
+     * - `final`: Whether this is a terminal status
+     * - `tooltip`, `help_text`: UI guidance
+     *
+     * @urlParam module string required The module ID. Example: pedidos-simples
+     * @urlParam status string required The status key. Example: 3
+     *
+     * @bodyParam label string The display label. Example: Disponível para Retirada
+     * @bodyParam description string Status description. Example: Produto pronto para retirada
+     * @bodyParam color string Color: blue,red,yellow,green,purple,gray,orange,cyan,pink. Example: green
+     * @bodyParam icon string Lucide icon name. Example: CheckCircle
+     * @bodyParam badge_variant string Variant: default,destructive,outline,secondary,success,warning. Example: success
+     * @bodyParam can_edit boolean Can records be edited in this status. Example: false
+     * @bodyParam final boolean Is this a terminal status. Example: false
+     * @bodyParam tooltip string Tooltip for UI. Example: Produto pronto
+     * @bodyParam help_text string Help text for admins. Example: O vendedor deve notificar o cliente
+     *
+     * @response 200 scenario="success" {
+     *   "message": "Status '3' atualizado.",
+     *   "data": {
+     *     "name": "disponivel",
+     *     "label": "Disponível para Retirada",
+     *     "color": "green",
+     *     "icon": "CheckCircle"
+     *   }
+     * }
+     * @response 404 scenario="status not found" {"message": "Status não encontrado."}
      */
     public function updateStatus(Request $request, string $moduleId, string $statusKey): JsonResponse
     {

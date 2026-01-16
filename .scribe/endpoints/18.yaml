@@ -394,7 +394,7 @@ endpoints:
         name: birth_date
         description: 'Must be a valid date. Must be a date before <code>today</code>.'
         required: false
-        example: '2022-02-06'
+        example: '2022-02-09'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -433,7 +433,7 @@ endpoints:
       neighborhood: u
       city: 'São Paulo'
       state: SP
-      birth_date: '2022-02-06'
+      birth_date: '2022-02-09'
       address: 'Rua das Flores, 123'
       notes: 'Cliente preferencial'
     fileParameters: []
@@ -729,7 +729,7 @@ endpoints:
         name: birth_date
         description: 'Must be a valid date. Must be a date before <code>today</code>.'
         required: false
-        example: '2022-02-06'
+        example: '2022-02-09'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -746,7 +746,7 @@ endpoints:
       neighborhood: u
       city: j
       state: wv
-      birth_date: '2022-02-06'
+      birth_date: '2022-02-09'
     fileParameters: []
     responses:
       -

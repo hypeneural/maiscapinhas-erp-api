@@ -1,0 +1,417 @@
+name: 'WhatsApp - Mensagens'
+description: |-
+
+  Endpoints para envio de mensagens e verificação de números via WhatsApp.
+
+  Estes endpoints permitem que o sistema envie mensagens através
+  das instâncias WhatsApp configuradas.
+
+  **Autorização:**
+  - Super admin: acesso total a qualquer instância
+  - Usuários: acesso a instâncias do seu escopo (user/store/global)
+
+  **Resolução de Instância:**
+  Se não informar instance_id, o sistema resolve automaticamente:
+  1. Instância do usuário (se existir)
+  2. Instância da loja (se usuário tiver vínculo)
+  3. Instância global favorita
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/whatsapp/instances/{instance_id}/messages/text'
+    metadata:
+      custom: []
+      groupName: 'WhatsApp - Mensagens'
+      groupDescription: |-
+
+        Endpoints para envio de mensagens e verificação de números via WhatsApp.
+
+        Estes endpoints permitem que o sistema envie mensagens através
+        das instâncias WhatsApp configuradas.
+
+        **Autorização:**
+        - Super admin: acesso total a qualquer instância
+        - Usuários: acesso a instâncias do seu escopo (user/store/global)
+
+        **Resolução de Instância:**
+        Se não informar instance_id, o sistema resolve automaticamente:
+        1. Instância do usuário (se existir)
+        2. Instância da loja (se usuário tiver vínculo)
+        3. Instância global favorita
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Enviar mensagem de texto'
+      description: 'Envia uma mensagem de texto via WhatsApp.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      instance_id:
+        custom: []
+        name: instance_id
+        description: 'The ID of the instance.'
+        required: true
+        example: 4
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      instance:
+        custom: []
+        name: instance
+        description: 'ID da instância WhatsApp.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      instance_id: 4
+      instance: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      number:
+        custom: []
+        name: number
+        description: 'Número do destinatário (com DDI, só dígitos).'
+        required: true
+        example: '5548999999999'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      text:
+        custom: []
+        name: text
+        description: 'Texto da mensagem (max 4000 chars).'
+        required: true
+        example: 'Olá! Seu pedido está pronto.'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      number: '5548999999999'
+      text: 'Olá! Seu pedido está pronto.'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "ok": true,
+              "message_id": "3EB0C767D097B3C5C12345",
+              "provider_data": { "key": { "id": "..." } }
+            }
+          }
+        headers: []
+        description: 'Mensagem enviada'
+      -
+        custom: []
+        status: 403
+        content: |-
+          {
+            "message": "Instância não está ativa."
+          }
+        headers: []
+        description: 'Instância inativa'
+      -
+        custom: []
+        status: 422
+        content: |-
+          {
+            "message": "Instância sem API Key configurada."
+          }
+        headers: []
+        description: 'Instância sem API Key'
+      -
+        custom: []
+        status: 502
+        content: |-
+          {
+            "message": "Erro ao enviar mensagem.",
+            "errors": { "provider_status": 500 }
+          }
+        headers: []
+        description: 'Erro no provedor'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/whatsapp/instances/{instance_id}/messages/media'
+    metadata:
+      custom: []
+      groupName: 'WhatsApp - Mensagens'
+      groupDescription: |-
+
+        Endpoints para envio de mensagens e verificação de números via WhatsApp.
+
+        Estes endpoints permitem que o sistema envie mensagens através
+        das instâncias WhatsApp configuradas.
+
+        **Autorização:**
+        - Super admin: acesso total a qualquer instância
+        - Usuários: acesso a instâncias do seu escopo (user/store/global)
+
+        **Resolução de Instância:**
+        Se não informar instance_id, o sistema resolve automaticamente:
+        1. Instância do usuário (se existir)
+        2. Instância da loja (se usuário tiver vínculo)
+        3. Instância global favorita
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Enviar mensagem com mídia'
+      description: 'Envia uma mensagem com mídia (imagem, vídeo, documento, áudio) via WhatsApp.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      instance_id:
+        custom: []
+        name: instance_id
+        description: 'The ID of the instance.'
+        required: true
+        example: 4
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      instance:
+        custom: []
+        name: instance
+        description: 'ID da instância WhatsApp.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      instance_id: 4
+      instance: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      number:
+        custom: []
+        name: number
+        description: 'Número do destinatário (com DDI).'
+        required: true
+        example: '5548999999999'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      mediatype:
+        custom: []
+        name: mediatype
+        description: 'Tipo: image, video, document, audio.'
+        required: true
+        example: image
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      mimetype:
+        custom: []
+        name: mimetype
+        description: 'MIME type do arquivo.'
+        required: true
+        example: image/jpeg
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      media:
+        custom: []
+        name: media
+        description: 'URL pública do arquivo.'
+        required: true
+        example: 'https://example.com/image.jpg'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      fileName:
+        custom: []
+        name: fileName
+        description: 'Nome do arquivo (para documents).'
+        required: false
+        example: documento.pdf
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      caption:
+        custom: []
+        name: caption
+        description: 'Legenda da mídia.'
+        required: false
+        example: 'Aqui está seu comprovante!'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      number: '5548999999999'
+      mediatype: image
+      mimetype: image/jpeg
+      media: 'https://example.com/image.jpg'
+      fileName: documento.pdf
+      caption: 'Aqui está seu comprovante!'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": { "ok": true, "message_id": "3EB0C767D097B3C5C12345" }
+          }
+        headers: []
+        description: 'Mídia enviada'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/whatsapp/instances/{instance_id}/numbers/check'
+    metadata:
+      custom: []
+      groupName: 'WhatsApp - Mensagens'
+      groupDescription: |-
+
+        Endpoints para envio de mensagens e verificação de números via WhatsApp.
+
+        Estes endpoints permitem que o sistema envie mensagens através
+        das instâncias WhatsApp configuradas.
+
+        **Autorização:**
+        - Super admin: acesso total a qualquer instância
+        - Usuários: acesso a instâncias do seu escopo (user/store/global)
+
+        **Resolução de Instância:**
+        Se não informar instance_id, o sistema resolve automaticamente:
+        1. Instância do usuário (se existir)
+        2. Instância da loja (se usuário tiver vínculo)
+        3. Instância global favorita
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Verificar números WhatsApp'
+      description: 'Verifica se uma lista de números possui WhatsApp.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      instance_id:
+        custom: []
+        name: instance_id
+        description: 'The ID of the instance.'
+        required: true
+        example: 4
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      instance:
+        custom: []
+        name: instance
+        description: 'ID da instância WhatsApp.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      instance_id: 4
+      instance: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      numbers:
+        custom: []
+        name: numbers
+        description: 'Lista de números (max 200).'
+        required: true
+        example:
+          - '5548999999999'
+          - '5548888888888'
+        type: 'string[]'
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      numbers:
+        - '5548999999999'
+        - '5548888888888'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "ok": true,
+              "results": [
+                { "number": "5548999999999", "exists": true, "jid": "5548999999999@s.whatsapp.net" },
+                { "number": "5548888888888", "exists": false, "jid": null }
+              ]
+            }
+          }
+        headers: []
+        description: 'Verificação realizada'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

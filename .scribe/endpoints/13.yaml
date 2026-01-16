@@ -47,7 +47,7 @@ endpoints:
         name: date
         description: 'Must be a valid date.'
         required: true
-        example: '2026-01-14T01:18:08'
+        example: '2026-01-16T19:10:27'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -55,7 +55,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      date: '2026-01-14T01:18:08'
+      date: '2026-01-16T19:10:27'
     fileParameters: []
     responses:
       -
@@ -120,7 +120,7 @@ endpoints:
         name: date
         description: 'Must be a valid date.'
         required: true
-        example: '2026-01-14T01:18:08'
+        example: '2026-01-16T19:10:27'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -131,7 +131,7 @@ endpoints:
         name: shift_code
         description: ''
         required: true
-        example: M
+        example: 'N'
         type: string
         enumValues:
           - '1'
@@ -189,8 +189,8 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      date: '2026-01-14T01:18:08'
-      shift_code: M
+      date: '2026-01-16T19:10:27'
+      shift_code: 'N'
       in_count: 39
       out_count: 84
       staff_in: 12

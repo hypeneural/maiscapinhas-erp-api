@@ -10,7 +10,7 @@
     ],
     "info": {
         "name": "MaisCapinhas ERP API - Documenta\u00e7\u00e3o",
-        "_postman_id": "90b569a5-f232-43eb-bf30-1e41f9ef3cca",
+        "_postman_id": "21922b42-607c-4152-a520-b892956529cc",
         "description": "API REST para gest\u00e3o de vendas, metas, fechamento de caixa, b\u00f4nus e comiss\u00f5es do ERP MaisCapinhas.",
         "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json",
         "version": "1.0.0"
@@ -796,7 +796,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-14T01:18:08\"}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-16T19:10:27\"}"
                         },
                         "description": "Retorna m\u00e9tricas completas para o vendedor, incluindo:\n- Vendas pessoais do dia\n- **Gamifica\u00e7\u00e3o de B\u00f4nus** - quanto falta para o pr\u00f3ximo n\u00edvel\n- **Proje\u00e7\u00e3o de Comiss\u00e3o** - tier atual e potencial\n- **Pace Di\u00e1rio** - ritmo comparado \u00e0 m\u00e9dia\n\nEste dashboard \u00e9 projetado para **motivar** o vendedor mostrando\nmetas tang\u00edveis e progresso em tempo real.\n\n**Quem pode usar:** Vendedores e n\u00edveis superiores.\n\n**M\u00e9tricas retornadas:**\n| M\u00e9trica | Descri\u00e7\u00e3o |\n|---------|-----------|\n| `my_sales` | Quantidade e valor total das vendas do dia |\n| `store_sales` | Total de vendas da loja (para compara\u00e7\u00e3o) |\n| `bonus_gamification` | Gap para pr\u00f3ximo b\u00f4nus, b\u00f4nus atual |\n| `monthly_commission` | Tier atual, proje\u00e7\u00e3o, potencial |\n| `daily_pace` | Ritmo vs m\u00e9dia di\u00e1ria |\n| `my_shifts` | Turnos do dia com status |"
                     },
@@ -844,7 +844,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-14T01:18:08\"}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-16T19:10:27\"}"
                         },
                         "description": "Retorna m\u00e9tricas para confer\u00eancia de caixa e auditoria,\nincluindo fechamentos pendentes e ranking de vendedores.\n\n**Foco:** Integridade de caixa e aprova\u00e7\u00e3o de fechamentos.\n\n**Quem pode usar:** Conferentes, Gerentes e Admins.\n\n**M\u00e9tricas retornadas:**\n| M\u00e9trica | Descri\u00e7\u00e3o |\n|---------|-----------|\n| `pending_closings` | Fechamentos aguardando aprova\u00e7\u00e3o |\n| `pending_count` | Quantidade de pendentes |\n| `store_sales` | Total de vendas da loja no dia |\n| `shifts_today` | Resumo por status (open\/closed\/pending) |\n| `top_sellers` | Top 5 vendedores do dia |"
                     },
@@ -958,7 +958,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"seller_id\":16,\"from\":\"2026-01-14T01:18:06\",\"to\":\"2026-01-14T01:18:06\",\"per_page\":22}"
+                            "raw": "{\"store_id\":16,\"seller_id\":16,\"from\":\"2026-01-16T19:10:25\",\"to\":\"2026-01-16T19:10:25\",\"per_page\":22}"
                         },
                         "description": "Retorna a lista paginada de vendas das lojas \u00e0s quais o\nusu\u00e1rio tem acesso, com diversos filtros dispon\u00edveis.\n\n**Visibilidade:**\n- Vendedor: v\u00ea vendas de todas as lojas onde trabalha\n- Gerente: v\u00ea todas as vendas das lojas que gerencia\n- Admin: v\u00ea todas as vendas do sistema\n\n**Filtros dispon\u00edveis:**\n- `store_id` - Filtrar por loja espec\u00edfica\n- `seller_id` - Filtrar por vendedor\n- `from`\/`to` - Per\u00edodo de datas\n\n**Ordena\u00e7\u00e3o:** Por data de venda, mais recentes primeiro.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado (v\u00ea apenas suas lojas)."
                     },
@@ -1224,7 +1224,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-14T01:18:07\",\"status\":\"pending\",\"per_page\":22}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-16T19:10:25\",\"status\":\"pending\",\"per_page\":22}"
                         },
                         "description": "Retorna os turnos de caixa das lojas \u00e0s quais o usu\u00e1rio tem acesso,\ncom filtros por loja, data e status.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado.\n\n**Filtros dispon\u00edveis:**\n- `store_id` - Filtrar por loja espec\u00edfica\n- `date` - Filtrar por data espec\u00edfica (YYYY-MM-DD)\n- `status` - Filtrar por status (open, closed, pending)\n\n**C\u00f3digos de turno:**\n- `1` ou `M` - Manh\u00e3\n- `2` ou `T` - Tarde\n- `3` ou `N` - Noite"
                     },
@@ -1804,7 +1804,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-14T01:18:07\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-16T19:10:26\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
                         },
                         "description": "POST \/api\/v1\/rules\/bonus"
                     },
@@ -1889,7 +1889,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-14T01:18:07\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-16T19:10:26\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
                         },
                         "description": "PUT \/api\/v1\/rules\/bonus\/{rule}"
                     },
@@ -1997,7 +1997,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-14T01:18:07\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-16T19:10:26\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
                         },
                         "description": "POST \/api\/v1\/rules\/commission"
                     },
@@ -2082,7 +2082,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-14T01:18:07\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-01-16T19:10:26\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
                         },
                         "description": "PUT \/api\/v1\/rules\/commission\/{rule}"
                     },
@@ -2190,7 +2190,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"month\":\"6425-59\",\"goal_amount\":9,\"active\":true}"
+                            "raw": "{\"store_id\":16,\"month\":\"6425-59\",\"goal_amount\":9,\"active\":false}"
                         },
                         "description": "POST \/api\/v1\/goals\/monthly"
                     },
@@ -2275,7 +2275,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"goal_amount\":27,\"active\":true}"
+                            "raw": "{\"goal_amount\":27,\"active\":false}"
                         },
                         "description": "PUT \/api\/v1\/goals\/monthly\/{goal}"
                     },
@@ -2378,7 +2378,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"from\":\"2026-01-14T01:18:08\",\"to\":\"2026-01-14T01:18:08\",\"per_page\":22}"
+                            "raw": "{\"store_id\":16,\"from\":\"2026-01-16T19:10:27\",\"to\":\"2026-01-16T19:10:27\",\"per_page\":22}"
                         },
                         "description": "GET \/api\/v1\/finance\/bonus?store_id=&from=&to="
                     },
@@ -2497,7 +2497,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"from\":\"2026-01-14T01:18:08\",\"to\":\"2026-01-14T01:18:08\"}"
+                            "raw": "{\"from\":\"2026-01-16T19:10:27\",\"to\":\"2026-01-16T19:10:27\"}"
                         },
                         "description": "Retorna o hist\u00f3rico de b\u00f4nus de um vendedor espec\u00edfico com resumo.\n\n**Quem pode usar:** O pr\u00f3prio vendedor ou Gerentes\/Admins."
                     },
@@ -2703,7 +2703,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-14T01:18:08\"}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-16T19:10:27\"}"
                         },
                         "description": "GET \/api\/v1\/analytics\/people\/shift?store_id=&date="
                     },
@@ -2747,9 +2747,3138 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-01-14T01:18:08\",\"shift_code\":\"M\",\"in_count\":39,\"out_count\":84,\"staff_in\":12,\"staff_out\":77}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-01-16T19:10:27\",\"shift_code\":\"N\",\"in_count\":39,\"out_count\":84,\"staff_in\":12,\"staff_out\":77}"
                         },
                         "description": "POST \/api\/v1\/analytics\/people\/shift"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Admin - Graph Visualization",
+            "description": "",
+            "item": [
+                {
+                    "name": "Get system overview graph.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/graph\/overview",
+                            "query": [
+                                {
+                                    "key": "depth",
+                                    "value": "16",
+                                    "description": "Max depth to traverse. Default: 3",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "include_users",
+                                    "value": "",
+                                    "description": "Include user nodes. Default: false",
+                                    "disabled": true
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/graph\/overview?depth=16&include_users="
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Shows role hierarchy, modules, and high-level stats."
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/graph\/overview could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Get graph for a specific role.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/graph\/role\/:role",
+                            "query": [
+                                {
+                                    "key": "include_users",
+                                    "value": "",
+                                    "description": "Include users with this role. Default: false",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "include_permissions",
+                                    "value": "",
+                                    "description": "Include individual permissions. Default: true",
+                                    "disabled": true
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/graph\/role\/:role?include_users=&include_permissions=",
+                            "variable": [
+                                {
+                                    "id": "role",
+                                    "key": "role",
+                                    "value": "1",
+                                    "description": "The role."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Shows modules, permissions, and optionally users."
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/graph\/role\/1 could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Get graph for a specific user.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/graph\/user\/:user",
+                            "query": [
+                                {
+                                    "key": "include_inherited",
+                                    "value": "",
+                                    "description": "Show where each permission comes from. Default: true",
+                                    "disabled": true
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/graph\/user\/:user?include_inherited=",
+                            "variable": [
+                                {
+                                    "id": "user",
+                                    "key": "user",
+                                    "value": "1",
+                                    "description": "The user."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Shows all permissions from roles and overrides."
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/graph\/user\/1 could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Get graph for a specific store.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/graph\/store\/:store",
+                            "query": [
+                                {
+                                    "key": "include_users",
+                                    "value": "",
+                                    "description": "Include users in this store. Default: true",
+                                    "disabled": true
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/graph\/store\/:store?include_users=",
+                            "variable": [
+                                {
+                                    "id": "store",
+                                    "key": "store",
+                                    "value": "1",
+                                    "description": "The store."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/graph\/store\/1 could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Get graph for a specific module.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/graph\/module\/:module",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/graph\/module\/:module",
+                            "variable": [
+                                {
+                                    "id": "module",
+                                    "key": "module",
+                                    "value": "architecto",
+                                    "description": "The module."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Shows all roles and users with access."
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/graph\/module\/architecto could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Admin - Modules",
+            "description": "",
+            "item": [
+                {
+                    "name": "List all modules.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/modules",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/modules"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/modules could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Get module details.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/modules\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/modules\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "architecto",
+                                    "description": "The ID of the module."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/modules\/architecto could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Get full module configuration (for frontend).",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/modules\/:module\/full",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/modules\/:module\/full",
+                            "variable": [
+                                {
+                                    "id": "module",
+                                    "key": "module",
+                                    "value": "architecto",
+                                    "description": "The module."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns everything needed to render the module UI."
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/modules\/architecto\/full could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Install a module.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/modules\/:module\/install",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/modules\/:module\/install",
+                            "variable": [
+                                {
+                                    "id": "module",
+                                    "key": "module",
+                                    "value": "architecto",
+                                    "description": "The module."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Activate module globally.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/modules\/:module\/activate",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/modules\/:module\/activate",
+                            "variable": [
+                                {
+                                    "id": "module",
+                                    "key": "module",
+                                    "value": "architecto",
+                                    "description": "The module."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Deactivate module globally.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/modules\/:module\/deactivate",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/modules\/:module\/deactivate",
+                            "variable": [
+                                {
+                                    "id": "module",
+                                    "key": "module",
+                                    "value": "architecto",
+                                    "description": "The module."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get transition role matrix for a module.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/modules\/:module\/transitions",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/modules\/:module\/transitions",
+                            "variable": [
+                                {
+                                    "id": "module",
+                                    "key": "module",
+                                    "value": "architecto",
+                                    "description": "The module."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/modules\/architecto\/transitions could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Update transition role matrix.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/modules\/:module_id\/transitions",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/modules\/:module_id\/transitions",
+                            "variable": [
+                                {
+                                    "id": "module_id",
+                                    "key": "module_id",
+                                    "value": "architecto",
+                                    "description": "The ID of the module."
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "[]"
+                        },
+                        "description": "Allows Super Admin to customize who can make which transitions."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "List all stores with module activation status.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/modules\/:module_id\/stores",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/modules\/:module_id\/stores",
+                            "variable": [
+                                {
+                                    "id": "module_id",
+                                    "key": "module_id",
+                                    "value": "architecto",
+                                    "description": "The ID of the module."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Shows which stores have this module active\/inactive."
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/modules\/architecto\/stores could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Activate module for a specific store.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/modules\/:module\/stores\/:store\/activate",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/modules\/:module\/stores\/:store\/activate",
+                            "variable": [
+                                {
+                                    "id": "module",
+                                    "key": "module",
+                                    "value": "architecto",
+                                    "description": "The module."
+                                },
+                                {
+                                    "id": "store",
+                                    "key": "store",
+                                    "value": "1",
+                                    "description": "The store."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Deactivate module for a specific store.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/modules\/:module\/stores\/:store\/deactivate",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/modules\/:module\/stores\/:store\/deactivate",
+                            "variable": [
+                                {
+                                    "id": "module",
+                                    "key": "module",
+                                    "value": "architecto",
+                                    "description": "The module."
+                                },
+                                {
+                                    "id": "store",
+                                    "key": "store",
+                                    "value": "1",
+                                    "description": "The store."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update module texts.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/modules\/:module_id\/texts",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/modules\/:module_id\/texts",
+                            "variable": [
+                                {
+                                    "id": "module_id",
+                                    "key": "module_id",
+                                    "value": "architecto",
+                                    "description": "The ID of the module."
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"texts\":{\"menu_label\":\"b\",\"menu_tooltip\":\"n\",\"page_title\":\"g\",\"page_description\":\"z\",\"create_button\":\"m\",\"empty_state\":\"i\",\"loading_title\":\"y\",\"loading_description\":\"v\",\"error_title\":\"d\",\"error_description\":\"l\",\"retry_button\":\"j\"}}"
+                        },
+                        "description": "Allows Super Admin to customize UI labels, messages, etc."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update a specific action.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/modules\/:module_id\/actions\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/modules\/:module_id\/actions\/:id",
+                            "variable": [
+                                {
+                                    "id": "module_id",
+                                    "key": "module_id",
+                                    "value": "architecto",
+                                    "description": "The ID of the module."
+                                },
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "architecto",
+                                    "description": "The ID of the action."
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"label\":\"b\",\"icon\":\"n\",\"tooltip\":\"g\",\"shortcut\":\"zmiyvd\",\"shortcut_modifier\":\"meta\",\"confirm\":true,\"confirm_title\":\"l\",\"confirm_message\":\"j\",\"confirm_button\":\"n\",\"cancel_button\":\"i\",\"confirm_variant\":\"default\",\"is_active\":false}"
+                        },
+                        "description": "Allows Super Admin to customize action labels, icons, confirmations, etc."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create a custom action.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/modules\/:module\/actions",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/modules\/:module\/actions",
+                            "variable": [
+                                {
+                                    "id": "module",
+                                    "key": "module",
+                                    "value": "architecto",
+                                    "description": "The module."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"id\":\"b\",\"label\":\"n\",\"icon\":\"g\",\"tooltip\":\"z\",\"shortcut\":\"miyvdl\",\"shortcut_modifier\":\"ctrl\",\"confirm\":false,\"confirm_title\":\"j\",\"confirm_message\":\"n\",\"confirm_button\":\"i\",\"cancel_button\":\"k\",\"confirm_variant\":\"warning\",\"permission\":\"h\",\"available_in_status\":[16],\"api_endpoint\":\"n\",\"api_method\":\"DELETE\"}"
+                        },
+                        "description": "Allows Super Admin to add new actions to a module."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete a custom action.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/modules\/:module\/actions\/:action",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/modules\/:module\/actions\/:action",
+                            "variable": [
+                                {
+                                    "id": "module",
+                                    "key": "module",
+                                    "value": "architecto",
+                                    "description": "The module."
+                                },
+                                {
+                                    "id": "action",
+                                    "key": "action",
+                                    "value": "architecto",
+                                    "description": "The action."
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get module audit log.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/modules\/:module\/audit-log",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/modules\/:module\/audit-log",
+                            "variable": [
+                                {
+                                    "id": "module",
+                                    "key": "module",
+                                    "value": "architecto",
+                                    "description": "The module."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns history of changes made to the module configuration."
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/modules\/architecto\/audit-log could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Get module config with schema.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/modules\/:module_id\/config",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/modules\/:module_id\/config",
+                            "variable": [
+                                {
+                                    "id": "module_id",
+                                    "key": "module_id",
+                                    "value": "architecto",
+                                    "description": "The ID of the module."
+                                },
+                                {
+                                    "id": "module",
+                                    "key": "module",
+                                    "value": "pedidos-simples",
+                                    "description": "The module ID."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns the current configuration values, default values, and a dynamic schema\nthat describes each configurable field. The schema is organized in sections\n(e.g., notifications, deadlines, requirements) with field types and validation rules.\n\n**Schema Structure:**\n- `sections`: Grouped configuration fields by category\n- `sections.{key}.fields`: Individual field definitions with type, label, hint, options\n- `defaults`: Default values for all fields\n\n**Field Types:**\n- `switch`: Boolean toggle\n- `number`: Integer with min\/max\n- `select`: Dropdown with predefined options\n- `text`\/`textarea`: String input\n\n**Conditional Fields:**\nFields with `depends_on` should only be shown when the referenced field is true."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"module_id\": \"pedidos-simples\",\n  \"module_name\": \"Pedidos Simples\",\n  \"config\": {\n    \"notify_on_status_change\": false,\n    \"notification_channel\": \"whatsapp\",\n    \"warning_after_days\": 5,\n    \"auto_cancel_days\": 20,\n    \"require_customer_phone\": true,\n    \"require_notes\": false\n  },\n  \"schema\": {\n    \"sections\": {\n      \"notifications\": {\n        \"label\": \"Notifica\u00e7\u00f5es\",\n        \"icon\": \"Bell\",\n        \"description\": \"Configura\u00e7\u00f5es de notifica\u00e7\u00e3o ao cliente\",\n        \"fields\": {\n          \"notify_on_status_change\": {\n            \"type\": \"switch\",\n            \"label\": \"Notificar ao mudar status\",\n            \"hint\": \"Enviar notifica\u00e7\u00e3o WhatsApp quando o status mudar\",\n            \"default\": false\n          },\n          \"notification_channel\": {\n            \"type\": \"select\",\n            \"label\": \"Canal de notifica\u00e7\u00e3o\",\n            \"options\": {\"whatsapp\": \"WhatsApp\", \"email\": \"E-mail\", \"both\": \"Ambos\"},\n            \"default\": \"whatsapp\",\n            \"depends_on\": \"notify_on_status_change\"\n          }\n        }\n      }\n    },\n    \"defaults\": {}\n  },\n  \"has_custom_config\": false\n}",
+                            "name": "success"
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\"message\": \"M\u00f3dulo n\u00e3o encontrado.\"}",
+                            "name": "module not found"
+                        }
+                    ]
+                },
+                {
+                    "name": "Update module config.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/modules\/:module_id\/config",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/modules\/:module_id\/config",
+                            "variable": [
+                                {
+                                    "id": "module_id",
+                                    "key": "module_id",
+                                    "value": "architecto",
+                                    "description": "The ID of the module."
+                                },
+                                {
+                                    "id": "module",
+                                    "key": "module",
+                                    "value": "pedidos-simples",
+                                    "description": "The module ID."
+                                }
+                            ]
+                        },
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"notify_on_status_change\":true,\"notification_channel\":\"whatsapp\",\"warning_after_days\":3,\"auto_cancel_days\":20,\"require_customer_phone\":true,\"require_notes\":false}"
+                        },
+                        "description": "Updates the global configuration for a module. Only fields defined in the\nmodule's config schema can be updated. Validation is automatically applied\nbased on field types (switch=boolean, number=integer with min\/max, etc.).\n\nThe update is merged with existing config, so you only need to send changed fields.\nAll changes are logged in the module's audit log."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"message\": \"Configura\u00e7\u00f5es atualizadas.\",\n  \"config\": {\n    \"notify_on_status_change\": true,\n    \"notification_channel\": \"whatsapp\",\n    \"warning_after_days\": 3,\n    \"auto_cancel_days\": 20,\n    \"require_customer_phone\": true,\n    \"require_notes\": false\n  }\n}",
+                            "name": "success"
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\"message\": \"M\u00f3dulo n\u00e3o encontrado.\"}",
+                            "name": "module not found"
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\"message\": \"The warning_after_days field must be at least 1.\"}",
+                            "name": "validation error"
+                        }
+                    ]
+                },
+                {
+                    "name": "Reset module config to defaults.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/modules\/:module\/config\/reset",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/modules\/:module\/config\/reset",
+                            "variable": [
+                                {
+                                    "id": "module",
+                                    "key": "module",
+                                    "value": "pedidos-simples",
+                                    "description": "The module ID."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Removes all custom configuration and restores the module to its default\nsettings as defined in the module class. This action is logged in the\naudit trail with the previous configuration values."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"message\": \"Configura\u00e7\u00f5es restauradas para os valores padr\u00e3o.\",\n  \"config\": {\n    \"notify_on_status_change\": false,\n    \"notification_channel\": \"whatsapp\",\n    \"warning_after_days\": 5,\n    \"auto_cancel_days\": 20,\n    \"require_customer_phone\": true,\n    \"require_notes\": false\n  }\n}",
+                            "name": "success"
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\"message\": \"M\u00f3dulo n\u00e3o encontrado.\"}",
+                            "name": "module not found"
+                        }
+                    ]
+                },
+                {
+                    "name": "Get store-specific config.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/modules\/:module_id\/stores\/:store\/config",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/modules\/:module_id\/stores\/:store\/config",
+                            "variable": [
+                                {
+                                    "id": "module_id",
+                                    "key": "module_id",
+                                    "value": "architecto",
+                                    "description": "The ID of the module."
+                                },
+                                {
+                                    "id": "store",
+                                    "key": "store",
+                                    "value": "1",
+                                    "description": "The store ID."
+                                },
+                                {
+                                    "id": "module",
+                                    "key": "module",
+                                    "value": "pedidos-simples",
+                                    "description": "The module ID."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns the configuration for a module on a specific store. Store config\noverrides global config. The response includes both the global config,\nstore-specific overrides, and the effective (merged) configuration.\n\n**Config Hierarchy:**\n1. Module defaults (from code)\n2. Global config (from modules table)\n3. Store config (from module_store pivot) - highest priority"
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"module_id\": \"pedidos-simples\",\n  \"store_id\": 1,\n  \"global_config\": {\n    \"notify_on_status_change\": true,\n    \"warning_after_days\": 5\n  },\n  \"store_config\": {\n    \"warning_after_days\": 2\n  },\n  \"effective_config\": {\n    \"notify_on_status_change\": true,\n    \"warning_after_days\": 2\n  },\n  \"schema\": {}\n}",
+                            "name": "success"
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\"message\": \"M\u00f3dulo n\u00e3o ativo para esta loja.\"}",
+                            "name": "module not active for store"
+                        }
+                    ]
+                },
+                {
+                    "name": "Update store-specific config.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/modules\/:module_id\/stores\/:store\/config",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/modules\/:module_id\/stores\/:store\/config",
+                            "variable": [
+                                {
+                                    "id": "module_id",
+                                    "key": "module_id",
+                                    "value": "architecto",
+                                    "description": "The ID of the module."
+                                },
+                                {
+                                    "id": "store",
+                                    "key": "store",
+                                    "value": "1",
+                                    "description": "The store ID."
+                                },
+                                {
+                                    "id": "module",
+                                    "key": "module",
+                                    "value": "pedidos-simples",
+                                    "description": "The module ID."
+                                }
+                            ]
+                        },
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"warning_after_days\":2,\"notify_on_status_change\":true}"
+                        },
+                        "description": "Updates the configuration for a module on a specific store. These settings\noverride the global module configuration for this store only.\n\nUse this endpoint when a store needs different settings than the default.\nFor example, one store might need shorter warning periods or different\nnotification settings."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"message\": \"Configura\u00e7\u00f5es da loja #1 atualizadas.\",\n  \"store_config\": {\n    \"warning_after_days\": 2,\n    \"notify_on_status_change\": true\n  }\n}",
+                            "name": "success"
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\"message\": \"M\u00f3dulo n\u00e3o encontrado.\"}",
+                            "name": "module not found"
+                        }
+                    ]
+                },
+                {
+                    "name": "Get validation schema.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/modules\/:module\/schema",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/modules\/:module\/schema",
+                            "variable": [
+                                {
+                                    "id": "module",
+                                    "key": "module",
+                                    "value": "pedidos-simples",
+                                    "description": "The module ID."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns the complete validation schema for editing module components:\ntexts, statuses, and actions. This schema allows the frontend to render\ndynamic forms with proper validation before submission.\n\n**Included Data:**\n- `schema.texts`: Validation rules for text\/label fields\n- `schema.status`: Validation rules for status editing\n- `schema.action`: Validation rules for action editing\n- `allowed_values`: Lists of valid icons, colors, badge variants"
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"module_id\": \"pedidos-simples\",\n  \"schema\": {\n    \"texts\": {\n      \"menu_label\": {\"type\": \"string\", \"required\": false, \"min\": 1, \"max\": 100}\n    },\n    \"status\": {\n      \"name\": {\"type\": \"string\", \"required\": true, \"pattern\": \"^[a-z_]+$\", \"max\": 50},\n      \"label\": {\"type\": \"string\", \"required\": true, \"min\": 2, \"max\": 50},\n      \"color\": {\"type\": \"enum\", \"allowed\": [\"blue\", \"red\", \"yellow\", \"green\"]},\n      \"icon\": {\"type\": \"enum\", \"allowed\": [\"FileCheck\", \"Truck\", \"Store\"]}\n    }\n  },\n  \"allowed_values\": {\n    \"icons\": [\"FileCheck\", \"Truck\", \"Store\", \"Bell\"],\n    \"colors\": [\"blue\", \"red\", \"yellow\", \"green\"],\n    \"badge_variants\": [\"default\", \"destructive\", \"outline\"]\n  }\n}",
+                            "name": "success"
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\"message\": \"M\u00f3dulo n\u00e3o encontrado.\"}",
+                            "name": "module not found"
+                        }
+                    ]
+                },
+                {
+                    "name": "Update status configuration.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/modules\/:module_id\/statuses\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/modules\/:module_id\/statuses\/:id",
+                            "variable": [
+                                {
+                                    "id": "module_id",
+                                    "key": "module_id",
+                                    "value": "architecto",
+                                    "description": "The ID of the module."
+                                },
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "architecto",
+                                    "description": "The ID of the status."
+                                },
+                                {
+                                    "id": "module",
+                                    "key": "module",
+                                    "value": "pedidos-simples",
+                                    "description": "The module ID."
+                                },
+                                {
+                                    "id": "status",
+                                    "key": "status",
+                                    "value": "3",
+                                    "description": "The status key."
+                                }
+                            ]
+                        },
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"label\":\"Dispon\u00edvel para Retirada\",\"description\":\"Produto pronto para retirada\",\"color\":\"green\",\"icon\":\"CheckCircle\",\"badge_variant\":\"success\",\"can_edit\":false,\"final\":false,\"tooltip\":\"Produto pronto\",\"help_text\":\"O vendedor deve notificar o cliente\"}"
+                        },
+                        "description": "Allows Super Admin to customize status properties like labels, colors,\nicons, and tooltips. Changes are stored as overrides and merged with\nthe base module definition.\n\n**Editable Fields:**\n- `label`: Display name (2-50 chars)\n- `description`: Status description\n- `color`: Visual color (blue, red, yellow, etc.)\n- `icon`: Lucide icon name\n- `badge_variant`: Shadcn badge variant\n- `can_edit`: Whether records in this status can be edited\n- `final`: Whether this is a terminal status\n- `tooltip`, `help_text`: UI guidance"
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"message\": \"Status '3' atualizado.\",\n  \"data\": {\n    \"name\": \"disponivel\",\n    \"label\": \"Dispon\u00edvel para Retirada\",\n    \"color\": \"green\",\n    \"icon\": \"CheckCircle\"\n  }\n}",
+                            "name": "success"
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\"message\": \"Status n\u00e3o encontrado.\"}",
+                            "name": "status not found"
+                        }
+                    ]
+                },
+                {
+                    "name": "Create a custom status.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/modules\/:module\/statuses",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/modules\/:module\/statuses",
+                            "variable": [
+                                {
+                                    "id": "module",
+                                    "key": "module",
+                                    "value": "architecto",
+                                    "description": "The module."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"key\":\"b\",\"status\":{\"name\":\"b\",\"label\":\"n\",\"description\":\"Animi quos velit et fugiat.\",\"color\":\"purple\",\"icon\":\"d\",\"badge_variant\":\"destructive\",\"can_edit\":true,\"final\":true,\"tooltip\":\"l\",\"help_text\":\"j\"},\"transitions_to\":[\"architecto\"],\"transitions_from\":[\"architecto\"]}"
+                        },
+                        "description": "Allows Super Admin to add new statuses to a module."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete a custom status.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/modules\/:module\/statuses\/:status",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/modules\/:module\/statuses\/:status",
+                            "variable": [
+                                {
+                                    "id": "module",
+                                    "key": "module",
+                                    "value": "architecto",
+                                    "description": "The module."
+                                },
+                                {
+                                    "id": "status",
+                                    "key": "status",
+                                    "value": "architecto",
+                                    "description": "The status."
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Only custom statuses can be deleted."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Preview impact of a proposed change.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/modules\/:module\/preview-impact",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/modules\/:module\/preview-impact",
+                            "variable": [
+                                {
+                                    "id": "module",
+                                    "key": "module",
+                                    "value": "architecto",
+                                    "description": "The module."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"action\":\"update_status\",\"status_key\":\"architecto\"}"
+                        },
+                        "description": "Helps admin understand consequences before confirming."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Admin - Permissions",
+            "description": "",
+            "item": [
+                {
+                    "name": "List all permissions with filtering and grouping options.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/permissions",
+                            "query": [
+                                {
+                                    "key": "type",
+                                    "value": "architecto",
+                                    "description": "Filter by type: ability, screen, feature",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "module",
+                                    "value": "architecto",
+                                    "description": "Filter by module name",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "search",
+                                    "value": "architecto",
+                                    "description": "Search in name or display_name",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "group_by",
+                                    "value": "architecto",
+                                    "description": "Group results by: module, type",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/permissions?type=architecto&module=architecto&search=architecto&group_by=architecto"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/permissions could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Create a new permission.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/permissions",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/permissions"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"name\":\"b\",\"display_name\":\"n\",\"type\":\"architecto\",\"module\":\"n\",\"description\":\"Animi quos velit et fugiat.\",\"sort_order\":42}"
+                        },
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get permissions grouped by module (optimized for frontend).",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/permissions\/grouped",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/permissions\/grouped"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/permissions\/grouped could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Get permissions organized by type (abilities, screens, features).",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/permissions\/by-type",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/permissions\/by-type"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/permissions\/by-type could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Get list of available modules.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/permissions\/modules",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/permissions\/modules"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/permissions\/modules could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Get permission naming conventions and examples.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/permissions\/conventions",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/permissions\/conventions"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/permissions\/conventions could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Bulk create permissions.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/permissions\/bulk",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/permissions\/bulk"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"permissions\":[{\"name\":\"b\",\"display_name\":\"n\",\"type\":\"architecto\",\"module\":\"n\",\"description\":\"Animi quos velit et fugiat.\"}]}"
+                        },
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Preview permission changes before applying.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/permissions\/preview",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/permissions\/preview"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"user_id\":16,\"add_permissions\":[\"architecto\"],\"remove_permissions\":[\"architecto\"]}"
+                        },
+                        "description": "Shows what permissions will be added\/removed."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Bulk grant permissions to multiple users.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/permissions\/bulk-grant",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/permissions\/bulk-grant"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"user_ids\":[16],\"permissions\":[\"architecto\"],\"expires_at\":\"2052-02-10\",\"reason\":\"n\"}"
+                        },
+                        "description": "Limited to 10 users per request for safety."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get most granted permissions via overrides.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/permissions\/most-granted",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/permissions\/most-granted"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Useful for UX: show popular permissions when adding overrides."
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/permissions\/most-granted could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Get a specific permission.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/permissions\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/permissions\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "1",
+                                    "description": "The ID of the permission."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/permissions\/1 could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Update a permission.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/permissions\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/permissions\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "1",
+                                    "description": "The ID of the permission."
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"name\":\"b\",\"display_name\":\"n\",\"module\":\"g\",\"description\":\"Quos velit et fugiat sunt nihil accusantium harum.\",\"sort_order\":8}"
+                        },
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete a permission.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/permissions\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/permissions\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "1",
+                                    "description": "The ID of the permission."
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get users who have a specific permission.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/permissions\/:permission\/users",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/permissions\/:permission\/users",
+                            "variable": [
+                                {
+                                    "id": "permission",
+                                    "key": "permission",
+                                    "value": "1",
+                                    "description": "The permission."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Useful for audit: \"Who can delete orders?\""
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/permissions\/1\/users could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Copy permissions from one user to another.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/users\/:user\/permissions\/copy-from\/:source",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/users\/:user\/permissions\/copy-from\/:source",
+                            "variable": [
+                                {
+                                    "id": "user",
+                                    "key": "user",
+                                    "value": "1",
+                                    "description": "The user."
+                                },
+                                {
+                                    "id": "source",
+                                    "key": "source",
+                                    "value": "architecto",
+                                    "description": ""
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"include_temporary\":true,\"expires_at\":\"2052-02-10\"}"
+                        },
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get audit log for a user's permissions.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/users\/:user\/permissions\/audit-log",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/users\/:user\/permissions\/audit-log",
+                            "variable": [
+                                {
+                                    "id": "user",
+                                    "key": "user",
+                                    "value": "1",
+                                    "description": "The user."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/users\/1\/permissions\/audit-log could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Admin - Roles",
+            "description": "",
+            "item": [
+                {
+                    "name": "List all roles.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/roles",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/roles"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/roles could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Create a new role.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/roles",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/roles"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"name\":\"b\",\"display_name\":\"n\",\"description\":\"Animi quos velit et fugiat.\",\"level\":1,\"permission_ids\":[16]}"
+                        },
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get a specific role with permissions.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/roles\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/roles\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "1",
+                                    "description": "The ID of the role."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/roles\/1 could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Update a role.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/roles\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/roles\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "1",
+                                    "description": "The ID of the role."
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"name\":\"b\",\"display_name\":\"n\",\"description\":\"Animi quos velit et fugiat.\",\"level\":1,\"permission_ids\":[16]}"
+                        },
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete a role.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/roles\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/roles\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "1",
+                                    "description": "The ID of the role."
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Sync permissions for a role.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/roles\/:role_id\/permissions",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/roles\/:role_id\/permissions",
+                            "variable": [
+                                {
+                                    "id": "role_id",
+                                    "key": "role_id",
+                                    "value": "1",
+                                    "description": "The ID of the role."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"permission_ids\":[16]}"
+                        },
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Clone a role.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/roles\/:role_id\/clone",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/roles\/:role_id\/clone",
+                            "variable": [
+                                {
+                                    "id": "role_id",
+                                    "key": "role_id",
+                                    "value": "1",
+                                    "description": "The ID of the role."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"name\":\"b\",\"display_name\":\"n\",\"description\":\"Animi quos velit et fugiat.\"}"
+                        },
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update permissions with add\/remove support.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/roles\/:role_id\/permissions",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/roles\/:role_id\/permissions",
+                            "variable": [
+                                {
+                                    "id": "role_id",
+                                    "key": "role_id",
+                                    "value": "1",
+                                    "description": "The ID of the role."
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"add\":[\"architecto\"],\"remove\":[\"architecto\"]}"
+                        },
+                        "description": ""
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Admin - Store Permission Overrides",
+            "description": "",
+            "item": [
+                {
+                    "name": "List all overrides for a store.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/stores\/:store_id\/permission-overrides",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/stores\/:store_id\/permission-overrides",
+                            "variable": [
+                                {
+                                    "id": "store_id",
+                                    "key": "store_id",
+                                    "value": "1",
+                                    "description": "The ID of the store."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/stores\/1\/permission-overrides could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Grant or deny a permission for all users in a store.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/stores\/:store_id\/permission-overrides",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/stores\/:store_id\/permission-overrides",
+                            "variable": [
+                                {
+                                    "id": "store_id",
+                                    "key": "store_id",
+                                    "value": "1",
+                                    "description": "The ID of the store."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"permission_id\":\"architecto\",\"granted\":true}"
+                        },
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Bulk grant\/deny permissions for a store.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/stores\/:store_id\/permission-overrides\/bulk",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/stores\/:store_id\/permission-overrides\/bulk",
+                            "variable": [
+                                {
+                                    "id": "store_id",
+                                    "key": "store_id",
+                                    "value": "1",
+                                    "description": "The ID of the store."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"overrides\":[{\"permission_id\":\"architecto\",\"granted\":true}]}"
+                        },
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Remove all overrides for a store.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/stores\/:store_id\/permission-overrides\/clear",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/stores\/:store_id\/permission-overrides\/clear",
+                            "variable": [
+                                {
+                                    "id": "store_id",
+                                    "key": "store_id",
+                                    "value": "1",
+                                    "description": "The ID of the store."
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update an existing store override.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/stores\/:store_id\/permission-overrides\/:override",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/stores\/:store_id\/permission-overrides\/:override",
+                            "variable": [
+                                {
+                                    "id": "store_id",
+                                    "key": "store_id",
+                                    "value": "1",
+                                    "description": "The ID of the store."
+                                },
+                                {
+                                    "id": "override",
+                                    "key": "override",
+                                    "value": "architecto",
+                                    "description": ""
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"granted\":true}"
+                        },
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Remove an override (reverts to role-based permission).",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/stores\/:store_id\/permission-overrides\/:override",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/stores\/:store_id\/permission-overrides\/:override",
+                            "variable": [
+                                {
+                                    "id": "store_id",
+                                    "key": "store_id",
+                                    "value": "1",
+                                    "description": "The ID of the store."
+                                },
+                                {
+                                    "id": "override",
+                                    "key": "override",
+                                    "value": "architecto",
+                                    "description": ""
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Admin - User Permission Overrides",
+            "description": "",
+            "item": [
+                {
+                    "name": "List all overrides for a user.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/users\/:user_id\/permission-overrides",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/users\/:user_id\/permission-overrides",
+                            "variable": [
+                                {
+                                    "id": "user_id",
+                                    "key": "user_id",
+                                    "value": "1",
+                                    "description": "The ID of the user."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/users\/1\/permission-overrides could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Grant or deny a permission to a user.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/users\/:user_id\/permission-overrides",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/users\/:user_id\/permission-overrides",
+                            "variable": [
+                                {
+                                    "id": "user_id",
+                                    "key": "user_id",
+                                    "value": "1",
+                                    "description": "The ID of the user."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"permission_id\":\"architecto\",\"granted\":true,\"expires_at\":\"2052-02-10\",\"reason\":\"n\"}"
+                        },
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Bulk grant\/deny permissions.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/users\/:user_id\/permission-overrides\/bulk",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/users\/:user_id\/permission-overrides\/bulk",
+                            "variable": [
+                                {
+                                    "id": "user_id",
+                                    "key": "user_id",
+                                    "value": "1",
+                                    "description": "The ID of the user."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"overrides\":[{\"permission_id\":\"architecto\",\"granted\":true,\"expires_at\":\"2052-02-10\",\"reason\":\"n\"}]}"
+                        },
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Remove all overrides for a user (optionally filtered by store).",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/users\/:user_id\/permission-overrides\/clear",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/users\/:user_id\/permission-overrides\/clear",
+                            "variable": [
+                                {
+                                    "id": "user_id",
+                                    "key": "user_id",
+                                    "value": "1",
+                                    "description": "The ID of the user."
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get effective permissions for a user with source information.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/users\/:user_id\/permission-overrides\/effective",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/users\/:user_id\/permission-overrides\/effective",
+                            "variable": [
+                                {
+                                    "id": "user_id",
+                                    "key": "user_id",
+                                    "value": "1",
+                                    "description": "The ID of the user."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "This endpoint shows the final resolved state of all permissions\nfor a user, including where each permission comes from (role, store override, user override)."
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/users\/1\/permission-overrides\/effective could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Update an existing override.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/users\/:user_id\/permission-overrides\/:override_id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/users\/:user_id\/permission-overrides\/:override_id",
+                            "variable": [
+                                {
+                                    "id": "user_id",
+                                    "key": "user_id",
+                                    "value": "1",
+                                    "description": "The ID of the user."
+                                },
+                                {
+                                    "id": "override_id",
+                                    "key": "override_id",
+                                    "value": "16",
+                                    "description": "The ID of the override."
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"granted\":false,\"expires_at\":\"2052-02-10\",\"reason\":\"n\"}"
+                        },
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Remove an override (reverts to role-based permission).",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/users\/:user_id\/permission-overrides\/:override_id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/users\/:user_id\/permission-overrides\/:override_id",
+                            "variable": [
+                                {
+                                    "id": "user_id",
+                                    "key": "user_id",
+                                    "value": "1",
+                                    "description": "The ID of the user."
+                                },
+                                {
+                                    "id": "override_id",
+                                    "key": "override_id",
+                                    "value": "16",
+                                    "description": "The ID of the override."
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Admin - User Role Assignments",
+            "description": "",
+            "item": [
+                {
+                    "name": "List available roles for assignment.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/roles\/available",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/roles\/available"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/roles\/available could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "List all role assignments for a user.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/users\/:user_id\/roles",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/users\/:user_id\/roles",
+                            "variable": [
+                                {
+                                    "id": "user_id",
+                                    "key": "user_id",
+                                    "value": "1",
+                                    "description": "The ID of the user."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                }
+                            ],
+                            "code": 404,
+                            "body": "{\n    \"message\": \"The route api.maiscapinhas.com.br\/\/api\/v1\/admin\/users\/1\/roles could not be found.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Assign a role to a user (global or store-specific).",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/users\/:user_id\/roles",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/users\/:user_id\/roles",
+                            "variable": [
+                                {
+                                    "id": "user_id",
+                                    "key": "user_id",
+                                    "value": "1",
+                                    "description": "The ID of the user."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"role_id\":\"architecto\"}"
+                        },
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Sync roles for a user (replaces all current assignments).",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/users\/:user_id\/roles\/sync",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/users\/:user_id\/roles\/sync",
+                            "variable": [
+                                {
+                                    "id": "user_id",
+                                    "key": "user_id",
+                                    "value": "1",
+                                    "description": "The ID of the user."
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"assignments\":[{\"role_id\":\"architecto\"}]}"
+                        },
+                        "description": ""
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Remove a role assignment from a user.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/admin\/users\/:user_id\/roles\/:assignment",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/admin\/users\/:user_id\/roles\/:assignment",
+                            "variable": [
+                                {
+                                    "id": "user_id",
+                                    "key": "user_id",
+                                    "value": "1",
+                                    "description": "The ID of the user."
+                                },
+                                {
+                                    "id": "assignment",
+                                    "key": "assignment",
+                                    "value": "1",
+                                    "description": ""
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
                     },
                     "response": []
                 }
@@ -2836,7 +5965,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"from\":\"2026-01-14T01:18:10\",\"to\":\"2026-01-14T01:18:10\",\"causer_id\":16,\"event\":\"n\",\"log_name\":\"g\",\"store_id\":16,\"subject_type\":\"n\",\"subject_id\":16,\"per_page\":22}"
+                            "raw": "{\"from\":\"2026-01-16T19:10:30\",\"to\":\"2026-01-16T19:10:30\",\"causer_id\":16,\"event\":\"n\",\"log_name\":\"g\",\"store_id\":16,\"subject_type\":\"n\",\"subject_id\":16,\"per_page\":22}"
                         },
                         "description": "Retorna lista paginada de logs com suporte a diversos filtros.\n\n**Filtros dispon\u00edveis:**\n- `from`\/`to` - Per\u00edodo de datas\n- `causer_id` - ID do usu\u00e1rio que executou a a\u00e7\u00e3o\n- `event` - Nome do evento (suporta wildcard: `auth.*`)\n- `log_name` - Dom\u00ednio: auth, cash, rules, goals\n- `store_id` - Loja relacionada\n- `subject_type` - Tipo de entidade (CashClosing, BonusRule, etc)\n- `subject_id` - ID da entidade\n\n**Ordena\u00e7\u00e3o:** Por data de cria\u00e7\u00e3o, mais recentes primeiro.\n\n**Quem pode usar:** Apenas administradores."
                     },
@@ -2890,7 +6019,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"from\":\"2026-01-14T01:18:10\",\"to\":\"2026-01-14T01:18:10\"}"
+                            "raw": "{\"from\":\"2026-01-16T19:10:30\",\"to\":\"2026-01-16T19:10:30\"}"
                         },
                         "description": "Retorna estat\u00edsticas agregadas dos logs para overview.\n\n**Quem pode usar:** Apenas administradores."
                     },
@@ -3028,7 +6157,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"name\":\"Mais Capinhas Shopping Center\",\"city\":\"Florian\u00f3polis\",\"active\":true,\"codigo\":\"gzmiyvdljnikhway\",\"bio_enabled\":false,\"address\":\"k\",\"neighborhood\":\"c\",\"state\":\"my\",\"zip_code\":\"uwpwlv\",\"latitude\":-90,\"longitude\":-180,\"phone\":\"rsitcpscqldzsnrw\",\"whatsapp\":\"tujwvlxjklqppwqb\",\"instagram\":\"e\",\"opening_hours\":{\"tz\":\"America\\\/Matamoros\",\"weekly\":{\"*\":[[]]},\"exceptions\":[{\"date\":\"2026-01-14\",\"closed\":true,\"reason\":\"o\"}]},\"cnpj\":\"tnnoqitpxntltcvi\",\"troco_padrao\":15}"
+                            "raw": "{\"name\":\"Mais Capinhas Shopping Center\",\"city\":\"Florian\u00f3polis\",\"active\":true,\"codigo\":\"gzmiyvdljnikhway\",\"bio_enabled\":false,\"address\":\"k\",\"neighborhood\":\"c\",\"state\":\"my\",\"zip_code\":\"uwpwlv\",\"latitude\":-90,\"longitude\":-180,\"phone\":\"rsitcpscqldzsnrw\",\"whatsapp\":\"tujwvlxjklqppwqb\",\"instagram\":\"e\",\"opening_hours\":{\"tz\":\"America\\\/Matamoros\",\"weekly\":{\"*\":[[]]},\"exceptions\":[{\"date\":\"2026-01-16\",\"closed\":false,\"reason\":\"o\"}]},\"cnpj\":\"tnnoqitpxntltcvi\",\"troco_padrao\":15}"
                         },
                         "description": "Cadastra uma nova loja (ponto de venda) no sistema.\n\nAp\u00f3s criar a loja, voc\u00ea deve:\n1. Vincular usu\u00e1rios \u00e0 loja (via endpoint de v\u00ednculos)\n2. Configurar metas mensais (via `\/goals\/monthly`)\n3. Opcionalmente criar regras espec\u00edficas de b\u00f4nus\/comiss\u00e3o\n\n**Quem pode usar:** Apenas administradores."
                     },
@@ -3123,7 +6252,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"name\":\"Mais Capinhas Tijucas - Centro\",\"city\":\"Tijucas\",\"active\":true,\"codigo\":\"gzmiyvdljnikhway\",\"bio_enabled\":false,\"address\":\"k\",\"neighborhood\":\"c\",\"state\":\"my\",\"zip_code\":\"uwpwlv\",\"latitude\":-90,\"longitude\":-180,\"phone\":\"rsitcpscqldzsnrw\",\"whatsapp\":\"tujwvlxjklqppwqb\",\"instagram\":\"e\",\"opening_hours\":{\"tz\":\"America\\\/Matamoros\",\"weekly\":{\"*\":[[]]},\"exceptions\":[{\"date\":\"2026-01-14\",\"closed\":true,\"reason\":\"o\"}]},\"cnpj\":\"tnnoqitpxntltcvi\",\"troco_padrao\":15}"
+                            "raw": "{\"name\":\"Mais Capinhas Tijucas - Centro\",\"city\":\"Tijucas\",\"active\":true,\"codigo\":\"gzmiyvdljnikhway\",\"bio_enabled\":false,\"address\":\"k\",\"neighborhood\":\"c\",\"state\":\"my\",\"zip_code\":\"uwpwlv\",\"latitude\":-90,\"longitude\":-180,\"phone\":\"rsitcpscqldzsnrw\",\"whatsapp\":\"tujwvlxjklqppwqb\",\"instagram\":\"e\",\"opening_hours\":{\"tz\":\"America\\\/Matamoros\",\"weekly\":{\"*\":[[]]},\"exceptions\":[{\"date\":\"2026-01-16\",\"closed\":true,\"reason\":\"o\"}]},\"cnpj\":\"tnnoqitpxntltcvi\",\"troco_padrao\":15}"
                         },
                         "description": "Atualiza informa\u00e7\u00f5es de uma loja existente.\nApenas os campos informados ser\u00e3o alterados.\n\n**Quem pode usar:** Apenas administradores."
                     },
@@ -3314,7 +6443,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"name\":\"Jo\u00e3o Silva Santos\",\"email\":\"joao.silva@maiscapinhas.com.br\",\"password\":\"senha123456\",\"active\":true,\"is_super_admin\":false,\"zip_code\":\"vdljnikh\",\"street\":\"w\",\"number\":\"aykcmyuwpwlvqwrs\",\"complement\":\"i\",\"neighborhood\":\"t\",\"city\":\"c\",\"state\":\"ps\",\"birth_date\":\"2022-02-06\",\"hire_date\":\"2022-02-06\",\"whatsapp\":\"ngzmiyvdljnikhwa\",\"instagram\":\"y\",\"cpf\":\"kcmyuwpwlvqwrs\",\"pix_key\":\"i\",\"stores\":[\"architecto\"],\"roles\":[\"fabrica\"]}"
+                            "raw": "{\"name\":\"Jo\u00e3o Silva Santos\",\"email\":\"joao.silva@maiscapinhas.com.br\",\"password\":\"senha123456\",\"active\":true,\"is_super_admin\":true,\"zip_code\":\"vdljnikh\",\"street\":\"w\",\"number\":\"aykcmyuwpwlvqwrs\",\"complement\":\"i\",\"neighborhood\":\"t\",\"city\":\"c\",\"state\":\"ps\",\"birth_date\":\"2022-02-09\",\"hire_date\":\"2022-02-09\",\"whatsapp\":\"ngzmiyvdljnikhwa\",\"instagram\":\"y\",\"cpf\":\"kcmyuwpwlvqwrs\",\"pix_key\":\"i\",\"stores\":[\"architecto\"],\"roles\":[\"fabrica\"]}"
                         },
                         "description": "Cadastra um novo usu\u00e1rio no sistema, opcionalmente j\u00e1 vinculando-o\na uma ou mais lojas com roles espec\u00edficas.\n\nEste endpoint \u00e9 utilizado para:\n- Onboarding de novos funcion\u00e1rios\n- Criar usu\u00e1rios administrativos\n- Configurar equipe de vendas\n\n**Fluxo recomendado:**\n1. Criar usu\u00e1rio com dados b\u00e1sicos + senha tempor\u00e1ria\n2. Vincular \u00e0s lojas onde ir\u00e1 trabalhar\n3. Compartilhar credenciais com o novo usu\u00e1rio\n\n**Regras de Neg\u00f3cio:**\n- Email deve ser \u00fanico (valida\u00e7\u00e3o 422 se duplicado)\n- Senha deve ter m\u00ednimo 8 caracteres\n- V\u00ednculos s\u00e3o opcionais na cria\u00e7\u00e3o (podem ser adicionados depois)\n- Se informar v\u00ednculos, `store_id` deve existir e `role` deve ser v\u00e1lida\n\n**Quem pode usar:** Apenas administradores."
                     },
@@ -3421,7 +6550,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"name\":\"Jo\u00e3o da Silva Atualizado\",\"email\":\"joao.novo@maiscapinhas.com.br\",\"password\":\"novasenha123\",\"active\":true,\"is_super_admin\":true,\"zip_code\":\"vdljnikh\",\"street\":\"w\",\"number\":\"aykcmyuwpwlvqwrs\",\"complement\":\"i\",\"neighborhood\":\"t\",\"city\":\"c\",\"state\":\"ps\",\"birth_date\":\"2022-02-06\",\"hire_date\":\"2022-02-06\",\"whatsapp\":\"ngzmiyvdljnikhwa\",\"instagram\":\"y\",\"cpf\":\"kcmyuwpwlvqwrs\",\"pix_key\":\"i\",\"roles\":[\"fabrica\"]}"
+                            "raw": "{\"name\":\"Jo\u00e3o da Silva Atualizado\",\"email\":\"joao.novo@maiscapinhas.com.br\",\"password\":\"novasenha123\",\"active\":true,\"is_super_admin\":true,\"zip_code\":\"vdljnikh\",\"street\":\"w\",\"number\":\"aykcmyuwpwlvqwrs\",\"complement\":\"i\",\"neighborhood\":\"t\",\"city\":\"c\",\"state\":\"ps\",\"birth_date\":\"2022-02-09\",\"hire_date\":\"2022-02-09\",\"whatsapp\":\"ngzmiyvdljnikhwa\",\"instagram\":\"y\",\"cpf\":\"kcmyuwpwlvqwrs\",\"pix_key\":\"i\",\"roles\":[\"fabrica\"]}"
                         },
                         "description": "Atualiza dados cadastrais de um usu\u00e1rio existente.\nApenas os campos informados ser\u00e3o alterados.\n\n**Casos de uso:**\n- Corrigir nome ou email\n- Alterar senha\n- Ativar\/desativar usu\u00e1rio\n\n**Regras de Neg\u00f3cio:**\n- Email deve continuar \u00fanico (valida\u00e7\u00e3o considera o pr\u00f3prio usu\u00e1rio)\n- Para gerenciar v\u00ednculos com lojas, use os endpoints de v\u00ednculos\n\n**Quem pode usar:** Apenas administradores."
                     },
@@ -3516,7 +6645,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"stores\":[{\"store_id\":16,\"role\":\"admin\"}]}"
+                            "raw": "{\"stores\":[{\"store_id\":16,\"role\":\"gerente\"}]}"
                         },
                         "description": "PUT \/admin\/users\/{user}\/stores"
                     },
@@ -3552,7 +6681,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"stores\":[{\"store_id\":16,\"role\":\"vendedor\"}]}"
+                            "raw": "{\"stores\":[{\"store_id\":16,\"role\":\"admin\"}]}"
                         },
                         "description": "POST \/admin\/users\/{user}\/stores\/bulk"
                     },
@@ -3588,7 +6717,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"role\":\"conferente\",\"store_ids\":[16]}"
+                            "raw": "{\"role\":\"admin\",\"store_ids\":[16]}"
                         },
                         "description": "PATCH \/admin\/users\/{user}\/stores\/bulk"
                     },
@@ -4078,7 +7207,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"name\":\"loja_02\",\"provider\":\"n\",\"base_url\":\"http:\\\/\\\/crooks.biz\\\/et-fugiat-sunt-nihil-accusantium\",\"phone_e164\":\"nikhwaykcmyuwpwl\",\"api_key\":\"new-api-key\",\"token\":\"q\",\"store_id\":16,\"user_id\":16,\"is_default\":true,\"is_active\":true,\"notes\":\"n\",\"webhook_secret\":\"g\",\"webhook_url\":\"http:\\\/\\\/www.okuneva.com\\\/fugiat-sunt-nihil-accusantium-harum-mollitia.html\",\"status\":\"connected\"}"
+                            "raw": "{\"name\":\"loja_02\",\"provider\":\"n\",\"base_url\":\"http:\\\/\\\/crooks.biz\\\/et-fugiat-sunt-nihil-accusantium\",\"phone_e164\":\"nikhwaykcmyuwpwl\",\"api_key\":\"new-api-key\",\"token\":\"q\",\"store_id\":16,\"user_id\":16,\"is_default\":true,\"is_active\":false,\"notes\":\"n\",\"webhook_secret\":\"g\",\"webhook_url\":\"http:\\\/\\\/www.okuneva.com\\\/fugiat-sunt-nihil-accusantium-harum-mollitia.html\",\"status\":\"disconnected\"}"
                         },
                         "description": "Atualiza dados de uma inst\u00e2ncia WhatsApp.\nSecrets s\u00f3 s\u00e3o atualizados se enviados no payload."
                     },
@@ -4673,7 +7802,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":1,\"user_id\":16,\"customer_id\":1,\"customer_device_id\":1,\"selected_product\":\"Capa Premium\",\"product_reference\":\"g\",\"obs\":\"z\",\"qty\":1,\"price\":49.9,\"payed\":false,\"payday\":\"2026-01-14T01:18:09\",\"received_by_id\":16,\"status\":\"1\",\"observation\":\"Cliente quer borda preta\"}"
+                            "raw": "{\"store_id\":1,\"user_id\":16,\"customer_id\":1,\"customer_device_id\":1,\"selected_product\":\"Capa Premium\",\"product_reference\":\"g\",\"obs\":\"z\",\"qty\":1,\"price\":49.9,\"payed\":false,\"payday\":\"2026-01-16T19:10:29\",\"received_by_id\":16,\"status\":\"6\",\"observation\":\"Cliente quer borda preta\"}"
                         },
                         "description": "Cria uma nova capa personalizada para um cliente.\nA capa iniciar\u00e1 no status \"Aguardando Foto\" at\u00e9 o upload.\n\n**Quem pode usar:** Todos os usu\u00e1rios autenticados."
                     },
@@ -4774,7 +7903,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"customer_id\":16,\"customer_device_id\":16,\"selected_product\":\"Capa Ultra Premium\",\"product_reference\":\"g\",\"obs\":\"z\",\"qty\":27,\"price\":59.9,\"status\":\"3\",\"observation\":\"Cliente alterou modelo\"}"
+                            "raw": "{\"customer_id\":16,\"customer_device_id\":16,\"selected_product\":\"Capa Ultra Premium\",\"product_reference\":\"g\",\"obs\":\"z\",\"qty\":27,\"price\":59.9,\"status\":\"4\",\"observation\":\"Cliente alterou modelo\"}"
                         },
                         "description": "Atualiza dados de uma capa personalizada.\n\n**Quem pode usar:** Usu\u00e1rio com acesso \u00e0 capa."
                     },
@@ -5794,7 +8923,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"name\":\"Jo\u00e3o Silva\",\"email\":\"joao@email.com\",\"phone\":\"11999999999\",\"zip_code\":\"yuwpwlvq\",\"street\":\"w\",\"number\":\"rsitcpscqldzsnrw\",\"complement\":\"t\",\"neighborhood\":\"u\",\"city\":\"S\u00e3o Paulo\",\"state\":\"SP\",\"birth_date\":\"2022-02-06\",\"address\":\"Rua das Flores, 123\",\"notes\":\"Cliente preferencial\"}"
+                            "raw": "{\"name\":\"Jo\u00e3o Silva\",\"email\":\"joao@email.com\",\"phone\":\"11999999999\",\"zip_code\":\"yuwpwlvq\",\"street\":\"w\",\"number\":\"rsitcpscqldzsnrw\",\"complement\":\"t\",\"neighborhood\":\"u\",\"city\":\"S\u00e3o Paulo\",\"state\":\"SP\",\"birth_date\":\"2022-02-09\",\"address\":\"Rua das Flores, 123\",\"notes\":\"Cliente preferencial\"}"
                         },
                         "description": "Cria um novo cliente no sistema.\n\n**Quem pode usar:** Todos os usu\u00e1rios autenticados."
                     },
@@ -5901,7 +9030,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"name\":\"Jo\u00e3o Silva Atualizado\",\"email\":\"joao.novo@email.com\",\"phone\":\"11988888888\",\"zip_code\":\"yuwpwlvq\",\"street\":\"w\",\"number\":\"rsitcpscqldzsnrw\",\"complement\":\"t\",\"neighborhood\":\"u\",\"city\":\"j\",\"state\":\"wv\",\"birth_date\":\"2022-02-06\"}"
+                            "raw": "{\"name\":\"Jo\u00e3o Silva Atualizado\",\"email\":\"joao.novo@email.com\",\"phone\":\"11988888888\",\"zip_code\":\"yuwpwlvq\",\"street\":\"w\",\"number\":\"rsitcpscqldzsnrw\",\"complement\":\"t\",\"neighborhood\":\"u\",\"city\":\"j\",\"state\":\"wv\",\"birth_date\":\"2022-02-09\"}"
                         },
                         "description": "Atualiza os dados de um cliente existente.\n\n**Quem pode usar:** Usu\u00e1rio com acesso ao cliente."
                     },
@@ -6296,7 +9425,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"status\":\"archived\",\"only_unacknowledged\":true,\"only_unseen\":true,\"severity\":\"info\",\"type\":\"recado\",\"scope\":\"global\",\"store_id\":16,\"created_by\":16,\"date_from\":\"2026-01-14T01:18:05\",\"date_to\":\"2052-02-07\",\"per_page\":22,\"page\":67,\"sort\":\"created_at_desc\"}"
+                            "raw": "{\"status\":\"scheduled\",\"only_unacknowledged\":true,\"only_unseen\":false,\"severity\":\"danger\",\"type\":\"recado\",\"scope\":\"global\",\"store_id\":16,\"created_by\":16,\"date_from\":\"2026-01-16T19:10:23\",\"date_to\":\"2052-02-09\",\"per_page\":22,\"page\":67,\"sort\":\"starts_at_desc\"}"
                         },
                         "description": "Retorna o hist\u00f3rico de avisos que o usu\u00e1rio recebeu, com pagina\u00e7\u00e3o e filtros.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado."
                     },
@@ -6386,7 +9515,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"status\":\"scheduled\",\"only_unacknowledged\":true,\"only_unseen\":false,\"severity\":\"info\",\"type\":\"recado\",\"scope\":\"role\",\"store_id\":16,\"created_by\":16,\"date_from\":\"2026-01-14T01:18:05\",\"date_to\":\"2052-02-07\",\"per_page\":22,\"page\":67,\"sort\":\"severity_desc\"}"
+                            "raw": "{\"status\":\"draft\",\"only_unacknowledged\":true,\"only_unseen\":true,\"severity\":\"warning\",\"type\":\"recado\",\"scope\":\"store\",\"store_id\":16,\"created_by\":16,\"date_from\":\"2026-01-16T19:10:23\",\"date_to\":\"2052-02-09\",\"per_page\":22,\"page\":67,\"sort\":\"starts_at_desc\"}"
                         },
                         "description": "Retorna lista de avisos com filtros e pagina\u00e7\u00e3o para gerenciamento.\nSuper admins veem todos os avisos; outros admins veem apenas avisos das lojas que gerenciam.\n\n**Quem pode usar:** Administradores e gerentes."
                     },
@@ -6427,7 +9556,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"title\":\"Manuten\u00e7\u00e3o Programada\",\"message\":\"O sistema ficar\u00e1 indispon\u00edvel...\",\"excerpt\":\"Sistema indispon\u00edvel das 22h \u00e0s 23h\",\"type\":\"announcement\",\"severity\":\"warning\",\"display_mode\":\"modal\",\"icon\":\"g\",\"image_url\":\"http:\\\/\\\/www.okuneva.com\\\/fugiat-sunt-nihil-accusantium-harum-mollitia.html\",\"image_alt\":\"k\",\"cta_label\":\"h\",\"cta_url\":\"http:\\\/\\\/www.dubuque.net\\\/quo-omnis-nostrum-aut-adipisci\",\"scope\":\"store\",\"require_ack\":true,\"starts_at\":\"2026-01-15T10:00:00Z\",\"expires_at\":\"2026-01-20T23:59:59Z\",\"repeat_every_minutes\":22,\"priority\":10,\"pinned_until\":\"2026-01-14T01:18:05\",\"targets\":[\"architecto\"]}"
+                            "raw": "{\"title\":\"Manuten\u00e7\u00e3o Programada\",\"message\":\"O sistema ficar\u00e1 indispon\u00edvel...\",\"excerpt\":\"Sistema indispon\u00edvel das 22h \u00e0s 23h\",\"type\":\"announcement\",\"severity\":\"warning\",\"display_mode\":\"modal\",\"icon\":\"g\",\"image_url\":\"http:\\\/\\\/www.okuneva.com\\\/fugiat-sunt-nihil-accusantium-harum-mollitia.html\",\"image_alt\":\"k\",\"cta_label\":\"h\",\"cta_url\":\"http:\\\/\\\/www.dubuque.net\\\/quo-omnis-nostrum-aut-adipisci\",\"scope\":\"store\",\"require_ack\":true,\"starts_at\":\"2026-01-15T10:00:00Z\",\"expires_at\":\"2026-01-20T23:59:59Z\",\"repeat_every_minutes\":22,\"priority\":10,\"pinned_until\":\"2026-01-16T19:10:23\",\"targets\":[\"architecto\"]}"
                         },
                         "description": "Cria um novo aviso em status `draft`. Ap\u00f3s criar, use o endpoint `\/publish` para publicar.\n\n**Quem pode usar:** Administradores e gerentes.\n\n**Regras de neg\u00f3cio:**\n- Avisos s\u00e3o criados como rascunho (draft)\n- \u00c9 necess\u00e1rio definir targets para avisos com scope `store`, `user` ou `role`\n- `require_ack` define se o usu\u00e1rio precisa confirmar leitura"
                     },
@@ -6540,7 +9669,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"title\":\"T\u00edtulo atualizado\",\"message\":\"Nova mensagem\",\"excerpt\":\"n\",\"type\":\"advertencia\",\"severity\":\"info\",\"display_mode\":\"modal\",\"icon\":\"g\",\"image_url\":\"http:\\\/\\\/www.okuneva.com\\\/fugiat-sunt-nihil-accusantium-harum-mollitia.html\",\"image_alt\":\"k\",\"cta_label\":\"h\",\"cta_url\":\"http:\\\/\\\/www.dubuque.net\\\/quo-omnis-nostrum-aut-adipisci\",\"scope\":\"global\",\"require_ack\":true,\"starts_at\":\"2026-01-14T01:18:06\",\"expires_at\":\"2052-02-07\",\"repeat_every_minutes\":22,\"priority\":84,\"pinned_until\":\"2026-01-14T01:18:06\",\"targets\":[\"architecto\"]}"
+                            "raw": "{\"title\":\"T\u00edtulo atualizado\",\"message\":\"Nova mensagem\",\"excerpt\":\"n\",\"type\":\"advertencia\",\"severity\":\"info\",\"display_mode\":\"both\",\"icon\":\"g\",\"image_url\":\"http:\\\/\\\/www.okuneva.com\\\/fugiat-sunt-nihil-accusantium-harum-mollitia.html\",\"image_alt\":\"k\",\"cta_label\":\"h\",\"cta_url\":\"http:\\\/\\\/www.dubuque.net\\\/quo-omnis-nostrum-aut-adipisci\",\"scope\":\"store\",\"require_ack\":true,\"starts_at\":\"2026-01-16T19:10:24\",\"expires_at\":\"2052-02-09\",\"repeat_every_minutes\":22,\"priority\":84,\"pinned_until\":\"2026-01-16T19:10:24\",\"targets\":[\"architecto\"]}"
                         },
                         "description": "Atualiza os dados de um aviso existente. Apenas rascunhos podem ter seus targets atualizados.\n\n**Quem pode usar:** Administradores e gerentes (criador ou com acesso ao scope)."
                     },
@@ -7092,6 +10221,257 @@
             ]
         },
         {
+            "name": "Formas de Pagamento",
+            "description": "\nGest\u00e3o de formas de pagamento do sistema.\nFormas de pagamento dispon\u00edveis: Dinheiro, Pix, D\u00e9bito, Cr\u00e9dito, etc.\n\n**Leitura:** Todos os usu\u00e1rios autenticados.\n**Escrita:** Apenas Super Admin e Admin Global.",
+            "item": [
+                {
+                    "name": "Listar formas de pagamento",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/payment-methods",
+                            "query": [
+                                {
+                                    "key": "search",
+                                    "value": "pix",
+                                    "description": "Buscar por nome ou slug.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "is_active",
+                                    "value": "1",
+                                    "description": "Filtrar por status ativo.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "sort",
+                                    "value": "sort_order",
+                                    "description": "Campo para ordena\u00e7\u00e3o.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "direction",
+                                    "value": "asc",
+                                    "description": "Dire\u00e7\u00e3o: `asc` ou `desc`.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "per_page",
+                                    "value": "50",
+                                    "description": "Itens por p\u00e1gina (m\u00e1x 100).",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/v1\/payment-methods?search=pix&is_active=1&sort=sort_order&direction=asc&per_page=50"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna lista paginada de formas de pagamento com filtros.\n\n**Quem pode usar:** Todos os usu\u00e1rios autenticados."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": [\n    {\"id\": 1, \"name\": \"Dinheiro\", \"slug\": \"dinheiro\", \"is_active\": true, \"sort_order\": 1},\n    {\"id\": 2, \"name\": \"Pix\", \"slug\": \"pix\", \"is_active\": true, \"sort_order\": 2}\n  ],\n  \"meta\": {\"current_page\": 1, \"total\": 4}\n}",
+                            "name": "Lista de formas de pagamento"
+                        }
+                    ]
+                },
+                {
+                    "name": "Criar forma de pagamento",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/payment-methods",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/payment-methods"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"name\":\"Boleto\",\"slug\":\"boleto\",\"description\":\"Pagamento via boleto banc\u00e1rio\",\"is_active\":true,\"sort_order\":5}"
+                        },
+                        "description": "Cria uma nova forma de pagamento.\n\n**Quem pode usar:** Apenas Super Admin e Admin Global."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\n  \"message\": \"Forma de pagamento criada com sucesso.\",\n  \"data\": {\"id\": 5, \"name\": \"Boleto\", \"slug\": \"boleto\", \"is_active\": true}\n}",
+                            "name": "Forma de pagamento criada"
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\"message\": \"Apenas administradores podem gerenciar formas de pagamento.\"}",
+                            "name": "Sem permiss\u00e3o"
+                        }
+                    ]
+                },
+                {
+                    "name": "Detalhes da forma de pagamento",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/payment-methods\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/payment-methods\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "1",
+                                    "description": "The ID of the payment method."
+                                },
+                                {
+                                    "id": "payment_method",
+                                    "key": "payment_method",
+                                    "value": "1",
+                                    "description": "ID da forma de pagamento."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Retorna detalhes de uma forma de pagamento espec\u00edfica.\n\n**Quem pode usar:** Todos os usu\u00e1rios autenticados."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\"id\": 1, \"name\": \"Dinheiro\", \"slug\": \"dinheiro\", \"is_active\": true, \"sort_order\": 1}\n}",
+                            "name": "Detalhes da forma de pagamento"
+                        }
+                    ]
+                },
+                {
+                    "name": "Atualizar forma de pagamento",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/payment-methods\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/payment-methods\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "1",
+                                    "description": "The ID of the payment method."
+                                },
+                                {
+                                    "id": "payment_method",
+                                    "key": "payment_method",
+                                    "value": "1",
+                                    "description": "ID da forma de pagamento."
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"name\":\"Dinheiro\",\"slug\":\"n\",\"description\":\"Animi quos velit et fugiat.\",\"is_active\":false,\"sort_order\":1}"
+                        },
+                        "description": "Atualiza dados de uma forma de pagamento existente.\n\n**Quem pode usar:** Apenas Super Admin e Admin Global."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"message\": \"Forma de pagamento atualizada com sucesso.\",\n  \"data\": {\"id\": 1, \"name\": \"Dinheiro\", \"is_active\": false}\n}",
+                            "name": "Forma de pagamento atualizada"
+                        }
+                    ]
+                },
+                {
+                    "name": "Excluir forma de pagamento",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/payment-methods\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/payment-methods\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "1",
+                                    "description": "The ID of the payment method."
+                                },
+                                {
+                                    "id": "payment_method",
+                                    "key": "payment_method",
+                                    "value": "1",
+                                    "description": "ID da forma de pagamento."
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Remove uma forma de pagamento do sistema.\n\n**Quem pode usar:** Apenas Super Admin e Admin Global."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"message\": \"Forma de pagamento exclu\u00edda com sucesso.\"}",
+                            "name": "Forma de pagamento exclu\u00edda"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
             "name": "F\u00e1brica - Pedidos de Produ\u00e7\u00e3o",
             "description": "\nPortal da f\u00e1brica para gest\u00e3o de pedidos de produ\u00e7\u00e3o de capas personalizadas.\nEstes endpoints s\u00e3o exclusivos para usu\u00e1rios com papel de f\u00e1brica (middleware `fabrica`).\n\n**Fluxo de produ\u00e7\u00e3o:**\n1. Admin envia capas para produ\u00e7\u00e3o \u2192 Pedido criado com status `pending`\n2. F\u00e1brica aceita pedido (informa valor) \u2192 Status `accepted`\n3. F\u00e1brica despacha pedido (informa rastreio) \u2192 Status `dispatched`\n4. Admin recebe pedido \u2192 Status `received`\n\n**Permiss\u00f5es:** Apenas usu\u00e1rios com papel de f\u00e1brica.",
             "item": [
@@ -7406,7 +10786,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"active\":\"1\",\"state\":\"bn\",\"city\":\"g\",\"date_from\":\"2026-01-14\",\"date_to\":\"2052-02-07\"}"
+                            "raw": "{\"active\":\"0\",\"state\":\"bn\",\"city\":\"g\",\"date_from\":\"2026-01-16\",\"date_to\":\"2052-02-09\"}"
                         },
                         "description": "Returns statistical data about users without exposing personal information.\nUseful for dashboard cards and charts."
                     },
@@ -7561,7 +10941,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":1,\"user_id\":16,\"customer_id\":1,\"customer_device_id\":1,\"selected_product\":\"Capa Personalizada\",\"obs\":\"g\",\"status\":\"3\",\"observation\":\"Cliente pediu urg\u00eancia\",\"value\":49.9}"
+                            "raw": "{\"store_id\":1,\"user_id\":16,\"customer_id\":1,\"customer_device_id\":1,\"selected_product\":\"Capa Personalizada\",\"obs\":\"g\",\"status\":\"1\",\"observation\":\"Cliente pediu urg\u00eancia\",\"value\":49.9}"
                         },
                         "description": "Cria um novo pedido associado a um cliente.\n\n**Quem pode usar:** Todos os usu\u00e1rios autenticados."
                     },

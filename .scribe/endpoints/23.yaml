@@ -1,67 +1,56 @@
-name: 'Administração - Usuários'
+name: 'Capas Personalizadas'
 description: |-
 
-  Gerenciamento centralizado de usuários do sistema MaisCapinhas ERP.
+  Gestão de capas de celular personalizadas.
+  Capas são produtos criados sob demanda com fotos enviadas pelos clientes.
 
-  Este módulo permite criar, editar, listar e desativar usuários,
-  além de vincular usuários a lojas com roles específicas.
+  **Fluxo de status:**
+  1. Aguardando Foto (1) → Cliente envia foto
+  2. Encomenda Solicitada (2) → Aguardando produção
+  3. Capa Paga (3) → Pagamento registrado
+  4. Pronta para entrega (4) → Produção concluída
+  5. Entregue (5) → Cliente recebeu
+  6. Cancelada (6)
 
-  **Modelo de Permissões:**
-  - Cada usuário pode estar vinculado a múltiplas lojas
-  - Em cada loja, o usuário tem uma role: `admin`, `gerente`, `conferente` ou `vendedor`
-  - Usuários desativados perdem acesso a todos os endpoints protegidos
+  **Escopo de acesso:**
+  - Super admins e admins globais: acesso a todas as capas
+  - Outros usuários: apenas capas que criaram
 
-  **Regras de Negócio:**
-  - Email deve ser único no sistema
-  - Não é possível desativar o próprio usuário
-  - Ao desativar, todos os tokens de acesso são revogados
-
-  **Auditoria:** Todas as operações são registradas via Spatie ActivityLog.
+  **Permissões:** Todos os usuários autenticados (exceto endpoints públicos).
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/admin/users
+    uri: api/v1/capas-personalizadas
     metadata:
       custom: []
-      groupName: 'Administração - Usuários'
+      groupName: 'Capas Personalizadas'
       groupDescription: |-
 
-        Gerenciamento centralizado de usuários do sistema MaisCapinhas ERP.
+        Gestão de capas de celular personalizadas.
+        Capas são produtos criados sob demanda com fotos enviadas pelos clientes.
 
-        Este módulo permite criar, editar, listar e desativar usuários,
-        além de vincular usuários a lojas com roles específicas.
+        **Fluxo de status:**
+        1. Aguardando Foto (1) → Cliente envia foto
+        2. Encomenda Solicitada (2) → Aguardando produção
+        3. Capa Paga (3) → Pagamento registrado
+        4. Pronta para entrega (4) → Produção concluída
+        5. Entregue (5) → Cliente recebeu
+        6. Cancelada (6)
 
-        **Modelo de Permissões:**
-        - Cada usuário pode estar vinculado a múltiplas lojas
-        - Em cada loja, o usuário tem uma role: `admin`, `gerente`, `conferente` ou `vendedor`
-        - Usuários desativados perdem acesso a todos os endpoints protegidos
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todas as capas
+        - Outros usuários: apenas capas que criaram
 
-        **Regras de Negócio:**
-        - Email deve ser único no sistema
-        - Não é possível desativar o próprio usuário
-        - Ao desativar, todos os tokens de acesso são revogados
-
-        **Auditoria:** Todas as operações são registradas via Spatie ActivityLog.
+        **Permissões:** Todos os usuários autenticados (exceto endpoints públicos).
       subgroup: ''
       subgroupDescription: ''
-      title: 'Listar todos os usuários'
+      title: 'Listar capas personalizadas'
       description: |-
-        Retorna uma lista paginada de todos os usuários cadastrados no sistema,
-        incluindo suas lojas vinculadas e respectivas roles.
+        Retorna lista paginada de capas com filtros diversos.
 
-        Este endpoint é útil para:
-        - Visão geral da equipe
-        - Buscar usuários por nome/email
-        - Filtrar por status ativo/inativo
-        - Ver quais usuários estão em determinada loja
-
-        **Quem pode usar:** Apenas administradores.
-
-        **Dados retornados por usuário:**
-        - `id`, `name`, `email`, `active` - dados básicos
-        - `stores[]` - lista de lojas com `store_id`, `store_name`, `role`
+        **Quem pode usar:** Todos os usuários autenticados.
       authenticated: true
       deprecated: false
     headers:
@@ -71,32 +60,10 @@ endpoints:
     urlParameters: []
     cleanUrlParameters: []
     queryParameters:
-      search:
-        custom: []
-        name: search
-        description: 'Busca parcial por nome ou email (case insensitive).'
-        required: false
-        example: joao
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      active:
-        custom: []
-        name: active
-        description: 'Filtrar por status: true (ativos) ou false (inativos).'
-        required: false
-        example: true
-        type: boolean
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
       store_id:
         custom: []
         name: store_id
-        description: 'Filtrar apenas usuários vinculados a esta loja.'
+        description: 'Filtrar por loja (apenas admins).'
         required: false
         example: 1
         type: integer
@@ -104,22 +71,176 @@ endpoints:
         exampleWasSpecified: true
         nullable: false
         deprecated: false
+      user_id:
+        custom: []
+        name: user_id
+        description: 'Filtrar por usuário (apenas admins).'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      status:
+        custom: []
+        name: status
+        description: 'integer|array Status da capa (aceita array para múltiplos).'
+        required: false
+        example: '2'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      customer_id:
+        custom: []
+        name: customer_id
+        description: 'Filtrar por cliente.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      initial_date:
+        custom: []
+        name: initial_date
+        description: 'Data inicial.'
+        required: false
+        example: '2026-01-01'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      final_date:
+        custom: []
+        name: final_date
+        description: 'Data final.'
+        required: false
+        example: '2026-12-31'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      brand_id:
+        custom: []
+        name: brand_id
+        description: 'Filtrar por marca do dispositivo.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      model_id:
+        custom: []
+        name: model_id
+        description: 'Filtrar por modelo do dispositivo.'
+        required: false
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      keyword:
+        custom: []
+        name: keyword
+        description: 'Busca em texto.'
+        required: false
+        example: João
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      payed:
+        custom: []
+        name: payed
+        description: 'Filtrar por status de pagamento.'
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      payday:
+        custom: []
+        name: payday
+        description: 'Filtrar por data de pagamento.'
+        required: false
+        example: '2026-01-13'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      received_by_id:
+        custom: []
+        name: received_by_id
+        description: 'Filtrar por usuário que registrou recebimento.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      sort:
+        custom: []
+        name: sort
+        description: 'Campo para ordenação.'
+        required: false
+        example: created_at
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      direction:
+        custom: []
+        name: direction
+        description: 'Direção: `asc` ou `desc`.'
+        required: false
+        example: desc
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
       per_page:
         custom: []
         name: per_page
-        description: 'Quantidade por página (1-100, default: 25).'
+        description: 'Itens por página (máx 100).'
         required: false
-        example: 25
+        example: 15
         type: integer
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
     cleanQueryParameters:
-      search: joao
-      active: true
       store_id: 1
-      per_page: 25
+      user_id: 1
+      status: '2'
+      customer_id: 1
+      initial_date: '2026-01-01'
+      final_date: '2026-12-31'
+      brand_id: 1
+      model_id: 5
+      keyword: João
+      payed: true
+      payday: '2026-01-13'
+      received_by_id: 1
+      sort: created_at
+      direction: desc
+      per_page: 15
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
@@ -129,30 +250,894 @@ endpoints:
         status: 200
         content: |-
           {
-            "data": [
-              {
-                "id": 1,
-                "name": "Admin Master",
-                "email": "admin@maiscapinhas.com.br",
-                "active": true,
-                "created_at": "2026-01-01T00:00:00Z",
-                "stores": [
-                  { "store_id": 1, "store_name": "Mais Capinhas Tijucas", "role": "admin" },
-                  { "store_id": 2, "store_name": "Mais Capinhas Itapema", "role": "admin" }
-                ]
-              }
-            ],
-            "meta": { "current_page": 1, "per_page": 25, "total": 10, "last_page": 1 }
+            "data": [{
+              "id": 1,
+              "status": 2,
+              "photo_url": "https://storage.example.com/capas/123.jpg",
+              "customer": {"id": 1, "name": "João"},
+              "price": 49.90
+            }],
+            "meta": {"current_page": 1, "total": 50}
           }
         headers: []
-        description: 'Lista de usuários'
+        description: 'Lista de capas'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/capas-personalizadas
+    metadata:
+      custom: []
+      groupName: 'Capas Personalizadas'
+      groupDescription: |-
+
+        Gestão de capas de celular personalizadas.
+        Capas são produtos criados sob demanda com fotos enviadas pelos clientes.
+
+        **Fluxo de status:**
+        1. Aguardando Foto (1) → Cliente envia foto
+        2. Encomenda Solicitada (2) → Aguardando produção
+        3. Capa Paga (3) → Pagamento registrado
+        4. Pronta para entrega (4) → Produção concluída
+        5. Entregue (5) → Cliente recebeu
+        6. Cancelada (6)
+
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todas as capas
+        - Outros usuários: apenas capas que criaram
+
+        **Permissões:** Todos os usuários autenticados (exceto endpoints públicos).
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Criar capa personalizada'
+      description: |-
+        Cria uma nova capa personalizada para um cliente.
+        A capa iniciará no status "Aguardando Foto" até o upload.
+
+        **Quem pode usar:** Todos os usuários autenticados.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'ID da loja (usa loja do usuário se não informado).'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      user_id:
+        custom: []
+        name: user_id
+        description: 'The <code>id</code> of an existing record in the users table.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      customer_id:
+        custom: []
+        name: customer_id
+        description: 'ID do cliente.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      customer_device_id:
+        custom: []
+        name: customer_device_id
+        description: 'ID do dispositivo do cliente.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      selected_product:
+        custom: []
+        name: selected_product
+        description: 'Produto selecionado.'
+        required: false
+        example: 'Capa Premium'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      product_reference:
+        custom: []
+        name: product_reference
+        description: 'Must not be greater than 255 characters.'
+        required: false
+        example: g
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      obs:
+        custom: []
+        name: obs
+        description: 'Must not be greater than 5000 characters.'
+        required: false
+        example: z
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      qty:
+        custom: []
+        name: qty
+        description: Quantidade.
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      price:
+        custom: []
+        name: price
+        description: 'Preço unitário.'
+        required: false
+        example: 49.9
+        type: number
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      payed:
+        custom: []
+        name: payed
+        description: ''
+        required: false
+        example: false
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      payday:
+        custom: []
+        name: payday
+        description: 'This field is required when <code>payed</code> is <code>true</code> or <code>1</code>. Must be a valid date.'
+        required: false
+        example: '2026-01-16T19:10:29'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      received_by_id:
+        custom: []
+        name: received_by_id
+        description: 'This field is required when <code>payed</code> is <code>true</code> or <code>1</code>. The <code>id</code> of an existing record in the users table.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      status:
+        custom: []
+        name: status
+        description: ''
+        required: false
+        example: '6'
+        type: integer
+        enumValues:
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      observation:
+        custom: []
+        name: observation
+        description: Observações.
+        required: false
+        example: 'Cliente quer borda preta'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      store_id: 1
+      user_id: 16
+      customer_id: 1
+      customer_device_id: 1
+      selected_product: 'Capa Premium'
+      product_reference: g
+      obs: z
+      qty: 1
+      price: 49.9
+      payed: false
+      payday: '2026-01-16T19:10:29'
+      received_by_id: 16
+      status: '6'
+      observation: 'Cliente quer borda preta'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 201
+        content: |-
+          {
+            "message": "Capa personalizada criada com sucesso.",
+            "data": {"id": 1, "status": 1, "customer": {"name": "João"}}
+          }
+        headers: []
+        description: 'Capa criada'
+      -
+        custom: []
+        status: 422
+        content: '{"message": "Usuário não está vinculado a nenhuma loja."}'
+        headers: []
+        description: 'Sem loja'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/capas-personalizadas/{id}'
+    metadata:
+      custom: []
+      groupName: 'Capas Personalizadas'
+      groupDescription: |-
+
+        Gestão de capas de celular personalizadas.
+        Capas são produtos criados sob demanda com fotos enviadas pelos clientes.
+
+        **Fluxo de status:**
+        1. Aguardando Foto (1) → Cliente envia foto
+        2. Encomenda Solicitada (2) → Aguardando produção
+        3. Capa Paga (3) → Pagamento registrado
+        4. Pronta para entrega (4) → Produção concluída
+        5. Entregue (5) → Cliente recebeu
+        6. Cancelada (6)
+
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todas as capas
+        - Outros usuários: apenas capas que criaram
+
+        **Permissões:** Todos os usuários autenticados (exceto endpoints públicos).
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Detalhes da capa'
+      description: |-
+        Retorna detalhes completos da capa personalizada.
+
+        **Quem pode usar:** Usuário com acesso à capa.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the capas personalizada.'
+        required: true
+        example: 31
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      capasPersonalizada:
+        custom: []
+        name: capasPersonalizada
+        description: 'ID da capa.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 31
+      capasPersonalizada: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "id": 1,
+              "status": 2,
+              "photo_url": "https://storage.example.com/capas/123.jpg",
+              "customer": {"name": "João"},
+              "price": 49.90
+            }
+          }
+        headers: []
+        description: 'Detalhes da capa'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: 'api/v1/capas-personalizadas/{id}'
+    metadata:
+      custom: []
+      groupName: 'Capas Personalizadas'
+      groupDescription: |-
+
+        Gestão de capas de celular personalizadas.
+        Capas são produtos criados sob demanda com fotos enviadas pelos clientes.
+
+        **Fluxo de status:**
+        1. Aguardando Foto (1) → Cliente envia foto
+        2. Encomenda Solicitada (2) → Aguardando produção
+        3. Capa Paga (3) → Pagamento registrado
+        4. Pronta para entrega (4) → Produção concluída
+        5. Entregue (5) → Cliente recebeu
+        6. Cancelada (6)
+
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todas as capas
+        - Outros usuários: apenas capas que criaram
+
+        **Permissões:** Todos os usuários autenticados (exceto endpoints públicos).
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Atualizar capa'
+      description: |-
+        Atualiza dados de uma capa personalizada.
+
+        **Quem pode usar:** Usuário com acesso à capa.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the capas personalizada.'
+        required: true
+        example: 31
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      capasPersonalizada:
+        custom: []
+        name: capasPersonalizada
+        description: 'ID da capa.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 31
+      capasPersonalizada: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      customer_id:
+        custom: []
+        name: customer_id
+        description: 'The <code>id</code> of an existing record in the customers table.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      customer_device_id:
+        custom: []
+        name: customer_device_id
+        description: 'The <code>id</code> of an existing record in the customer_devices table.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      selected_product:
+        custom: []
+        name: selected_product
+        description: 'Produto selecionado.'
+        required: false
+        example: 'Capa Ultra Premium'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      product_reference:
+        custom: []
+        name: product_reference
+        description: 'Must not be greater than 255 characters.'
+        required: false
+        example: g
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      obs:
+        custom: []
+        name: obs
+        description: 'Must not be greater than 5000 characters.'
+        required: false
+        example: z
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      qty:
+        custom: []
+        name: qty
+        description: 'Must be at least 1.'
+        required: false
+        example: 27
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      price:
+        custom: []
+        name: price
+        description: 'Preço unitário.'
+        required: false
+        example: 59.9
+        type: number
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      status:
+        custom: []
+        name: status
+        description: ''
+        required: false
+        example: '4'
+        type: integer
+        enumValues:
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+          - '7'
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      observation:
+        custom: []
+        name: observation
+        description: Observações.
+        required: false
+        example: 'Cliente alterou modelo'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      customer_id: 16
+      customer_device_id: 16
+      selected_product: 'Capa Ultra Premium'
+      product_reference: g
+      obs: z
+      qty: 27
+      price: 59.9
+      status: '4'
+      observation: 'Cliente alterou modelo'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "message": "Capa personalizada atualizada com sucesso.",
+            "data": {"id": 1, "price": 59.90}
+          }
+        headers: []
+        description: 'Capa atualizada'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/v1/capas-personalizadas/{id}'
+    metadata:
+      custom: []
+      groupName: 'Capas Personalizadas'
+      groupDescription: |-
+
+        Gestão de capas de celular personalizadas.
+        Capas são produtos criados sob demanda com fotos enviadas pelos clientes.
+
+        **Fluxo de status:**
+        1. Aguardando Foto (1) → Cliente envia foto
+        2. Encomenda Solicitada (2) → Aguardando produção
+        3. Capa Paga (3) → Pagamento registrado
+        4. Pronta para entrega (4) → Produção concluída
+        5. Entregue (5) → Cliente recebeu
+        6. Cancelada (6)
+
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todas as capas
+        - Outros usuários: apenas capas que criaram
+
+        **Permissões:** Todos os usuários autenticados (exceto endpoints públicos).
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Excluir capa'
+      description: |-
+        Remove uma capa personalizada (soft delete).
+
+        **Quem pode usar:** Usuário com acesso à capa.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the capas personalizada.'
+        required: true
+        example: 31
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      capasPersonalizada:
+        custom: []
+        name: capasPersonalizada
+        description: 'ID da capa.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 31
+      capasPersonalizada: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"message": "Capa personalizada excluída com sucesso."}'
+        headers: []
+        description: 'Capa excluída'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: 'api/v1/capas-personalizadas/{capas_personalizada_id}/status'
+    metadata:
+      custom: []
+      groupName: 'Capas Personalizadas'
+      groupDescription: |-
+
+        Gestão de capas de celular personalizadas.
+        Capas são produtos criados sob demanda com fotos enviadas pelos clientes.
+
+        **Fluxo de status:**
+        1. Aguardando Foto (1) → Cliente envia foto
+        2. Encomenda Solicitada (2) → Aguardando produção
+        3. Capa Paga (3) → Pagamento registrado
+        4. Pronta para entrega (4) → Produção concluída
+        5. Entregue (5) → Cliente recebeu
+        6. Cancelada (6)
+
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todas as capas
+        - Outros usuários: apenas capas que criaram
+
+        **Permissões:** Todos os usuários autenticados (exceto endpoints públicos).
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Atualizar status da capa'
+      description: |-
+        Atualiza o status de uma capa personalizada.
+        Quando o status é alterado para "Disponível na Loja" (3), é possível
+        enviar uma notificação via WhatsApp para o cliente.
+
+        **Quem pode usar:** Usuário com acesso à capa.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      capas_personalizada_id:
+        custom: []
+        name: capas_personalizada_id
+        description: 'The ID of the capas personalizada.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      capasPersonalizada:
+        custom: []
+        name: capasPersonalizada
+        description: 'ID da capa.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      capas_personalizada_id: architecto
+      capasPersonalizada: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      status:
+        custom: []
+        name: status
+        description: 'Novo status (1-7).'
+        required: true
+        example: 3
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      notify_whatsapp:
+        custom: []
+        name: notify_whatsapp
+        description: 'Enviar notificação WhatsApp ao cliente (apenas para status 3).'
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      status: 3
+      notify_whatsapp: true
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "message": "Status atualizado com sucesso.",
+            "data": {"id": 1, "status": 3}
+          }
+        headers: []
+        description: 'Status atualizado'
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "message": "Status atualizado com sucesso.",
+            "data": {"id": 1, "status": 3},
+            "whatsapp_notification": {"sent": true, "phone": "****9999"}
+          }
+        headers: []
+        description: 'Status atualizado com notificação'
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "message": "Status atualizado com sucesso.",
+            "data": {"id": 1, "status": 3},
+            "whatsapp_notification": {"sent": false, "phone": null, "error": "Cliente não possui telefone cadastrado."}
+          }
+        headers: []
+        description: 'Notificação falhou'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/capas-personalizadas/bulk-status
+    metadata:
+      custom: []
+      groupName: 'Capas Personalizadas'
+      groupDescription: |-
+
+        Gestão de capas de celular personalizadas.
+        Capas são produtos criados sob demanda com fotos enviadas pelos clientes.
+
+        **Fluxo de status:**
+        1. Aguardando Foto (1) → Cliente envia foto
+        2. Encomenda Solicitada (2) → Aguardando produção
+        3. Capa Paga (3) → Pagamento registrado
+        4. Pronta para entrega (4) → Produção concluída
+        5. Entregue (5) → Cliente recebeu
+        6. Cancelada (6)
+
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todas as capas
+        - Outros usuários: apenas capas que criaram
+
+        **Permissões:** Todos os usuários autenticados (exceto endpoints públicos).
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Atualização em lote de status'
+      description: |-
+        Atualiza o status de múltiplas capas de uma só vez.
+
+        **Quem pode usar:** Apenas administradores.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      ids:
+        custom: []
+        name: ids
+        description: 'Lista de IDs das capas.'
+        required: true
+        example:
+          - 1
+          - 2
+          - 3
+        type: 'string[]'
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      status:
+        custom: []
+        name: status
+        description: 'Novo status.'
+        required: true
+        example: 4
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      'ids.*':
+        custom: []
+        name: 'ids.*'
+        description: 'ID da capa.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      ids:
+        - 1
+        - 2
+        - 3
+      status: 4
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "message": "Atualização em lote concluída. 3 atualizadas, 0 ignoradas.",
+            "data": {"updated": 3, "skipped": 0}
+          }
+        headers: []
+        description: 'Atualização concluída'
       -
         custom: []
         status: 403
-        content: |-
-          {
-            "message": "Apenas administradores podem acessar este recurso."
-          }
+        content: '{"message": "Apenas administradores podem alterar status em lote."}'
         headers: []
         description: 'Sem permissão'
     responseFields: []
@@ -167,50 +1152,33 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/v1/admin/users
+    uri: api/v1/capas-personalizadas/send-to-production
     metadata:
       custom: []
-      groupName: 'Administração - Usuários'
+      groupName: 'Capas Personalizadas'
       groupDescription: |-
 
-        Gerenciamento centralizado de usuários do sistema MaisCapinhas ERP.
+        Gestão de capas de celular personalizadas.
+        Capas são produtos criados sob demanda com fotos enviadas pelos clientes.
 
-        Este módulo permite criar, editar, listar e desativar usuários,
-        além de vincular usuários a lojas com roles específicas.
+        **Fluxo de status:**
+        1. Aguardando Foto (1) → Cliente envia foto
+        2. Encomenda Solicitada (2) → Aguardando produção
+        3. Capa Paga (3) → Pagamento registrado
+        4. Pronta para entrega (4) → Produção concluída
+        5. Entregue (5) → Cliente recebeu
+        6. Cancelada (6)
 
-        **Modelo de Permissões:**
-        - Cada usuário pode estar vinculado a múltiplas lojas
-        - Em cada loja, o usuário tem uma role: `admin`, `gerente`, `conferente` ou `vendedor`
-        - Usuários desativados perdem acesso a todos os endpoints protegidos
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todas as capas
+        - Outros usuários: apenas capas que criaram
 
-        **Regras de Negócio:**
-        - Email deve ser único no sistema
-        - Não é possível desativar o próprio usuário
-        - Ao desativar, todos os tokens de acesso são revogados
-
-        **Auditoria:** Todas as operações são registradas via Spatie ActivityLog.
+        **Permissões:** Todos os usuários autenticados (exceto endpoints públicos).
       subgroup: ''
       subgroupDescription: ''
-      title: 'Criar novo usuário'
+      title: 'Enviar para produção'
       description: |-
-        Cadastra um novo usuário no sistema, opcionalmente já vinculando-o
-        a uma ou mais lojas com roles específicas.
-
-        Este endpoint é utilizado para:
-        - Onboarding de novos funcionários
-        - Criar usuários administrativos
-        - Configurar equipe de vendas
-
-        **Fluxo recomendado:**
-        1. Criar usuário com dados básicos + senha temporária
-        2. Vincular às lojas onde irá trabalhar
-        3. Compartilhar credenciais com o novo usuário
-
-        **Regras de Negócio:**
-        - Email deve ser único (validação 422 se duplicado)
-        - Senha deve ter mínimo 8 caracteres
-        - Vínculos são opcionais na criação (podem ser adicionados depois)
-        - Se informar vínculos, `store_id` deve existir e `role` deve ser válida
+        Marca capas selecionadas como enviadas para produção na fábrica.
 
         **Quem pode usar:** Apenas administradores.
       authenticated: true
@@ -224,417 +1192,48 @@ endpoints:
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      name:
+      ids:
         custom: []
-        name: name
-        description: 'Nome completo do usuário.'
+        name: ids
+        description: 'Lista de IDs das capas.'
         required: true
-        example: 'João Silva Santos'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      email:
-        custom: []
-        name: email
-        description: 'Email único para login.'
-        required: true
-        example: joao.silva@maiscapinhas.com.br
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      password:
-        custom: []
-        name: password
-        description: 'Senha de acesso (mínimo 8 caracteres).'
-        required: true
-        example: senha123456
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      active:
-        custom: []
-        name: active
-        description: 'Define se usuário está ativo (default: true).'
-        required: false
-        example: true
-        type: boolean
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      is_super_admin:
-        custom: []
-        name: is_super_admin
-        description: ''
-        required: false
-        example: false
-        type: boolean
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      zip_code:
-        custom: []
-        name: zip_code
-        description: 'Must not be greater than 8 characters.'
-        required: false
-        example: vdljnikh
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      street:
-        custom: []
-        name: street
-        description: 'Must not be greater than 255 characters.'
-        required: false
-        example: w
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      number:
-        custom: []
-        name: number
-        description: 'Must not be greater than 20 characters.'
-        required: false
-        example: aykcmyuwpwlvqwrs
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      complement:
-        custom: []
-        name: complement
-        description: 'Must not be greater than 255 characters.'
-        required: false
-        example: i
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      neighborhood:
-        custom: []
-        name: neighborhood
-        description: 'Must not be greater than 100 characters.'
-        required: false
-        example: t
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      city:
-        custom: []
-        name: city
-        description: 'Must not be greater than 255 characters.'
-        required: false
-        example: c
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      state:
-        custom: []
-        name: state
-        description: 'Must be 2 characters.'
-        required: false
-        example: ps
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      birth_date:
-        custom: []
-        name: birth_date
-        description: 'Must be a valid date. Must be a date before <code>today</code>.'
-        required: false
-        example: '2022-02-06'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      hire_date:
-        custom: []
-        name: hire_date
-        description: 'Must be a valid date. Must be a date before or equal to <code>today</code>.'
-        required: false
-        example: '2022-02-06'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      whatsapp:
-        custom: []
-        name: whatsapp
-        description: 'Must not be greater than 20 characters.'
-        required: false
-        example: ngzmiyvdljnikhwa
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      instagram:
-        custom: []
-        name: instagram
-        description: 'Must not be greater than 50 characters.'
-        required: false
-        example: 'y'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      cpf:
-        custom: []
-        name: cpf
-        description: 'Must not be greater than 14 characters.'
-        required: false
-        example: kcmyuwpwlvqwrs
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      pix_key:
-        custom: []
-        name: pix_key
-        description: 'Must not be greater than 255 characters.'
-        required: false
-        example: i
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      stores:
-        custom: []
-        name: stores
-        description: 'Lista de lojas para vincular na criação.'
-        required: false
         example:
-          - architecto
+          - 1
+          - 2
+          - 3
         type: 'string[]'
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: false
         deprecated: false
-      roles:
+      sended_to_production_at:
         custom: []
-        name: roles
-        description: ''
+        name: sended_to_production_at
+        description: 'Data de envio (ISO 8601).'
         required: false
-        example:
-          - fabrica
-        type: 'string[]'
-        enumValues:
-          - fabrica
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      'stores[].store_id':
-        custom: []
-        name: 'stores[].store_id'
-        description: 'This field is required when <code>stores</code> is present. The <code>id</code> of an existing record in the stores table.'
-        required: false
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      'stores[].role':
-        custom: []
-        name: 'stores[].role'
-        description: 'This field is required when <code>stores</code> is present.'
-        required: false
-        example: architecto
+        example: '2026-01-13'
         type: string
-        enumValues:
-          - admin
-          - gerente
-          - conferente
-          - vendedor
-        exampleWasSpecified: false
+        enumValues: []
+        exampleWasSpecified: true
         nullable: false
         deprecated: false
-      'stores.*.store_id':
+      'ids.*':
         custom: []
-        name: 'stores.*.store_id'
-        description: 'ID da loja existente.'
+        name: 'ids.*'
+        description: 'ID da capa.'
         required: true
         example: 1
         type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      'stores.*.role':
-        custom: []
-        name: 'stores.*.role'
-        description: 'Role: admin, gerente, conferente ou vendedor.'
-        required: true
-        example: vendedor
-        type: string
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      name: 'João Silva Santos'
-      email: joao.silva@maiscapinhas.com.br
-      password: senha123456
-      active: true
-      is_super_admin: false
-      zip_code: vdljnikh
-      street: w
-      number: aykcmyuwpwlvqwrs
-      complement: i
-      neighborhood: t
-      city: c
-      state: ps
-      birth_date: '2022-02-06'
-      hire_date: '2022-02-06'
-      whatsapp: ngzmiyvdljnikhwa
-      instagram: 'y'
-      cpf: kcmyuwpwlvqwrs
-      pix_key: i
-      stores:
-        - architecto
-      roles:
-        - fabrica
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 201
-        content: |-
-          {
-            "data": {
-              "id": 11,
-              "name": "João Silva Santos",
-              "email": "joao.silva@maiscapinhas.com.br",
-              "active": true,
-              "created_at": "2026-01-07T17:00:00Z",
-              "stores": [
-                { "store_id": 1, "store_name": "Mais Capinhas Tijucas", "role": "vendedor" }
-              ]
-            }
-          }
-        headers: []
-        description: 'Usuário criado com vínculos'
-      -
-        custom: []
-        status: 422
-        content: |-
-          {
-            "message": "The given data was invalid.",
-            "errors": { "email": ["Este email já está em uso."] }
-          }
-        headers: []
-        description: 'Email duplicado'
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: 'api/v1/admin/users/{id}'
-    metadata:
-      custom: []
-      groupName: 'Administração - Usuários'
-      groupDescription: |-
-
-        Gerenciamento centralizado de usuários do sistema MaisCapinhas ERP.
-
-        Este módulo permite criar, editar, listar e desativar usuários,
-        além de vincular usuários a lojas com roles específicas.
-
-        **Modelo de Permissões:**
-        - Cada usuário pode estar vinculado a múltiplas lojas
-        - Em cada loja, o usuário tem uma role: `admin`, `gerente`, `conferente` ou `vendedor`
-        - Usuários desativados perdem acesso a todos os endpoints protegidos
-
-        **Regras de Negócio:**
-        - Email deve ser único no sistema
-        - Não é possível desativar o próprio usuário
-        - Ao desativar, todos os tokens de acesso são revogados
-
-        **Auditoria:** Todas as operações são registradas via Spatie ActivityLog.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Ver detalhes do usuário'
-      description: |-
-        Retorna informações completas de um usuário específico,
-        incluindo todas as lojas vinculadas e suas respectivas roles.
-
-        Útil para:
-        - Verificar acessos do usuário
-        - Editar informações
-        - Auditar permissões
-
-        **Quem pode usar:** Apenas administradores.
-
-        **Dados retornados:**
-        - `id`, `name`, `email`, `active`, `created_at`, `updated_at`
-        - `stores[]` - array de lojas com role em cada uma
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        custom: []
-        name: id
-        description: 'The ID of the user.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      user:
-        custom: []
-        name: user
-        description: 'ID do usuário.'
-        required: true
-        example: 6
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      id: 1
-      user: 6
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
+      ids:
+        - 1
+        - 2
+        - 3
+      sended_to_production_at: '2026-01-13'
     fileParameters: []
     responses:
       -
@@ -642,29 +1241,17 @@ endpoints:
         status: 200
         content: |-
           {
-            "data": {
-              "id": 6,
-              "name": "João Vendedor",
-              "email": "joao.vendedor@maiscapinhas.com.br",
-              "active": true,
-              "created_at": "2026-01-01T00:00:00Z",
-              "updated_at": "2026-01-07T12:00:00Z",
-              "stores": [
-                { "store_id": 1, "store_name": "Mais Capinhas Tijucas", "role": "vendedor" }
-              ]
-            }
+            "message": "Envio para produção concluído. 3 capas atualizadas.",
+            "data": {"updated": 3}
           }
         headers: []
-        description: 'Detalhes do usuário'
+        description: 'Envio concluído'
       -
         custom: []
-        status: 404
-        content: |-
-          {
-            "message": "No query results for model [App\\Models\\User] 999"
-          }
+        status: 403
+        content: '{"message": "Apenas administradores podem enviar para produção."}'
         headers: []
-        description: 'Usuário não encontrado'
+        description: 'Sem permissão'
     responseFields: []
     auth:
       - headers
@@ -676,47 +1263,36 @@ endpoints:
   -
     custom: []
     httpMethods:
-      - PUT
       - PATCH
-    uri: 'api/v1/admin/users/{id}'
+    uri: 'api/v1/capas-personalizadas/{capas_personalizada_id}/payment'
     metadata:
       custom: []
-      groupName: 'Administração - Usuários'
+      groupName: 'Capas Personalizadas'
       groupDescription: |-
 
-        Gerenciamento centralizado de usuários do sistema MaisCapinhas ERP.
+        Gestão de capas de celular personalizadas.
+        Capas são produtos criados sob demanda com fotos enviadas pelos clientes.
 
-        Este módulo permite criar, editar, listar e desativar usuários,
-        além de vincular usuários a lojas com roles específicas.
+        **Fluxo de status:**
+        1. Aguardando Foto (1) → Cliente envia foto
+        2. Encomenda Solicitada (2) → Aguardando produção
+        3. Capa Paga (3) → Pagamento registrado
+        4. Pronta para entrega (4) → Produção concluída
+        5. Entregue (5) → Cliente recebeu
+        6. Cancelada (6)
 
-        **Modelo de Permissões:**
-        - Cada usuário pode estar vinculado a múltiplas lojas
-        - Em cada loja, o usuário tem uma role: `admin`, `gerente`, `conferente` ou `vendedor`
-        - Usuários desativados perdem acesso a todos os endpoints protegidos
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todas as capas
+        - Outros usuários: apenas capas que criaram
 
-        **Regras de Negócio:**
-        - Email deve ser único no sistema
-        - Não é possível desativar o próprio usuário
-        - Ao desativar, todos os tokens de acesso são revogados
-
-        **Auditoria:** Todas as operações são registradas via Spatie ActivityLog.
+        **Permissões:** Todos os usuários autenticados (exceto endpoints públicos).
       subgroup: ''
       subgroupDescription: ''
-      title: 'Atualizar usuário'
+      title: 'Registrar pagamento'
       description: |-
-        Atualiza dados cadastrais de um usuário existente.
-        Apenas os campos informados serão alterados.
+        Registra o pagamento de uma capa personalizada.
 
-        **Casos de uso:**
-        - Corrigir nome ou email
-        - Alterar senha
-        - Ativar/desativar usuário
-
-        **Regras de Negócio:**
-        - Email deve continuar único (validação considera o próprio usuário)
-        - Para gerenciar vínculos com lojas, use os endpoints de vínculos
-
-        **Quem pode usar:** Apenas administradores.
+        **Quem pode usar:** Usuário com acesso à capa.
       authenticated: true
       deprecated: false
     headers:
@@ -724,266 +1300,71 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      id:
+      capas_personalizada_id:
         custom: []
-        name: id
-        description: 'The ID of the user.'
+        name: capas_personalizada_id
+        description: 'The ID of the capas personalizada.'
         required: true
-        example: 1
-        type: integer
+        example: architecto
+        type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      user:
+      capasPersonalizada:
         custom: []
-        name: user
-        description: 'ID do usuário a atualizar.'
+        name: capasPersonalizada
+        description: 'ID da capa.'
         required: true
-        example: 6
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 1
-      user: 6
+      capas_personalizada_id: architecto
+      capasPersonalizada: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      name:
+      payed:
         custom: []
-        name: name
-        description: 'Novo nome completo.'
-        required: false
-        example: 'João da Silva Atualizado'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      email:
-        custom: []
-        name: email
-        description: 'Novo email (deve ser único).'
-        required: false
-        example: joao.novo@maiscapinhas.com.br
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      password:
-        custom: []
-        name: password
-        description: 'Nova senha (mínimo 8 caracteres).'
-        required: false
-        example: novasenha123
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      active:
-        custom: []
-        name: active
-        description: 'Ativar (true) ou desativar (false).'
-        required: false
+        name: payed
+        description: 'Status de pagamento.'
+        required: true
         example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-      is_super_admin:
+      payday:
         custom: []
-        name: is_super_admin
-        description: ''
+        name: payday
+        description: 'Data do pagamento.'
         required: false
-        example: true
-        type: boolean
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      zip_code:
-        custom: []
-        name: zip_code
-        description: 'Must not be greater than 8 characters.'
-        required: false
-        example: vdljnikh
+        example: '2026-01-13'
         type: string
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: true
         deprecated: false
-      street:
+      received_by_id:
         custom: []
-        name: street
-        description: 'Must not be greater than 255 characters.'
+        name: received_by_id
+        description: 'ID do usuário que recebeu o pagamento.'
         required: false
-        example: w
-        type: string
+        example: 1
+        type: integer
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: true
-        deprecated: false
-      number:
-        custom: []
-        name: number
-        description: 'Must not be greater than 20 characters.'
-        required: false
-        example: aykcmyuwpwlvqwrs
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      complement:
-        custom: []
-        name: complement
-        description: 'Must not be greater than 255 characters.'
-        required: false
-        example: i
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      neighborhood:
-        custom: []
-        name: neighborhood
-        description: 'Must not be greater than 100 characters.'
-        required: false
-        example: t
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      city:
-        custom: []
-        name: city
-        description: 'Must not be greater than 255 characters.'
-        required: false
-        example: c
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      state:
-        custom: []
-        name: state
-        description: 'Must be 2 characters.'
-        required: false
-        example: ps
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      birth_date:
-        custom: []
-        name: birth_date
-        description: 'Must be a valid date. Must be a date before <code>today</code>.'
-        required: false
-        example: '2022-02-06'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      hire_date:
-        custom: []
-        name: hire_date
-        description: 'Must be a valid date. Must be a date before or equal to <code>today</code>.'
-        required: false
-        example: '2022-02-06'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      whatsapp:
-        custom: []
-        name: whatsapp
-        description: 'Must not be greater than 20 characters.'
-        required: false
-        example: ngzmiyvdljnikhwa
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      instagram:
-        custom: []
-        name: instagram
-        description: 'Must not be greater than 50 characters.'
-        required: false
-        example: 'y'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      cpf:
-        custom: []
-        name: cpf
-        description: 'Must not be greater than 14 characters.'
-        required: false
-        example: kcmyuwpwlvqwrs
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      pix_key:
-        custom: []
-        name: pix_key
-        description: 'Must not be greater than 255 characters.'
-        required: false
-        example: i
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      roles:
-        custom: []
-        name: roles
-        description: ''
-        required: false
-        example:
-          - fabrica
-        type: 'string[]'
-        enumValues:
-          - fabrica
-        exampleWasSpecified: false
-        nullable: false
         deprecated: false
     cleanBodyParameters:
-      name: 'João da Silva Atualizado'
-      email: joao.novo@maiscapinhas.com.br
-      password: novasenha123
-      active: true
-      is_super_admin: true
-      zip_code: vdljnikh
-      street: w
-      number: aykcmyuwpwlvqwrs
-      complement: i
-      neighborhood: t
-      city: c
-      state: ps
-      birth_date: '2022-02-06'
-      hire_date: '2022-02-06'
-      whatsapp: ngzmiyvdljnikhwa
-      instagram: 'y'
-      cpf: kcmyuwpwlvqwrs
-      pix_key: i
-      roles:
-        - fabrica
+      payed: true
+      payday: '2026-01-13'
+      received_by_id: 1
     fileParameters: []
     responses:
       -
@@ -991,15 +1372,11 @@ endpoints:
         status: 200
         content: |-
           {
-            "data": {
-              "id": 6,
-              "name": "João da Silva Atualizado",
-              "email": "joao.vendedor@maiscapinhas.com.br",
-              "active": true
-            }
+            "message": "Pagamento registrado com sucesso.",
+            "data": {"id": 1, "payed": true, "payday": "2026-01-13"}
           }
         headers: []
-        description: 'Usuário atualizado'
+        description: 'Pagamento registrado'
     responseFields: []
     auth:
       - headers
@@ -1012,46 +1389,35 @@ endpoints:
     custom: []
     httpMethods:
       - DELETE
-    uri: 'api/v1/admin/users/{id}'
+    uri: 'api/v1/capas-personalizadas/{capas_personalizada_id}/photo'
     metadata:
       custom: []
-      groupName: 'Administração - Usuários'
+      groupName: 'Capas Personalizadas'
       groupDescription: |-
 
-        Gerenciamento centralizado de usuários do sistema MaisCapinhas ERP.
+        Gestão de capas de celular personalizadas.
+        Capas são produtos criados sob demanda com fotos enviadas pelos clientes.
 
-        Este módulo permite criar, editar, listar e desativar usuários,
-        além de vincular usuários a lojas com roles específicas.
+        **Fluxo de status:**
+        1. Aguardando Foto (1) → Cliente envia foto
+        2. Encomenda Solicitada (2) → Aguardando produção
+        3. Capa Paga (3) → Pagamento registrado
+        4. Pronta para entrega (4) → Produção concluída
+        5. Entregue (5) → Cliente recebeu
+        6. Cancelada (6)
 
-        **Modelo de Permissões:**
-        - Cada usuário pode estar vinculado a múltiplas lojas
-        - Em cada loja, o usuário tem uma role: `admin`, `gerente`, `conferente` ou `vendedor`
-        - Usuários desativados perdem acesso a todos os endpoints protegidos
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todas as capas
+        - Outros usuários: apenas capas que criaram
 
-        **Regras de Negócio:**
-        - Email deve ser único no sistema
-        - Não é possível desativar o próprio usuário
-        - Ao desativar, todos os tokens de acesso são revogados
-
-        **Auditoria:** Todas as operações são registradas via Spatie ActivityLog.
+        **Permissões:** Todos os usuários autenticados (exceto endpoints públicos).
       subgroup: ''
       subgroupDescription: ''
-      title: 'Desativar usuário'
+      title: 'Remover foto'
       description: |-
-        Define o usuário como inativo (`active = false`) e revoga
-        todos os tokens de acesso, forçando logout imediato.
+        Remove a foto de uma capa personalizada.
 
-        **Importante:**
-        - Não exclui o usuário do banco (soft disable)
-        - Dados históricos são mantidos para auditoria
-        - Usuário pode ser reativado posteriormente via PUT
-
-        **Regras de Negócio:**
-        - Não é possível desativar seu próprio usuário (proteção)
-        - Usuários desativados não conseguem fazer login
-        - Tokens existentes são invalidados imediatamente
-
-        **Quem pode usar:** Apenas administradores.
+        **Quem pode usar:** Usuário com acesso à capa.
       authenticated: true
       deprecated: false
     headers:
@@ -1059,31 +1425,31 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      id:
+      capas_personalizada_id:
         custom: []
-        name: id
-        description: 'The ID of the user.'
+        name: capas_personalizada_id
+        description: 'The ID of the capas personalizada.'
         required: true
-        example: 1
-        type: integer
+        example: architecto
+        type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      user:
+      capasPersonalizada:
         custom: []
-        name: user
-        description: 'ID do usuário a desativar.'
+        name: capasPersonalizada
+        description: 'ID da capa.'
         required: true
-        example: 6
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 1
-      user: 6
+      capas_personalizada_id: architecto
+      capasPersonalizada: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -1093,127 +1459,15 @@ endpoints:
       -
         custom: []
         status: 200
-        content: |-
-          {
-            "data": { "message": "Usuário desativado com sucesso." }
-          }
+        content: '{"message": "Foto removida com sucesso."}'
         headers: []
-        description: 'Usuário desativado'
+        description: 'Foto removida'
       -
         custom: []
-        status: 403
-        content: |-
-          {
-            "message": "Você não pode desativar seu próprio usuário."
-          }
+        status: 404
+        content: '{"message": "Capa não possui foto."}'
         headers: []
-        description: 'Tentativa de auto-desativação'
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - PUT
-    uri: 'api/v1/admin/users/{user_id}/stores'
-    metadata:
-      custom: []
-      groupName: 'Administração - Usuários'
-      groupDescription: |-
-
-        Gerenciamento centralizado de usuários do sistema MaisCapinhas ERP.
-
-        Este módulo permite criar, editar, listar e desativar usuários,
-        além de vincular usuários a lojas com roles específicas.
-
-        **Modelo de Permissões:**
-        - Cada usuário pode estar vinculado a múltiplas lojas
-        - Em cada loja, o usuário tem uma role: `admin`, `gerente`, `conferente` ou `vendedor`
-        - Usuários desativados perdem acesso a todos os endpoints protegidos
-
-        **Regras de Negócio:**
-        - Email deve ser único no sistema
-        - Não é possível desativar o próprio usuário
-        - Ao desativar, todos os tokens de acesso são revogados
-
-        **Auditoria:** Todas as operações são registradas via Spatie ActivityLog.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Sync user stores (replace all bindings).'
-      description: 'PUT /admin/users/{user}/stores'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      user_id:
-        custom: []
-        name: user_id
-        description: 'The ID of the user.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      user_id: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      stores:
-        custom: []
-        name: stores
-        description: ''
-        required: true
-        example:
-          - []
-        type: 'object[]'
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      'stores[].store_id':
-        custom: []
-        name: 'stores[].store_id'
-        description: 'The <code>id</code> of an existing record in the stores table.'
-        required: true
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      'stores[].role':
-        custom: []
-        name: 'stores[].role'
-        description: ''
-        required: true
-        example: admin
-        type: string
-        enumValues:
-          - admin
-          - gerente
-          - conferente
-          - vendedor
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      stores:
-        -
-          store_id: 16
-          role: admin
-    fileParameters: []
-    responses: []
+        description: 'Sem foto'
     responseFields: []
     auth:
       - headers
@@ -1226,32 +1480,37 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: 'api/v1/admin/users/{user_id}/stores/bulk'
+    uri: 'api/v1/capas-personalizadas/{capas_personalizada_id}/gerar-token-upload'
     metadata:
       custom: []
-      groupName: 'Administração - Usuários'
+      groupName: 'Capas Personalizadas'
       groupDescription: |-
 
-        Gerenciamento centralizado de usuários do sistema MaisCapinhas ERP.
+        Gestão de capas de celular personalizadas.
+        Capas são produtos criados sob demanda com fotos enviadas pelos clientes.
 
-        Este módulo permite criar, editar, listar e desativar usuários,
-        além de vincular usuários a lojas com roles específicas.
+        **Fluxo de status:**
+        1. Aguardando Foto (1) → Cliente envia foto
+        2. Encomenda Solicitada (2) → Aguardando produção
+        3. Capa Paga (3) → Pagamento registrado
+        4. Pronta para entrega (4) → Produção concluída
+        5. Entregue (5) → Cliente recebeu
+        6. Cancelada (6)
 
-        **Modelo de Permissões:**
-        - Cada usuário pode estar vinculado a múltiplas lojas
-        - Em cada loja, o usuário tem uma role: `admin`, `gerente`, `conferente` ou `vendedor`
-        - Usuários desativados perdem acesso a todos os endpoints protegidos
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todas as capas
+        - Outros usuários: apenas capas que criaram
 
-        **Regras de Negócio:**
-        - Email deve ser único no sistema
-        - Não é possível desativar o próprio usuário
-        - Ao desativar, todos os tokens de acesso são revogados
-
-        **Auditoria:** Todas as operações são registradas via Spatie ActivityLog.
+        **Permissões:** Todos os usuários autenticados (exceto endpoints públicos).
       subgroup: ''
       subgroupDescription: ''
-      title: 'Bulk add user to multiple stores.'
-      description: 'POST /admin/users/{user}/stores/bulk'
+      title: 'Gerar token de upload'
+      description: |-
+        Gera um token temporário para upload público de foto.
+        Use este token no endpoint de upload público para permitir que clientes
+        enviem fotos sem autenticação.
+
+        **Quem pode usar:** Usuário com acesso à capa.
       authenticated: true
       deprecated: false
     headers:
@@ -1259,239 +1518,51 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      user_id:
+      capas_personalizada_id:
         custom: []
-        name: user_id
-        description: 'The ID of the user.'
+        name: capas_personalizada_id
+        description: 'The ID of the capas personalizada.'
         required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      user_id: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      stores:
-        custom: []
-        name: stores
-        description: 'Must have at least 1 items.'
-        required: true
-        example:
-          - []
-        type: 'object[]'
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      'stores[].store_id':
-        custom: []
-        name: 'stores[].store_id'
-        description: 'The <code>id</code> of an existing record in the stores table.'
-        required: true
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      'stores[].role':
-        custom: []
-        name: 'stores[].role'
-        description: ''
-        required: true
-        example: vendedor
+        example: architecto
         type: string
-        enumValues:
-          - admin
-          - gerente
-          - conferente
-          - vendedor
+        enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-    cleanBodyParameters:
-      stores:
-        -
-          store_id: 16
-          role: vendedor
-    fileParameters: []
-    responses: []
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - PATCH
-    uri: 'api/v1/admin/users/{user_id}/stores/bulk'
-    metadata:
-      custom: []
-      groupName: 'Administração - Usuários'
-      groupDescription: |-
-
-        Gerenciamento centralizado de usuários do sistema MaisCapinhas ERP.
-
-        Este módulo permite criar, editar, listar e desativar usuários,
-        além de vincular usuários a lojas com roles específicas.
-
-        **Modelo de Permissões:**
-        - Cada usuário pode estar vinculado a múltiplas lojas
-        - Em cada loja, o usuário tem uma role: `admin`, `gerente`, `conferente` ou `vendedor`
-        - Usuários desativados perdem acesso a todos os endpoints protegidos
-
-        **Regras de Negócio:**
-        - Email deve ser único no sistema
-        - Não é possível desativar o próprio usuário
-        - Ao desativar, todos os tokens de acesso são revogados
-
-        **Auditoria:** Todas as operações são registradas via Spatie ActivityLog.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Bulk update role in multiple stores.'
-      description: 'PATCH /admin/users/{user}/stores/bulk'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      user_id:
+      capasPersonalizada:
         custom: []
-        name: user_id
-        description: 'The ID of the user.'
+        name: capasPersonalizada
+        description: 'ID da capa.'
         required: true
         example: 1
         type: integer
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      user_id: 1
+      capas_personalizada_id: architecto
+      capasPersonalizada: 1
     queryParameters: []
     cleanQueryParameters: []
-    bodyParameters:
-      role:
-        custom: []
-        name: role
-        description: ''
-        required: true
-        example: conferente
-        type: string
-        enumValues:
-          - admin
-          - gerente
-          - conferente
-          - vendedor
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      store_ids:
-        custom: []
-        name: store_ids
-        description: 'The <code>id</code> of an existing record in the stores table.'
-        required: false
-        example:
-          - 16
-        type: 'integer[]'
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      role: conferente
-      store_ids:
-        - 16
+    bodyParameters: []
+    cleanBodyParameters: []
     fileParameters: []
-    responses: []
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - DELETE
-    uri: 'api/v1/admin/users/{user_id}/stores/bulk'
-    metadata:
-      custom: []
-      groupName: 'Administração - Usuários'
-      groupDescription: |-
-
-        Gerenciamento centralizado de usuários do sistema MaisCapinhas ERP.
-
-        Este módulo permite criar, editar, listar e desativar usuários,
-        além de vincular usuários a lojas com roles específicas.
-
-        **Modelo de Permissões:**
-        - Cada usuário pode estar vinculado a múltiplas lojas
-        - Em cada loja, o usuário tem uma role: `admin`, `gerente`, `conferente` ou `vendedor`
-        - Usuários desativados perdem acesso a todos os endpoints protegidos
-
-        **Regras de Negócio:**
-        - Email deve ser único no sistema
-        - Não é possível desativar o próprio usuário
-        - Ao desativar, todos os tokens de acesso são revogados
-
-        **Auditoria:** Todas as operações são registradas via Spatie ActivityLog.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Bulk remove user from multiple stores.'
-      description: 'DELETE /admin/users/{user}/stores/bulk'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      user_id:
+    responses:
+      -
         custom: []
-        name: user_id
-        description: 'The ID of the user.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      user_id: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      store_ids:
-        custom: []
-        name: store_ids
-        description: 'The <code>id</code> of an existing record in the stores table.'
-        required: false
-        example:
-          - 16
-        type: 'integer[]'
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      store_ids:
-        - 16
-    fileParameters: []
-    responses: []
+        status: 200
+        content: |-
+          {
+            "message": "Token gerado com sucesso.",
+            "data": {
+              "token": "abc123xyz...",
+              "expires_at": "2026-01-13T16:00:00+00:00",
+              "upload_url": "/api/v1/capas-personalizadas/1/upload-publico"
+            }
+          }
+        headers: []
+        description: 'Token gerado'
     responseFields: []
     auth:
       - headers
