@@ -476,6 +476,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/{module}/deactivate', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'deactivate'])->name('deactivate');
             Route::get('/{module}/transitions', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'transitions'])->name('transitions');
             Route::put('/{module}/transitions', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'updateTransitions'])->name('transitions.update');
+            Route::get('/{module}/stores', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'stores'])->name('stores.index');
             Route::post('/{module}/stores/{store}/activate', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'activateForStore'])->name('stores.activate');
             Route::post('/{module}/stores/{store}/deactivate', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'deactivateForStore'])->name('stores.deactivate');
 

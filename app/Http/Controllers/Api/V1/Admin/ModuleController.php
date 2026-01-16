@@ -258,6 +258,48 @@ class ModuleController extends Controller
     }
 
     /**
+     * List all stores with module activation status.
+     * Shows which stores have this module active/inactive.
+     */
+    public function stores(string $moduleId): JsonResponse
+    {
+        $registry = ModuleRegistry::getInstance();
+        $registry->boot();
+
+        $module = $registry->get($moduleId);
+        if (!$module) {
+            return response()->json(['message' => 'Módulo não encontrado.'], 404);
+        }
+
+        $dbModule = Module::with('stores')->find($moduleId);
+
+        // Get all stores
+        $allStores = \App\Models\Store::where('active', true)->get();
+
+        // Map stores with module status
+        $stores = $allStores->map(function ($store) use ($dbModule) {
+            $pivotData = $dbModule?->stores->firstWhere('id', $store->id)?->pivot;
+
+            return [
+                'store_id' => $store->id,
+                'store_name' => $store->name,
+                'city' => $store->city,
+                'is_active' => $pivotData?->is_active ?? false,
+                'activated_at' => $pivotData?->activated_at,
+                'config' => $pivotData?->config ?? [],
+            ];
+        });
+
+        return response()->json([
+            'module_id' => $moduleId,
+            'module_name' => $module->getName(),
+            'stores' => $stores,
+            'total' => $stores->count(),
+            'active_count' => $stores->where('is_active', true)->count(),
+        ]);
+    }
+
+    /**
      * Activate module for a specific store.
      */
     public function activateForStore(Request $request, string $moduleId, int $storeId): JsonResponse
