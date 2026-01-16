@@ -255,10 +255,11 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // ============================================
-    // Phone Catalog (Brands & Models)
+    // Phone Catalog Module (Brands & Models)
     // ============================================
-    Route::apiResource('phone-brands', PhoneBrandController::class);
-    Route::apiResource('phone-models', PhoneModelController::class);
+    Route::prefix('phone-catalog')->name('phone-catalog.')->group(function () {
+        require app_path('Modules/CatalogoAparelhos/routes.php');
+    });
 
     // ============================================
     // Payment Methods (Formas de Pagamento)

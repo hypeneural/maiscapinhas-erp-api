@@ -87,7 +87,6 @@ class PhoneBrandController extends Controller
      */
     public function store(StorePhoneBrandRequest $request): JsonResponse
     {
-        $this->authorizeAdmin($request);
 
         $brand = PhoneBrand::create($request->validated());
 
@@ -134,7 +133,6 @@ class PhoneBrandController extends Controller
      */
     public function update(UpdatePhoneBrandRequest $request, PhoneBrand $phoneBrand): JsonResponse
     {
-        $this->authorizeAdmin($request);
 
         $phoneBrand->update($request->validated());
 
@@ -159,9 +157,8 @@ class PhoneBrandController extends Controller
      * @response 200 scenario="Marca excluída" {"message": "Marca excluída com sucesso."}
      * @response 422 scenario="Tem modelos" {"message": "Não é possível excluir marca com modelos vinculados."}
      */
-    public function destroy(Request $request, PhoneBrand $phoneBrand): JsonResponse
+    public function destroy(PhoneBrand $phoneBrand): JsonResponse
     {
-        $this->authorizeAdmin($request);
 
         // Check if brand has models
         if ($phoneBrand->models()->exists()) {
@@ -177,13 +174,5 @@ class PhoneBrandController extends Controller
         ]);
     }
 
-    private function authorizeAdmin(Request $request): void
-    {
-        $user = $request->user();
-
-        if (!$user->isSuperAdmin() && !$user->isGlobalAdmin()) {
-            abort(403, 'Apenas administradores podem gerenciar marcas.');
-        }
-    }
 }
 

@@ -109,6 +109,7 @@ class ModuleRegistry
             \App\Modules\Fabrica\FabricaModule::class,
             \App\Modules\Conferencia\ConferenciaModule::class,
             \App\Modules\Comunicados\ComunicadosModule::class,
+            \App\Modules\CatalogoAparelhos\CatalogoAparelhosModule::class,
         ];
 
         foreach ($coreModules as $moduleClass) {

@@ -99,7 +99,6 @@ class PhoneModelController extends Controller
      */
     public function store(StorePhoneModelRequest $request): JsonResponse
     {
-        $this->authorizeAdmin($request);
 
         $model = PhoneModel::create($request->validated());
 
@@ -147,7 +146,6 @@ class PhoneModelController extends Controller
      */
     public function update(UpdatePhoneModelRequest $request, PhoneModel $phoneModel): JsonResponse
     {
-        $this->authorizeAdmin($request);
 
         $phoneModel->update($request->validated());
 
@@ -172,9 +170,8 @@ class PhoneModelController extends Controller
      * @response 200 scenario="Modelo excluído" {"message": "Modelo excluído com sucesso."}
      * @response 422 scenario="Tem dispositivos" {"message": "Não é possível excluir modelo com dispositivos vinculados."}
      */
-    public function destroy(Request $request, PhoneModel $phoneModel): JsonResponse
+    public function destroy(PhoneModel $phoneModel): JsonResponse
     {
-        $this->authorizeAdmin($request);
 
         // Check if model has devices
         if ($phoneModel->devices()->exists()) {
@@ -190,13 +187,5 @@ class PhoneModelController extends Controller
         ]);
     }
 
-    private function authorizeAdmin(Request $request): void
-    {
-        $user = $request->user();
-
-        if (!$user->isSuperAdmin() && !$user->isGlobalAdmin()) {
-            abort(403, 'Apenas administradores podem gerenciar modelos.');
-        }
-    }
 }
 
