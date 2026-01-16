@@ -348,10 +348,33 @@ class CapaPersonalizadaController extends Controller
     {
         $this->authorizeAccess($request, $capasPersonalizada);
 
+        $user = $request->user();
+        $oldStatus = $capasPersonalizada->status->value;
+        $newStatus = $request->validated()['status'];
+
+        // Validate transition is allowed for user's roles
+        $module = \App\Modules\ModuleRegistry::getInstance()->get('capas-personalizadas');
+        if ($module && !$user->isSuperAdmin()) {
+            $userRoles = $user->getRoleNames()->toArray();
+
+            if (!$module->canUserTransition($oldStatus, $newStatus, $userRoles)) {
+                $matrix = $module->getTransitionRoleMatrix();
+                $allowedRoles = $matrix[$oldStatus][$newStatus] ?? [];
+
+                return response()->json([
+                    'message' => 'Você não tem permissão para esta transição de status.',
+                    'current_status' => $oldStatus,
+                    'target_status' => $newStatus,
+                    'your_roles' => $userRoles,
+                    'allowed_roles' => $allowedRoles,
+                ], 403);
+            }
+        }
+
         $result = $this->capaService->updateStatus(
             $capasPersonalizada,
-            $request->validated()['status'],
-            $request->user(),
+            $newStatus,
+            $user,
             $request->boolean('notify_whatsapp', false)
         );
 

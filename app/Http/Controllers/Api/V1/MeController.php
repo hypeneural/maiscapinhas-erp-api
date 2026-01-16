@@ -284,4 +284,137 @@ class MeController extends Controller
             'stores' => $user->getStoresWithRoles(),
         ]);
     }
+
+    /**
+     * Obter telas acessíveis ao usuário
+     *
+     * Retorna todas as telas (screens) que o usuário pode acessar,
+     * consolidadas de todos os módulos ativos.
+     *
+     * **Quem pode usar:** Qualquer usuário autenticado.
+     *
+     * @response 200 scenario="Telas acessíveis" {
+     *   "data": {
+     *     "screens": [
+     *       {"module_id": "pedidos-simples", "name": "pedidos.list", "display_name": "Lista de Pedidos", "path": "/pedidos"},
+     *       {"module_id": "capas-personalizadas", "name": "capas.list", "display_name": "Lista de Capas", "path": "/capas"}
+     *     ],
+     *     "total": 8
+     *   }
+     * }
+     */
+    public function screens(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $userPermissions = $this->resolveUserPermissions($user)['permissions'];
+        $userRoles = $user->getRoleNames()->toArray();
+
+        // Boot module registry
+        $registry = \App\Modules\ModuleRegistry::getInstance();
+        $registry->boot();
+
+        $accessibleScreens = [];
+
+        foreach ($registry->all() as $module) {
+            $moduleScreens = $module->getScreens();
+
+            foreach ($moduleScreens as $screen) {
+                $screenName = $screen['name'] ?? '';
+
+                // Super admin has access to all screens
+                if ($user->isSuperAdmin()) {
+                    $accessibleScreens[] = array_merge($screen, [
+                        'module_id' => $module->getId(),
+                        'module_name' => $module->getName(),
+                    ]);
+                    continue;
+                }
+
+                // Check if user has permission for this screen
+                // Convention: screen name matches permission name, or check screen.* patterns
+                $hasAccess = in_array($screenName, $userPermissions)
+                    || in_array("screen.{$screenName}", $userPermissions)
+                    || $this->checkRoleBasedScreenAccess($screenName, $userRoles);
+
+                if ($hasAccess) {
+                    $accessibleScreens[] = array_merge($screen, [
+                        'module_id' => $module->getId(),
+                        'module_name' => $module->getName(),
+                    ]);
+                }
+            }
+        }
+
+        // Build navigation based on accessible screens
+        $navigation = $this->buildNavigation($accessibleScreens, $userRoles);
+
+        return $this->success([
+            'screens' => $accessibleScreens,
+            'navigation' => $navigation,
+            'total' => count($accessibleScreens),
+        ]);
+    }
+
+    /**
+     * Check role-based screen access
+     */
+    protected function checkRoleBasedScreenAccess(string $screenName, array $roles): bool
+    {
+        // Extract module prefix from screen name (e.g., "pedidos.list" -> "pedidos")
+        $prefix = explode('.', $screenName)[0] ?? '';
+
+        $roleScreenMap = [
+            'admin' => ['pedidos', 'capas', 'dashboard', 'reports', 'users', 'admin', 'modules'],
+            'gerente' => ['pedidos', 'capas', 'dashboard', 'reports'],
+            'vendedor' => ['pedidos', 'capas', 'dashboard'],
+            'conferente' => ['pedidos', 'capas', 'dashboard', 'conferencia'],
+            'fabrica' => ['producao', 'dashboard'],
+        ];
+
+        foreach ($roles as $role) {
+            $allowedPrefixes = $roleScreenMap[$role] ?? [];
+            if (in_array($prefix, $allowedPrefixes)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Build navigation items based on accessible screens
+     */
+    protected function buildNavigation(array $screens, array $roles): array
+    {
+        $navItems = [
+            ['label' => 'Dashboard', 'path' => '/dashboard', 'icon' => 'Home', 'order' => 1],
+        ];
+
+        // Map module prefixes to nav items
+        $moduleNavMap = [
+            'pedidos' => ['label' => 'Pedidos', 'path' => '/pedidos', 'icon' => 'FileText', 'order' => 2],
+            'capas' => ['label' => 'Capas', 'path' => '/capas', 'icon' => 'Image', 'order' => 3],
+            'phone_catalog' => ['label' => 'Aparelhos', 'path' => '/phone-catalog', 'icon' => 'Smartphone', 'order' => 4],
+            'whatsapp' => ['label' => 'WhatsApp', 'path' => '/admin/whatsapp', 'icon' => 'MessageCircle', 'order' => 5],
+            'producao' => ['label' => 'Produção', 'path' => '/producao', 'icon' => 'Factory', 'order' => 6],
+            'admin' => ['label' => 'Administração', 'path' => '/admin', 'icon' => 'Settings', 'order' => 99],
+        ];
+
+        $addedModules = [];
+
+        foreach ($screens as $screen) {
+            $prefix = explode('.', $screen['name'])[0] ?? '';
+
+            if (!isset($addedModules[$prefix]) && isset($moduleNavMap[$prefix])) {
+                $navItems[] = $moduleNavMap[$prefix];
+                $addedModules[$prefix] = true;
+            }
+        }
+
+        // Sort by order
+        usort($navItems, fn($a, $b) => ($a['order'] ?? 50) <=> ($b['order'] ?? 50));
+
+        // Remove order from output
+        return array_map(fn($item) => array_diff_key($item, ['order' => '']), $navItems);
+    }
 }

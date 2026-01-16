@@ -336,10 +336,33 @@ class PedidoController extends Controller
     {
         $this->authorizeAccess($request, $pedido);
 
+        $user = $request->user();
+        $oldStatus = $pedido->status->value;
+        $newStatus = $request->validated()['status'];
+
+        // Validate transition is allowed for user's roles
+        $module = \App\Modules\ModuleRegistry::getInstance()->get('pedidos-simples');
+        if ($module && !$user->isSuperAdmin()) {
+            $userRoles = $user->getRoleNames()->toArray();
+
+            if (!$module->canUserTransition($oldStatus, $newStatus, $userRoles)) {
+                $matrix = $module->getTransitionRoleMatrix();
+                $allowedRoles = $matrix[$oldStatus][$newStatus] ?? [];
+
+                return response()->json([
+                    'message' => 'Você não tem permissão para esta transição de status.',
+                    'current_status' => $oldStatus,
+                    'target_status' => $newStatus,
+                    'your_roles' => $userRoles,
+                    'allowed_roles' => $allowedRoles,
+                ], 403);
+            }
+        }
+
         $result = $this->pedidoService->updateStatus(
             $pedido,
-            $request->validated()['status'],
-            $request->user(),
+            $newStatus,
+            $user,
             $request->input('reason'),
             'api',
             $request->boolean('notify_whatsapp', false)

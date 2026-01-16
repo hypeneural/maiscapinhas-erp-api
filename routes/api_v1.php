@@ -92,6 +92,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Me (current user profile)
     Route::get('/me', MeController::class)->name('me');
     Route::put('/me', [MeController::class, 'update'])->name('me.update');
+    Route::get('/me/screens', [MeController::class, 'screens'])->name('me.screens');
 
     // ============================================
     // Announcements (internal communication)
@@ -147,26 +148,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{sale}', [SaleController::class, 'destroy'])->name('destroy')->middleware('permission:sales.delete');
     });
 
-    // Cash Management
+    // ============================================
+    // Conferência de Caixa Module
+    // ============================================
     Route::prefix('cash')->name('cash.')->group(function () {
-        // Shifts
-        Route::prefix('shifts')->name('shifts.')->group(function () {
-            Route::get('/', [CashShiftController::class, 'index'])->name('index')->middleware('permission:caixa.view');
-            Route::get('/pending', [CashShiftController::class, 'pending'])->name('pending')->middleware('permission:caixa.closing.approve');
-            Route::get('/divergent', [CashShiftController::class, 'divergent'])->name('divergent')->middleware('permission:caixa.closing.approve');
-            Route::post('/', [CashShiftController::class, 'store'])->name('store')->middleware('permission:caixa.shift.open');
-            Route::get('/{shift}', [CashShiftController::class, 'show'])->name('show')->middleware('permission:caixa.view');
-        });
-
-        // Closings (actions on shifts)
-        Route::prefix('closings')->name('closings.')->group(function () {
-            Route::get('/{shift}', [CashClosingController::class, 'show'])->name('show')->middleware('permission:caixa.view');
-            Route::post('/{shift}', [CashClosingController::class, 'store'])->name('store')->middleware('permission:caixa.closing.create');
-            Route::put('/{shift}', [CashClosingController::class, 'update'])->name('update')->middleware('permission:caixa.closing.create');
-            Route::post('/{shift}/submit', [CashClosingController::class, 'submit'])->name('submit')->middleware('permission:caixa.closing.create');
-            Route::post('/{shift}/approve', [CashClosingController::class, 'approve'])->name('approve')->middleware('permission:caixa.closing.approve');
-            Route::post('/{shift}/reject', [CashClosingController::class, 'reject'])->name('reject')->middleware('permission:caixa.closing.reject');
-        });
+        require app_path('Modules/ConferenciaCaixa/routes.php');
     });
 
     // ============================================

@@ -239,11 +239,11 @@ GET /api/v1/me/screens
 
 ## Resumo de Ações Pendentes
 
-| Item | Status | Ação |
+| Item | Status | Nota |
 |------|--------|------|
-| Validação de `transition_role_matrix` nos controllers | 🔴 Não implementado | Implementar se necessário |
+| Validação de `transition_role_matrix` nos controllers | 🟢 Implementado | Retorna 403 com detalhes se role não autorizado |
 | Sincronização de permissões ao ativar/desativar módulo | 🔴 Não implementado | Implementar se necessário |
-| Endpoint `/me/screens` consolidado | 🔴 Não existe | Criar se necessário |
+| Endpoint `/me/screens` consolidado | 🟢 Implementado | `GET /api/v1/me/screens` |
 | Screen permissions como middleware | 🟡 Apenas metadado | Manter como está (controle FE) |
 
 ---

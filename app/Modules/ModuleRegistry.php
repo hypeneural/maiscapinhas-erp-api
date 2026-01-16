@@ -107,10 +107,10 @@ class ModuleRegistry
             \App\Modules\PedidosSimples\PedidosSimplesModule::class,
             \App\Modules\CapasPersonalizadas\CapasPersonalizadasModule::class,
             \App\Modules\Fabrica\FabricaModule::class,
-            \App\Modules\Conferencia\ConferenciaModule::class,
             \App\Modules\Comunicados\ComunicadosModule::class,
             \App\Modules\CatalogoAparelhos\CatalogoAparelhosModule::class,
             \App\Modules\WhatsAppInstances\WhatsAppInstancesModule::class,
+            \App\Modules\ConferenciaCaixa\ConferenciaCaixaModule::class,
         ];
 
         foreach ($coreModules as $moduleClass) {
