@@ -195,4 +195,77 @@ class RoleController extends Controller
             'message' => 'Role excluído com sucesso.',
         ]);
     }
+
+    /**
+     * Clone a role.
+     *
+     * @param Request $request
+     * @param Role $role
+     * @return JsonResponse
+     */
+    public function clone(Request $request, Role $role): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:50', 'unique:roles,name', 'regex:/^[a-z-]+$/'],
+            'display_name' => ['required', 'string', 'max:100'],
+            'description' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $newRole = Role::create([
+            'name' => $validated['name'],
+            'display_name' => $validated['display_name'],
+            'description' => $validated['description'] ?? "Clonado de {$role->display_name}",
+            'level' => $role->level,
+            'guard_name' => 'web',
+            'is_system' => false,
+        ]);
+
+        // Copy all permissions
+        $newRole->permissions()->sync($role->permissions->pluck('id'));
+
+        return response()->json([
+            'message' => "Role clonada de '{$role->display_name}'.",
+            'data' => [
+                'id' => $newRole->id,
+                'name' => $newRole->name,
+                'display_name' => $newRole->display_name,
+                'permissions_count' => $newRole->permissions()->count(),
+                'cloned_from' => $role->name,
+            ],
+        ], 201);
+    }
+
+    /**
+     * Update permissions with add/remove support.
+     *
+     * @param Request $request
+     * @param Role $role
+     * @return JsonResponse
+     */
+    public function updatePermissions(Request $request, Role $role): JsonResponse
+    {
+        $validated = $request->validate([
+            'add' => ['sometimes', 'array'],
+            'add.*' => ['string', 'exists:permissions,name'],
+            'remove' => ['sometimes', 'array'],
+            'remove.*' => ['string', 'exists:permissions,name'],
+        ]);
+
+        if (!empty($validated['add'])) {
+            $role->givePermissionTo($validated['add']);
+        }
+        if (!empty($validated['remove'])) {
+            $role->revokePermissionTo($validated['remove']);
+        }
+
+        return response()->json([
+            'message' => 'Permissões atualizadas.',
+            'data' => [
+                'role_id' => $role->id,
+                'permissions' => $role->permissions()->pluck('name'),
+                'permissions_count' => $role->permissions()->count(),
+            ],
+        ]);
+    }
 }
+

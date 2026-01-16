@@ -237,13 +237,11 @@ class CapasPersonalizadasModule extends BaseModule
             'page_description' => 'Gerencie capas com imagens personalizadas.',
             'create_button' => 'Nova Capa',
             'empty_state' => 'Nenhuma capa encontrada.',
-            'filters' => [
-                'status' => 'Filtrar por status',
-                'seller' => 'Filtrar por vendedor',
-                'store' => 'Filtrar por loja',
-                'date_range' => 'Período',
-                'capa_type' => 'Tipo de capa',
-            ],
+            'loading_title' => 'Carregando capas...',
+            'loading_description' => 'Aguarde enquanto buscamos as capas.',
+            'error_title' => 'Erro ao carregar capas',
+            'error_description' => 'Não foi possível carregar a lista de capas.',
+            'retry_button' => 'Tentar novamente',
         ];
     }
 
@@ -259,12 +257,19 @@ class CapasPersonalizadasModule extends BaseModule
                 'icon' => 'Plus',
                 'tooltip' => 'Criar uma nova capa personalizada',
                 'shortcut' => 'N',
+                'shortcut_modifier' => null,
                 'permission' => 'capas.create',
             ],
             'add_to_cart' => [
                 'label' => 'Adicionar ao Carrinho',
                 'icon' => 'ShoppingCart',
                 'tooltip' => 'Adicionar esta capa ao carrinho de produção',
+                'confirm' => true,
+                'confirm_title' => 'Adicionar ao Carrinho?',
+                'confirm_message' => 'A capa será enviada para produção.',
+                'confirm_button' => 'Sim, Adicionar',
+                'cancel_button' => 'Cancelar',
+                'confirm_variant' => 'default',
                 'permission' => 'capas.status.to-carrinho',
                 'available_in_status' => [1],
             ],
@@ -273,7 +278,13 @@ class CapasPersonalizadasModule extends BaseModule
                 'icon' => 'Bell',
                 'tooltip' => 'Enviar WhatsApp informando que a capa está pronta',
                 'shortcut' => 'A',
-                'confirm' => false,
+                'shortcut_modifier' => null,
+                'confirm' => true,
+                'confirm_title' => 'Avisar Cliente?',
+                'confirm_message' => 'O cliente receberá uma notificação WhatsApp.',
+                'confirm_button' => 'Sim, Enviar',
+                'cancel_button' => 'Cancelar',
+                'confirm_variant' => 'default',
                 'permission' => 'capas.status.to-aguardando',
                 'available_in_status' => [3],
             ],
@@ -281,6 +292,12 @@ class CapasPersonalizadasModule extends BaseModule
                 'label' => 'Confirmar Recebimento',
                 'icon' => 'PackageCheck',
                 'tooltip' => 'Confirmar que a capa chegou da fábrica',
+                'confirm' => true,
+                'confirm_title' => 'Confirmar Recebimento?',
+                'confirm_message' => 'A capa ficará disponível para retirada.',
+                'confirm_button' => 'Confirmar',
+                'cancel_button' => 'Voltar',
+                'confirm_variant' => 'default',
                 'permission' => 'capas.status.to-disponivel',
                 'available_in_status' => [10],
             ],
@@ -288,6 +305,12 @@ class CapasPersonalizadasModule extends BaseModule
                 'label' => 'Finalizar Venda',
                 'icon' => 'CheckCircle',
                 'tooltip' => 'Registrar pagamento e finalizar',
+                'confirm' => true,
+                'confirm_title' => 'Finalizar Venda',
+                'confirm_message' => 'Confirma o registro do pagamento?',
+                'confirm_button' => 'Confirmar Venda',
+                'cancel_button' => 'Voltar',
+                'confirm_variant' => 'default',
                 'permission' => 'capas.status.to-concluida',
                 'available_in_status' => [8],
                 'requires_fields' => ['payment_status', 'payment_1_amount', 'payment_1_date', 'payment_1_method_id'],
@@ -299,6 +322,9 @@ class CapasPersonalizadasModule extends BaseModule
                 'confirm' => true,
                 'confirm_title' => 'Cancelar Capa',
                 'confirm_message' => 'Tem certeza que deseja cancelar?',
+                'confirm_button' => 'Sim, Cancelar',
+                'cancel_button' => 'Não, Voltar',
+                'confirm_variant' => 'destructive',
                 'permission' => 'capas.cancel-before-cart',
                 'available_in_status' => [1],
                 'requires_fields' => ['cancelation_reason'],
@@ -474,6 +500,190 @@ class CapasPersonalizadasModule extends BaseModule
                         'cancelation_reason' => 'customer_no_show',
                     ],
                 ],
+            ],
+        ];
+    }
+
+    // ========================================
+    // Filters
+    // ========================================
+
+    public function getFilters(): array
+    {
+        return [
+            'status' => [
+                'type' => 'multi-select',
+                'label' => 'Status',
+                'options' => 'from_statuses',
+            ],
+            'seller' => [
+                'type' => 'select',
+                'label' => 'Vendedor',
+                'options' => 'from_users',
+            ],
+            'store' => [
+                'type' => 'select',
+                'label' => 'Loja',
+                'options' => 'from_user_stores',
+            ],
+            'date_range' => [
+                'type' => 'date-range',
+                'label' => 'Período',
+                'presets' => ['today', 'week', 'month', 'custom'],
+            ],
+            'production_status' => [
+                'type' => 'select',
+                'label' => 'Produção',
+                'options' => [
+                    'pending' => 'Aguardando envio',
+                    'sent' => 'Enviado à fábrica',
+                    'producing' => 'Em produção',
+                    'shipped' => 'Despachado',
+                ],
+            ],
+        ];
+    }
+
+    // ========================================
+    // Table Columns
+    // ========================================
+
+    public function getTableColumns(): array
+    {
+        return [
+            'default' => [
+                ['key' => 'id', 'label' => '#', 'sortable' => true, 'width' => 80],
+                ['key' => 'customer_name', 'label' => 'Cliente', 'sortable' => true],
+                ['key' => 'phone_model', 'label' => 'Modelo', 'sortable' => true],
+                ['key' => 'status', 'label' => 'Status', 'type' => 'badge'],
+                ['key' => 'seller_name', 'label' => 'Vendedor', 'sortable' => true],
+                ['key' => 'created_at', 'label' => 'Data', 'type' => 'date', 'format' => 'dd/MM/yyyy'],
+            ],
+            'compact' => [
+                ['key' => 'id', 'label' => '#'],
+                ['key' => 'customer_name', 'label' => 'Cliente'],
+                ['key' => 'status', 'label' => 'Status', 'type' => 'badge'],
+            ],
+            'production' => [
+                ['key' => 'id', 'label' => '#'],
+                ['key' => 'image_thumbnail', 'label' => 'Imagem', 'type' => 'image'],
+                ['key' => 'phone_model', 'label' => 'Modelo'],
+                ['key' => 'store_name', 'label' => 'Loja'],
+                ['key' => 'status', 'label' => 'Status', 'type' => 'badge'],
+            ],
+        ];
+    }
+
+    // ========================================
+    // Bulk Actions
+    // ========================================
+
+    public function getBulkActions(): array
+    {
+        return [
+            'add_to_cart' => [
+                'label' => 'Adicionar ao Carrinho',
+                'icon' => 'ShoppingCart',
+                'permission' => 'capas.status.to-carrinho',
+                'requires_selection' => true,
+                'min_selection' => 1,
+                'max_selection' => 100,
+            ],
+            'export' => [
+                'label' => 'Exportar Selecionados',
+                'icon' => 'Download',
+                'permission' => 'capas.export',
+                'requires_selection' => true,
+                'formats' => ['xlsx', 'pdf', 'csv'],
+            ],
+        ];
+    }
+
+    // ========================================
+    // Row Actions
+    // ========================================
+
+    public function getRowActions(): array
+    {
+        return [
+            'primary' => [
+                'action' => 'view',
+                'label' => 'Ver Detalhes',
+                'icon' => 'Eye',
+            ],
+            'secondary' => [
+                ['action' => 'edit', 'label' => 'Editar', 'icon' => 'Edit', 'permission' => 'capas.update'],
+                ['action' => 'duplicate', 'label' => 'Duplicar', 'icon' => 'Copy', 'permission' => 'capas.create'],
+                ['action' => 'cancel', 'label' => 'Cancelar', 'icon' => 'X', 'permission' => 'capas.cancel-before-cart', 'variant' => 'destructive'],
+            ],
+        ];
+    }
+
+    // ========================================
+    // Notifications
+    // ========================================
+
+    public function getNotifications(): array
+    {
+        return [
+            'created' => [
+                'title' => 'Capa criada!',
+                'description' => 'Capa #{id} foi criada com sucesso.',
+                'variant' => 'success',
+            ],
+            'added_to_cart' => [
+                'title' => 'Adicionado ao carrinho',
+                'description' => 'Capa #{id} foi adicionada ao carrinho de produção.',
+                'variant' => 'success',
+            ],
+            'sent_to_factory' => [
+                'title' => 'Enviado à fábrica',
+                'description' => 'Lote com {count} capas foi enviado.',
+                'variant' => 'info',
+            ],
+            'received' => [
+                'title' => 'Recebimento confirmado',
+                'description' => 'Capa #{id} chegou na loja.',
+                'variant' => 'success',
+            ],
+            'notified' => [
+                'title' => 'Cliente notificado',
+                'description' => 'O cliente foi avisado via WhatsApp.',
+                'variant' => 'success',
+            ],
+            'completed' => [
+                'title' => 'Venda concluída!',
+                'description' => 'Capa #{id} foi finalizada.',
+                'variant' => 'success',
+            ],
+            'cancelled' => [
+                'title' => 'Capa cancelada',
+                'description' => 'Capa #{id} foi cancelada.',
+                'variant' => 'warning',
+            ],
+            'error' => [
+                'title' => 'Erro',
+                'description' => 'Não foi possível completar a ação.',
+                'variant' => 'destructive',
+            ],
+        ];
+    }
+
+    // ========================================
+    // Stats Cards
+    // ========================================
+
+    public function getStatsCards(): array
+    {
+        return [
+            'enabled' => true,
+            'permission' => 'capas.view-stats',
+            'cards' => [
+                ['id' => 'total', 'label' => 'Total', 'icon' => 'Image', 'color' => 'blue'],
+                ['id' => 'in_cart', 'label' => 'No Carrinho', 'icon' => 'ShoppingCart', 'color' => 'slate'],
+                ['id' => 'in_production', 'label' => 'Em Produção', 'icon' => 'Factory', 'color' => 'orange'],
+                ['id' => 'available', 'label' => 'Disponíveis', 'icon' => 'Store', 'color' => 'green'],
+                ['id' => 'completed', 'label' => 'Concluídas', 'icon' => 'CheckCircle', 'color' => 'emerald'],
             ],
         ];
     }

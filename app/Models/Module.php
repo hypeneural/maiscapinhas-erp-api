@@ -21,6 +21,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property array|null $config
  * @property array|null $status_overrides
  * @property array|null $transition_overrides
+ * @property array|null $text_overrides
+ * @property array|null $action_overrides
+ * @property array|null $custom_actions
+ * @property array|null $audit_log
  */
 class Module extends Model
 {
@@ -39,6 +43,10 @@ class Module extends Model
         'config',
         'status_overrides',
         'transition_overrides',
+        'text_overrides',
+        'action_overrides',
+        'custom_actions',
+        'audit_log',
         'installed_at',
     ];
 
@@ -48,6 +56,10 @@ class Module extends Model
         'config' => 'array',
         'status_overrides' => 'array',
         'transition_overrides' => 'array',
+        'text_overrides' => 'array',
+        'action_overrides' => 'array',
+        'custom_actions' => 'array',
+        'audit_log' => 'array',
         'installed_at' => 'datetime',
     ];
 

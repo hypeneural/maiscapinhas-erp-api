@@ -415,9 +415,25 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('permissions/modules', [AdminPermissionController::class, 'modules'])->name('permissions.modules');
         Route::get('permissions/conventions', [AdminPermissionController::class, 'conventions'])->name('permissions.conventions');
         Route::post('permissions/bulk', [AdminPermissionController::class, 'bulkStore'])->name('permissions.bulk');
+
+        // Permission Features (must be before {permission} wildcard)
+        Route::post('permissions/preview', [AdminPermissionController::class, 'preview'])->name('permissions.preview');
+        Route::post('permissions/bulk-grant', [AdminPermissionController::class, 'bulkGrant'])->name('permissions.bulk-grant');
+        Route::get('permissions/most-granted', [AdminPermissionController::class, 'mostGranted'])->name('permissions.most-granted');
+
+        // Permission CRUD with wildcard (must be after specific routes)
         Route::get('permissions/{permission}', [AdminPermissionController::class, 'show'])->name('permissions.show');
         Route::put('permissions/{permission}', [AdminPermissionController::class, 'update'])->name('permissions.update');
         Route::delete('permissions/{permission}', [AdminPermissionController::class, 'destroy'])->name('permissions.destroy');
+        Route::get('permissions/{permission}/users', [AdminPermissionController::class, 'usersByPermission'])->name('permissions.users');
+
+        // User permission management
+        Route::post('users/{user}/permissions/copy-from/{source}', [AdminPermissionController::class, 'copyFrom'])->name('users.permissions.copy-from');
+        Route::get('users/{user}/permissions/audit-log', [AdminPermissionController::class, 'userAuditLog'])->name('users.permissions.audit-log');
+
+        // Role Clone and Permissions
+        Route::post('roles/{role}/clone', [\App\Http\Controllers\Api\V1\Admin\RoleController::class, 'clone'])->name('roles.clone');
+        Route::put('roles/{role}/permissions', [\App\Http\Controllers\Api\V1\Admin\RoleController::class, 'updatePermissions'])->name('roles.update-permissions');
 
         // User Permission Overrides
         Route::prefix('users/{user}/permission-overrides')->name('users.permission-overrides.')->group(function () {
@@ -462,6 +478,22 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::put('/{module}/transitions', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'updateTransitions'])->name('transitions.update');
             Route::post('/{module}/stores/{store}/activate', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'activateForStore'])->name('stores.activate');
             Route::post('/{module}/stores/{store}/deactivate', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'deactivateForStore'])->name('stores.deactivate');
+
+            // Phase 2: Granular editing endpoints
+            Route::put('/{module}/texts', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'updateTexts'])->name('texts.update');
+            Route::put('/{module}/actions/{action}', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'updateAction'])->name('actions.update');
+            Route::post('/{module}/actions', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'createAction'])->name('actions.create');
+            Route::delete('/{module}/actions/{action}', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'deleteAction'])->name('actions.delete');
+            Route::get('/{module}/audit-log', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'getAuditLog'])->name('audit-log');
+        });
+
+        // Graph Visualization (React Flow format)
+        Route::prefix('graph')->name('graph.')->group(function () {
+            Route::get('/overview', [\App\Http\Controllers\Api\V1\Admin\GraphController::class, 'overview'])->name('overview');
+            Route::get('/role/{role}', [\App\Http\Controllers\Api\V1\Admin\GraphController::class, 'role'])->name('role');
+            Route::get('/user/{user}', [\App\Http\Controllers\Api\V1\Admin\GraphController::class, 'user'])->name('user');
+            Route::get('/store/{store}', [\App\Http\Controllers\Api\V1\Admin\GraphController::class, 'store'])->name('store');
+            Route::get('/module/{module}', [\App\Http\Controllers\Api\V1\Admin\GraphController::class, 'module'])->name('module');
         });
     });
 

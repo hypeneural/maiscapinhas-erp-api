@@ -71,6 +71,9 @@ class MeController extends Controller
     {
         $user = $request->user();
 
+        // Get permissions, temporary overrides, and expiring soon
+        $permissionData = $this->resolveUserPermissions($user);
+
         return $this->success([
             'user' => [
                 'id' => $user->id,
@@ -89,7 +92,102 @@ class MeController extends Controller
                 'created_at' => $user->created_at->toIso8601String(),
             ],
             'stores' => $user->getStoresWithRoles(),
+            'permissions' => $permissionData['permissions'],
+            'temporary_permissions' => $permissionData['temporary_permissions'],
+            'expiring_soon' => $permissionData['expiring_soon'],
+            'has_temporary_permissions' => count($permissionData['temporary_permissions']) > 0,
+            'temporary_count' => count($permissionData['temporary_permissions']),
+            'expiring_count' => count($permissionData['expiring_soon']),
+            'dashboard_layout' => $user->dashboard_layout ?? [
+                'widgets' => ['stats', 'recent_orders', 'notifications'],
+            ],
         ]);
+    }
+
+    /**
+     * Resolve user permissions including temporary and expiring
+     */
+    protected function resolveUserPermissions($user): array
+    {
+        // Get all permissions from roles and overrides
+        $allPermissions = [];
+        $temporaryPermissions = [];
+        $expiringSoon = [];
+
+        // 1. Get role permissions
+        foreach ($user->roles as $role) {
+            foreach ($role->permissions as $permission) {
+                $allPermissions[] = $permission->name;
+            }
+        }
+
+        // 2. Get screen permissions
+        $allPermissions = array_merge($allPermissions, $this->getScreenPermissions($user));
+
+        // 3. Get user overrides (grants)
+        $userOverrides = \App\Models\UserPermissionOverride::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->where(function ($q) {
+                $q->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', now());
+            })
+            ->get();
+
+        foreach ($userOverrides as $override) {
+            if ($override->type === 'grant') {
+                $allPermissions[] = $override->permission;
+
+                // Track temporary permissions
+                if ($override->expires_at) {
+                    $temporaryPermissions[] = [
+                        'permission' => $override->permission,
+                        'expires_at' => $override->expires_at->toIso8601String(),
+                        'granted_by' => $override->grantedBy?->name ?? 'Sistema',
+                        'reason' => $override->reason,
+                    ];
+
+                    // Check if expiring soon (within 72h)
+                    $hoursUntilExpiry = now()->diffInHours($override->expires_at, false);
+                    if ($hoursUntilExpiry > 0 && $hoursUntilExpiry <= 72) {
+                        $expiringSoon[] = [
+                            'permission' => $override->permission,
+                            'expires_in_hours' => (int) $hoursUntilExpiry,
+                            'expires_at' => $override->expires_at->toIso8601String(),
+                        ];
+                    }
+                }
+            }
+        }
+
+        return [
+            'permissions' => array_unique($allPermissions),
+            'temporary_permissions' => $temporaryPermissions,
+            'expiring_soon' => $expiringSoon,
+        ];
+    }
+
+    /**
+     * Get screen permissions based on roles
+     */
+    protected function getScreenPermissions($user): array
+    {
+        $screens = [];
+
+        // Map roles to screens
+        $roleScreens = [
+            'admin' => ['screen.pedidos', 'screen.capas', 'screen.dashboard', 'screen.reports', 'screen.users'],
+            'gerente' => ['screen.pedidos', 'screen.capas', 'screen.dashboard', 'screen.reports'],
+            'vendedor' => ['screen.pedidos', 'screen.capas', 'screen.dashboard'],
+            'fabrica' => ['screen.producao', 'screen.dashboard'],
+        ];
+
+        foreach ($user->getRoleNames() as $roleName) {
+            if (isset($roleScreens[$roleName])) {
+                $screens = array_merge($screens, $roleScreens[$roleName]);
+            }
+        }
+
+        return array_unique($screens);
     }
 
     /**

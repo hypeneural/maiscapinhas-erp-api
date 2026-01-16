@@ -428,4 +428,319 @@ class PermissionController extends Controller
 
         return $map[$module] ?? ucfirst($module ?? '');
     }
+
+    // ========================================
+    // Frontend Suggested Features
+    // ========================================
+
+    /**
+     * Preview permission changes before applying.
+     * Shows what permissions will be added/removed.
+     */
+    public function preview(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'add_permissions' => ['sometimes', 'array'],
+            'add_permissions.*' => ['string', 'exists:permissions,name'],
+            'remove_permissions' => ['sometimes', 'array'],
+            'remove_permissions.*' => ['string', 'exists:permissions,name'],
+        ]);
+
+        $user = \App\Models\User::findOrFail($validated['user_id']);
+
+        // Get current permissions
+        $currentPermissions = $this->getUserPermissions($user);
+
+        // Calculate after state
+        $afterPermissions = $currentPermissions;
+
+        if (!empty($validated['add_permissions'])) {
+            $afterPermissions = array_unique(array_merge($afterPermissions, $validated['add_permissions']));
+        }
+
+        if (!empty($validated['remove_permissions'])) {
+            $afterPermissions = array_values(array_diff($afterPermissions, $validated['remove_permissions']));
+        }
+
+        // Calculate diff
+        $added = array_values(array_diff($afterPermissions, $currentPermissions));
+        $removed = array_values(array_diff($currentPermissions, $afterPermissions));
+
+        return response()->json([
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'current' => array_values($currentPermissions),
+            'after' => array_values($afterPermissions),
+            'added' => $added,
+            'removed' => $removed,
+            'total_change' => count($added) + count($removed),
+        ]);
+    }
+
+    /**
+     * Bulk grant permissions to multiple users.
+     * Limited to 10 users per request for safety.
+     */
+    public function bulkGrant(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'user_ids' => ['required', 'array', 'max:10'],
+            'user_ids.*' => ['integer', 'exists:users,id'],
+            'permissions' => ['required', 'array'],
+            'permissions.*' => ['string', 'exists:permissions,name'],
+            'expires_at' => ['nullable', 'date', 'after:now'],
+            'reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $grantedBy = auth()->user();
+        $results = [];
+
+        foreach ($validated['user_ids'] as $userId) {
+            $user = \App\Models\User::find($userId);
+            $granted = [];
+
+            foreach ($validated['permissions'] as $permission) {
+                // Create or update override
+                \App\Models\UserPermissionOverride::updateOrCreate(
+                    [
+                        'user_id' => $userId,
+                        'permission' => $permission,
+                    ],
+                    [
+                        'type' => 'grant',
+                        'is_active' => true,
+                        'expires_at' => $validated['expires_at'] ?? null,
+                        'reason' => $validated['reason'] ?? 'Bulk grant',
+                        'granted_by_id' => $grantedBy->id,
+                    ]
+                );
+                $granted[] = $permission;
+            }
+
+            $results[] = [
+                'user_id' => $userId,
+                'user_name' => $user->name,
+                'granted' => $granted,
+            ];
+        }
+
+        return response()->json([
+            'message' => 'Permissões concedidas com sucesso.',
+            'data' => $results,
+            'total_users' => count($results),
+            'total_permissions' => count($validated['permissions']),
+        ]);
+    }
+
+    /**
+     * Copy permissions from one user to another.
+     */
+    public function copyFrom(Request $request, int $targetUserId, int $sourceUserId): JsonResponse
+    {
+        $target = \App\Models\User::findOrFail($targetUserId);
+        $source = \App\Models\User::findOrFail($sourceUserId);
+
+        $validated = $request->validate([
+            'include_temporary' => ['sometimes', 'boolean'],
+            'expires_at' => ['nullable', 'date', 'after:now'],
+        ]);
+
+        $includeTemporary = $validated['include_temporary'] ?? false;
+        $grantedBy = auth()->user();
+
+        // Get source overrides
+        $sourceOverrides = \App\Models\UserPermissionOverride::where('user_id', $sourceUserId)
+            ->where('is_active', true)
+            ->where('type', 'grant')
+            ->when(!$includeTemporary, function ($q) {
+                $q->whereNull('expires_at');
+            })
+            ->get();
+
+        $copied = [];
+        foreach ($sourceOverrides as $override) {
+            \App\Models\UserPermissionOverride::updateOrCreate(
+                [
+                    'user_id' => $targetUserId,
+                    'permission' => $override->permission,
+                ],
+                [
+                    'type' => 'grant',
+                    'is_active' => true,
+                    'expires_at' => $validated['expires_at'] ?? $override->expires_at,
+                    'reason' => "Copiado de {$source->name}",
+                    'granted_by_id' => $grantedBy->id,
+                ]
+            );
+            $copied[] = $override->permission;
+        }
+
+        return response()->json([
+            'message' => "Permissões copiadas de '{$source->name}' para '{$target->name}'.",
+            'data' => [
+                'source_user' => $source->name,
+                'target_user' => $target->name,
+                'permissions_copied' => $copied,
+                'count' => count($copied),
+            ],
+        ]);
+    }
+
+    /**
+     * Get audit log for a user's permissions.
+     */
+    public function userAuditLog(Request $request, int $userId): JsonResponse
+    {
+        $user = \App\Models\User::findOrFail($userId);
+        $limit = $request->input('limit', 50);
+
+        // Get permission changes from overrides history
+        $overrides = \App\Models\UserPermissionOverride::where('user_id', $userId)
+            ->with('grantedBy:id,name')
+            ->orderBy('updated_at', 'desc')
+            ->limit($limit)
+            ->get();
+
+        $auditLog = $overrides->map(fn($o) => [
+            'permission' => $o->permission,
+            'type' => $o->type,
+            'is_active' => $o->is_active,
+            'granted_by' => $o->grantedBy?->name,
+            'reason' => $o->reason,
+            'expires_at' => $o->expires_at?->toIso8601String(),
+            'created_at' => $o->created_at?->toIso8601String(),
+            'updated_at' => $o->updated_at?->toIso8601String(),
+        ]);
+
+        return response()->json([
+            'user_id' => $userId,
+            'user_name' => $user->name,
+            'entries' => $auditLog,
+            'total' => $auditLog->count(),
+        ]);
+    }
+
+    /**
+     * Get all permissions for a user (helper).
+     */
+    protected function getUserPermissions(\App\Models\User $user): array
+    {
+        $permissions = [];
+
+        // From roles
+        foreach ($user->roles as $role) {
+            foreach ($role->permissions as $permission) {
+                $permissions[] = $permission->name;
+            }
+        }
+
+        // From overrides
+        $overrides = \App\Models\UserPermissionOverride::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->where('type', 'grant')
+            ->where(function ($q) {
+                $q->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', now());
+            })
+            ->pluck('permission')
+            ->toArray();
+
+        return array_unique(array_merge($permissions, $overrides));
+    }
+
+    // ========================================
+    // Analytics Endpoints
+    // ========================================
+
+    /**
+     * Get most granted permissions via overrides.
+     * Useful for UX: show popular permissions when adding overrides.
+     */
+    public function mostGranted(Request $request): JsonResponse
+    {
+        $limit = $request->input('limit', 10);
+
+        // Query using correct column names and join with permissions
+        $mostGranted = \App\Models\UserPermissionOverride::selectRaw('permission_id, COUNT(*) as count')
+            ->where('granted', true)
+            ->active()
+            ->groupBy('permission_id')
+            ->orderByDesc('count')
+            ->limit($limit)
+            ->get();
+
+        // Enrich with permission details
+        $result = $mostGranted->map(function ($item) {
+            $permission = Permission::find($item->permission_id);
+            return [
+                'permission_id' => $item->permission_id,
+                'permission' => $permission?->name,
+                'display_name' => $permission?->display_name ?? 'Unknown',
+                'module' => $permission?->module,
+                'count' => $item->count,
+            ];
+        })->filter(fn($item) => $item['permission'] !== null)->values();
+
+        return response()->json([
+            'data' => $result,
+            'total' => $result->count(),
+        ]);
+    }
+
+    /**
+     * Get users who have a specific permission.
+     * Useful for audit: "Who can delete orders?"
+     */
+    public function usersByPermission(Request $request, string $permissionName): JsonResponse
+    {
+        // Find permission
+        $permission = Permission::where('name', $permissionName)->first();
+        if (!$permission) {
+            return response()->json(['message' => 'Permissão não encontrada.'], 404);
+        }
+
+        // Get users via roles
+        $usersViaRoles = \App\Models\User::whereHas('roles.permissions', function ($q) use ($permissionName) {
+            $q->where('name', $permissionName);
+        })->get();
+
+        // Get users via overrides
+        $usersViaOverrides = \App\Models\User::whereHas('permissionOverrides', function ($q) use ($permissionName) {
+            $q->where('permission', $permissionName)
+                ->where('is_active', true)
+                ->where('type', 'grant')
+                ->where(function ($q2) {
+                    $q2->whereNull('expires_at')
+                        ->orWhere('expires_at', '>', now());
+                });
+        })->get();
+
+        // Merge and format
+        $allUsers = $usersViaRoles->merge($usersViaOverrides)->unique('id');
+
+        $result = $allUsers->map(function ($user) use ($permissionName) {
+            // Find source
+            $override = \App\Models\UserPermissionOverride::where('user_id', $user->id)
+                ->where('permission', $permissionName)
+                ->where('is_active', true)
+                ->first();
+
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'source' => $override ? 'override' : 'role',
+                'expires_at' => $override?->expires_at?->toIso8601String(),
+                'is_temporary' => $override && $override->expires_at !== null,
+            ];
+        });
+
+        return response()->json([
+            'permission' => $permissionName,
+            'display_name' => $permission->display_name,
+            'users' => $result->values(),
+            'total' => $result->count(),
+        ]);
+    }
 }

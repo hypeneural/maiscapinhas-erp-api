@@ -87,6 +87,11 @@ class User extends Authenticatable
         return $this->hasMany(AnnouncementReceipt::class);
     }
 
+    public function permissionOverrides(): HasMany
+    {
+        return $this->hasMany(UserPermissionOverride::class);
+    }
+
     // ========================================
     // Scopes
     // ========================================

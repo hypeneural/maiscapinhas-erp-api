@@ -90,6 +90,13 @@ class Store extends Model
         return $this->hasMany(CommissionRule::class);
     }
 
+    public function modules()
+    {
+        return $this->belongsToMany(Module::class, 'module_store')
+            ->withPivot('is_active', 'config')
+            ->withTimestamps();
+    }
+
     // ========================================
     // Scopes
     // ========================================
