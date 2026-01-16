@@ -199,6 +199,97 @@ abstract class BaseModule implements ModuleInterface
     }
 
     // ========================================
+    // Module Configuration
+    // ========================================
+
+    public function getConfigSchema(): array
+    {
+        return [
+            'sections' => [
+                'notifications' => [
+                    'label' => 'Notificações',
+                    'icon' => 'Bell',
+                    'description' => 'Configurações de notificação ao cliente',
+                    'fields' => [
+                        'notify_on_status_change' => [
+                            'type' => 'switch',
+                            'label' => 'Notificar ao mudar status',
+                            'hint' => 'Enviar notificação WhatsApp quando o status mudar',
+                            'default' => false,
+                        ],
+                        'notification_channel' => [
+                            'type' => 'select',
+                            'label' => 'Canal de notificação',
+                            'options' => [
+                                'whatsapp' => 'WhatsApp',
+                                'email' => 'E-mail',
+                                'both' => 'Ambos',
+                            ],
+                            'default' => 'whatsapp',
+                            'depends_on' => 'notify_on_status_change',
+                        ],
+                    ],
+                ],
+                'deadlines' => [
+                    'label' => 'Prazos',
+                    'icon' => 'Clock',
+                    'description' => 'Alertas e prazos automáticos',
+                    'fields' => [
+                        'warning_after_days' => [
+                            'type' => 'number',
+                            'label' => 'Alertar após X dias parado',
+                            'hint' => 'Número de dias sem movimentação para exibir alerta',
+                            'min' => 1,
+                            'max' => 60,
+                            'default' => 5,
+                        ],
+                        'auto_cancel_days' => [
+                            'type' => 'number',
+                            'label' => 'Cancelar automaticamente após X dias',
+                            'hint' => 'Dias para cancelamento automático (0 = desativado)',
+                            'min' => 0,
+                            'max' => 90,
+                            'default' => 20,
+                        ],
+                    ],
+                ],
+                'requirements' => [
+                    'label' => 'Requisitos',
+                    'icon' => 'CheckSquare',
+                    'description' => 'Campos obrigatórios e validações',
+                    'fields' => [
+                        'require_customer_phone' => [
+                            'type' => 'switch',
+                            'label' => 'Exigir telefone do cliente',
+                            'hint' => 'Telefone será obrigatório para criar registro',
+                            'default' => true,
+                        ],
+                        'require_notes' => [
+                            'type' => 'switch',
+                            'label' => 'Exigir observações',
+                            'hint' => 'Campo de observações será obrigatório',
+                            'default' => false,
+                        ],
+                    ],
+                ],
+            ],
+            'defaults' => $this->getDefaultConfig(),
+        ];
+    }
+
+    public function getDefaultConfig(): array
+    {
+        return [
+            'notify_on_status_change' => false,
+            'notification_channel' => 'whatsapp',
+            'warning_after_days' => 5,
+            'auto_cancel_days' => 20,
+            'require_customer_phone' => true,
+            'require_notes' => false,
+        ];
+    }
+
+    // ========================================
     // Transition Helpers
     // ========================================
 

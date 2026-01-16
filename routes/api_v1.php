@@ -486,6 +486,20 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/{module}/actions', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'createAction'])->name('actions.create');
             Route::delete('/{module}/actions/{action}', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'deleteAction'])->name('actions.delete');
             Route::get('/{module}/audit-log', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'getAuditLog'])->name('audit-log');
+
+            // Module Configuration
+            Route::get('/{module}/config', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'getConfig'])->name('config.show');
+            Route::patch('/{module}/config', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'updateConfig'])->name('config.update');
+            Route::post('/{module}/config/reset', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'resetConfig'])->name('config.reset');
+            Route::get('/{module}/stores/{store}/config', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'getStoreConfig'])->name('config.store.show');
+            Route::patch('/{module}/stores/{store}/config', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'updateStoreConfig'])->name('config.store.update');
+
+            // Status Management (CRUD)
+            Route::get('/{module}/schema', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'getSchema'])->name('schema');
+            Route::patch('/{module}/statuses/{status}', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'updateStatus'])->name('statuses.update');
+            Route::post('/{module}/statuses', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'createStatus'])->name('statuses.create');
+            Route::delete('/{module}/statuses/{status}', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'deleteStatus'])->name('statuses.delete');
+            Route::post('/{module}/preview-impact', [\App\Http\Controllers\Api\V1\Admin\ModuleController::class, 'previewImpact'])->name('preview-impact');
         });
 
         // Graph Visualization (React Flow format)

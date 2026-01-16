@@ -287,6 +287,43 @@ interface ModuleInterface
     public function getConditionalFields(): array;
 
     // ========================================
+    // Module Configuration
+    // ========================================
+
+    /**
+     * Get the configuration schema for this module.
+     * Defines editable settings with sections, types, and validation.
+     *
+     * @return array{
+     *   sections: array<string, array{
+     *     label: string,
+     *     icon: string,
+     *     description?: string,
+     *     fields: array<string, array{
+     *       type: string,
+     *       label: string,
+     *       hint?: string,
+     *       required?: bool,
+     *       default?: mixed,
+     *       min?: int,
+     *       max?: int,
+     *       options?: array,
+     *       depends_on?: string
+     *     }>
+     *   }>,
+     *   defaults: array<string, mixed>
+     * }
+     */
+    public function getConfigSchema(): array;
+
+    /**
+     * Get default config values for this module.
+     *
+     * @return array<string, mixed>
+     */
+    public function getDefaultConfig(): array;
+
+    // ========================================
     // Automations
     // ========================================
 

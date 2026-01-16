@@ -572,4 +572,701 @@ class ModuleController extends Controller
 
         $module->update(['audit_log' => $auditLog]);
     }
+
+    // ========================================
+    // Module Configuration (CRUD)
+    // ========================================
+
+    /**
+     * Get module configuration with schema.
+     * Returns current config values, defaults, and field schema for UI rendering.
+     */
+    public function getConfig(string $moduleId): JsonResponse
+    {
+        $dbModule = Module::find($moduleId);
+
+        $registry = ModuleRegistry::getInstance();
+        $registry->boot();
+        $module = $registry->get($moduleId);
+
+        if (!$module) {
+            return response()->json(['message' => 'Módulo não encontrado.'], 404);
+        }
+
+        $schema = $module->getConfigSchema();
+        $defaults = $module->getDefaultConfig();
+        $currentConfig = $dbModule?->config ?? [];
+
+        // Merge defaults with current config
+        $mergedConfig = array_merge($defaults, $currentConfig);
+
+        return response()->json([
+            'module_id' => $moduleId,
+            'module_name' => $module->getName(),
+            'config' => $mergedConfig,
+            'schema' => $schema,
+            'has_custom_config' => !empty($currentConfig),
+        ]);
+    }
+
+    /**
+     * Update module configuration.
+     * Validates against schema and merges with existing config.
+     */
+    public function updateConfig(Request $request, string $moduleId): JsonResponse
+    {
+        $dbModule = Module::findOrFail($moduleId);
+
+        $registry = ModuleRegistry::getInstance();
+        $registry->boot();
+        $module = $registry->get($moduleId);
+
+        if (!$module) {
+            return response()->json(['message' => 'Módulo não encontrado.'], 404);
+        }
+
+        $schema = $module->getConfigSchema();
+        $defaults = $module->getDefaultConfig();
+
+        // Build validation rules from schema
+        $validationRules = [];
+        foreach ($schema['sections'] as $section) {
+            foreach ($section['fields'] as $fieldKey => $fieldConfig) {
+                $rules = ['sometimes'];
+
+                switch ($fieldConfig['type']) {
+                    case 'switch':
+                        $rules[] = 'boolean';
+                        break;
+                    case 'number':
+                        $rules[] = 'integer';
+                        if (isset($fieldConfig['min']))
+                            $rules[] = 'min:' . $fieldConfig['min'];
+                        if (isset($fieldConfig['max']))
+                            $rules[] = 'max:' . $fieldConfig['max'];
+                        break;
+                    case 'select':
+                        $options = array_keys($fieldConfig['options'] ?? []);
+                        if (!empty($options)) {
+                            $rules[] = 'in:' . implode(',', $options);
+                        }
+                        break;
+                    case 'text':
+                    case 'textarea':
+                        $rules[] = 'string';
+                        if (isset($fieldConfig['max']))
+                            $rules[] = 'max:' . $fieldConfig['max'];
+                        break;
+                }
+
+                $validationRules[$fieldKey] = $rules;
+            }
+        }
+
+        $validated = $request->validate($validationRules);
+
+        // Merge with existing config
+        $currentConfig = $dbModule->config ?? [];
+        $newConfig = array_merge($currentConfig, $validated);
+
+        $dbModule->update(['config' => $newConfig]);
+
+        // Log the change
+        $this->logAudit($dbModule, 'config_updated', [
+            'changes' => $validated,
+            'previous' => array_intersect_key($currentConfig, $validated),
+        ], auth()->user());
+
+        // Return merged config
+        $mergedConfig = array_merge($defaults, $newConfig);
+
+        return response()->json([
+            'message' => 'Configurações atualizadas.',
+            'config' => $mergedConfig,
+        ]);
+    }
+
+    /**
+     * Reset module configuration to defaults.
+     */
+    public function resetConfig(string $moduleId): JsonResponse
+    {
+        $dbModule = Module::findOrFail($moduleId);
+
+        $registry = ModuleRegistry::getInstance();
+        $registry->boot();
+        $module = $registry->get($moduleId);
+
+        if (!$module) {
+            return response()->json(['message' => 'Módulo não encontrado.'], 404);
+        }
+
+        $previousConfig = $dbModule->config;
+        $dbModule->update(['config' => null]);
+
+        // Log the change
+        $this->logAudit($dbModule, 'config_reset', [
+            'previous_config' => $previousConfig,
+        ], auth()->user());
+
+        return response()->json([
+            'message' => 'Configurações restauradas para os valores padrão.',
+            'config' => $module->getDefaultConfig(),
+        ]);
+    }
+
+    /**
+     * Get config for specific store (if module supports per-store config).
+     */
+    public function getStoreConfig(string $moduleId, int $storeId): JsonResponse
+    {
+        $dbModule = Module::findOrFail($moduleId);
+
+        $registry = ModuleRegistry::getInstance();
+        $registry->boot();
+        $module = $registry->get($moduleId);
+
+        if (!$module) {
+            return response()->json(['message' => 'Módulo não encontrado.'], 404);
+        }
+
+        // Get store-specific config from pivot table
+        $storeModule = $dbModule->stores()->where('stores.id', $storeId)->first();
+
+        if (!$storeModule) {
+            return response()->json(['message' => 'Módulo não ativo para esta loja.'], 404);
+        }
+
+        $globalConfig = array_merge($module->getDefaultConfig(), $dbModule->config ?? []);
+        $storeConfig = $storeModule->pivot->config ?? [];
+        $mergedConfig = array_merge($globalConfig, $storeConfig);
+
+        return response()->json([
+            'module_id' => $moduleId,
+            'store_id' => $storeId,
+            'global_config' => $globalConfig,
+            'store_config' => $storeConfig,
+            'effective_config' => $mergedConfig,
+            'schema' => $module->getConfigSchema(),
+        ]);
+    }
+
+    /**
+     * Update config for specific store.
+     */
+    public function updateStoreConfig(Request $request, string $moduleId, int $storeId): JsonResponse
+    {
+        $dbModule = Module::findOrFail($moduleId);
+
+        $registry = ModuleRegistry::getInstance();
+        $registry->boot();
+        $module = $registry->get($moduleId);
+
+        if (!$module) {
+            return response()->json(['message' => 'Módulo não encontrado.'], 404);
+        }
+
+        // Validate against schema (same logic as updateConfig)
+        $schema = $module->getConfigSchema();
+        $validationRules = [];
+        foreach ($schema['sections'] as $section) {
+            foreach ($section['fields'] as $fieldKey => $fieldConfig) {
+                $rules = ['sometimes'];
+                switch ($fieldConfig['type']) {
+                    case 'switch':
+                        $rules[] = 'boolean';
+                        break;
+                    case 'number':
+                        $rules[] = 'integer';
+                        if (isset($fieldConfig['min']))
+                            $rules[] = 'min:' . $fieldConfig['min'];
+                        if (isset($fieldConfig['max']))
+                            $rules[] = 'max:' . $fieldConfig['max'];
+                        break;
+                    case 'select':
+                        $options = array_keys($fieldConfig['options'] ?? []);
+                        if (!empty($options))
+                            $rules[] = 'in:' . implode(',', $options);
+                        break;
+                    default:
+                        $rules[] = 'string';
+                        break;
+                }
+                $validationRules[$fieldKey] = $rules;
+            }
+        }
+
+        $validated = $request->validate($validationRules);
+
+        // Get current store config
+        $pivot = $dbModule->stores()->where('stores.id', $storeId)->first()?->pivot;
+        $currentConfig = $pivot?->config ?? [];
+        $newConfig = array_merge($currentConfig, $validated);
+
+        // Update pivot
+        $dbModule->stores()->updateExistingPivot($storeId, ['config' => $newConfig]);
+
+        // Log the change
+        $this->logAudit($dbModule, 'store_config_updated', [
+            'store_id' => $storeId,
+            'changes' => $validated,
+        ], auth()->user());
+
+        return response()->json([
+            'message' => "Configurações da loja #{$storeId} atualizadas.",
+            'store_config' => $newConfig,
+        ]);
+    }
+
+    // ========================================
+    // Status Management (CRUD)
+    // ========================================
+
+    /**
+     * Get validation schema for module fields.
+     * Returns validation rules for texts, statuses, actions.
+     */
+    public function getSchema(string $moduleId): JsonResponse
+    {
+        $registry = ModuleRegistry::getInstance();
+        $registry->boot();
+
+        $module = $registry->get($moduleId);
+        if (!$module) {
+            return response()->json(['message' => 'Módulo não encontrado.'], 404);
+        }
+
+        // Available icons (Lucide)
+        $allowedIcons = [
+            'FileCheck',
+            'Truck',
+            'Store',
+            'Bell',
+            'CheckCircle',
+            'XCircle',
+            'AlertCircle',
+            'Clock',
+            'User',
+            'UserCheck',
+            'Package',
+            'Send',
+            'Plus',
+            'Edit',
+            'Trash',
+            'Eye',
+            'Settings',
+            'Shield',
+            'Key',
+            'Palette',
+            'LayoutDashboard',
+            'ClipboardList',
+            'CreditCard',
+        ];
+
+        // Available colors
+        $allowedColors = ['blue', 'red', 'yellow', 'green', 'purple', 'gray', 'orange', 'cyan', 'pink'];
+
+        // Badge variants (Shadcn)
+        $badgeVariants = ['default', 'destructive', 'outline', 'secondary', 'success', 'warning'];
+
+        return response()->json([
+            'module_id' => $moduleId,
+            'schema' => [
+                'texts' => [
+                    'menu_label' => ['type' => 'string', 'required' => false, 'min' => 1, 'max' => 100],
+                    'menu_tooltip' => ['type' => 'string', 'required' => false, 'max' => 255],
+                    'page_title' => ['type' => 'string', 'required' => false, 'min' => 1, 'max' => 100],
+                    'page_description' => ['type' => 'string', 'required' => false, 'max' => 500],
+                    'create_button' => ['type' => 'string', 'required' => false, 'max' => 50],
+                    'empty_state' => ['type' => 'string', 'required' => false, 'max' => 255],
+                ],
+                'status' => [
+                    'name' => ['type' => 'string', 'required' => true, 'pattern' => '^[a-z_]+$', 'max' => 50, 'hint' => 'Slug interno (ex: aguardando_cliente)'],
+                    'label' => ['type' => 'string', 'required' => true, 'min' => 2, 'max' => 50],
+                    'description' => ['type' => 'string', 'required' => false, 'max' => 255],
+                    'color' => ['type' => 'enum', 'allowed' => $allowedColors],
+                    'icon' => ['type' => 'enum', 'allowed' => $allowedIcons],
+                    'badge_variant' => ['type' => 'enum', 'allowed' => $badgeVariants],
+                    'can_edit' => ['type' => 'boolean', 'default' => true],
+                    'final' => ['type' => 'boolean', 'default' => false, 'hint' => 'Status final encerra o fluxo'],
+                    'tooltip' => ['type' => 'string', 'required' => false, 'max' => 255],
+                    'help_text' => ['type' => 'string', 'required' => false, 'max' => 500],
+                ],
+                'action' => [
+                    'label' => ['type' => 'string', 'required' => true, 'max' => 50],
+                    'icon' => ['type' => 'enum', 'allowed' => $allowedIcons],
+                    'tooltip' => ['type' => 'string', 'required' => false, 'max' => 255],
+                    'permission' => ['type' => 'string', 'required' => false, 'pattern' => '^[a-z._-]+$'],
+                    'available_in_status' => ['type' => 'array', 'items' => 'integer'],
+                    'confirm' => ['type' => 'boolean', 'default' => false],
+                    'confirm_title' => ['type' => 'string', 'max' => 100],
+                    'confirm_message' => ['type' => 'string', 'max' => 500],
+                    'requires_fields' => ['type' => 'array', 'items' => 'string'],
+                ],
+            ],
+            'allowed_values' => [
+                'icons' => $allowedIcons,
+                'colors' => $allowedColors,
+                'badge_variants' => $badgeVariants,
+            ],
+        ]);
+    }
+
+    /**
+     * Update a status configuration.
+     * Allows Super Admin to customize status labels, colors, icons, etc.
+     */
+    public function updateStatus(Request $request, string $moduleId, string $statusKey): JsonResponse
+    {
+        $dbModule = Module::findOrFail($moduleId);
+
+        $registry = ModuleRegistry::getInstance();
+        $registry->boot();
+        $module = $registry->get($moduleId);
+
+        if (!$module) {
+            return response()->json(['message' => 'Módulo não encontrado.'], 404);
+        }
+
+        // Check if status exists in base module
+        $statuses = $module->getStatuses();
+        if (!isset($statuses[$statusKey])) {
+            // Check if it's a custom status in overrides
+            $customStatuses = $dbModule->status_overrides ?? [];
+            if (!isset($customStatuses[$statusKey])) {
+                return response()->json(['message' => 'Status não encontrado.'], 404);
+            }
+        }
+
+        $validated = $request->validate([
+            'label' => ['sometimes', 'string', 'min:2', 'max:50'],
+            'description' => ['sometimes', 'string', 'max:255'],
+            'color' => ['sometimes', 'string', 'in:blue,red,yellow,green,purple,gray,orange,cyan,pink'],
+            'icon' => ['sometimes', 'string', 'max:50'],
+            'badge_variant' => ['sometimes', 'string', 'in:default,destructive,outline,secondary,success,warning'],
+            'can_edit' => ['sometimes', 'boolean'],
+            'final' => ['sometimes', 'boolean'],
+            'tooltip' => ['sometimes', 'string', 'max:255'],
+            'help_text' => ['sometimes', 'string', 'max:500'],
+        ]);
+
+        // Merge with existing overrides
+        $statusOverrides = $dbModule->status_overrides ?? [];
+        $statusOverrides[$statusKey] = array_merge($statusOverrides[$statusKey] ?? [], $validated);
+
+        $dbModule->update(['status_overrides' => $statusOverrides]);
+
+        // Log the change
+        $this->logAudit($dbModule, 'status_updated', [
+            'status_key' => $statusKey,
+            'changes' => $validated,
+        ], auth()->user());
+
+        return response()->json([
+            'message' => "Status '{$statusKey}' atualizado.",
+            'data' => $dbModule->getStatuses()[$statusKey] ?? null,
+        ]);
+    }
+
+    /**
+     * Create a custom status.
+     * Allows Super Admin to add new statuses to a module.
+     */
+    public function createStatus(Request $request, string $moduleId): JsonResponse
+    {
+        $dbModule = Module::findOrFail($moduleId);
+
+        $registry = ModuleRegistry::getInstance();
+        $registry->boot();
+        $module = $registry->get($moduleId);
+
+        if (!$module) {
+            return response()->json(['message' => 'Módulo não encontrado.'], 404);
+        }
+
+        $validated = $request->validate([
+            'key' => ['required', 'string', 'regex:/^[a-z0-9_]+$/', 'max:50'],
+            'status' => ['required', 'array'],
+            'status.name' => ['required', 'string', 'regex:/^[a-z_]+$/', 'max:50'],
+            'status.label' => ['required', 'string', 'min:2', 'max:50'],
+            'status.description' => ['sometimes', 'string', 'max:255'],
+            'status.color' => ['required', 'string', 'in:blue,red,yellow,green,purple,gray,orange,cyan,pink'],
+            'status.icon' => ['required', 'string', 'max:50'],
+            'status.badge_variant' => ['sometimes', 'string', 'in:default,destructive,outline,secondary,success,warning'],
+            'status.can_edit' => ['sometimes', 'boolean'],
+            'status.final' => ['sometimes', 'boolean'],
+            'status.tooltip' => ['sometimes', 'string', 'max:255'],
+            'status.help_text' => ['sometimes', 'string', 'max:500'],
+            // Transitions from this status
+            'transitions_to' => ['sometimes', 'array'],
+            'transitions_to.*' => ['string'],
+            // Transitions to this status
+            'transitions_from' => ['sometimes', 'array'],
+            'transitions_from.*' => ['string'],
+        ]);
+
+        $key = $validated['key'];
+        $statuses = $module->getStatuses();
+
+        // Check if key already exists
+        if (isset($statuses[$key])) {
+            return response()->json(['message' => "Status com key '{$key}' já existe."], 422);
+        }
+
+        // Add custom status
+        $statusOverrides = $dbModule->status_overrides ?? [];
+        $statusOverrides[$key] = array_merge($validated['status'], [
+            '_custom' => true,
+            '_created_at' => now()->toIso8601String(),
+        ]);
+
+        $updates = ['status_overrides' => $statusOverrides];
+
+        // Update transitions if provided
+        if (isset($validated['transitions_to']) || isset($validated['transitions_from'])) {
+            $transitionOverrides = $dbModule->transition_overrides ?? [];
+
+            // Transitions from this status
+            if (isset($validated['transitions_to'])) {
+                $transitionOverrides[$key] = $validated['transitions_to'];
+            }
+
+            // Transitions to this status (from other statuses)
+            if (isset($validated['transitions_from'])) {
+                foreach ($validated['transitions_from'] as $fromKey) {
+                    if (!isset($transitionOverrides[$fromKey])) {
+                        $transitionOverrides[$fromKey] = [];
+                    }
+                    if (!in_array($key, $transitionOverrides[$fromKey])) {
+                        $transitionOverrides[$fromKey][] = $key;
+                    }
+                }
+            }
+
+            $updates['transition_overrides'] = $transitionOverrides;
+        }
+
+        $dbModule->update($updates);
+
+        // Log the change
+        $this->logAudit($dbModule, 'status_created', [
+            'status_key' => $key,
+            'status' => $validated['status'],
+        ], auth()->user());
+
+        return response()->json([
+            'message' => "Status '{$key}' criado.",
+            'data' => $statusOverrides[$key],
+            'all_statuses' => $dbModule->getStatuses(),
+        ], 201);
+    }
+
+    /**
+     * Delete a custom status.
+     * Only custom statuses can be deleted.
+     */
+    public function deleteStatus(Request $request, string $moduleId, string $statusKey): JsonResponse
+    {
+        $dbModule = Module::findOrFail($moduleId);
+
+        $registry = ModuleRegistry::getInstance();
+        $registry->boot();
+        $module = $registry->get($moduleId);
+
+        if (!$module) {
+            return response()->json(['message' => 'Módulo não encontrado.'], 404);
+        }
+
+        $baseStatuses = $module->getStatuses();
+        $customStatuses = $dbModule->status_overrides ?? [];
+
+        // Can only delete custom statuses (not base module statuses)
+        if (isset($baseStatuses[$statusKey]) && !isset($customStatuses[$statusKey]['_custom'])) {
+            return response()->json([
+                'message' => 'Não é possível deletar status base do módulo.',
+                'hint' => 'Use o endpoint updateStatus para modificar propriedades do status.',
+            ], 422);
+        }
+
+        // Force check - require preview first unless force=true
+        $force = $request->boolean('force', false);
+        if (!$force) {
+            // Calculate impact
+            $impact = $this->calculateStatusImpact($dbModule, $moduleId, $statusKey);
+            if ($impact['affected_records'] > 0) {
+                return response()->json([
+                    'message' => 'Existem registros neste status. Use force=true para confirmar.',
+                    'impact' => $impact,
+                ], 409);
+            }
+        }
+
+        // Remove from status_overrides
+        if (isset($customStatuses[$statusKey])) {
+            unset($customStatuses[$statusKey]);
+            $dbModule->status_overrides = $customStatuses;
+        }
+
+        // Remove from transition_overrides
+        $transitionOverrides = $dbModule->transition_overrides ?? [];
+        unset($transitionOverrides[$statusKey]);
+        foreach ($transitionOverrides as $from => &$toList) {
+            $toList = array_filter($toList, fn($to) => $to !== $statusKey);
+        }
+        $dbModule->transition_overrides = $transitionOverrides;
+
+        $dbModule->save();
+
+        // Log the change
+        $this->logAudit($dbModule, 'status_deleted', [
+            'status_key' => $statusKey,
+        ], auth()->user());
+
+        return response()->json([
+            'message' => "Status '{$statusKey}' removido.",
+            'all_statuses' => $dbModule->getStatuses(),
+        ]);
+    }
+
+    /**
+     * Preview impact of a proposed change.
+     * Helps admin understand consequences before confirming.
+     */
+    public function previewImpact(Request $request, string $moduleId): JsonResponse
+    {
+        $dbModule = Module::findOrFail($moduleId);
+
+        $registry = ModuleRegistry::getInstance();
+        $registry->boot();
+        $module = $registry->get($moduleId);
+
+        if (!$module) {
+            return response()->json(['message' => 'Módulo não encontrado.'], 404);
+        }
+
+        $validated = $request->validate([
+            'action' => ['required', 'in:delete_status,update_status,update_transition,delete_action'],
+            'status_key' => ['required_if:action,delete_status,update_status', 'string'],
+            'changes' => ['sometimes', 'array'],
+        ]);
+
+        $action = $validated['action'];
+        $statusKey = $validated['status_key'] ?? null;
+        $changes = $validated['changes'] ?? [];
+
+        $impact = [
+            'action' => $action,
+            'can_proceed' => true,
+            'affected_records' => 0,
+            'warnings' => [],
+            'suggestions' => [],
+        ];
+
+        switch ($action) {
+            case 'delete_status':
+                $impact = array_merge($impact, $this->calculateStatusImpact($dbModule, $moduleId, $statusKey));
+                break;
+
+            case 'update_status':
+                if (isset($changes['final']) && $changes['final'] === true) {
+                    // Check if there are transitions FROM this status
+                    $transitions = $module->getTransitions();
+                    if (isset($transitions[$statusKey]) && count($transitions[$statusKey]) > 0) {
+                        $count = count($transitions[$statusKey]);
+                        $impact['warnings'][] = "Este status tem {$count} transições de saída que serão invalidadas.";
+                        $impact['suggestions'][] = 'Remova as transições de saída antes de marcar como final.';
+                    }
+                }
+                break;
+
+            case 'update_transition':
+                // For now, just acknowledge
+                $impact['warnings'][] = 'Alterações em transições podem afetar o fluxo de trabalho dos usuários.';
+                break;
+
+            case 'delete_action':
+                $actionKey = $validated['changes']['action_key'] ?? null;
+                if ($actionKey) {
+                    $impact['warnings'][] = "A ação '{$actionKey}' será removida de todos os status onde está disponível.";
+                }
+                break;
+        }
+
+        return response()->json($impact);
+    }
+
+    /**
+     * Calculate impact of deleting a status.
+     */
+    protected function calculateStatusImpact(Module $dbModule, string $moduleId, string $statusKey): array
+    {
+        $impact = [
+            'status_key' => $statusKey,
+            'can_proceed' => true,
+            'affected_records' => 0,
+            'warnings' => [],
+            'suggestions' => [],
+        ];
+
+        // Count affected records based on module type
+        $modelClass = match ($moduleId) {
+            'pedidos-simples' => \App\Models\Pedido::class,
+            'capas-personalizadas' => \App\Models\CapaPersonalizada::class,
+            default => null,
+        };
+
+        if ($modelClass && class_exists($modelClass)) {
+            $count = $modelClass::where('status', $statusKey)->count();
+            $impact['affected_records'] = $count;
+
+            if ($count > 0) {
+                $impact['warnings'][] = "{$count} registros estão neste status.";
+                $impact['suggestions'][] = 'Mova os registros para outro status antes de deletar.';
+                $impact['can_proceed'] = false;
+            }
+        }
+
+        // Check transitions TO this status
+        $registry = ModuleRegistry::getInstance();
+        $registry->boot();
+        $module = $registry->get($moduleId);
+
+        if ($module) {
+            $transitions = $module->getTransitions();
+            $incomingCount = 0;
+            $outgoingCount = 0;
+
+            foreach ($transitions as $from => $toList) {
+                if (in_array($statusKey, $toList)) {
+                    $incomingCount++;
+                }
+                if ($from === $statusKey) {
+                    $outgoingCount = count($toList);
+                }
+            }
+
+            if ($incomingCount > 0) {
+                $impact['warnings'][] = "{$incomingCount} status(s) tem transição para este status.";
+            }
+            if ($outgoingCount > 0) {
+                $impact['warnings'][] = "Este status tem {$outgoingCount} transição(ões) de saída.";
+            }
+        }
+
+        // Check actions linked to this status
+        $actions = $module?->getActions() ?? [];
+        $linkedActions = [];
+        foreach ($actions as $actionKey => $actionConfig) {
+            $availableIn = $actionConfig['available_in_status'] ?? [];
+            if (in_array($statusKey, $availableIn) || in_array((int) $statusKey, $availableIn)) {
+                $linkedActions[] = $actionKey;
+            }
+        }
+        if (count($linkedActions) > 0) {
+            $impact['warnings'][] = count($linkedActions) . " ação(ões) estão vinculadas a este status: " . implode(', ', $linkedActions);
+        }
+
+        return $impact;
+    }
 }
+
