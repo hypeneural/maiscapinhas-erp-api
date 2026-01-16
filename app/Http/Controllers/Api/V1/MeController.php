@@ -126,21 +126,22 @@ class MeController extends Controller
 
         // 3. Get user overrides (grants)
         $userOverrides = \App\Models\UserPermissionOverride::where('user_id', $user->id)
-            ->where('is_active', true)
-            ->where(function ($q) {
-                $q->whereNull('expires_at')
-                    ->orWhere('expires_at', '>', now());
-            })
+            ->with('permission')
+            ->active()
             ->get();
 
         foreach ($userOverrides as $override) {
-            if ($override->type === 'grant') {
-                $allPermissions[] = $override->permission;
+            $permName = $override->permission?->name;
+            if (!$permName)
+                continue;
+
+            if ($override->granted) {
+                $allPermissions[] = $permName;
 
                 // Track temporary permissions
                 if ($override->expires_at) {
                     $temporaryPermissions[] = [
-                        'permission' => $override->permission,
+                        'permission' => $permName,
                         'expires_at' => $override->expires_at->toIso8601String(),
                         'granted_by' => $override->grantedBy?->name ?? 'Sistema',
                         'reason' => $override->reason,
@@ -150,7 +151,7 @@ class MeController extends Controller
                     $hoursUntilExpiry = now()->diffInHours($override->expires_at, false);
                     if ($hoursUntilExpiry > 0 && $hoursUntilExpiry <= 72) {
                         $expiringSoon[] = [
-                            'permission' => $override->permission,
+                            'permission' => $permName,
                             'expires_in_hours' => (int) $hoursUntilExpiry,
                             'expires_at' => $override->expires_at->toIso8601String(),
                         ];
