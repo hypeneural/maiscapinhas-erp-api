@@ -530,7 +530,7 @@ class ModuleController extends Controller
     {
         $module = Module::findOrFail($moduleId);
 
-        $limit = $request->input('limit', 50);
+        $limit = (int) $request->input('limit', 50);
 
         // Fetch from audit_log table if exists, otherwise from module's audit_log column
         $auditLog = $module->audit_log ?? [];
