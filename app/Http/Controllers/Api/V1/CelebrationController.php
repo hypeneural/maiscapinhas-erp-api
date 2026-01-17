@@ -21,6 +21,229 @@ class CelebrationController extends Controller
     use ApiResponse;
 
     /**
+     * Listar comemorações (tabela dinâmica)
+     *
+     * Lista todos os usuários com datas de aniversário e contratação,
+     * com filtros avançados, ordenação e paginação para tabela admin.
+     *
+     * @queryParam store_id int Filtrar por loja. Example: 1
+     * @queryParam type string Tipo: `birthday`, `work_anniversary`. Example: birthday
+     * @queryParam month int Filtrar por mês (1-12). Example: 1
+     * @queryParam status string `today`, `upcoming`, `past`, `this_week`, `this_month`. Example: upcoming
+     * @queryParam keyword string Busca por nome. Example: João
+     * @queryParam sort string Campo: `name`, `date`, `days_until`, `store_name`, `years`. Default: days_until. Example: name
+     * @queryParam direction string `asc` ou `desc`. Default: asc. Example: asc
+     * @queryParam per_page int Itens por página (máx 100). Default: 25. Example: 25
+     *
+     * @response 200 {
+     *   "data": [...],
+     *   "meta": {"current_page": 1, "per_page": 25, "total": 50},
+     *   "filters": {"types": [...], "stores": [...], "statuses": [...]}
+     * }
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $storeId = $request->input('store_id');
+        $type = $request->input('type');
+        $month = $request->input('month');
+        $status = $request->input('status');
+        $keyword = $request->input('keyword');
+        $sortField = $request->input('sort', 'days_until');
+        $sortDirection = $request->input('direction', 'asc') === 'desc' ? 'desc' : 'asc';
+        $perPage = min((int) $request->input('per_page', 25), 100);
+
+        $today = Carbon::today();
+        $celebrations = [];
+
+        // Query users
+        $query = User::query()->active()->with('storeUsers.store');
+
+        if ($storeId) {
+            $query->whereHas('storeUsers', fn($q) => $q->where('store_id', $storeId));
+        }
+
+        if ($keyword) {
+            $query->where('name', 'like', "%{$keyword}%");
+        }
+
+        $users = $query->get();
+
+        foreach ($users as $user) {
+            $store = $user->storeUsers->first()?->store;
+            $storeName = $store?->name ?? 'Sem Loja';
+            $storeIdValue = $store?->id;
+
+            // Birthday
+            if ((!$type || $type === 'birthday') && $user->birth_date) {
+                $nextBirthday = Carbon::create($today->year, $user->birth_date->month, $user->birth_date->day);
+                if ($nextBirthday->lt($today)) {
+                    $nextBirthday->addYear();
+                }
+                $daysUntil = (int) $today->diffInDays($nextBirthday, false);
+
+                $celebrations[] = [
+                    'id' => $user->id . '_birthday',
+                    'user_id' => $user->id,
+                    'user_name' => $user->name,
+                    'avatar_url' => $user->avatar_url,
+                    'store_id' => $storeIdValue,
+                    'store_name' => $storeName,
+                    'type' => 'birthday',
+                    'type_label' => 'Aniversário',
+                    'original_date' => $user->birth_date->toDateString(),
+                    'next_date' => $nextBirthday->toDateString(),
+                    'day' => $user->birth_date->day,
+                    'month' => $user->birth_date->month,
+                    'days_until' => $daysUntil,
+                    'is_today' => $daysUntil === 0,
+                    'is_this_week' => $daysUntil >= 0 && $daysUntil <= 7,
+                    'is_this_month' => $nextBirthday->month === $today->month,
+                    'status' => $this->getStatus($daysUntil),
+                    'status_label' => $this->getStatusLabel($daysUntil),
+                    'years' => null,
+                ];
+            }
+
+            // Work anniversary
+            if ((!$type || $type === 'work_anniversary') && $user->hire_date) {
+                $nextAnniversary = Carbon::create($today->year, $user->hire_date->month, $user->hire_date->day);
+                if ($nextAnniversary->lt($today)) {
+                    $nextAnniversary->addYear();
+                }
+                $daysUntil = (int) $today->diffInDays($nextAnniversary, false);
+                $years = $nextAnniversary->year - $user->hire_date->year;
+
+                // Skip if not yet 1 year
+                if ($years < 1)
+                    continue;
+
+                $celebrations[] = [
+                    'id' => $user->id . '_work',
+                    'user_id' => $user->id,
+                    'user_name' => $user->name,
+                    'avatar_url' => $user->avatar_url,
+                    'store_id' => $storeIdValue,
+                    'store_name' => $storeName,
+                    'type' => 'work_anniversary',
+                    'type_label' => 'Aniversário de Empresa',
+                    'original_date' => $user->hire_date->toDateString(),
+                    'next_date' => $nextAnniversary->toDateString(),
+                    'day' => $user->hire_date->day,
+                    'month' => $user->hire_date->month,
+                    'days_until' => $daysUntil,
+                    'is_today' => $daysUntil === 0,
+                    'is_this_week' => $daysUntil >= 0 && $daysUntil <= 7,
+                    'is_this_month' => $nextAnniversary->month === $today->month,
+                    'status' => $this->getStatus($daysUntil),
+                    'status_label' => $this->getStatusLabel($daysUntil),
+                    'years' => $years,
+                    'years_label' => $years === 1 ? '1 ano' : "{$years} anos",
+                ];
+            }
+        }
+
+        // Filter by month
+        if ($month) {
+            $celebrations = array_filter($celebrations, fn($c) => $c['month'] === (int) $month);
+        }
+
+        // Filter by status
+        if ($status) {
+            $celebrations = array_filter($celebrations, fn($c) => $c['status'] === $status);
+        }
+
+        // Sort
+        $sortMap = [
+            'name' => 'user_name',
+            'date' => 'next_date',
+            'days_until' => 'days_until',
+            'store_name' => 'store_name',
+            'years' => 'years',
+        ];
+        $sortKey = $sortMap[$sortField] ?? 'days_until';
+
+        usort($celebrations, function ($a, $b) use ($sortKey, $sortDirection) {
+            $cmp = $a[$sortKey] <=> $b[$sortKey];
+            return $sortDirection === 'desc' ? -$cmp : $cmp;
+        });
+
+        // Pagination
+        $total = count($celebrations);
+        $page = max(1, (int) $request->input('page', 1));
+        $offset = ($page - 1) * $perPage;
+        $paginatedData = array_slice($celebrations, $offset, $perPage);
+
+        // Collect filter options
+        $stores = User::query()
+            ->active()
+            ->with('storeUsers.store')
+            ->get()
+            ->flatMap(fn($u) => $u->storeUsers->pluck('store'))
+            ->unique('id')
+            ->map(fn($s) => ['id' => $s?->id, 'name' => $s?->name])
+            ->filter(fn($s) => $s['id'])
+            ->values();
+
+        return response()->json([
+            'data' => array_values($paginatedData),
+            'meta' => [
+                'current_page' => $page,
+                'per_page' => $perPage,
+                'total' => $total,
+                'last_page' => (int) ceil($total / $perPage),
+            ],
+            'filters' => [
+                'types' => [
+                    ['value' => 'birthday', 'label' => 'Aniversário'],
+                    ['value' => 'work_anniversary', 'label' => 'Aniversário de Empresa'],
+                ],
+                'statuses' => [
+                    ['value' => 'today', 'label' => 'Hoje'],
+                    ['value' => 'this_week', 'label' => 'Esta Semana'],
+                    ['value' => 'this_month', 'label' => 'Este Mês'],
+                    ['value' => 'upcoming', 'label' => 'Próximos'],
+                ],
+                'stores' => $stores,
+                'months' => collect(range(1, 12))->map(fn($m) => [
+                    'value' => $m,
+                    'label' => Carbon::create(null, $m)->locale('pt_BR')->monthName,
+                ]),
+            ],
+            'summary' => [
+                'total' => $total,
+                'today' => count(array_filter($celebrations, fn($c) => $c['is_today'])),
+                'this_week' => count(array_filter($celebrations, fn($c) => $c['is_this_week'])),
+                'birthdays' => count(array_filter($celebrations, fn($c) => $c['type'] === 'birthday')),
+                'work_anniversaries' => count(array_filter($celebrations, fn($c) => $c['type'] === 'work_anniversary')),
+            ],
+        ]);
+    }
+
+    private function getStatus(int $daysUntil): string
+    {
+        if ($daysUntil === 0)
+            return 'today';
+        if ($daysUntil > 0 && $daysUntil <= 7)
+            return 'this_week';
+        if ($daysUntil > 7 && $daysUntil <= 30)
+            return 'this_month';
+        return 'upcoming';
+    }
+
+    private function getStatusLabel(int $daysUntil): string
+    {
+        if ($daysUntil === 0)
+            return 'Hoje';
+        if ($daysUntil === 1)
+            return 'Amanhã';
+        if ($daysUntil > 0 && $daysUntil <= 7)
+            return "Em {$daysUntil} dias";
+        if ($daysUntil > 7 && $daysUntil <= 30)
+            return "Em {$daysUntil} dias";
+        return Carbon::today()->addDays($daysUntil)->locale('pt_BR')->format('d M');
+    }
+
+    /**
      * Comemorações do mês
      *
      * Lista todos os aniversariantes (nascimento e empresa) do mês especificado.

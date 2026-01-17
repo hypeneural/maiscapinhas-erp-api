@@ -9,6 +9,11 @@
 use App\Http\Controllers\Api\V1\CelebrationController;
 use Illuminate\Support\Facades\Route;
 
+// Listagem com filtros (tabela dinâmica)
+Route::get('/', [CelebrationController::class, 'index'])
+    ->name('index')
+    ->middleware('permission:celebrations.view');
+
 Route::get('/month', [CelebrationController::class, 'month'])
     ->name('month')
     ->middleware('permission:celebrations.view');
