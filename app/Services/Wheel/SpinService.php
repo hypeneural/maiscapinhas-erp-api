@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\Log;
  * Responsabilidades:
  * - Lock: apenas 1 giro por vez por sessão
  * - Idempotência: via client_nonce
- * - Sorteio: seleção ponderada de segmento
+ * - Sorteio: seleção ponderada de segmento COM REGRAS AVANÇADAS
  * - Estoque: consumo atômico de inventário
  */
 class SpinService
@@ -35,6 +35,13 @@ class SpinService
 
     // Prefixo para locks
     private const LOCK_PREFIX = 'wheel_spin_lock:';
+
+    private PrizeSelector $prizeSelector;
+
+    public function __construct(?PrizeSelector $prizeSelector = null)
+    {
+        $this->prizeSelector = $prizeSelector ?? new PrizeSelector();
+    }
 
     /**
      * Solicita um giro para o player.
@@ -82,8 +89,16 @@ class SpinService
 
             // 5. Executar giro em transação
             return DB::transaction(function () use ($session, $player, $clientNonce) {
-                // Sortear segmento
-                $segment = $this->selectSegment($session->campaign);
+                // Incrementar spin_seq da sessão
+                $session->increment('spin_seq');
+                $spinSeq = $session->spin_seq;
+
+                // Sortear segmento usando PrizeSelector com regras avançadas
+                $segment = $this->prizeSelector->selectEligibleSegment(
+                    $session->campaign,
+                    $session,
+                    $session->screen_id
+                );
 
                 if (!$segment) {
                     throw new SpinException('Nenhum prêmio disponível no momento.', 'NO_SEGMENTS');
@@ -91,6 +106,14 @@ class SpinService
 
                 // Consumir inventário (se aplicável)
                 $inventoryConsumed = $this->consumeInventory($session->campaign, $segment->prize);
+
+                // Registrar prêmio no estado (atualiza cooldown/contadores)
+                $this->prizeSelector->recordPrizeAwarded(
+                    $session->campaign_id,
+                    $segment->prize_id,
+                    $spinSeq,
+                    $session->screen_id
+                );
 
                 // Gerar código do prêmio (se aplicável)
                 $prizeCode = $segment->prize->requiresRedeem()

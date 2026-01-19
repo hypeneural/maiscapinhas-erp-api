@@ -269,4 +269,44 @@ Route::prefix('players')->name('players.')->group(function () {
         ->middleware('permission:wheel.players.view');
 });
 
+// ============================================
+// Prize Rules (Regras de Prêmios)
+// ============================================
+Route::prefix('prize-rules')->name('prize-rules.')->group(function () {
+    // Regra específica
+    Route::get('/{rule_id}', [\App\Http\Controllers\Api\V1\Admin\Wheel\PrizeRuleController::class, 'show'])
+        ->name('show')
+        ->middleware('permission:wheel.campaigns.view');
 
+    Route::match(['put', 'patch'], '/{rule_id}', [\App\Http\Controllers\Api\V1\Admin\Wheel\PrizeRuleController::class, 'update'])
+        ->name('update')
+        ->middleware('permission:wheel.campaigns.manage');
+
+    Route::delete('/{rule_id}', [\App\Http\Controllers\Api\V1\Admin\Wheel\PrizeRuleController::class, 'destroy'])
+        ->name('destroy')
+        ->middleware('permission:wheel.campaigns.manage');
+
+    Route::post('/{rule_id}/reset-cooldown', [\App\Http\Controllers\Api\V1\Admin\Wheel\PrizeRuleController::class, 'resetCooldown'])
+        ->name('reset-cooldown')
+        ->middleware('permission:wheel.campaigns.manage');
+});
+
+// Regras dentro de campanha
+Route::prefix('campaigns/{campaign_key}/prize-rules')->name('campaigns.prize-rules.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\V1\Admin\Wheel\PrizeRuleController::class, 'index'])
+        ->name('index')
+        ->middleware('permission:wheel.campaigns.view');
+
+    Route::post('/', [\App\Http\Controllers\Api\V1\Admin\Wheel\PrizeRuleController::class, 'store'])
+        ->name('store')
+        ->middleware('permission:wheel.campaigns.manage');
+
+    Route::put('/bulk', [\App\Http\Controllers\Api\V1\Admin\Wheel\PrizeRuleController::class, 'bulkUpdate'])
+        ->name('bulk')
+        ->middleware('permission:wheel.campaigns.manage');
+});
+
+// Estado dos prêmios (elegibilidade)
+Route::get('/campaigns/{campaign_key}/prize-state', [\App\Http\Controllers\Api\V1\Admin\Wheel\PrizeRuleController::class, 'prizeState'])
+    ->name('campaigns.prize-state')
+    ->middleware('permission:wheel.campaigns.view');
