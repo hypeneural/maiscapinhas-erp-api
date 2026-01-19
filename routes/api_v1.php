@@ -514,6 +514,13 @@ Route::middleware('auth:sanctum')->group(function () {
         });
     });
 
-
+    // ============================================
+    // Wheel Runtime (TV + Mobile) - Sem auth admin
+    // ============================================
+    // Estas rotas usam autenticação própria (screen token / player token)
+    Route::prefix('wheel')->name('wheel.runtime.')->group(function () {
+        require app_path('Modules/Wheel/routes_runtime.php');
+    });
 
 });
+
