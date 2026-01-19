@@ -112,6 +112,7 @@ class ModuleRegistry
             \App\Modules\WhatsAppInstances\WhatsAppInstancesModule::class,
             \App\Modules\ConferenciaCaixa\ConferenciaCaixaModule::class,
             \App\Modules\Comemoracoes\ComemoracoesModule::class,
+            \App\Modules\Wheel\WheelModule::class,
         ];
 
         foreach ($coreModules as $moduleClass) {

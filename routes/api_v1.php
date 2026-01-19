@@ -505,6 +505,13 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/store/{store}', [\App\Http\Controllers\Api\V1\Admin\GraphController::class, 'store'])->name('store');
             Route::get('/module/{module}', [\App\Http\Controllers\Api\V1\Admin\GraphController::class, 'module'])->name('module');
         });
+
+        // ============================================
+        // Wheel Module (Roleta nas TVs) - Super Admin
+        // ============================================
+        Route::prefix('wheel')->name('wheel.')->middleware('permission:wheel.admin')->group(function () {
+            require app_path('Modules/Wheel/routes.php');
+        });
     });
 
 
