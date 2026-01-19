@@ -264,4 +264,115 @@ class CampaignController extends Controller
             'data' => new CampaignResource($campaign->fresh()),
         ]);
     }
+
+    /**
+     * Duplicar campanha.
+     * 
+     * Cria uma cópia da campanha com status draft, incluindo segmentos e inventário.
+     */
+    public function duplicate(Request $request, string $campaignKey): JsonResponse
+    {
+        $request->validate([
+            'new_name' => 'nullable|string|max:100',
+        ]);
+
+        $original = WheelCampaign::where('campaign_key', $campaignKey)
+            ->with(['segments.prize', 'inventory'])
+            ->firstOrFail();
+
+        // Criar nova campanha
+        $newName = $request->input('new_name', $original->name . ' (Cópia)');
+
+        $newCampaign = WheelCampaign::create([
+            'campaign_key' => WheelCampaign::generateCampaignKey(),
+            'name' => $newName,
+            'status' => CampaignStatus::DRAFT,
+            'starts_at' => null,
+            'ends_at' => null,
+            'terms_version' => $original->terms_version,
+            'settings' => $original->settings,
+        ]);
+
+        // Duplicar segmentos
+        foreach ($original->segments as $segment) {
+            $newCampaign->segments()->create([
+                'segment_key' => 'seg_' . \Illuminate\Support\Str::random(8),
+                'label' => $segment->label,
+                'color' => $segment->color,
+                'prize_id' => $segment->prize_id,
+                'probability_weight' => $segment->probability_weight,
+                'sort_order' => $segment->sort_order,
+                'active' => $segment->active,
+            ]);
+        }
+
+        // Duplicar inventário
+        foreach ($original->inventory as $inv) {
+            $newCampaign->inventory()->create([
+                'prize_id' => $inv->prize_id,
+                'total_limit' => $inv->total_limit,
+                'remaining' => $inv->total_limit, // Reset para total
+                'daily_limit' => $inv->daily_limit,
+                'daily_remaining' => $inv->daily_limit, // Reset
+            ]);
+        }
+
+        WheelEvent::logConfigChanged($newCampaign, 'campaign_duplicated', [
+            'source_campaign_key' => $original->campaign_key,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Campanha duplicada com sucesso.',
+            'data' => new CampaignResource($newCampaign->fresh()->loadCount(['screens', 'activeSegments'])),
+        ], 201);
+    }
+
+    /**
+     * Preview da roleta.
+     * 
+     * Retorna dados formatados para renderização visual da roleta.
+     */
+    public function preview(string $campaignKey): JsonResponse
+    {
+        $campaign = WheelCampaign::where('campaign_key', $campaignKey)
+            ->with(['activeSegments.prize'])
+            ->firstOrFail();
+
+        $totalWeight = $campaign->getTotalWeight();
+
+        $segments = $campaign->activeSegments->map(fn($seg) => [
+            'id' => $seg->id,
+            'segment_key' => $seg->segment_key,
+            'label' => $seg->label,
+            'color' => $seg->color,
+            'weight' => $seg->probability_weight,
+            'percentage' => $totalWeight > 0
+                ? round(($seg->probability_weight / $totalWeight) * 100, 1)
+                : 0,
+            'prize' => [
+                'prize_key' => $seg->prize->prize_key,
+                'name' => $seg->prize->name,
+                'type' => $seg->prize->type->value,
+                'icon' => $seg->prize->icon ?? $seg->prize->type->icon(),
+            ],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'campaign_key' => $campaign->campaign_key,
+                'campaign_name' => $campaign->name,
+                'segments' => $segments,
+                'total_segments' => $segments->count(),
+                'total_weight' => $totalWeight,
+                'settings' => [
+                    'spin_duration_ms' => $campaign->getSetting('spin_duration_ms', 5000),
+                    'min_rotations' => $campaign->getSetting('min_rotations', 3),
+                    'max_rotations' => $campaign->getSetting('max_rotations', 6),
+                ],
+            ],
+        ]);
+    }
 }
+

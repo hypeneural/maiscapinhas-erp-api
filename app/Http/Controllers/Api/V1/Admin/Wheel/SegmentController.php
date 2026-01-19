@@ -179,4 +179,39 @@ class SegmentController extends Controller
             'message' => 'Segmento excluído com sucesso.',
         ]);
     }
+
+    /**
+     * Reordenar segmentos.
+     * 
+     * Recebe array de IDs na nova ordem desejada.
+     */
+    public function reorder(Request $request, string $campaignKey): JsonResponse
+    {
+        $request->validate([
+            'order' => 'required|array|min:1',
+            'order.*' => 'integer',
+        ]);
+
+        $campaign = WheelCampaign::where('campaign_key', $campaignKey)->firstOrFail();
+
+        // Reordenar
+        foreach ($request->order as $index => $segmentId) {
+            WheelSegment::where('id', $segmentId)
+                ->where('campaign_id', $campaign->id)
+                ->update(['sort_order' => $index]);
+        }
+
+        WheelEvent::logConfigChanged($campaign, 'segments_reordered', [
+            'order' => $request->order,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Segmentos reordenados com sucesso.',
+            'data' => SegmentResource::collection(
+                $campaign->segments()->with('prize')->orderBy('sort_order')->get()
+            ),
+        ]);
+    }
 }
+

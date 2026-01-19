@@ -108,6 +108,16 @@ Route::prefix('campaigns')->name('campaigns.')->group(function () {
         ->name('end')
         ->middleware('permission:wheel.campaigns.manage');
 
+    // Duplicate campaign
+    Route::post('/{campaign_key}/duplicate', [CampaignController::class, 'duplicate'])
+        ->name('duplicate')
+        ->middleware('permission:wheel.campaigns.manage');
+
+    // Preview (wheel rendering data)
+    Route::get('/{campaign_key}/preview', [CampaignController::class, 'preview'])
+        ->name('preview')
+        ->middleware('permission:wheel.campaigns.view');
+
     // Segments (Wheel Config)
     Route::get('/{campaign_key}/segments', [SegmentController::class, 'index'])
         ->name('segments.index')
@@ -119,6 +129,10 @@ Route::prefix('campaigns')->name('campaigns.')->group(function () {
 
     Route::post('/{campaign_key}/segments', [SegmentController::class, 'store'])
         ->name('segments.store')
+        ->middleware('permission:wheel.campaigns.manage');
+
+    Route::post('/{campaign_key}/segments/reorder', [SegmentController::class, 'reorder'])
+        ->name('segments.reorder')
         ->middleware('permission:wheel.campaigns.manage');
 
     Route::delete('/{campaign_key}/segments/{segment_key}', [SegmentController::class, 'destroy'])
@@ -189,6 +203,10 @@ Route::prefix('analytics')->name('analytics.')->group(function () {
         ->name('summary')
         ->middleware('permission:wheel.analytics.view');
 
+    Route::get('/detailed', [AnalyticsController::class, 'detailed'])
+        ->name('detailed')
+        ->middleware('permission:wheel.analytics.view');
+
     Route::get('/screens-online', [AnalyticsController::class, 'screensOnline'])
         ->name('screens-online')
         ->middleware('permission:wheel.analytics.view');
@@ -205,3 +223,4 @@ Route::prefix('analytics')->name('analytics.')->group(function () {
         ->name('prizes-won')
         ->middleware('permission:wheel.analytics.view');
 });
+
