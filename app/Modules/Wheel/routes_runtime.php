@@ -76,6 +76,10 @@ Route::prefix('mobile')->name('mobile.')->group(function () {
     // Estado do player
     Route::get('/state', [MobileRuntimeController::class, 'state'])
         ->name('state');
+
+    // Atualizar endereço (ViaCEP)
+    Route::post('/address', [MobileRuntimeController::class, 'updateAddress'])
+        ->name('address.update');
 });
 
 // ACK do giro

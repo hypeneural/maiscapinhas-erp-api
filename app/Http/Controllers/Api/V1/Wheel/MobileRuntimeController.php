@@ -11,18 +11,20 @@ use App\Models\WheelEvent;
 use App\Models\WheelPhoneChallenge;
 use App\Models\WheelPlayer;
 use App\Models\WheelSession;
+use App\Models\WheelSessionPlayer;
 use App\Models\WheelSpin;
 use App\Services\Wheel\AblyPublisher;
 use App\Services\Wheel\SpinException;
 use App\Services\Wheel\SpinService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 
 /**
  * MobileRuntimeController
  * 
  * Endpoints runtime para Mobile (celular do cliente na loja).
+ * Refatorado para usar WheelPlayer (pessoa) + WheelSessionPlayer (participação).
  */
 class MobileRuntimeController extends Controller
 {
@@ -36,15 +38,27 @@ class MobileRuntimeController extends Controller
      * POST /sessions/{sessionKey}/join
      * 
      * Entrar na fila via QR Code.
+     * Busca/cria Player pelo WhatsApp e cria SessionPlayer para esta sessão.
      */
     public function join(Request $request, string $sessionKey): JsonResponse
     {
         $request->validate([
             'phone' => 'required|string|min:10|max:20',
+            'name' => 'nullable|string|max:100',
+            'terms_accepted' => 'required|boolean',
+            'device_fingerprint' => 'nullable|string|max:100',
         ]);
 
+        if (!$request->boolean('terms_accepted')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'É necessário aceitar os termos.',
+                'code' => 'TERMS_NOT_ACCEPTED',
+            ], 400);
+        }
+
         $session = WheelSession::where('session_key', $sessionKey)
-            ->with('campaign')
+            ->with('campaign', 'screen.store')
             ->first();
 
         if (!$session) {
@@ -55,79 +69,94 @@ class MobileRuntimeController extends Controller
             ], 404);
         }
 
-        // Verificar se pode entrar
         if ($session->isExpired()) {
             return response()->json([
                 'success' => false,
                 'message' => 'QR Code expirado.',
                 'code' => 'SESSION_EXPIRED',
-            ], 400);
+            ], 410);
         }
 
         if (!$session->canJoin()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Sessão não aceita novos participantes.',
-                'code' => 'SESSION_FULL',
-            ], 400);
+                'code' => 'QUEUE_FULL',
+            ], 422);
         }
 
         $phone = $request->input('phone');
+        $name = $request->input('name');
         $campaign = $session->campaign;
 
-        // Verificar limite por telefone
-        $phoneLimit = $campaign->getSetting('per_phone_limit', '1_per_campaign');
+        // Verificar limite por telefone/campanha
+        $player = WheelPlayer::findOrCreateByPhone($phone, $name);
 
-        if ($phoneLimit === '1_per_campaign') {
-            if (WheelPlayer::hasParticipatedInCampaign($phone, $campaign->id)) {
+        if ($campaign->getSetting('per_phone_limit') === '1_per_campaign') {
+            if ($player->hasParticipatedInCampaign($campaign->id)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Você já participou desta campanha.',
                     'code' => 'PHONE_LIMIT_REACHED',
-                ], 400);
+                ], 429);
             }
         }
 
-        // Verificar se já está na sessão
-        $existingPlayer = WheelPlayer::where('session_id', $session->id)
-            ->byPhone($phone)
+        // Verificar se já está nesta sessão
+        $existingSessionPlayer = WheelSessionPlayer::where('session_id', $session->id)
+            ->where('player_id', $player->id)
             ->active()
             ->first();
 
-        if ($existingPlayer) {
-            // Retornar player existente
-            $token = $existingPlayer->generateAccessToken();
+        if ($existingSessionPlayer) {
+            // Retornar participação existente
+            $token = $existingSessionPlayer->generateAccessToken();
 
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'player' => $this->formatPlayer($existingPlayer),
+                    'session_player' => $existingSessionPlayer->toMobileArray(),
+                    'player' => $player->toPublicArray(),
                     'access_token' => $token,
                     'realtime' => [
                         'auth_url' => '/api/v1/wheel/realtime/auth',
-                        'channel' => "wheel:player:{$existingPlayer->player_key}",
+                        'channel' => "wheel:player:{$player->player_key}",
                     ],
                 ],
                 'message' => 'Bem-vindo de volta!',
             ]);
         }
 
-        // Criar player
-        $player = WheelPlayer::createForSession(
-            $session,
-            $phone,
-            $request->ip(),
-            $request->userAgent()
-        );
+        // Próxima posição na fila
+        $queuePosition = WheelSessionPlayer::where('session_id', $session->id)
+            ->active()
+            ->max('queue_position') ?? -1;
+        $queuePosition += 1;
+
+        // Criar participação nesta sessão
+        $sessionPlayer = WheelSessionPlayer::create([
+            'session_id' => $session->id,
+            'player_id' => $player->id,
+            'status' => PlayerStatus::PENDING,
+            'queue_position' => $queuePosition,
+            'terms_version' => $campaign->terms_version,
+            'terms_accepted_at' => now(),
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'device_info' => [
+                'fingerprint' => $request->input('device_fingerprint'),
+            ],
+        ]);
 
         // Gerar token de acesso
-        $accessToken = $player->generateAccessToken();
+        $accessToken = $sessionPlayer->generateAccessToken();
 
         // Logar evento
         WheelEvent::log('player_joined', [
             'player_key' => $player->player_key,
-            'queue_position' => $player->queue_position,
-        ], $session->screen_id, $session->campaign_id);
+            'session_player_key' => $sessionPlayer->session_player_key,
+            'queue_position' => $queuePosition,
+        ], $session->screen_id, $campaign->id);
 
         // Atualizar sessão para ativa se primeiro player
         if ($session->status === SessionStatus::WAITING) {
@@ -138,9 +167,10 @@ class MobileRuntimeController extends Controller
         // Publicar para TV
         $this->ably->publishToScreen($session->screen->screen_key, 'player_connected', [
             'player_key' => $player->player_key,
-            'phone_masked' => $player->phone_masked,
-            'queue_position' => $player->queue_position,
-            'status' => $player->status->value,
+            'phone_masked' => $player->getPhoneMasked(),
+            'name' => $player->full_name,
+            'queue_position' => $queuePosition,
+            'status' => $sessionPlayer->status->value,
         ]);
 
         // Publicar fila atualizada
@@ -149,10 +179,12 @@ class MobileRuntimeController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'player' => $this->formatPlayer($player),
+                'session_player' => $sessionPlayer->toMobileArray(),
+                'player' => $player->toPublicArray(),
                 'access_token' => $accessToken,
                 'session' => [
                     'session_key' => $session->session_key,
+                    'store_name' => $session->screen->store->name ?? 'Loja',
                     'campaign_name' => $campaign->name,
                 ],
                 'realtime' => [
@@ -165,91 +197,32 @@ class MobileRuntimeController extends Controller
     }
 
     /**
-     * POST /sessions/{sessionKey}/verify
-     * 
-     * Verificar telefone via código WhatsApp.
-     */
-    public function verify(Request $request, string $sessionKey): JsonResponse
-    {
-        $request->validate([
-            'code' => 'required|string|size:6',
-        ]);
-
-        $player = $this->getAuthenticatedPlayer($request);
-        if ($player instanceof JsonResponse) {
-            return $player;
-        }
-
-        // Buscar challenge ativo
-        $challenge = WheelPhoneChallenge::findActiveForPlayer($player->id);
-
-        if (!$challenge) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Nenhum código de verificação pendente.',
-                'code' => 'NO_CHALLENGE',
-            ], 400);
-        }
-
-        // Tentar verificar
-        $verified = $challenge->verify($request->input('code'));
-
-        if (!$verified) {
-            $attemptsLeft = $challenge->max_attempts - $challenge->attempts;
-
-            return response()->json([
-                'success' => false,
-                'message' => "Código incorreto. {$attemptsLeft} tentativa(s) restante(s).",
-                'code' => 'INVALID_CODE',
-                'attempts_left' => $attemptsLeft,
-            ], 400);
-        }
-
-        // Logar
-        WheelEvent::log('player_verified', [
-            'player_key' => $player->player_key,
-        ], $player->session->screen_id, $player->session->campaign_id);
-
-        // Publicar para TV
-        $this->ably->publishToScreen(
-            $player->session->screen->screen_key,
-            'player_verified',
-            [
-                'player_key' => $player->player_key,
-                'phone_masked' => $player->phone_masked,
-            ]
-        );
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Telefone verificado com sucesso!',
-            'data' => [
-                'player' => $this->formatPlayer($player->fresh()),
-                'can_spin' => $player->fresh()->canSpin(),
-            ],
-        ]);
-    }
-
-    /**
      * POST /sessions/{sessionKey}/request-code
      * 
      * Solicitar código de verificação via WhatsApp.
      */
     public function requestCode(Request $request, string $sessionKey): JsonResponse
     {
-        $player = $this->getAuthenticatedPlayer($request);
-        if ($player instanceof JsonResponse) {
-            return $player;
+        $sessionPlayer = $this->getAuthenticatedSessionPlayer($request);
+        if ($sessionPlayer instanceof JsonResponse) {
+            return $sessionPlayer;
         }
 
-        if ($player->phone_verified) {
+        $player = $sessionPlayer->player;
+
+        if ($player->whatsapp_confirmed_at) {
+            // Já verificado, atualizar status da participação
+            $sessionPlayer->status = PlayerStatus::VERIFIED;
+            $sessionPlayer->save();
+
             return response()->json([
-                'success' => false,
+                'success' => true,
                 'message' => 'Telefone já verificado.',
-            ], 400);
+                'data' => ['already_verified' => true],
+            ]);
         }
 
-        // Verificar se já tem challenge ativo
+        // Verificar challenge existente
         $existingChallenge = WheelPhoneChallenge::findActiveForPlayer($player->id);
 
         if ($existingChallenge && !$existingChallenge->isExpired()) {
@@ -266,11 +239,10 @@ class MobileRuntimeController extends Controller
         $challenge = WheelPhoneChallenge::createForPlayer($player);
 
         // Atualizar status
-        $player->status = PlayerStatus::VERIFYING;
-        $player->save();
+        $sessionPlayer->status = PlayerStatus::VERIFYING;
+        $sessionPlayer->save();
 
-        // TODO: Integrar com Evolution API para enviar via WhatsApp
-        // Por enquanto, apenas simula o envio
+        // TODO: Integrar com Evolution API
         $challenge->markSent(['simulated' => true]);
 
         return response()->json([
@@ -278,8 +250,82 @@ class MobileRuntimeController extends Controller
             'message' => 'Código enviado para seu WhatsApp.',
             'data' => [
                 'expires_in_seconds' => 300,
-                // Em DEV, retornar o código para facilitar testes
                 'code' => app()->environment('local') ? $challenge->code : null,
+            ],
+        ]);
+    }
+
+    /**
+     * POST /sessions/{sessionKey}/verify
+     * 
+     * Verificar telefone via código WhatsApp.
+     */
+    public function verify(Request $request, string $sessionKey): JsonResponse
+    {
+        $request->validate([
+            'code' => 'required|string|min:4|max:6',
+        ]);
+
+        $sessionPlayer = $this->getAuthenticatedSessionPlayer($request);
+        if ($sessionPlayer instanceof JsonResponse) {
+            return $sessionPlayer;
+        }
+
+        $player = $sessionPlayer->player;
+
+        // Buscar challenge ativo
+        $challenge = WheelPhoneChallenge::findActiveForPlayer($player->id);
+
+        if (!$challenge) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nenhum código de verificação pendente.',
+                'code' => 'NO_CHALLENGE',
+            ], 400);
+        }
+
+        // Verificar código
+        $verified = $challenge->verify($request->input('code'));
+
+        if (!$verified) {
+            $attemptsLeft = $challenge->max_attempts - $challenge->attempts;
+
+            return response()->json([
+                'success' => false,
+                'message' => "Código incorreto. {$attemptsLeft} tentativa(s) restante(s).",
+                'code' => 'INVALID_CODE',
+                'attempts_left' => $attemptsLeft,
+            ], 400);
+        }
+
+        // Marcar player como verificado (globalmente)
+        $player->markWhatsAppConfirmed();
+
+        // Atualizar participação
+        $sessionPlayer->status = PlayerStatus::VERIFIED;
+        $sessionPlayer->save();
+
+        // Logar
+        WheelEvent::log('player_verified', [
+            'player_key' => $player->player_key,
+        ], $sessionPlayer->session->screen_id, $sessionPlayer->session->campaign_id);
+
+        // Publicar para TV
+        $this->ably->publishToScreen(
+            $sessionPlayer->session->screen->screen_key,
+            'player_verified',
+            [
+                'player_key' => $player->player_key,
+                'phone_masked' => $player->getPhoneMasked(),
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Telefone verificado com sucesso!',
+            'data' => [
+                'session_player' => $sessionPlayer->fresh()->toMobileArray(),
+                'can_spin' => $sessionPlayer->fresh()->canSpin(),
             ],
         ]);
     }
@@ -295,17 +341,17 @@ class MobileRuntimeController extends Controller
             'client_nonce' => 'nullable|string|max:100',
         ]);
 
-        $player = $this->getAuthenticatedPlayer($request);
-        if ($player instanceof JsonResponse) {
-            return $player;
+        $sessionPlayer = $this->getAuthenticatedSessionPlayer($request);
+        if ($sessionPlayer instanceof JsonResponse) {
+            return $sessionPlayer;
         }
 
-        $session = $player->session;
+        $session = $sessionPlayer->session;
+        $player = $sessionPlayer->player;
 
         try {
-            $result = $this->spinService->requestSpin(
-                $session,
-                $player,
+            $result = $this->spinService->requestSpinForSessionPlayer(
+                $sessionPlayer,
                 $request->input('client_nonce')
             );
 
@@ -350,7 +396,7 @@ class MobileRuntimeController extends Controller
             'latency_ms' => 'nullable|integer',
         ]);
 
-        $spin = WheelSpin::where('spin_key', $spinKey)->first();
+        $spin = WheelSpin::where('spin_key', $spinKey)->with('sessionPlayer.player', 'prize')->first();
 
         if (!$spin) {
             return response()->json([
@@ -360,33 +406,34 @@ class MobileRuntimeController extends Controller
         }
 
         // Verificar autenticação
-        $player = $this->getAuthenticatedPlayer($request);
-        if ($player instanceof JsonResponse) {
-            return $player;
+        $sessionPlayer = $this->getAuthenticatedSessionPlayer($request);
+        if ($sessionPlayer instanceof JsonResponse) {
+            return $sessionPlayer;
         }
 
-        if ($spin->player_id !== $player->id) {
+        if ($spin->session_player_id !== $sessionPlayer->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Spin não pertence a este jogador.',
             ], 403);
         }
 
-        // Atualizar com telemetria e completar
+        // Atualizar com telemetria
         $telemetry = $request->only(['animation_duration_ms', 'fps', 'latency_ms']);
         $spin = $this->spinService->acknowledgeSpin($spin, $telemetry);
 
-        // Obter resultado
         $result = [
             'spin_key' => $spin->spin_key,
-            'won' => $spin->prize->requiresRedeem(),
+            'is_winner' => $spin->prize->requiresRedeem(),
             'prize' => [
                 'prize_key' => $spin->prize->prize_key,
                 'name' => $spin->prize->name,
                 'type' => $spin->prize->type->value,
                 'icon' => $spin->prize->icon ?? $spin->prize->type->icon(),
+                'code' => $spin->prize_code,
+                'redeem_instructions' => $spin->prize->redeem_instructions,
             ],
-            'prize_code' => $spin->prize_code,
+            'spins_remaining' => $sessionPlayer->fresh()->getSpinsAvailable(),
         ];
 
         // Publicar resultado
@@ -397,7 +444,7 @@ class MobileRuntimeController extends Controller
         );
 
         $this->ably->publishToPlayer(
-            $player->player_key,
+            $sessionPlayer->player->player_key,
             'spin_result',
             $result
         );
@@ -415,37 +462,131 @@ class MobileRuntimeController extends Controller
      */
     public function state(Request $request): JsonResponse
     {
-        $player = $this->getAuthenticatedPlayer($request);
-        if ($player instanceof JsonResponse) {
-            return $player;
+        $sessionPlayer = $this->getAuthenticatedSessionPlayer($request);
+        if ($sessionPlayer instanceof JsonResponse) {
+            return $sessionPlayer;
         }
 
-        $session = $player->session;
-        $lastSpin = $player->spins()->latest()->first();
+        $session = $sessionPlayer->session->load('screen.store', 'campaign');
+        $player = $sessionPlayer->player;
+        $lastSpin = $sessionPlayer->spins()->with('prize')->latest()->first();
 
         return response()->json([
             'success' => true,
             'data' => [
-                'player' => $this->formatPlayer($player),
+                'state' => $sessionPlayer->getState(),
+                'server_time' => now()->toISOString(),
+                'player' => $player->toPublicArray(),
+                'session_player' => $sessionPlayer->toMobileArray(),
                 'session' => [
                     'session_key' => $session->session_key,
                     'status' => $session->status->value,
-                    'campaign_name' => $session->campaign->name,
+                    'expires_at' => $session->expires_at?->toISOString(),
                 ],
-                'last_spin' => $lastSpin ? [
+                'screen' => [
+                    'screen_key' => $session->screen->screen_key,
+                    'store_name' => $session->screen->store->name ?? 'Loja',
+                ],
+                'queue' => [
+                    'position' => $sessionPlayer->queue_position,
+                    'total' => WheelSessionPlayer::where('session_id', $session->id)->active()->count(),
+                    'eta_seconds' => $sessionPlayer->queue_position * 15, // ~15s por jogador
+                ],
+                'current_spin' => $lastSpin && !$lastSpin->isCompleted() ? [
                     'spin_key' => $lastSpin->spin_key,
                     'status' => $lastSpin->status->value,
-                    'prize_code' => $lastSpin->prize_code,
+                    'started_at' => $lastSpin->started_at?->toISOString(),
                 ] : null,
-                'server_time' => now()->toISOString(),
+                'last_result' => $lastSpin && $lastSpin->isCompleted() ? [
+                    'spin_key' => $lastSpin->spin_key,
+                    'prize' => [
+                        'name' => $lastSpin->prize->name,
+                        'type' => $lastSpin->prize->type->value,
+                        'code' => $lastSpin->prize_code,
+                    ],
+                ] : null,
+                'ui_hints' => [
+                    'focus_mode_min_ms' => 2500,
+                    'spin_duration_ms' => $session->campaign->getSetting('spin_duration_ms', 8000),
+                ],
             ],
         ]);
     }
 
     /**
-     * Autentica player via Bearer token.
+     * POST /mobile/address
+     * 
+     * Atualizar endereço do player via CEP (ViaCEP).
      */
-    private function getAuthenticatedPlayer(Request $request): WheelPlayer|JsonResponse
+    public function updateAddress(Request $request): JsonResponse
+    {
+        $request->validate([
+            'cep' => 'required|string|size:8',
+            'number' => 'nullable|string|max:20',
+            'complement' => 'nullable|string|max:100',
+        ]);
+
+        $sessionPlayer = $this->getAuthenticatedSessionPlayer($request);
+        if ($sessionPlayer instanceof JsonResponse) {
+            return $sessionPlayer;
+        }
+
+        $player = $sessionPlayer->player;
+        $cep = preg_replace('/\D/', '', $request->input('cep'));
+
+        // Buscar no ViaCEP
+        try {
+            $response = Http::timeout(5)->get("https://viacep.com.br/ws/{$cep}/json/");
+
+            if ($response->successful()) {
+                $data = $response->json();
+
+                if (isset($data['erro'])) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'CEP não encontrado.',
+                        'code' => 'CEP_NOT_FOUND',
+                    ], 404);
+                }
+
+                // Atualizar player
+                $player->updateAddressFromViaCep($data);
+                $player->number = $request->input('number');
+                $player->complement = $request->input('complement');
+                $player->save();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Endereço atualizado com sucesso.',
+                    'data' => [
+                        'cep' => $player->cep,
+                        'street' => $player->street,
+                        'number' => $player->number,
+                        'complement' => $player->complement,
+                        'neighborhood' => $player->neighborhood,
+                        'city' => $player->city,
+                        'state' => $player->state,
+                    ],
+                ]);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao consultar CEP. Tente novamente.',
+                'code' => 'VIACEP_ERROR',
+            ], 500);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Erro ao consultar CEP.',
+        ], 500);
+    }
+
+    /**
+     * Autentica SessionPlayer via Bearer token.
+     */
+    private function getAuthenticatedSessionPlayer(Request $request): WheelSessionPlayer|JsonResponse
     {
         $token = $request->bearerToken();
 
@@ -456,45 +597,41 @@ class MobileRuntimeController extends Controller
             ], 401);
         }
 
-        // Buscar player ativo com este token
-        $players = WheelPlayer::active()->get();
+        // Buscar session_player ativo
+        $sessionPlayers = WheelSessionPlayer::active()
+            ->with('player', 'session.screen', 'session.campaign')
+            ->get();
 
-        foreach ($players as $player) {
-            if ($player->verifyAccessToken($token)) {
-                return $player;
+        foreach ($sessionPlayers as $sp) {
+            if ($sp->verifyAccessToken($token)) {
+                return $sp;
             }
         }
 
         return response()->json([
             'success' => false,
-            'message' => 'Token inválido.',
+            'message' => 'Token inválido ou sessão expirada.',
         ], 401);
-    }
-
-    private function formatPlayer(WheelPlayer $player): array
-    {
-        return [
-            'player_key' => $player->player_key,
-            'phone_masked' => $player->phone_masked,
-            'status' => $player->status->value,
-            'queue_position' => $player->queue_position,
-            'phone_verified' => $player->phone_verified,
-            'can_spin' => $player->canSpin(),
-        ];
     }
 
     private function publishQueueUpdate(WheelSession $session): void
     {
-        $queue = $session->activePlayers()->get()->map(fn($p) => [
-            'player_key' => $p->player_key,
-            'phone_masked' => $p->phone_masked,
-            'status' => $p->status->value,
-            'queue_position' => $p->queue_position,
-        ])->toArray();
+        $queue = WheelSessionPlayer::where('session_id', $session->id)
+            ->active()
+            ->with('player')
+            ->orderBy('queue_position')
+            ->get()
+            ->map(fn($sp) => [
+                'player_key' => $sp->player->player_key,
+                'phone_masked' => $sp->player->getPhoneMasked(),
+                'status' => $sp->status->value,
+                'queue_position' => $sp->queue_position,
+            ])->toArray();
 
         $this->ably->publishToScreen($session->screen->screen_key, 'queue_updated', [
             'queue' => $queue,
             'count' => count($queue),
+            'current_player' => $queue[0] ?? null,
         ]);
     }
 }

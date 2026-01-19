@@ -4,19 +4,17 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Enums\PlayerStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
  * Model: WheelPlayer
  * 
- * Jogador participando de uma sessão da roleta.
+ * Representa uma PESSOA (cliente) que participa da roleta.
+ * Identificado pelo WhatsApp (único).
+ * Pode participar de múltiplas sessões/lojas.
  */
 class WheelPlayer extends Model
 {
@@ -26,141 +24,120 @@ class WheelPlayer extends Model
 
     protected $fillable = [
         'player_key',
-        'session_id',
-        'phone',
+        'full_name',
+        'whatsapp_e164',
+        'whatsapp_lid',
+        'whatsapp_confirmed_at',
         'phone_masked',
         'phone_hash',
-        'status',
-        'queue_position',
-        'access_token_hash',
         'phone_verified',
-        'phone_verified_at',
-        'ip_address',
-        'user_agent',
-        'terms_version',
-        'terms_accepted_at',
+        // Endereço (ViaCEP)
+        'cep',
+        'street',
+        'number',
+        'complement',
+        'neighborhood',
+        'city',
+        'state',
+        'ibge',
+        'ddd',
+        'siafi',
+        'viacep_raw',
+        'viacep_synced_at',
+        // Atividade
+        'last_seen_at',
     ];
 
     protected $casts = [
-        'status' => PlayerStatus::class,
         'phone_verified' => 'boolean',
-        'phone_verified_at' => 'datetime',
-        'terms_accepted_at' => 'datetime',
+        'whatsapp_confirmed_at' => 'datetime',
+        'viacep_raw' => 'array',
+        'viacep_synced_at' => 'datetime',
+        'last_seen_at' => 'datetime',
     ];
 
     protected $hidden = [
-        'phone',
+        'whatsapp_e164',
         'phone_hash',
-        'access_token_hash',
     ];
+
+    // ========================================
+    // Boot
+    // ========================================
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($player) {
+            if (empty($player->player_key)) {
+                $player->player_key = 'player_' . Str::random(12);
+            }
+            if (!empty($player->whatsapp_e164) && empty($player->phone_hash)) {
+                $player->phone_hash = self::hashPhone($player->whatsapp_e164);
+                $player->phone_masked = self::maskPhone($player->whatsapp_e164);
+            }
+        });
+    }
 
     // ========================================
     // Relationships
     // ========================================
 
-    public function session(): BelongsTo
+    /**
+     * Participações em sessões (pivot).
+     */
+    public function sessionPlayers(): HasMany
     {
-        return $this->belongsTo(WheelSession::class, 'session_id');
+        return $this->hasMany(WheelSessionPlayer::class, 'player_id');
     }
 
-    public function spins(): HasMany
+    /**
+     * Sessões em que participou.
+     */
+    public function sessions()
     {
-        return $this->hasMany(WheelSpin::class, 'player_id');
+        return $this->belongsToMany(WheelSession::class, 'wheel_session_players', 'player_id', 'session_id')
+            ->withPivot('status', 'queue_position', 'joined_at', 'left_at')
+            ->withTimestamps();
     }
 
+    /**
+     * Desafios de verificação de telefone.
+     */
     public function phoneChallenges(): HasMany
     {
         return $this->hasMany(WheelPhoneChallenge::class, 'player_id');
-    }
-
-    public function latestChallenge(): HasOne
-    {
-        return $this->hasOne(WheelPhoneChallenge::class, 'player_id')
-            ->latestOfMany();
     }
 
     // ========================================
     // Scopes
     // ========================================
 
-    public function scopeVerified($query)
-    {
-        return $query->where('phone_verified', true);
-    }
-
-    public function scopeBySession($query, int $sessionId)
-    {
-        return $query->where('session_id', $sessionId);
-    }
-
-    public function scopeActive($query)
-    {
-        return $query->whereNotIn('status', [
-            PlayerStatus::LEFT,
-            PlayerStatus::TIMEOUT,
-            PlayerStatus::WON,
-            PlayerStatus::LOST,
-        ]);
-    }
-
     public function scopeByPhone($query, string $phone)
     {
         return $query->where('phone_hash', self::hashPhone($phone));
     }
 
+    public function scopeByWhatsApp($query, string $phone)
+    {
+        return $query->where('whatsapp_e164', $phone);
+    }
+
+    public function scopeConfirmed($query)
+    {
+        return $query->whereNotNull('whatsapp_confirmed_at');
+    }
+
     // ========================================
-    // Methods
+    // Phone Methods
     // ========================================
-
-    /**
-     * Gera access token e retorna o valor em texto plano (apenas 1x).
-     */
-    public function generateAccessToken(): string
-    {
-        $plainToken = Str::random(64);
-        $this->access_token_hash = Hash::make($plainToken);
-        $this->save();
-
-        return $plainToken;
-    }
-
-    /**
-     * Verifica se o token é válido.
-     */
-    public function verifyAccessToken(string $token): bool
-    {
-        if (!$this->access_token_hash) {
-            return false;
-        }
-
-        return Hash::check($token, $this->access_token_hash);
-    }
-
-    /**
-     * Marca o telefone como verificado.
-     */
-    public function markPhoneVerified(): void
-    {
-        $this->phone_verified = true;
-        $this->phone_verified_at = now();
-        $this->status = PlayerStatus::VERIFIED;
-        $this->save();
-    }
-
-    /**
-     * Verifica se pode girar.
-     */
-    public function canSpin(): bool
-    {
-        return $this->status->canSpin();
-    }
 
     /**
      * Mascara o telefone para exibição.
      */
     public static function maskPhone(string $phone): string
     {
-        // +5548999999999 → +55 48 *****-9999
         $clean = preg_replace('/[^0-9+]/', '', $phone);
 
         if (strlen($clean) < 10) {
@@ -168,7 +145,7 @@ class WheelPlayer extends Model
         }
 
         $lastFour = substr($clean, -4);
-        $ddd = substr($clean, 2, 2);
+        $ddd = strlen($clean) >= 12 ? substr($clean, 2, 2) : substr($clean, 0, 2);
 
         return "+55 {$ddd} *****-{$lastFour}";
     }
@@ -183,48 +160,168 @@ class WheelPlayer extends Model
     }
 
     /**
-     * Gera player_key único.
+     * Retorna telefone mascarado.
      */
-    public static function generatePlayerKey(): string
+    public function getPhoneMasked(): string
     {
-        return 'player_' . Str::random(12);
+        return $this->phone_masked ?? self::maskPhone($this->whatsapp_e164 ?? '');
     }
 
     /**
-     * Cria um novo jogador para a sessão.
+     * Marca WhatsApp como confirmado.
      */
-    public static function createForSession(
-        WheelSession $session,
-        string $phone,
-        ?string $ipAddress = null,
-        ?string $userAgent = null
-    ): self {
-        // Próxima posição na fila
-        $nextPosition = $session->players()->max('queue_position') + 1;
+    public function markWhatsAppConfirmed(): void
+    {
+        $this->whatsapp_confirmed_at = now();
+        $this->phone_verified = true;
+        $this->save();
+    }
 
-        return self::create([
-            'player_key' => self::generatePlayerKey(),
-            'session_id' => $session->id,
-            'phone' => $phone,
-            'phone_masked' => self::maskPhone($phone),
-            'phone_hash' => self::hashPhone($phone),
-            'status' => PlayerStatus::PENDING,
-            'queue_position' => $nextPosition,
-            'ip_address' => $ipAddress,
-            'user_agent' => $userAgent,
+    // ========================================
+    // Address Methods (ViaCEP)
+    // ========================================
+
+    /**
+     * Atualiza endereço via CEP.
+     */
+    public function updateAddressFromViaCep(array $viaCepData): void
+    {
+        $this->fill([
+            'cep' => $viaCepData['cep'] ?? null,
+            'street' => $viaCepData['logradouro'] ?? null,
+            'neighborhood' => $viaCepData['bairro'] ?? null,
+            'city' => $viaCepData['localidade'] ?? null,
+            'state' => $viaCepData['uf'] ?? null,
+            'ibge' => $viaCepData['ibge'] ?? null,
+            'ddd' => $viaCepData['ddd'] ?? null,
+            'siafi' => $viaCepData['siafi'] ?? null,
+            'viacep_raw' => $viaCepData,
+            'viacep_synced_at' => now(),
         ]);
+        $this->save();
     }
 
     /**
-     * Verifica se o telefone já participou da campanha.
+     * Retorna endereço formatado.
      */
-    public static function hasParticipatedInCampaign(string $phone, int $campaignId): bool
+    public function getFullAddress(): ?string
+    {
+        if (!$this->street) {
+            return null;
+        }
+
+        $parts = array_filter([
+            $this->street,
+            $this->number,
+            $this->complement,
+            $this->neighborhood,
+            $this->city,
+            $this->state,
+            $this->cep,
+        ]);
+
+        return implode(', ', $parts);
+    }
+
+    /**
+     * Verifica se tem endereço completo.
+     */
+    public function hasCompleteAddress(): bool
+    {
+        return !empty($this->cep) &&
+            !empty($this->city) &&
+            !empty($this->state);
+    }
+
+    // ========================================
+    // Activity Methods
+    // ========================================
+
+    /**
+     * Atualiza última atividade.
+     */
+    public function updateLastSeen(): bool
+    {
+        $this->last_seen_at = now();
+        return $this->save();
+    }
+
+    // ========================================
+    // Eligibility Methods
+    // ========================================
+
+    /**
+     * Verifica se já participou de uma campanha.
+     */
+    public function hasParticipatedInCampaign(int $campaignId): bool
+    {
+        return WheelSpin::whereHas('sessionPlayer', function ($q) {
+            $q->where('player_id', $this->id);
+        })
+            ->whereHas('sessionPlayer.session', function ($q) use ($campaignId) {
+                $q->where('campaign_id', $campaignId);
+            })
+            ->where('status', 'completed')
+            ->exists();
+    }
+
+    /**
+     * Conta quantas vezes jogou em uma campanha.
+     */
+    public function getSpinsInCampaign(int $campaignId): int
+    {
+        return WheelSpin::whereHas('sessionPlayer', function ($q) {
+            $q->where('player_id', $this->id);
+        })
+            ->whereHas('sessionPlayer.session', function ($q) use ($campaignId) {
+                $q->where('campaign_id', $campaignId);
+            })
+            ->where('status', 'completed')
+            ->count();
+    }
+
+    // ========================================
+    // Factory Methods
+    // ========================================
+
+    /**
+     * Busca ou cria player pelo WhatsApp.
+     */
+    public static function findOrCreateByPhone(string $phone, ?string $name = null): self
     {
         $phoneHash = self::hashPhone($phone);
 
-        return self::where('phone_hash', $phoneHash)
-            ->whereHas('session', fn($q) => $q->where('campaign_id', $campaignId))
-            ->whereIn('status', [PlayerStatus::WON, PlayerStatus::LOST])
-            ->exists();
+        $player = self::where('phone_hash', $phoneHash)->first();
+
+        if (!$player) {
+            $player = self::create([
+                'player_key' => 'player_' . Str::random(12),
+                'whatsapp_e164' => $phone,
+                'full_name' => $name,
+                'phone_masked' => self::maskPhone($phone),
+                'phone_hash' => $phoneHash,
+            ]);
+        } elseif ($name && !$player->full_name) {
+            $player->full_name = $name;
+            $player->save();
+        }
+
+        return $player;
+    }
+
+    /**
+     * Retorna dados públicos para API.
+     */
+    public function toPublicArray(): array
+    {
+        return [
+            'player_key' => $this->player_key,
+            'name' => $this->full_name,
+            'phone_masked' => $this->getPhoneMasked(),
+            'whatsapp_confirmed' => $this->whatsapp_confirmed_at !== null,
+            'has_address' => $this->hasCompleteAddress(),
+            'city' => $this->city,
+            'state' => $this->state,
+        ];
     }
 }

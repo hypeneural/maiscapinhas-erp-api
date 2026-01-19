@@ -224,3 +224,49 @@ Route::prefix('analytics')->name('analytics.')->group(function () {
         ->middleware('permission:wheel.analytics.view');
 });
 
+// ============================================
+// Players (Jogadores)
+// ============================================
+Route::prefix('players')->name('players.')->group(function () {
+    // Listagem com filtros avançados
+    Route::get('/', [\App\Http\Controllers\Api\V1\Admin\Wheel\PlayerController::class, 'index'])
+        ->name('index')
+        ->middleware('permission:wheel.players.view');
+
+    // Estatísticas por cidade (ANTES de /{player_key})
+    Route::get('/stats/by-city', [\App\Http\Controllers\Api\V1\Admin\Wheel\PlayerController::class, 'statsByCity'])
+        ->name('stats.by-city')
+        ->middleware('permission:wheel.analytics.view');
+
+    // Estatísticas por loja
+    Route::get('/stats/by-store', [\App\Http\Controllers\Api\V1\Admin\Wheel\PlayerController::class, 'statsByStore'])
+        ->name('stats.by-store')
+        ->middleware('permission:wheel.analytics.view');
+
+    // Exportar jogadores
+    Route::get('/export', [\App\Http\Controllers\Api\V1\Admin\Wheel\PlayerController::class, 'export'])
+        ->name('export')
+        ->middleware('permission:wheel.players.view');
+
+    // Detalhes de um jogador
+    Route::get('/{player_key}', [\App\Http\Controllers\Api\V1\Admin\Wheel\PlayerController::class, 'show'])
+        ->name('show')
+        ->middleware('permission:wheel.players.view');
+
+    // Atualizar jogador
+    Route::match(['put', 'patch'], '/{player_key}', [\App\Http\Controllers\Api\V1\Admin\Wheel\PlayerController::class, 'update'])
+        ->name('update')
+        ->middleware('permission:wheel.players.manage');
+
+    // Logs do jogador
+    Route::get('/{player_key}/logs', [\App\Http\Controllers\Api\V1\Admin\Wheel\PlayerController::class, 'logs'])
+        ->name('logs')
+        ->middleware('permission:wheel.players.view');
+
+    // Histórico de giros
+    Route::get('/{player_key}/spins', [\App\Http\Controllers\Api\V1\Admin\Wheel\PlayerController::class, 'spins'])
+        ->name('spins')
+        ->middleware('permission:wheel.players.view');
+});
+
+

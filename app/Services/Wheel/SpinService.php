@@ -149,6 +149,120 @@ class SpinService
     }
 
     /**
+     * Solicita giro para SessionPlayer (novo modelo pivot).
+     */
+    public function requestSpinForSessionPlayer(
+        \App\Models\WheelSessionPlayer $sessionPlayer,
+        ?string $clientNonce = null
+    ): SpinResult {
+        $session = $sessionPlayer->session;
+        $player = $sessionPlayer->player;
+
+        // 1. Idempotência
+        if ($clientNonce) {
+            $existingSpin = WheelSpin::where('session_player_id', $sessionPlayer->id)
+                ->where('client_nonce', $clientNonce)
+                ->first();
+            if ($existingSpin) {
+                return $this->buildResult($existingSpin);
+            }
+        }
+
+        // 2. Validações
+        if (!$sessionPlayer->canSpin()) {
+            throw new SpinException('Não é sua vez ou sem giros disponíveis.', 'CANNOT_SPIN');
+        }
+
+        if (!in_array($session->status, [SessionStatus::WAITING, SessionStatus::ACTIVE])) {
+            throw new SpinException('Sessão não está ativa.', 'SESSION_NOT_ACTIVE');
+        }
+
+        if ($session->isExpired()) {
+            throw new SpinException('Sessão expirou.', 'SESSION_EXPIRED');
+        }
+
+        $campaign = $session->campaign;
+        if ($campaign->status->value !== 'active') {
+            throw new SpinException('Campanha não está ativa.', 'CAMPAIGN_NOT_ACTIVE');
+        }
+
+        // 3. Lock
+        $lockKey = self::LOCK_PREFIX . $session->id;
+        $lock = Cache::lock($lockKey, self::LOCK_TIMEOUT);
+
+        if (!$lock->get()) {
+            throw new SpinException('Outro giro em andamento.', 'SPIN_LOCKED');
+        }
+
+        try {
+            return DB::transaction(function () use ($session, $sessionPlayer, $player, $campaign, $clientNonce) {
+                // Sortear segmento
+                $segment = $this->selectSegment($campaign);
+
+                if (!$segment) {
+                    throw new SpinException('Nenhum prêmio disponível.', 'NO_SEGMENTS');
+                }
+
+                // Consumir estoque
+                $this->consumeInventory($campaign, $segment->prize);
+
+                // Gerar código
+                $prizeCode = $segment->prize->requiresRedeem()
+                    ? $segment->prize->generateCode()
+                    : null;
+
+                // Calcular ângulo
+                $segments = $campaign->activeSegments()->orderBy('sort_order')->get();
+                $targetIndex = $segments->search(fn($s) => $s->id === $segment->id);
+
+                // Criar spin
+                $spin = WheelSpin::create([
+                    'spin_key' => WheelSpin::generateSpinKey(),
+                    'session_id' => $session->id,
+                    'session_player_id' => $sessionPlayer->id,
+                    'player_id' => $player->id, // Compatibilidade
+                    'campaign_id' => $campaign->id,
+                    'screen_id' => $session->screen_id,
+                    'status' => SpinStatus::PROCESSING,
+                    'client_nonce' => $clientNonce,
+                    'segment_id' => $segment->id,
+                    'prize_id' => $segment->prize_id,
+                    'prize_code' => $prizeCode,
+                    'requested_at' => now(),
+                ]);
+
+                $spin->final_angle = $spin->calculateFinalAngle($segments->toArray(), $targetIndex);
+                $spin->save();
+
+                // Atualizar status
+                $sessionPlayer->status = PlayerStatus::SPINNING;
+                $sessionPlayer->save();
+
+                $session->status = SessionStatus::SPINNING;
+                $session->current_session_player_id = $sessionPlayer->id;
+                $session->save();
+
+                // Log
+                WheelEvent::log(
+                    WheelEvent::TYPE_SPIN_STARTED,
+                    [
+                        'spin_key' => $spin->spin_key,
+                        'player_key' => $player->player_key,
+                        'session_player_key' => $sessionPlayer->session_player_key,
+                    ],
+                    $session->screen_id,
+                    $campaign->id
+                );
+
+                return $this->buildResult($spin, $segment, $targetIndex);
+            });
+
+        } finally {
+            $lock->release();
+        }
+    }
+
+    /**
      * Confirma conclusão do giro (ACK da animação).
      */
     public function acknowledgeSpin(
