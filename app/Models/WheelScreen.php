@@ -44,6 +44,22 @@ class WheelScreen extends Model
         'secret_token_hash',
     ];
 
+    protected $attributes = [
+        'status' => 'active',
+    ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($screen) {
+            // Gerar screen_key automaticamente se não fornecido
+            if (empty($screen->screen_key)) {
+                $screen->screen_key = 'screen-' . Str::random(12);
+            }
+        });
+    }
+
     // ========================================
     // Relationships
     // ========================================

@@ -37,6 +37,24 @@ class WheelSegment extends Model
         'active' => 'boolean',
     ];
 
+    protected $attributes = [
+        'active' => true,
+        'probability_weight' => 1,
+        'sort_order' => 0,
+    ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($segment) {
+            // Gerar segment_key automaticamente se não fornecido
+            if (empty($segment->segment_key)) {
+                $segment->segment_key = 'seg_' . Str::random(8);
+            }
+        });
+    }
+
     // ========================================
     // Relationships
     // ========================================

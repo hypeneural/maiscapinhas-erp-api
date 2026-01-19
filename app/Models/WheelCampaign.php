@@ -39,6 +39,10 @@ class WheelCampaign extends Model
         'settings' => 'array',
     ];
 
+    protected $attributes = [
+        'status' => 'draft',
+    ];
+
     /**
      * Configurações padrão da campanha.
      */
@@ -50,6 +54,18 @@ class WheelCampaign extends Model
         'max_queue_size' => 10,
         'per_phone_limit' => '1_per_campaign',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($campaign) {
+            // Gerar campaign_key automaticamente se não fornecido
+            if (empty($campaign->campaign_key)) {
+                $campaign->campaign_key = 'camp_' . now()->format('Y_m') . '_' . Str::random(4);
+            }
+        });
+    }
 
     // ========================================
     // Relationships

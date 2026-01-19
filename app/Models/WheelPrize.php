@@ -37,6 +37,22 @@ class WheelPrize extends Model
         'active' => 'boolean',
     ];
 
+    protected $attributes = [
+        'active' => true,
+    ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($prize) {
+            // Gerar prize_key automaticamente se não fornecido
+            if (empty($prize->prize_key)) {
+                $prize->prize_key = 'prize_' . Str::random(8);
+            }
+        });
+    }
+
     // ========================================
     // Relationships
     // ========================================
