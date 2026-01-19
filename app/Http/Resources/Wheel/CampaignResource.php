@@ -29,7 +29,7 @@ class CampaignResource extends JsonResource
             'terms_version' => $this->terms_version,
             'settings' => array_merge(
                 WheelCampaign::DEFAULT_SETTINGS,
-                $this->settings ?? []
+                is_string($this->settings) ? json_decode($this->settings, true) ?? [] : ($this->settings ?? [])
             ),
             'screens_count' => $this->whenCounted('screens'),
             'active_segments_count' => $this->whenCounted('activeSegments'),
