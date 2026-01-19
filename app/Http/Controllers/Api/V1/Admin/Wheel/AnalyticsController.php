@@ -294,5 +294,309 @@ class AnalyticsController extends Controller
             ],
         ]);
     }
+
+    /**
+     * Performance por loja/screen.
+     * 
+     * Métricas agrupadas por store incluindo spins, prêmios e taxa de conversão.
+     */
+    public function performanceByStore(Request $request): JsonResponse
+    {
+        $request->validate([
+            'period' => 'nullable|in:today,week,month',
+            'from' => 'nullable|date',
+            'to' => 'nullable|date',
+        ]);
+
+        $period = $request->input('period', 'week');
+        $from = match ($period) {
+            'today' => today(),
+            'week' => today()->subDays(7),
+            'month' => today()->subDays(30),
+            default => $request->input('from', today()->subDays(7)),
+        };
+        $to = today();
+
+        $screens = WheelScreen::with('store')->get();
+
+        $data = $screens->map(function ($screen) use ($from, $to) {
+            $baseQuery = WheelEvent::where('screen_id', $screen->id)
+                ->whereBetween('created_at', [$from, $to->endOfDay()]);
+
+            $spins = (clone $baseQuery)->where('type', WheelEvent::TYPE_SPIN_COMPLETED)->count();
+            $prizesWon = (clone $baseQuery)->where('type', WheelEvent::TYPE_PRIZE_WON)->count();
+            $playersJoined = (clone $baseQuery)->where('type', WheelEvent::TYPE_PLAYER_JOINED)->count();
+
+            // Calcular resgates via WheelSpin
+            $redeemed = \App\Models\WheelSpin::where('screen_id', $screen->id)
+                ->whereBetween('created_at', [$from, $to->endOfDay()])
+                ->where('redeemed', true)
+                ->count();
+
+            return [
+                'screen_key' => $screen->screen_key,
+                'screen_name' => $screen->name,
+                'store_id' => $screen->store_id,
+                'store_name' => $screen->store?->name ?? 'N/A',
+                'metrics' => [
+                    'spins' => $spins,
+                    'prizes_won' => $prizesWon,
+                    'players_joined' => $playersJoined,
+                    'redeemed' => $redeemed,
+                    'conversion_rate' => $spins > 0 ? round(($prizesWon / $spins) * 100, 1) : 0,
+                    'redemption_rate' => $prizesWon > 0 ? round(($redeemed / $prizesWon) * 100, 1) : 0,
+                ],
+            ];
+        })->filter(fn($s) => $s['metrics']['spins'] > 0);
+
+        // Agrupar por store
+        $byStore = $data->groupBy('store_id')->map(function ($screens, $storeId) {
+            $first = $screens->first();
+            return [
+                'store_id' => $storeId,
+                'store_name' => $first['store_name'],
+                'screens_count' => $screens->count(),
+                'totals' => [
+                    'spins' => $screens->sum('metrics.spins'),
+                    'prizes_won' => $screens->sum('metrics.prizes_won'),
+                    'players_joined' => $screens->sum('metrics.players_joined'),
+                    'redeemed' => $screens->sum('metrics.redeemed'),
+                ],
+                'screens' => $screens->values(),
+            ];
+        })->values();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'period' => ['from' => $from->toDateString(), 'to' => $to->toDateString()],
+                'by_store' => $byStore,
+            ],
+        ]);
+    }
+
+    /**
+     * Pico de horário.
+     * 
+     * Distribuição de spins por hora do dia e dia da semana.
+     */
+    public function peakHours(Request $request): JsonResponse
+    {
+        $request->validate([
+            'period' => 'nullable|in:today,week,month',
+        ]);
+
+        $period = $request->input('period', 'week');
+        $from = match ($period) {
+            'today' => today(),
+            'week' => today()->subDays(7),
+            'month' => today()->subDays(30),
+            default => today()->subDays(7),
+        };
+
+        $events = WheelEvent::where('type', WheelEvent::TYPE_SPIN_COMPLETED)
+            ->where('created_at', '>=', $from)
+            ->get();
+
+        // Por hora do dia (0-23)
+        $byHour = collect(range(0, 23))->mapWithKeys(fn($h) => [$h => 0])->toArray();
+        foreach ($events as $event) {
+            $hour = $event->created_at->hour;
+            $byHour[$hour]++;
+        }
+
+        // Por dia da semana (0=domingo, 6=sábado)
+        $dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+        $byDayOfWeek = collect(range(0, 6))->mapWithKeys(fn($d) => [$d => ['name' => $dayNames[$d], 'spins' => 0]])->toArray();
+        foreach ($events as $event) {
+            $dow = $event->created_at->dayOfWeek;
+            $byDayOfWeek[$dow]['spins']++;
+        }
+
+        // Encontrar horário de pico
+        $peakHour = array_search(max($byHour), $byHour);
+        $peakDay = collect($byDayOfWeek)->sortByDesc('spins')->keys()->first();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'period' => $period,
+                'total_spins' => $events->count(),
+                'peak_hour' => [
+                    'hour' => $peakHour,
+                    'label' => sprintf('%02d:00 - %02d:59', $peakHour, $peakHour),
+                    'spins' => $byHour[$peakHour],
+                ],
+                'peak_day' => [
+                    'day' => $peakDay,
+                    'name' => $dayNames[$peakDay],
+                    'spins' => $byDayOfWeek[$peakDay]['spins'],
+                ],
+                'by_hour' => collect($byHour)->map(fn($spins, $hour) => [
+                    'hour' => $hour,
+                    'label' => sprintf('%02d:00', $hour),
+                    'spins' => $spins,
+                ])->values(),
+                'by_day_of_week' => collect($byDayOfWeek)->values(),
+            ],
+        ]);
+    }
+
+    /**
+     * Mapa de calor geográfico.
+     * 
+     * Participação por cidade e estado dos jogadores.
+     */
+    public function geographicHeatmap(Request $request): JsonResponse
+    {
+        $request->validate([
+            'period' => 'nullable|in:today,week,month',
+        ]);
+
+        $period = $request->input('period', 'week');
+        $from = match ($period) {
+            'today' => today(),
+            'week' => today()->subDays(7),
+            'month' => today()->subDays(30),
+            default => today()->subDays(7),
+        };
+
+        // Buscar players que jogaram no período via session_players
+        $playerIds = \App\Models\WheelSessionPlayer::where('created_at', '>=', $from)
+            ->distinct()
+            ->pluck('player_id');
+
+        $players = \App\Models\WheelPlayer::whereIn('id', $playerIds)
+            ->whereNotNull('state')
+            ->get();
+
+        // Por estado
+        $byState = $players->groupBy('state')
+            ->map(fn($group, $state) => [
+                'state' => $state,
+                'players' => $group->count(),
+            ])
+            ->sortByDesc('players')
+            ->values();
+
+        // Por cidade
+        $byCity = $players->filter(fn($p) => $p->city)
+            ->groupBy(fn($p) => ($p->city ?? 'Desconhecida') . ', ' . ($p->state ?? ''))
+            ->map(fn($group, $cityState) => [
+                'city_state' => $cityState,
+                'players' => $group->count(),
+            ])
+            ->sortByDesc('players')
+            ->take(20)
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'period' => $period,
+                'total_players' => $players->count(),
+                'coverage' => [
+                    'states' => $byState->count(),
+                    'cities' => $byCity->count(),
+                ],
+                'by_state' => $byState,
+                'by_city' => $byCity,
+            ],
+        ]);
+    }
+
+    /**
+     * Métricas de ROI.
+     * 
+     * Valor médio por jogador e custo por engajamento.
+     */
+    public function roiMetrics(Request $request): JsonResponse
+    {
+        $request->validate([
+            'period' => 'nullable|in:today,week,month',
+            'campaign_key' => 'nullable|string',
+        ]);
+
+        $period = $request->input('period', 'week');
+        $from = match ($period) {
+            'today' => today(),
+            'week' => today()->subDays(7),
+            'month' => today()->subDays(30),
+            default => today()->subDays(7),
+        };
+        $to = today();
+
+        $campaignFilter = null;
+        if ($request->filled('campaign_key')) {
+            $campaignFilter = WheelCampaign::where('campaign_key', $request->campaign_key)->first();
+        }
+
+        // Total de spins e prêmios
+        $spinsQuery = \App\Models\WheelSpin::whereBetween('created_at', [$from, $to->endOfDay()])
+            ->where('status', 'completed');
+        if ($campaignFilter) {
+            $spinsQuery->where('campaign_id', $campaignFilter->id);
+        }
+
+        $spins = $spinsQuery->with('prize')->get();
+        $totalSpins = $spins->count();
+
+        // Calcular valor total distribuído
+        $totalValue = $spins->filter(fn($s) => $s->prize && $s->prize->estimated_value > 0)
+            ->sum(fn($s) => $s->prize->estimated_value);
+
+        // Jogadores únicos
+        $uniquePlayers = $spins->pluck('player_id')->unique()->count();
+
+        // Prêmios resgatados
+        $redeemed = $spins->where('redeemed', true)->count();
+        $redeemedValue = $spins->where('redeemed', true)
+            ->filter(fn($s) => $s->prize && $s->prize->estimated_value > 0)
+            ->sum(fn($s) => $s->prize->estimated_value);
+
+        // Métricas calculadas
+        $avgValuePerPlayer = $uniquePlayers > 0 ? round($totalValue / $uniquePlayers, 2) : 0;
+        $costPerEngagement = $totalSpins > 0 ? round($totalValue / $totalSpins, 2) : 0;
+        $costPerRedemption = $redeemed > 0 ? round($redeemedValue / $redeemed, 2) : 0;
+
+        // Breakdown por tipo de prêmio
+        $byPrizeType = $spins->filter(fn($s) => $s->prize)
+            ->groupBy(fn($s) => $s->prize->type->value)
+            ->map(fn($group, $type) => [
+                'type' => $type,
+                'count' => $group->count(),
+                'value' => $group->sum(fn($s) => $s->prize->estimated_value ?? 0),
+                'redeemed' => $group->where('redeemed', true)->count(),
+            ])
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'period' => ['from' => $from->toDateString(), 'to' => $to->toDateString()],
+                'campaign' => $campaignFilter ? [
+                    'campaign_key' => $campaignFilter->campaign_key,
+                    'name' => $campaignFilter->name,
+                ] : null,
+                'totals' => [
+                    'spins' => $totalSpins,
+                    'unique_players' => $uniquePlayers,
+                    'prizes_distributed' => $spins->filter(fn($s) => $s->prize && $s->prize->requiresRedeem())->count(),
+                    'prizes_redeemed' => $redeemed,
+                    'total_value_distributed' => $totalValue,
+                    'total_value_redeemed' => $redeemedValue,
+                ],
+                'metrics' => [
+                    'avg_value_per_player' => $avgValuePerPlayer,
+                    'cost_per_engagement' => $costPerEngagement,
+                    'cost_per_redemption' => $costPerRedemption,
+                    'redemption_rate' => $spins->filter(fn($s) => $s->prize && $s->prize->requiresRedeem())->count() > 0
+                        ? round(($redeemed / $spins->filter(fn($s) => $s->prize && $s->prize->requiresRedeem())->count()) * 100, 1)
+                        : 0,
+                ],
+                'by_prize_type' => $byPrizeType,
+            ],
+        ]);
+    }
 }
 

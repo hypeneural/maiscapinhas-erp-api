@@ -222,6 +222,25 @@ Route::prefix('analytics')->name('analytics.')->group(function () {
     Route::get('/prizes-won', [AnalyticsController::class, 'prizesWon'])
         ->name('prizes-won')
         ->middleware('permission:wheel.analytics.view');
+
+    // ============================================
+    // Advanced Analytics
+    // ============================================
+    Route::get('/by-store', [AnalyticsController::class, 'performanceByStore'])
+        ->name('by-store')
+        ->middleware('permission:wheel.analytics.view');
+
+    Route::get('/peak-hours', [AnalyticsController::class, 'peakHours'])
+        ->name('peak-hours')
+        ->middleware('permission:wheel.analytics.view');
+
+    Route::get('/geographic', [AnalyticsController::class, 'geographicHeatmap'])
+        ->name('geographic')
+        ->middleware('permission:wheel.analytics.view');
+
+    Route::get('/roi', [AnalyticsController::class, 'roiMetrics'])
+        ->name('roi')
+        ->middleware('permission:wheel.analytics.view');
 });
 
 // ============================================
