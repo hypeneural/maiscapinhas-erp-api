@@ -59,11 +59,15 @@ REDIS_QUEUE_RETRY_AFTER=300
 REDIS_QUEUE_BLOCK_FOR=5
 REDIS_CACHE_CONNECTION=cache
 REDIS_CACHE_LOCK_CONNECTION=default
+
+PDV_JOB_TRIES=5
+PDV_JOB_BACKOFF_SECONDS=10,30,60,120
 ```
 
 Notas:
 - `REDIS_PREFIX` evita colisao com outros apps no mesmo Redis.
 - `REDIS_QUEUE_RETRY_AFTER` deve ser maior que timeout do worker.
+- `PDV_JOB_TRIES` e `PDV_JOB_BACKOFF_SECONDS` controlam retries do `ProcessPdvSyncJob` sem novo deploy.
 - `noeviction` exige disciplina de TTL para cache e controle de payloads grandes (nao usar Redis para RAW payload).
 
 ## 3) Fila no Laravel Toolkit (Plesk)

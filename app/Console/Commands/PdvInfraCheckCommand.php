@@ -41,6 +41,14 @@ class PdvInfraCheckCommand extends Command
         $redisRetryAfter = (int) config('queue.connections.redis.retry_after', 90);
         $redisBlockFor = config('queue.connections.redis.block_for');
         $pdvQueue = (string) config('pdv.queue_name', 'pdv');
+        $jobTries = max(1, (int) config('pdv.job_tries', 5));
+        $jobBackoff = config('pdv.job_backoff_seconds', [10, 30, 60, 120]);
+        $jobBackoff = is_array($jobBackoff)
+            ? array_values(array_filter(array_map(
+                static fn (mixed $value): int => (int) $value,
+                $jobBackoff
+            ), static fn (int $value): bool => $value >= 0))
+            : [];
 
         $queueIsRedis = $queueDefault === 'redis';
         $this->addCheck(
@@ -65,6 +73,14 @@ class PdvInfraCheckCommand extends Command
             'PDV queue name',
             trim($pdvQueue) !== '',
             "pdv.queue_name={$pdvQueue}."
+        );
+
+        $backoffDisplay = $jobBackoff === [] ? 'none' : implode(',', $jobBackoff);
+        $this->addCheck(
+            'PDV job retry policy',
+            $jobTries > 0 && $jobBackoff !== [],
+            "job_tries={$jobTries}; job_backoff_seconds={$backoffDisplay}.",
+            'warning'
         );
 
         $retryAfterOk = $redisRetryAfter > $expectedWorkerTimeout;

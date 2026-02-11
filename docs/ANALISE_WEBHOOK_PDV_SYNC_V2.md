@@ -491,7 +491,7 @@ Sem isso, reprocessamento parcial pode deixar venda sem itens/pagamentos complet
 
 ### 13.2 Pendente para fechar o ciclo operacional
 
-- Configurar e validar Redis em producao (`QUEUE_CONNECTION=redis`, `CACHE_STORE=redis`).
+- Operacionalizar worker e scheduler em modo persistente no Laravel Toolkit (nao apenas execucao manual via SSH).
 - Rodar migrations em ambiente alvo.
 - Validar em producao os comandos de housekeeping e retry (`pdv:purge-raw-payloads`, `pdv:retry-failed`).
 - Integrar alerta externo (Slack/WhatsApp/email) para:
@@ -546,7 +546,8 @@ Com base na nota tecnica de servidor e no estado atual do codigo:
 
 - Redis do host esta adequado para este workload (local-only, nao exposto publicamente).
 - O codigo ja suporta queue/cache em Redis.
-- O maior risco restante e operacional: ambiente subir com `QUEUE_CONNECTION=sync` ou sem worker/scheduler ativos.
+- Redis e cache ja validados em producao com `pdv:infra-check`.
+- O maior risco restante e operacional: manter worker/scheduler sempre ativos apos deploy/restart do host.
 
 Decisoes recomendadas para producao:
 
@@ -560,6 +561,19 @@ Decisoes recomendadas para producao:
 4. Alinhar `REDIS_QUEUE_RETRY_AFTER` acima do timeout do worker (ex.: `300` > `180`).
 5. Executar `php artisan pdv:infra-check` como gate de prontidao antes do go-live.
 6. Validar worker ativo com `php artisan pdv:queue-smoke --wait=20`.
+7. Ajustar politica de retry do job PDV por env (`PDV_JOB_TRIES`, `PDV_JOB_BACKOFF_SECONDS`).
 
 Documento operacional detalhado:
 - `docs/INFRA_REDIS_FILAS_PLESK_PDV.md`.
+
+## 17) Validacao operacional em producao (2026-02-11)
+
+Validado em servidor (`/opt/plesk/php/8.3/bin/php`):
+
+- `php artisan pdv:infra-check --json` retornando `ok=true`, `errors=0`, `warnings=0`.
+- `php artisan pdv:queue-smoke --wait=20` consumido com sucesso na fila `pdv`.
+- `php artisan schedule:run` executando `pdv.scheduler.heartbeat`.
+
+Observacao:
+- o consumo da fila foi comprovado com `queue:work` manual em SSH;
+- para fechamento definitivo do ciclo operacional, o worker e o `schedule:run` devem ficar configurados como servico/tarefa recorrente no Laravel Toolkit.

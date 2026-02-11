@@ -28,11 +28,25 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
 
     public int $tries = 5;
 
+    /** @var array<int, int> */
     public array $backoff = [10, 30, 60, 120];
 
     public function __construct(
         public int $pdvSyncId
     ) {
+        $this->tries = max(1, (int) config('pdv.job_tries', 5));
+
+        $backoff = config('pdv.job_backoff_seconds', [10, 30, 60, 120]);
+        if (is_array($backoff)) {
+            $normalized = array_values(array_filter(array_map(
+                static fn (mixed $value): int => (int) $value,
+                $backoff
+            ), static fn (int $value): bool => $value >= 0));
+
+            if ($normalized !== []) {
+                $this->backoff = $normalized;
+            }
+        }
     }
 
     public function uniqueId(): string

@@ -23,14 +23,10 @@ Infra reportada do servidor:
 
 ## 2) Gap real hoje (o que ainda pode quebrar producao)
 
-1. Configuracao de producao pode permanecer em `QUEUE_CONNECTION=sync`/`CACHE_STORE=file` se nao houver checklist de corte.
-2. Falta padronizar tuning de fila:
-   - `retry_after` Redis;
-   - `timeout` do worker;
-   - `max-jobs` e `max-time`.
-3. Falta formalizar no playbook o setup do worker no Laravel Toolkit.
-4. Falta formalizar o scheduler por minuto (`schedule:run`) no Toolkit.
-5. Falta observabilidade operacional da fila (backlog/falhas/retry) como rotina de operacao.
+1. Worker ainda precisa ficar persistente no Laravel Toolkit (nao apenas `queue:work` manual em terminal).
+2. Scheduler ainda precisa ficar recorrente no Toolkit (nao apenas `schedule:run` manual).
+3. Falta formalizar alerta externo (Slack/WhatsApp/email) para backlog/falhas.
+4. Falta disciplina operacional de monitoramento continuo dos indicadores de fila.
 
 ## 3) Prioridades (atualizado)
 
@@ -78,7 +74,12 @@ Subetapas:
   - painel Toolkit, ou
   - `/opt/plesk/php/8.2/bin/php artisan queue:restart`.
 - [x] Criar comando de smoke test de worker: `pdv:queue-smoke --wait=20`.
-- [ ] Validar consumo da fila `pdv` em tempo real durante ingestao (Toolkit) com `pdv:queue-smoke`.
+- [x] Validar consumo da fila `pdv` em tempo real durante ingestao com `pdv:queue-smoke` (execucao manual `queue:work` validada em producao).
+- [ ] Validar consumo em modo persistente do Toolkit (sem terminal SSH aberto).
+
+Evidencia de producao (2026-02-11):
+- com worker manual ativo (`queue:work redis --queue=pdv,default ...`): `pdv:queue-smoke --wait=20` consumiu com sucesso.
+- sem worker ativo: `pdv:queue-smoke --wait=20` expirou em 20s (comportamento esperado).
 
 Criterio de aceite:
 - fila `pdv` sem backlog crescente em operacao nominal (15 lojas / 10 min).
@@ -91,7 +92,9 @@ Objetivo: garantir automacoes (`purge`/`retry`) sem dependencias manuais.
 Subetapas:
 - [ ] Criar tarefa agendada no Toolkit (cada 1 minuto):
   - `/opt/plesk/php/8.2/bin/php /var/www/vhosts/maiscapinhas.com.br/api.maiscapinhas.com.br/artisan schedule:run`
-- [ ] Validar execucao dos jobs agendados:
+- [x] Validar execucao manual dos jobs agendados:
+  - `pdv.scheduler.heartbeat` executando via `schedule:run`.
+- [ ] Validar execucao recorrente dos jobs agendados (Toolkit):
   - `pdv:purge-raw-payloads` diario;
   - `pdv:retry-failed` a cada 10 min quando habilitado.
 - [ ] Confirmar timezone/clock do servidor para consistencia dos horarios.
@@ -105,13 +108,14 @@ Criterio de aceite:
 Objetivo: evitar redelivery indevido e duplicacao por timeout mal ajustado.
 
 Subetapas:
-- [ ] Definir regra final:
+- [x] Definir regra final:
   - `REDIS_QUEUE_RETRY_AFTER` > timeout max do worker.
 - [x] Consolidar baseline sugerido em config/env de referencia:
   - timeout worker `180`;
   - `REDIS_QUEUE_RETRY_AFTER=300`.
-- [ ] Revisar `tries/backoff` dos jobs PDV em producao real.
-- [ ] Registrar decisao em doc operacional para nao regredir em futuros deploys.
+- [x] Revisar `tries/backoff` dos jobs PDV:
+  - `ProcessPdvSyncJob` agora usa config/env (`PDV_JOB_TRIES`, `PDV_JOB_BACKOFF_SECONDS`).
+- [x] Registrar decisao em doc operacional para nao regredir em futuros deploys.
 
 Criterio de aceite:
 - job longo nao e reentregue enquanto ainda esta processando.
@@ -169,13 +173,11 @@ Criterio de aceite:
 
 ## 5) Ordem recomendada de execucao (faltantes)
 
-1. PR-17
-2. PR-18
-3. PR-19
-4. PR-20
-5. PR-21
-6. PR-22
-7. PR-23
+1. PR-18
+2. PR-19
+3. PR-21
+4. PR-22
+5. PR-23
 
 ## 6) Definicao de pronto (infra webhook PDV)
 

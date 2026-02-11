@@ -50,6 +50,11 @@ return [
     'store_lock_seconds' => (int) env('PDV_STORE_LOCK_SECONDS', 30),
     'worker_timeout_seconds' => (int) env('PDV_WORKER_TIMEOUT_SECONDS', 180),
     'queue_stale_threshold_minutes' => (int) env('PDV_QUEUE_STALE_THRESHOLD_MINUTES', 20),
+    'job_tries' => max(1, (int) env('PDV_JOB_TRIES', 5)),
+    'job_backoff_seconds' => array_values(array_filter(array_map(
+        static fn (string $value): int => (int) trim($value),
+        explode(',', (string) env('PDV_JOB_BACKOFF_SECONDS', '10,30,60,120'))
+    ), static fn (int $value): bool => $value >= 0)),
 
     /*
     |--------------------------------------------------------------------------
