@@ -1,0 +1,108 @@
+{
+  "schema_version": "2.0",
+  "agent": {
+    "version": "2.0.0",
+    "machine": "TEST-WEBHOOK",
+    "sent_at": "2026-02-11T01:16:30-03:00"
+  },
+  "store": {
+    "id_ponto_venda": 10,
+    "nome": "Loja 1 - MC Komprao Centro TJ",
+    "alias": "tijucas-01"
+  },
+  "window": {
+    "from": "2026-02-11T01:06:30-03:00",
+    "to": "2026-02-11T01:16:30-03:00",
+    "minutes": 10
+  },
+  "turnos": [
+    {
+      "id_turno": "1C2AFFC3-E444-4D41-B183-DF82F13F7CC5",
+      "sequencial": 1,
+      "fechado": false,
+      "data_hora_inicio": "2026-02-11T08:00:00-03:00",
+      "data_hora_termino": null,
+      "operador": {
+        "id_usuario": 12,
+        "nome": "Operador Teste"
+      },
+      "totais_sistema": {
+        "total": 59.9,
+        "qtd_vendas": 1,
+        "por_pagamento": [
+          {
+            "id_finalizador": 12,
+            "meio": "Pix",
+            "total": 59.9,
+            "qtd_vendas": 1
+          }
+        ]
+      },
+      "fechamento_declarado": null,
+      "falta_caixa": null
+    }
+  ],
+  "vendas": [
+    {
+      "id_operacao": 968621,
+      "data_hora": "2026-02-11T01:12:00-03:00",
+      "id_turno": "1C2AFFC3-E444-4D41-B183-DF82F13F7CC5",
+      "itens": [
+        {
+          "line_id": 9686211,
+          "line_no": 1,
+          "id_produto": 1001,
+          "codigo_barras": "TEST1001",
+          "nome": "Produto Teste PDV",
+          "qtd": 1,
+          "preco_unit": 59.9,
+          "total": 59.9,
+          "desconto": 0,
+          "vendedor": {
+            "id_usuario": 92,
+            "nome": "Vitoria"
+          }
+        }
+      ],
+      "pagamentos": [
+        {
+          "line_id": 9686212,
+          "line_no": 1,
+          "id_finalizador": 12,
+          "meio": "Pix",
+          "valor": 59.9,
+          "troco": 0,
+          "parcelas": 1
+        }
+      ],
+      "total": 59.9
+    }
+  ],
+  "resumo": {
+    "by_vendor": [
+      {
+        "id_usuario": 92,
+        "nome": "Vitoria",
+        "qtd_cupons": 1,
+        "total_vendido": 59.9
+      }
+    ],
+    "by_payment": [
+      {
+        "id_finalizador": 12,
+        "meio": "Pix",
+        "total": 59.9
+      }
+    ]
+  },
+  "ops": {
+    "count": 1,
+    "ids": [
+      968621
+    ]
+  },
+  "integrity": {
+    "sync_id": "20d7fe28245d2773bb87eb5f8bf47248bb250ef989d8341c37f5e7e1ec01fee0",
+    "warnings": []
+  }
+}

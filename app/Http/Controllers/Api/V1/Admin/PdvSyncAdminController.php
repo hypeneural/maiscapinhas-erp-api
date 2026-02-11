@@ -25,6 +25,7 @@ class PdvSyncAdminController extends Controller
             'sync_id' => ['sometimes', 'string', 'max:128'],
             'schema_version' => ['sometimes', 'string', 'max:10'],
             'request_id' => ['sometimes', 'string', 'max:64'],
+            'risk_flag' => ['sometimes', 'string', 'max:80'],
             'store_pdv_id' => ['sometimes', 'integer', 'min:1'],
             'store_id' => ['sometimes', 'integer', 'min:1'],
             'from' => ['sometimes', 'date'],
@@ -48,6 +49,10 @@ class PdvSyncAdminController extends Controller
 
         if (!empty($validated['request_id'])) {
             $query->where('request_id', 'like', '%' . $validated['request_id'] . '%');
+        }
+
+        if (!empty($validated['risk_flag'])) {
+            $query->whereJsonContains('risk_flags', $validated['risk_flag']);
         }
 
         if (!empty($validated['store_pdv_id'])) {
@@ -142,6 +147,21 @@ class PdvSyncAdminController extends Controller
             ->groupBy('status')
             ->pluck('total', 'status')
             ->toArray();
+
+        $riskFlagCounts = [
+            'store_mapping_missing' => (int) PdvSync::query()
+                ->whereJsonContains('risk_flags', 'store_mapping_missing')
+                ->count(),
+            'user_mapping_missing' => (int) PdvSync::query()
+                ->whereJsonContains('risk_flags', 'user_mapping_missing')
+                ->count(),
+            'auth_bearer_fallback' => (int) PdvSync::query()
+                ->whereJsonContains('risk_flags', 'auth_bearer_fallback')
+                ->count(),
+            'timestamp_out_of_window' => (int) PdvSync::query()
+                ->whereJsonContains('risk_flags', 'timestamp_out_of_window')
+                ->count(),
+        ];
 
         $statusBreakdown = [
             'queued' => (int) ($statusCounts[PdvSync::STATUS_QUEUED] ?? 0),
@@ -243,6 +263,7 @@ class PdvSyncAdminController extends Controller
         return $this->success([
             'backlog_by_status' => $statusCounts,
             'status_breakdown' => $statusBreakdown,
+            'risk_flags' => $riskFlagCounts,
             'last_24h' => [
                 'total' => $total24h,
                 'failed' => $failed24h,

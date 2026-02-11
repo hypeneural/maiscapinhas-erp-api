@@ -573,6 +573,7 @@ Validado em servidor (`/opt/plesk/php/8.3/bin/php`):
 - `php artisan pdv:infra-check --json` retornando `ok=true`, `errors=0`, `warnings=0`.
 - `php artisan pdv:queue-smoke --wait=20` consumido com sucesso na fila `pdv`.
 - `php artisan schedule:run` executando `pdv.scheduler.heartbeat`.
+- segunda rodada de validacao confirmou heartbeat ativo e `infra-check` zerado apos `schedule:run`.
 
 Observacao:
 - o consumo da fila foi comprovado com `queue:work` manual em SSH;

@@ -12,7 +12,7 @@ Escopo: estabilidade de ingestao e processamento do webhook `POST /api/v1/pdv/sy
 - Redis acessivel apenas localmente (`127.0.0.1:6379`), sem exposicao publica.
 - `requirepass` vazio (aceitavel neste cenario local-only).
 - Politica de memoria: `noeviction`.
-- PHP correto para Artisan no host: `/opt/plesk/php/8.2/bin/php`.
+- PHP correto para Artisan no host: `/opt/plesk/php/8.3/bin/php` (ou a versao ativa no Toolkit).
 - Laravel Toolkit disponivel para gerenciar worker e scheduler.
 
 ## 1.2 Estado atual no codigo
@@ -87,7 +87,7 @@ Racional:
 Pos deploy:
 
 ```bash
-/opt/plesk/php/8.2/bin/php artisan queue:restart
+/opt/plesk/php/8.3/bin/php artisan queue:restart
 ```
 
 ## 4) Scheduler (obrigatorio)
@@ -95,7 +95,7 @@ Pos deploy:
 Criar no Toolkit tarefa a cada 1 minuto:
 
 ```bash
-/opt/plesk/php/8.2/bin/php /var/www/vhosts/maiscapinhas.com.br/api.maiscapinhas.com.br/artisan schedule:run
+/opt/plesk/php/8.3/bin/php /var/www/vhosts/maiscapinhas.com.br/api.maiscapinhas.com.br/artisan schedule:run
 ```
 
 Sem isso:
@@ -107,8 +107,8 @@ Sem isso:
 
 1. Ajustar `.env` de producao para Redis (fila + cache).
 2. Limpar cache de config:
-   - `/opt/plesk/php/8.2/bin/php artisan config:clear`
-   - `/opt/plesk/php/8.2/bin/php artisan cache:clear`
+   - `/opt/plesk/php/8.3/bin/php artisan config:clear`
+   - `/opt/plesk/php/8.3/bin/php artisan cache:clear`
 3. Ativar worker no Toolkit com parametros recomendados.
 4. Criar `schedule:run` por minuto no Toolkit.
 5. Testar ingestao real:
@@ -125,12 +125,12 @@ Sem isso:
 Comandos essenciais:
 
 ```bash
-/opt/plesk/php/8.2/bin/php artisan pdv:infra-check
-/opt/plesk/php/8.2/bin/php artisan pdv:infra-check --json
-/opt/plesk/php/8.2/bin/php artisan pdv:queue-smoke --wait=20
-/opt/plesk/php/8.2/bin/php artisan queue:failed
-/opt/plesk/php/8.2/bin/php artisan queue:retry all
-/opt/plesk/php/8.2/bin/php artisan queue:flush
+/opt/plesk/php/8.3/bin/php artisan pdv:infra-check
+/opt/plesk/php/8.3/bin/php artisan pdv:infra-check --json
+/opt/plesk/php/8.3/bin/php artisan pdv:queue-smoke --wait=20
+/opt/plesk/php/8.3/bin/php artisan queue:failed
+/opt/plesk/php/8.3/bin/php artisan queue:retry all
+/opt/plesk/php/8.3/bin/php artisan queue:flush
 ```
 
 Interpretacao rapida do `pdv:infra-check`:

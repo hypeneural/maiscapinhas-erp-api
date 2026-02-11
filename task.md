@@ -27,16 +27,84 @@ Infra reportada do servidor:
 2. Scheduler ainda precisa ficar recorrente no Toolkit (nao apenas `schedule:run` manual).
 3. Falta formalizar alerta externo (Slack/WhatsApp/email) para backlog/falhas.
 4. Falta disciplina operacional de monitoramento continuo dos indicadores de fila.
+5. Falta contrato definitivo de normalizacao de lojas (`id_ponto_venda`) com o time ERP.
+6. Falta contrato definitivo de normalizacao de usuarios PDV (`operador.id_usuario` e `vendedor.id_usuario`) para metas e filtros.
+7. Backend ainda nao possui tabela/comando oficial para mapping de usuario PDV -> usuario interno.
+8. Falta regra operacional para conflitos de identidade (usuario null, troca de nome, correcao retroativa).
+9. `id_ponto_venda` pode ser apenas local por banco (nao ha garantia de unicidade global na rede).
+10. Agente nao reenvia correcao retroativa (cancelamento/troca de vendedor fora da janela).
+11. `id_finalizador` e `id_produto` podem variar por loja; filtros globais exigem normalizacao composta.
 
 ## 3) Prioridades (atualizado)
 
-- `P0` ativar fila Redis e operacao baseline sem risco de perda de sync.
-- `P1` monitoramento/alertas e disciplina operacional.
+- `P0` fechar contrato de normalizacao do JSON (lojas/usuarios) e manter fila/scheduler recorrentes.
+- `P1` monitoramento/alertas, governanca de mapping e disciplina operacional.
 - `P2` carga, tuning fino e hardening.
 
 ## 4) Backlog por prioridade
 
 ## P0 (bloqueante)
+
+### PR-24 - Contrato de normalizacao de lojas PDV
+Objetivo: remover ambiguidade de identidade de loja no webhook antes do rollout total.
+
+Subetapas:
+- [ ] Validar com time ERP se `store.id_ponto_venda` e chave canonica imutavel.
+- [ ] Confirmar regra para renomeacao/reuso de loja e impacto no historico.
+- [ ] Obter carga oficial inicial de lojas (id, nome, alias, status).
+- [ ] Definir procedimento de onboarding de nova loja antes do primeiro sync.
+- [ ] Registrar respostas na doc `docs/PERGUNTAS_NORMALIZACAO_LOJAS_USUARIOS_WEBHOOK_PDV.md`.
+
+Criterio de aceite:
+- existe definicao escrita de chave canonica de loja e processo de mudanca.
+
+---
+
+### PR-25 - Contrato de normalizacao de usuarios PDV
+Objetivo: garantir consistencia de metas, ranking e filtros por vendedor.
+
+Subetapas:
+- [ ] Confirmar escopo de unicidade de `id_usuario` (global vs por loja).
+- [ ] Confirmar se mesma pessoa pode ter IDs diferentes por loja.
+- [ ] Confirmar regra de negocio para `id_usuario` null em item e operador.
+- [ ] Confirmar comportamento de alteracao retroativa de vendedor/operador.
+- [ ] Obter carga inicial oficial de usuarios por loja (id, nome, status, papel).
+
+Criterio de aceite:
+- regra de identidade de usuario fechada por escrito e aprovada entre times.
+
+---
+
+### PR-28 - Mitigacao de colisao de identidade de loja
+Objetivo: evitar associacao de sync na loja errada quando `id_ponto_venda` nao for globalmente unico.
+
+Subetapas:
+- [ ] Definir chave canonica temporaria de loja: `id_ponto_venda + store.alias` (ate existir `store_external_id`).
+- [ ] Adicionar validacao de consistencia do mapping na ingestao (`alias` divergente -> `risk_flag` especifica).
+- [ ] Definir fluxo de bloqueio seguro para colisao detectada (`status=blocked` + alerta).
+- [ ] Alinhar com time ERP proposta de novo campo `store_external_id` no payload.
+- [ ] Planejar migracao de mapping para `store_external_id` (quando disponivel).
+
+Criterio de aceite:
+- colisao de loja nao gera upsert silencioso em loja incorreta.
+
+---
+
+### PR-26 - Implementar normalizacao de usuario no backend
+Objetivo: sair de "armazenar id bruto" para mapping operacional de usuario PDV -> usuario interno.
+
+Subetapas:
+- [x] Criar migration `pdv_user_mappings` (`store_pdv_id`, `pdv_user_id`, `user_id`, `active`, `source`, `confidence`).
+- [x] Criar comando `pdv:map-user` para operacao manual/auditavel.
+- [x] Aplicar mapping no processamento (turnos/itens) sem quebrar ingestao.
+- [x] Marcar `risk_flags` quando usuario PDV vier sem mapping (`user_mapping_missing`).
+- [x] Expor informacao no admin (`/api/v1/admin/pdv/syncs`) para monitoramento.
+- [ ] Executar migrations em homolog/producao e validar ingestao real com usuario mapeado e nao mapeado.
+
+Criterio de aceite:
+- sync processa normalmente, mas sinaliza explicitamente usuarios nao mapeados.
+
+---
 
 ### PR-17 - Ativar baseline Redis em producao
 Objetivo: tirar o webhook do modo dependente de `sync` e garantir processamento desacoplado.
@@ -94,6 +162,7 @@ Subetapas:
   - `/opt/plesk/php/8.2/bin/php /var/www/vhosts/maiscapinhas.com.br/api.maiscapinhas.com.br/artisan schedule:run`
 - [x] Validar execucao manual dos jobs agendados:
   - `pdv.scheduler.heartbeat` executando via `schedule:run`.
+- [x] Validar `pdv:infra-check --json` sem warnings apos heartbeat manual (`warnings=0`).
 - [ ] Validar execucao recorrente dos jobs agendados (Toolkit):
   - `pdv:purge-raw-payloads` diario;
   - `pdv:retry-failed` a cada 10 min quando habilitado.
@@ -122,6 +191,54 @@ Criterio de aceite:
 
 ## P1 (alta)
 
+### PR-27 - Politica de conflito e reconciliacao de identidade
+Objetivo: padronizar resposta operacional para dados contraditorios de loja/usuario.
+
+Subetapas:
+- [ ] Definir matriz de decisao para conflitos:
+  - mesmo `pdv_user_id` com nomes diferentes;
+  - mesmo nome com `pdv_user_id` diferente;
+  - loja sem mapping;
+  - usuario sem mapping.
+- [ ] Definir quando bloquear (`status=blocked`) vs aceitar com `risk_flags`.
+- [ ] Definir rotina diaria de reconciliacao de mappings com time ERP.
+- [ ] Criar playbook de ajuste de mapping sem reprocessamento destrutivo.
+
+Criterio de aceite:
+- conflitos recorrentes tem tratamento padrao e auditavel.
+
+---
+
+### PR-29 - Estrategia para correcao retroativa (cancelamentos/edicoes)
+Objetivo: reduzir risco de divergencia historica quando ERP altera dados fora da janela de 10 min.
+
+Subetapas:
+- [ ] Formalizar que webhook incremental nao corrige historico automaticamente.
+- [ ] Definir reconciliacao periodica (ex.: diario) para detectar cancelamentos pos-envio.
+- [ ] Criar backlog tecnico do agente para evento de cancelamento retroativo (PR-08 no lado ERP).
+- [ ] Definir sinalizacao no backend para dados potencialmente desatualizados.
+- [ ] Criar runbook de ajuste operacional quando divergencia for detectada.
+
+Criterio de aceite:
+- existe processo definido para tratar divergencia retroativa sem perda de rastreabilidade.
+
+---
+
+### PR-30 - Normalizacao de dicionarios (usuarios/finalizadores/produtos)
+Objetivo: garantir filtros corretos entre lojas com cadastros locais.
+
+Subetapas:
+- [ ] Definir chave de usuario como composta (`store_pdv_id`, `pdv_user_id`).
+- [ ] Definir chave de pagamento como composta (`store_pdv_id`, `id_finalizador`).
+- [ ] Definir chave canonica de produto para visao global (`codigo_barras` preferencial).
+- [ ] Solicitar carga inicial de usuarios por loja ao time ERP.
+- [ ] Planejar sync periodico de dicionarios para reconciliacao.
+
+Criterio de aceite:
+- filtros e relatorios interlojas nao dependem de IDs locais isolados.
+
+---
+
 ### PR-21 - Observabilidade de fila e incidentes
 Objetivo: detectar ruptura em minutos.
 
@@ -130,6 +247,7 @@ Subetapas:
   - `queue:failed`, `queue:retry all`, `queue:flush`.
 - [x] Criar comando de prontidao `pdv:infra-check` (Redis/queue/cache/scheduler/backlog).
 - [x] Adicionar heartbeat de scheduler em cache (`pdv:scheduler:heartbeat`) para deteccao de parada.
+- [x] Validar gate operacional completo (`pdv:infra-check --json` com `ok=true`, `errors=0`, `warnings=0`).
 - [ ] Monitorar indicadores minimos:
   - backlog por fila;
   - `failed_jobs` por janela;
@@ -173,17 +291,28 @@ Criterio de aceite:
 
 ## 5) Ordem recomendada de execucao (faltantes)
 
-1. PR-18
-2. PR-19
-3. PR-21
-4. PR-22
-5. PR-23
+1. PR-24
+2. PR-25
+3. PR-28
+4. PR-26
+5. PR-18
+6. PR-19
+7. PR-27
+8. PR-30
+9. PR-29
+10. PR-21
+11. PR-22
+12. PR-23
 
 ## 6) Definicao de pronto (infra webhook PDV)
 
 Pronto quando:
 - webhook responde rapido e sempre enfileira via Redis;
 - worker + scheduler estao ativos no Toolkit;
+- identidade de loja e usuario PDV esta fechada por contrato;
+- mappings de loja e usuario estao operacionais e monitorados;
+- risco de colisao de `id_ponto_venda` esta mitigado;
+- estrategia para correcao retroativa esta definida com o time ERP;
 - timeout/retry_after estao alinhados e documentados;
 - backlog/falhas sao monitorados com alerta;
 - retencao RAW 30 dias e metadados 12+ meses estao operando.
