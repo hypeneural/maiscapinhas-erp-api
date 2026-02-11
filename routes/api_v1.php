@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\Admin\AuditLogController;
+use App\Http\Controllers\Api\V1\Admin\PdvSyncAdminController;
 use App\Http\Controllers\Api\V1\Admin\StoreController as AdminStoreController;
 use App\Http\Controllers\Api\V1\Admin\StoreUserController as AdminStoreUserController;
 use App\Http\Controllers\Api\V1\Admin\UserController as AdminUserController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MonthlyGoalController;
 use App\Http\Controllers\Api\V1\PasswordResetController;
+use App\Http\Controllers\Api\V1\PdvSyncController;
 use App\Http\Controllers\Api\V1\PeopleAnalyticsController;
 use App\Http\Controllers\Api\V1\RankingController;
 use App\Http\Controllers\Api\V1\ReportController;
@@ -56,6 +58,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthController::class)->name('health');
 Route::get('/version', VersionController::class)->name('version');
+Route::post('/pdv/sync', [PdvSyncController::class, 'ingest'])
+    ->middleware(['pdv.signature', 'throttle:pdv'])
+    ->name('pdv.sync');
 
 // Auth routes (public)
 Route::prefix('auth')->name('auth.')->group(function () {
@@ -294,6 +299,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Admin Routes (admin only)
     // ============================================
     Route::prefix('admin')->name('admin.')->group(function () {
+        // PDV sync observability
+        Route::prefix('pdv')->name('pdv.')->group(function () {
+            Route::get('/syncs', [PdvSyncAdminController::class, 'index'])->name('syncs.index');
+            Route::get('/syncs/metrics', [PdvSyncAdminController::class, 'metrics'])->name('syncs.metrics');
+        });
 
         // Users Management
         Route::apiResource('users', AdminUserController::class);
@@ -523,4 +533,3 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
 });
-

@@ -33,6 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'fabrica' => \App\Http\Middleware\EnsureIsFabrica::class,
             'super-admin' => \App\Http\Middleware\EnsureIsSuperAdmin::class,
             'permission' => \App\Http\Middleware\CheckPermission::class,
+            'pdv.signature' => \App\Http\Middleware\ValidatePdvSignature::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
