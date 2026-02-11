@@ -54,6 +54,7 @@ $formatDt = static function (DateTimeImmutable $dt, bool $withOffset): string {
 
 $payload = [
     'schema_version' => '2.0',
+    'event_type' => 'sales',
     'agent' => [
         'version' => '2.0.0',
         'machine' => 'DESKTOP-9TD3UO6',

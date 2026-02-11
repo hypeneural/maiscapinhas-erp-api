@@ -16,6 +16,7 @@ class PdvSync extends Model
     protected $fillable = [
         'sync_id',
         'schema_version',
+        'event_type',
         'request_id',
         'store_pdv_id',
         'store_id',
@@ -61,6 +62,10 @@ class PdvSync extends Model
     public const STATUS_PROCESSED = 'processed';
     public const STATUS_FAILED = 'failed';
     public const STATUS_BLOCKED = 'blocked';
+
+    public const EVENT_TYPE_SALES = 'sales';
+    public const EVENT_TYPE_TURNO_CLOSURE = 'turno_closure';
+    public const EVENT_TYPE_MIXED = 'mixed';
 
     public function payload(): HasOne
     {

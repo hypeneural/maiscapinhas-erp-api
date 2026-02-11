@@ -80,8 +80,8 @@ Objetivo: evitar associacao de sync na loja errada quando `id_ponto_venda` nao f
 
 Subetapas:
 - [ ] Definir chave canonica temporaria de loja: `id_ponto_venda + store.alias` (ate existir `store_external_id`).
-- [ ] Adicionar validacao de consistencia do mapping na ingestao (`alias` divergente -> `risk_flag` especifica).
-- [ ] Definir fluxo de bloqueio seguro para colisao detectada (`status=blocked` + alerta).
+- [x] Adicionar validacao de consistencia do mapping na ingestao (`alias` divergente -> `risk_flag` especifica).
+- [x] Definir fluxo de bloqueio seguro para colisao detectada (`status=blocked` + alerta).
 - [ ] Alinhar com time ERP proposta de novo campo `store_external_id` no payload.
 - [ ] Planejar migracao de mapping para `store_external_id` (quando disponivel).
 
@@ -103,6 +103,23 @@ Subetapas:
 
 Criterio de aceite:
 - sync processa normalmente, mas sinaliza explicitamente usuarios nao mapeados.
+
+---
+
+### PR-31 - Suporte a `event_type` (PR-09 agente)
+Objetivo: receber fechamento de caixa mesmo sem vendas na janela (`turno_closure`) sem quebrar compatibilidade.
+
+Subetapas:
+- [x] Aceitar `event_type` no webhook com fallback seguro para `sales` quando vier desconhecido.
+- [x] Persistir `event_type` em `pdv_syncs` para auditoria e monitoramento.
+- [x] Aceitar payload com `vendas=[]` e `ops.count=0` quando `event_type=turno_closure`.
+- [x] Atualizar schema `docs/schema_v2.0.json` para incluir `event_type`.
+- [x] Expor `event_type` em `/api/v1/admin/pdv/syncs` e incluir `by_event_type` nas métricas.
+- [x] Cobrir cenários com testes (sales, turno_closure, fallback de `event_type`).
+- [ ] Executar migration em homolog/producao e validar ingestao real com payload `turno_closure`.
+
+Criterio de aceite:
+- backend recebe e processa fechamento de turno sem exigir vendas na janela.
 
 ---
 

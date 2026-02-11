@@ -15,6 +15,10 @@
       "type": "string",
       "const": "2.0"
     },
+    "event_type": {
+      "type": "string",
+      "maxLength": 30
+    },
     "agent": {
       "$ref": "#/$defs/agentInfo"
     },

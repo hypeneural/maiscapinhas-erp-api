@@ -39,6 +39,7 @@ return [
     'timestamp_mode' => env('PDV_TIMESTAMP_MODE', 'tolerant'),
     'timestamp_tolerance_seconds' => (int) env('PDV_TIMESTAMP_TOLERANCE_SECONDS', 600),
     'naive_datetime_timezone' => env('PDV_NAIVE_DATETIME_TIMEZONE', 'America/Sao_Paulo'),
+    'block_on_alias_mismatch' => (bool) env('PDV_BLOCK_ON_ALIAS_MISMATCH', false),
 
     /*
     |--------------------------------------------------------------------------

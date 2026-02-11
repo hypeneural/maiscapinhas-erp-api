@@ -30,6 +30,7 @@ test('super admin can list pdv syncs with filters', function () {
     PdvSync::query()->create([
         'sync_id' => 'sync-admin-list-001',
         'schema_version' => '2.0',
+        'event_type' => 'mixed',
         'request_id' => 'req-admin-list-001',
         'store_pdv_id' => 10,
         'store_id' => $store->id,
@@ -43,11 +44,12 @@ test('super admin can list pdv syncs with filters', function () {
     ]);
 
     actingAs($user)
-        ->getJson('/api/v1/admin/pdv/syncs?status=queued&store_pdv_id=10&schema_version=2.0&request_id=req-admin-list-001')
+        ->getJson('/api/v1/admin/pdv/syncs?status=queued&event_type=mixed&store_pdv_id=10&schema_version=2.0&request_id=req-admin-list-001')
         ->assertStatus(200)
         ->assertJsonPath('meta.pagination.total', 1)
         ->assertJsonPath('data.0.sync_id', 'sync-admin-list-001')
         ->assertJsonPath('data.0.schema_version', '2.0')
+        ->assertJsonPath('data.0.event_type', 'mixed')
         ->assertJsonPath('data.0.request_id', 'req-admin-list-001')
         ->assertJsonPath('data.0.status', 'queued');
 });
@@ -81,6 +83,7 @@ test('super admin can view pdv sync metrics including stale store tracking', fun
 
     PdvSync::query()->create([
         'sync_id' => 'sync-metrics-healthy',
+        'event_type' => 'turno_closure',
         'store_pdv_id' => 10,
         'store_id' => $storeHealthy->id,
         'window_from' => now()->subMinutes(10),
@@ -95,6 +98,7 @@ test('super admin can view pdv sync metrics including stale store tracking', fun
 
     PdvSync::query()->create([
         'sync_id' => 'sync-metrics-failed',
+        'event_type' => 'sales',
         'store_pdv_id' => 10,
         'store_id' => $storeHealthy->id,
         'window_from' => now()->subMinutes(25),
@@ -115,6 +119,8 @@ test('super admin can view pdv sync metrics including stale store tracking', fun
         ->assertJsonPath('data.status_breakdown.failed', 1)
         ->assertJsonPath('data.status_breakdown.processed', 1)
         ->assertJsonPath('data.last_24h.status_breakdown.failed', 1)
+        ->assertJsonPath('data.by_event_type.sales', 1)
+        ->assertJsonPath('data.by_event_type.turno_closure', 1)
         ->json('data');
 
     expect($response['stores']['stale_count'])->toBeGreaterThanOrEqual(1);

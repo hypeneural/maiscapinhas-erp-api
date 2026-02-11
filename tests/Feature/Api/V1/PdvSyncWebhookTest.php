@@ -25,6 +25,7 @@ function pdvPayload(array $overrides = []): array
 {
     $base = [
         'schema_version' => '2.0',
+        'event_type' => 'sales',
         'agent' => [
             'version' => '2.0.0',
             'machine' => 'PDV-STORE-01',
@@ -147,6 +148,7 @@ test('accepts valid webhook and queues processing', function () {
         ->assertJsonPath('data.status', 'created')
         ->assertJsonPath('data.processing_status', 'queued')
         ->assertJsonPath('data.schema_version', '2.0')
+        ->assertJsonPath('data.event_type', 'sales')
         ->assertJsonPath('data.request_id', 'req-pdv-001')
         ->assertJsonPath('data.duplicate', false)
         ->assertJsonPath('data.sync_id', 'sync-10-20260210-163000');
@@ -154,6 +156,7 @@ test('accepts valid webhook and queues processing', function () {
     assertDatabaseHas('pdv_syncs', [
         'sync_id' => 'sync-10-20260210-163000',
         'schema_version' => '2.0',
+        'event_type' => 'sales',
         'request_id' => 'req-pdv-001',
         'status' => 'queued',
         'store_pdv_id' => 10,
@@ -172,6 +175,7 @@ test('returns 200 duplicate for same sync id', function () {
     signedPdvRequest($payload)->assertStatus(201);
     signedPdvRequest($payload)->assertStatus(200)
         ->assertJsonPath('data.status', 'duplicate')
+        ->assertJsonPath('data.event_type', 'sales')
         ->assertJsonPath('data.duplicate', true);
 
     assertDatabaseCount('pdv_syncs', 1);
@@ -348,6 +352,86 @@ test('accepts bearer token when auth mode is bearer', function () {
         'sync_id' => 'sync-bearer-mode-001',
         'status' => 'queued',
     ]);
+});
+
+test('accepts turno_closure event with empty vendas and zero ops', function () {
+    $payload = pdvPayload([
+        'event_type' => 'turno_closure',
+        'turnos' => [[
+            'id_turno' => 'turno-closure-test-001',
+            'fechado' => true,
+            'data_hora_inicio' => now()->subHours(6)->toDateTimeString(),
+            'data_hora_termino' => now()->toDateTimeString(),
+            'totais_sistema' => [
+                'total' => 100.00,
+                'qtd_vendas' => 2,
+                'por_pagamento' => [],
+            ],
+            'fechamento_declarado' => [
+                'total' => 95.00,
+                'por_pagamento' => [],
+            ],
+            'falta_caixa' => [
+                'total' => 5.00,
+                'por_pagamento' => [],
+            ],
+        ]],
+        'vendas' => [],
+        'ops' => [
+            'count' => 0,
+            'ids' => [],
+        ],
+        'integrity' => [
+            'sync_id' => 'sync-turno-closure-001',
+        ],
+    ]);
+
+    signedPdvRequest($payload)
+        ->assertStatus(201)
+        ->assertJsonPath('data.status', 'created')
+        ->assertJsonPath('data.event_type', 'turno_closure')
+        ->assertJsonPath('data.processing_status', 'queued');
+
+    assertDatabaseHas('pdv_syncs', [
+        'sync_id' => 'sync-turno-closure-001',
+        'event_type' => 'turno_closure',
+        'ops_count' => 0,
+        'status' => 'queued',
+    ]);
+});
+
+test('unknown event_type falls back to sales and sets risk flag', function () {
+    $payload = pdvPayload([
+        'event_type' => 'unexpected_mode',
+        'integrity' => [
+            'sync_id' => 'sync-event-type-fallback-001',
+        ],
+    ]);
+
+    $response = signedPdvRequest($payload)
+        ->assertStatus(201)
+        ->assertJsonPath('data.status', 'created')
+        ->assertJsonPath('data.event_type', 'sales')
+        ->assertJson(fn ($json) => $json
+            ->where('data.status', 'created')
+            ->where('data.event_type', 'sales')
+            ->has('data.risk_flags')
+            ->etc()
+        );
+
+    expect($response->json('data.risk_flags'))->toContain('event_type_unknown');
+
+    assertDatabaseHas('pdv_syncs', [
+        'sync_id' => 'sync-event-type-fallback-001',
+        'event_type' => 'sales',
+        'status' => 'queued',
+    ]);
+
+    $riskFlags = PdvSync::query()
+        ->where('sync_id', 'sync-event-type-fallback-001')
+        ->value('risk_flags');
+
+    expect(is_array($riskFlags) ? $riskFlags : [])->toContain('event_type_unknown');
 });
 
 test('rejects bearer token when auth mode is bearer and token is invalid', function () {

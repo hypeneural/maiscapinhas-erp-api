@@ -25,6 +25,7 @@ class PdvSyncIngestRequest extends FormRequest
 
         return [
             'schema_version' => ['required', 'string', 'max:10', Rule::in($supportedSchemaVersions)],
+            'event_type' => ['sometimes', 'string', 'max:30'],
 
             'agent' => ['sometimes', 'array'],
             'agent.version' => ['sometimes', 'string', 'max:20'],

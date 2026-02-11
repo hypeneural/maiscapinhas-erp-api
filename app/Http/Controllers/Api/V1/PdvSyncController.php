@@ -30,6 +30,7 @@ class PdvSyncController extends Controller
         $syncId = (string) data_get($payload, 'integrity.sync_id');
         $storePdvId = (int) data_get($payload, 'store.id_ponto_venda');
         $schemaVersion = (string) data_get($payload, 'schema_version');
+        [$eventType, $unknownEventType] = $this->normalizeEventType(data_get($payload, 'event_type'));
         $authMode = (string) $request->attributes->get('pdv_auth_mode', 'unknown');
         $requestId = app(AuditContext::class)->getRequestId() ?: (string) $request->header('X-Request-Id', '');
 
@@ -40,6 +41,7 @@ class PdvSyncController extends Controller
                 'sync_id' => $syncId,
                 'store_pdv_id' => $storePdvId,
                 'schema_version' => $existingSync->schema_version,
+                'event_type' => $existingSync->event_type ?? PdvSync::EVENT_TYPE_SALES,
                 'request_id' => $requestId,
                 'status' => 'duplicate',
                 'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
@@ -53,6 +55,7 @@ class PdvSyncController extends Controller
                 'sync_id' => $syncId,
                 'pdv_sync_id' => $existingSync->id,
                 'schema_version' => $existingSync->schema_version,
+                'event_type' => $existingSync->event_type ?? PdvSync::EVENT_TYPE_SALES,
                 'request_id' => $requestId,
                 'auth_mode' => $authMode,
                 'message' => 'Sync already received.',
@@ -152,6 +155,15 @@ class PdvSyncController extends Controller
             ->first();
 
         $storeId = $storeMapping?->store_id;
+        $storeAlias = $this->normalizeAlias(data_get($payload, 'store.alias'));
+        $mappedAlias = $this->normalizeAlias($storeMapping?->alias);
+        $aliasMismatch = $storeMapping !== null
+            && $storeAlias !== null
+            && $mappedAlias !== null
+            && $storeAlias !== $mappedAlias;
+        $blockOnAliasMismatch = (bool) config('pdv.block_on_alias_mismatch', false);
+        $shouldBlock = $aliasMismatch && $blockOnAliasMismatch;
+
         $riskFlags = [];
         if ($timestampOutOfWindow) {
             $riskFlags[] = 'timestamp_out_of_window';
@@ -162,8 +174,17 @@ class PdvSyncController extends Controller
         if ($storeId === null) {
             $riskFlags[] = 'store_mapping_missing';
         }
+        if ($aliasMismatch) {
+            $riskFlags[] = 'store_alias_mismatch';
+        }
+        if ($shouldBlock) {
+            $riskFlags[] = 'store_alias_mismatch_blocked';
+        }
         if ($authMode === 'bearer_fallback') {
             $riskFlags[] = 'auth_bearer_fallback';
+        }
+        if ($unknownEventType) {
+            $riskFlags[] = 'event_type_unknown';
         }
 
         $warnings = data_get($payload, 'integrity.warnings', []);
@@ -184,7 +205,6 @@ class PdvSyncController extends Controller
 
         $agentVersion = data_get($payload, 'agent.version');
         $agentMachine = data_get($payload, 'agent.machine');
-        $storeAlias = data_get($payload, 'store.alias');
         $opsCount = (int) data_get($payload, 'ops.count', 0);
 
         $inserted = 0;
@@ -198,6 +218,7 @@ class PdvSyncController extends Controller
             $storeId,
             $storeAlias,
             $schemaVersion,
+            $eventType,
             $requestId,
             $windowFrom,
             $windowTo,
@@ -208,16 +229,21 @@ class PdvSyncController extends Controller
             $timestampSkewSeconds,
             $timestampOutOfWindow,
             $riskFlags,
+            $shouldBlock,
             $payloadSha256,
             $payloadBytes,
             $rawPayload
         ) {
+            $status = $shouldBlock ? PdvSync::STATUS_BLOCKED : PdvSync::STATUS_QUEUED;
+            $queuedAt = $shouldBlock ? null : now();
+
             $inserted = DB::table('pdv_syncs')->insertOrIgnore([
                 'sync_id' => $syncId,
                 'store_pdv_id' => $storePdvId,
                 'store_id' => $storeId,
                 'store_alias' => $storeAlias,
                 'schema_version' => $schemaVersion,
+                'event_type' => $eventType,
                 'window_from' => $windowFrom->toDateTimeString(),
                 'window_to' => $windowTo->toDateTimeString(),
                 'agent_version' => $agentVersion,
@@ -225,7 +251,7 @@ class PdvSyncController extends Controller
                 'request_id' => $requestId !== '' ? $requestId : null,
                 'ops_count' => $opsCount,
                 'warnings' => json_encode($warnings, JSON_UNESCAPED_UNICODE),
-                'status' => PdvSync::STATUS_QUEUED,
+                'status' => $status,
                 'timestamp_skew_seconds' => $timestampSkewSeconds,
                 'timestamp_out_of_window' => $timestampOutOfWindow,
                 'risk_flags' => json_encode($riskFlags, JSON_UNESCAPED_UNICODE),
@@ -233,7 +259,7 @@ class PdvSyncController extends Controller
                 'payload_bytes' => $payloadBytes,
                 'attempts' => 0,
                 'received_at' => now(),
-                'queued_at' => now(),
+                'queued_at' => $queuedAt,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -249,8 +275,10 @@ class PdvSyncController extends Controller
                 'compression' => 'none',
             ]);
 
-            ProcessPdvSyncJob::dispatch($sync->id)
-                ->onQueue((string) config('pdv.queue_name', 'pdv'));
+            if (!$shouldBlock) {
+                ProcessPdvSyncJob::dispatch($sync->id)
+                    ->onQueue((string) config('pdv.queue_name', 'pdv'));
+            }
         });
 
         if ($inserted === 0) {
@@ -259,6 +287,7 @@ class PdvSyncController extends Controller
                 'sync_id' => $syncId,
                 'store_pdv_id' => $storePdvId,
                 'schema_version' => $existingSync?->schema_version,
+                'event_type' => $existingSync?->event_type ?? PdvSync::EVENT_TYPE_SALES,
                 'request_id' => $requestId,
                 'status' => 'duplicate_race',
                 'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
@@ -272,40 +301,92 @@ class PdvSyncController extends Controller
                 'sync_id' => $syncId,
                 'pdv_sync_id' => $existingSync?->id,
                 'schema_version' => $existingSync?->schema_version,
+                'event_type' => $existingSync?->event_type ?? PdvSync::EVENT_TYPE_SALES,
                 'request_id' => $requestId,
                 'auth_mode' => $authMode,
                 'message' => 'Sync already received.',
             ]);
         }
 
+        $processingStatus = $shouldBlock ? PdvSync::STATUS_BLOCKED : PdvSync::STATUS_QUEUED;
+
         Log::info('pdv.sync.ingest', [
             'sync_id' => $syncId,
             'store_pdv_id' => $storePdvId,
             'schema_version' => $schemaVersion,
+            'event_type' => $eventType,
             'request_id' => $requestId,
-            'status' => 'queued',
+            'status' => $processingStatus,
             'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
             'pdv_sync_id' => $sync?->id,
             'timestamp_out_of_window' => $timestampOutOfWindow,
             'timestamp_mode' => $timestampMode,
             'risk_flags' => $riskFlags,
+            'store_alias' => $storeAlias,
+            'mapped_alias' => $mappedAlias,
+            'alias_mismatch' => $aliasMismatch,
+            'unknown_event_type' => $unknownEventType,
             'auth_mode' => $authMode,
         ]);
 
         return $this->created([
             'status' => 'created',
-            'processing_status' => 'queued',
+            'processing_status' => $processingStatus,
             'duplicate' => false,
             'sync_id' => $syncId,
             'pdv_sync_id' => $sync?->id,
             'schema_version' => $schemaVersion,
+            'event_type' => $eventType,
             'request_id' => $requestId,
             'timestamp_mode' => $timestampMode,
             'timestamp_out_of_window' => $timestampOutOfWindow,
             'risk_flags' => $riskFlags,
             'auth_mode' => $authMode,
-            'message' => 'Sync received and queued for processing.',
+            'message' => $shouldBlock
+                ? 'Sync received but blocked for manual review.'
+                : 'Sync received and queued for processing.',
         ]);
+    }
+
+    private function normalizeAlias(mixed $alias): ?string
+    {
+        if ($alias === null) {
+            return null;
+        }
+
+        $value = trim((string) $alias);
+        if ($value === '') {
+            return null;
+        }
+
+        return strtolower($value);
+    }
+
+    /**
+     * @return array{0:string,1:bool}
+     */
+    private function normalizeEventType(mixed $eventType): array
+    {
+        $value = is_string($eventType) ? trim(strtolower($eventType)) : '';
+        if ($value === '') {
+            return [PdvSync::EVENT_TYPE_SALES, false];
+        }
+
+        $allowed = [
+            PdvSync::EVENT_TYPE_SALES,
+            PdvSync::EVENT_TYPE_TURNO_CLOSURE,
+            PdvSync::EVENT_TYPE_MIXED,
+        ];
+
+        if (in_array($value, $allowed, true)) {
+            return [$value, false];
+        }
+
+        Log::warning('pdv.sync.unknown_event_type', [
+            'event_type' => $value,
+        ]);
+
+        return [PdvSync::EVENT_TYPE_SALES, true];
     }
 
     private function pdvValidationError(string $message, array $details): JsonResponse

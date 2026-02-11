@@ -22,6 +22,7 @@ class PdvSyncAdminController extends Controller
 
         $validated = $request->validate([
             'status' => ['sometimes', 'string', 'max:20'],
+            'event_type' => ['sometimes', 'string', 'max:30'],
             'sync_id' => ['sometimes', 'string', 'max:128'],
             'schema_version' => ['sometimes', 'string', 'max:10'],
             'request_id' => ['sometimes', 'string', 'max:64'],
@@ -37,6 +38,10 @@ class PdvSyncAdminController extends Controller
 
         if (!empty($validated['status'])) {
             $query->where('status', $validated['status']);
+        }
+
+        if (!empty($validated['event_type'])) {
+            $query->where('event_type', $validated['event_type']);
         }
 
         if (!empty($validated['sync_id'])) {
@@ -94,6 +99,7 @@ class PdvSyncAdminController extends Controller
                 'id' => $sync->id,
                 'sync_id' => $sync->sync_id,
                 'schema_version' => $sync->schema_version,
+                'event_type' => $sync->event_type ?? PdvSync::EVENT_TYPE_SALES,
                 'request_id' => $sync->request_id,
                 'store_pdv_id' => $sync->store_pdv_id,
                 'store_id' => $sync->store_id,
@@ -161,6 +167,12 @@ class PdvSyncAdminController extends Controller
             'timestamp_out_of_window' => (int) PdvSync::query()
                 ->whereJsonContains('risk_flags', 'timestamp_out_of_window')
                 ->count(),
+            'store_alias_mismatch' => (int) PdvSync::query()
+                ->whereJsonContains('risk_flags', 'store_alias_mismatch')
+                ->count(),
+            'store_alias_mismatch_blocked' => (int) PdvSync::query()
+                ->whereJsonContains('risk_flags', 'store_alias_mismatch_blocked')
+                ->count(),
         ];
 
         $statusBreakdown = [
@@ -201,6 +213,30 @@ class PdvSyncAdminController extends Controller
             'blocked' => (int) ($statusCounts24h[PdvSync::STATUS_BLOCKED] ?? 0),
             'duplicate' => 0,
         ];
+
+        $eventTypeCounts = PdvSync::query()
+            ->selectRaw('event_type, COUNT(*) as total')
+            ->groupBy('event_type')
+            ->pluck('total', 'event_type')
+            ->toArray();
+
+        $eventTypeBreakdown = [
+            PdvSync::EVENT_TYPE_SALES => (int) ($eventTypeCounts[PdvSync::EVENT_TYPE_SALES] ?? 0),
+            PdvSync::EVENT_TYPE_TURNO_CLOSURE => (int) ($eventTypeCounts[PdvSync::EVENT_TYPE_TURNO_CLOSURE] ?? 0),
+            PdvSync::EVENT_TYPE_MIXED => (int) ($eventTypeCounts[PdvSync::EVENT_TYPE_MIXED] ?? 0),
+        ];
+
+        $unknownEventTypeCount = (int) PdvSync::query()
+            ->whereNotIn('event_type', [
+                PdvSync::EVENT_TYPE_SALES,
+                PdvSync::EVENT_TYPE_TURNO_CLOSURE,
+                PdvSync::EVENT_TYPE_MIXED,
+            ])
+            ->count();
+
+        if ($unknownEventTypeCount > 0) {
+            $eventTypeBreakdown['unknown'] = $unknownEventTypeCount;
+        }
 
         $samples = PdvSync::query()
             ->whereNotNull('processing_started_at')
@@ -264,6 +300,7 @@ class PdvSyncAdminController extends Controller
             'backlog_by_status' => $statusCounts,
             'status_breakdown' => $statusBreakdown,
             'risk_flags' => $riskFlagCounts,
+            'by_event_type' => $eventTypeBreakdown,
             'last_24h' => [
                 'total' => $total24h,
                 'failed' => $failed24h,
