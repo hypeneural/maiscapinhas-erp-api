@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Requests\Pdv;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
+use Illuminate\Contracts\Validation\Validator;
 
 class PdvSyncIngestRequest extends FormRequest
 {
@@ -52,8 +54,10 @@ class PdvSyncIngestRequest extends FormRequest
             'vendas.*.id_turno' => ['nullable', 'string', 'max:64'],
             'vendas.*.total' => ['sometimes', 'numeric'],
             'vendas.*.itens' => ['sometimes', 'array'],
+            'vendas.*.itens.*.line_id' => ['sometimes', 'integer', 'min:1'],
             'vendas.*.itens.*.line_no' => ['sometimes', 'integer', 'min:1'],
             'vendas.*.pagamentos' => ['sometimes', 'array'],
+            'vendas.*.pagamentos.*.line_id' => ['sometimes', 'integer', 'min:1'],
             'vendas.*.pagamentos.*.line_no' => ['sometimes', 'integer', 'min:1'],
             'resumo' => ['sometimes', 'array'],
 
@@ -67,5 +71,14 @@ class PdvSyncIngestRequest extends FormRequest
             'integrity.warnings' => ['sometimes', 'array'],
             'integrity.warnings.*' => ['string', 'max:1000'],
         ];
+    }
+
+    protected function failedValidation(Validator $validator): void
+    {
+        throw new HttpResponseException(response()->json([
+            'error' => 'validation',
+            'message' => 'Validation failed.',
+            'details' => $validator->errors(),
+        ], 422));
     }
 }

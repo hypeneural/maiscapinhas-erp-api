@@ -96,6 +96,8 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                 Log::info('pdv.sync.process', [
                     'pdv_sync_id' => $sync->id,
                     'sync_id' => $sync->sync_id,
+                    'schema_version' => $sync->schema_version,
+                    'request_id' => $sync->request_id,
                     'store_pdv_id' => $context['store_pdv_id'],
                     'store_id' => $context['store_id'],
                     'status' => 'processed',
@@ -111,6 +113,8 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             Log::error('pdv.sync.process', [
                 'pdv_sync_id' => $sync->id,
                 'sync_id' => $sync->sync_id,
+                'schema_version' => $sync->schema_version,
+                'request_id' => $sync->request_id,
                 'store_pdv_id' => $sync->store_pdv_id,
                 'store_id' => $sync->store_id,
                 'status' => 'failed',
@@ -123,6 +127,8 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             Log::info('pdv.sync.process', [
                 'pdv_sync_id' => $sync->id,
                 'sync_id' => $sync->sync_id,
+                'schema_version' => $sync->schema_version,
+                'request_id' => $sync->request_id,
                 'status' => $sync->status,
                 'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
             ]);
@@ -320,8 +326,10 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
 
         $now = now();
         $vendaRows = [];
-        $itemRows = [];
-        $pagamentoRows = [];
+        $itemRowsByLineId = [];
+        $itemRowsFallback = [];
+        $pagamentoRowsByLineId = [];
+        $pagamentoRowsFallback = [];
 
         foreach ($vendas as $venda) {
             if (!is_array($venda)) {
@@ -370,6 +378,8 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                     $desconto = $this->asDecimal(data_get($item, 'desconto'), 2);
                     $vendedorPdvId = $this->asInt(data_get($item, 'vendedor.id_usuario'));
                     $vendedorNome = $this->asString(data_get($item, 'vendedor.nome'));
+                    $lineId = $this->asInt(data_get($item, 'line_id'));
+                    $lineId = $lineId !== null && $lineId > 0 ? $lineId : null;
                     $lineNo = $this->resolveLineNumber($item, $index);
                     $lineNoProvided = (int) data_get($item, 'line_no', 0);
                     $fingerprint = $this->itemFingerprint([
@@ -383,20 +393,22 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                         'vendedor_pdv_id' => $vendedorPdvId,
                         'vendedor_nome' => $vendedorNome,
                     ]);
-                    $occurrence = $this->nextOccurrence($itemOccurrences, $fingerprint);
-                    $rowHash = $this->childRowHash(
-                        'item',
-                        $storePdvId,
-                        $idOperacao,
-                        $lineNoProvided > 0 ? $lineNo : null,
-                        $fingerprint,
-                        $occurrence
-                    );
+                    $rowHash = $lineId !== null
+                        ? $this->childRowHashByLineId('item', $storePdvId, $lineId)
+                        : $this->childRowHash(
+                            'item',
+                            $storePdvId,
+                            $idOperacao,
+                            $lineNoProvided > 0 ? $lineNo : null,
+                            $fingerprint,
+                            $this->nextOccurrence($itemOccurrences, $fingerprint)
+                        );
 
-                    $itemRows[] = [
+                    $itemRow = [
                         'store_pdv_id' => $storePdvId,
                         'store_id' => $storeId,
                         'id_operacao' => $idOperacao,
+                        'line_id' => $lineId,
                         'line_no' => $lineNo,
                         'row_hash' => $rowHash,
                         'id_produto' => $idProduto,
@@ -411,6 +423,12 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                         'created_at' => $now,
                         'updated_at' => $now,
                     ];
+
+                    if ($lineId !== null) {
+                        $itemRowsByLineId[] = $itemRow;
+                    } else {
+                        $itemRowsFallback[] = $itemRow;
+                    }
                 }
             }
 
@@ -427,6 +445,8 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                     $valor = $this->asDecimal(data_get($pagamento, 'valor'), 2);
                     $troco = $this->asDecimal(data_get($pagamento, 'troco'), 2);
                     $parcelas = max(1, (int) data_get($pagamento, 'parcelas', 1));
+                    $lineId = $this->asInt(data_get($pagamento, 'line_id'));
+                    $lineId = $lineId !== null && $lineId > 0 ? $lineId : null;
                     $lineNo = $this->resolveLineNumber($pagamento, $index);
                     $lineNoProvided = (int) data_get($pagamento, 'line_no', 0);
                     $fingerprint = $this->paymentFingerprint([
@@ -436,20 +456,22 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                         'troco' => $troco,
                         'parcelas' => $parcelas,
                     ]);
-                    $occurrence = $this->nextOccurrence($paymentOccurrences, $fingerprint);
-                    $rowHash = $this->childRowHash(
-                        'payment',
-                        $storePdvId,
-                        $idOperacao,
-                        $lineNoProvided > 0 ? $lineNo : null,
-                        $fingerprint,
-                        $occurrence
-                    );
+                    $rowHash = $lineId !== null
+                        ? $this->childRowHashByLineId('payment', $storePdvId, $lineId)
+                        : $this->childRowHash(
+                            'payment',
+                            $storePdvId,
+                            $idOperacao,
+                            $lineNoProvided > 0 ? $lineNo : null,
+                            $fingerprint,
+                            $this->nextOccurrence($paymentOccurrences, $fingerprint)
+                        );
 
-                    $pagamentoRows[] = [
+                    $pagamentoRow = [
                         'store_pdv_id' => $storePdvId,
                         'store_id' => $storeId,
                         'id_operacao' => $idOperacao,
+                        'line_id' => $lineId,
                         'line_no' => $lineNo,
                         'row_hash' => $rowHash,
                         'id_finalizador' => $idFinalizador,
@@ -460,6 +482,12 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                         'created_at' => $now,
                         'updated_at' => $now,
                     ];
+
+                    if ($lineId !== null) {
+                        $pagamentoRowsByLineId[] = $pagamentoRow;
+                    } else {
+                        $pagamentoRowsFallback[] = $pagamentoRow;
+                    }
                 }
             }
         }
@@ -473,10 +501,34 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
 
         $this->upsertRows(
             'pdv_venda_itens',
-            $itemRows,
+            $itemRowsByLineId,
+            ['store_pdv_id', 'line_id'],
+            [
+                'line_id',
+                'store_id',
+                'id_operacao',
+                'line_no',
+                'row_hash',
+                'id_produto',
+                'codigo_barras',
+                'nome_produto',
+                'qtd',
+                'preco_unit',
+                'total',
+                'desconto',
+                'vendedor_pdv_id',
+                'vendedor_nome',
+                'updated_at',
+            ]
+        );
+
+        $this->upsertRows(
+            'pdv_venda_itens',
+            $itemRowsFallback,
             ['store_pdv_id', 'id_operacao', 'row_hash'],
             [
                 'store_id',
+                'line_id',
                 'line_no',
                 'id_produto',
                 'codigo_barras',
@@ -493,10 +545,30 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
 
         $this->upsertRows(
             'pdv_venda_pagamentos',
-            $pagamentoRows,
+            $pagamentoRowsByLineId,
+            ['store_pdv_id', 'line_id'],
+            [
+                'line_id',
+                'store_id',
+                'id_operacao',
+                'line_no',
+                'row_hash',
+                'id_finalizador',
+                'meio_pagamento',
+                'valor',
+                'troco',
+                'parcelas',
+                'updated_at',
+            ]
+        );
+
+        $this->upsertRows(
+            'pdv_venda_pagamentos',
+            $pagamentoRowsFallback,
             ['store_pdv_id', 'id_operacao', 'row_hash'],
             [
                 'store_id',
+                'line_id',
                 'line_no',
                 'id_finalizador',
                 'meio_pagamento',
@@ -622,6 +694,17 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             $storePdvId,
             $idOperacao,
             $lineMarker,
+        ]));
+    }
+
+    private function childRowHashByLineId(string $kind, int $storePdvId, int $lineId): string
+    {
+        return hash('sha256', implode('|', [
+            'pdv',
+            $kind,
+            $storePdvId,
+            'line_id',
+            $lineId,
         ]));
     }
 

@@ -193,6 +193,60 @@ test('rejects when schema header does not match payload schema_version', functio
     assertDatabaseCount('pdv_syncs', 0);
 });
 
+test('returns validation error when json schema validation is enabled and payload violates schema', function () {
+    config()->set('pdv.json_schema_validation_enabled', true);
+    config()->set('pdv.json_schema_files', [
+        '2.0' => base_path('docs/schema_v2.0.json'),
+    ]);
+
+    $payload = pdvPayload([
+        'agent' => [
+            'sent_at' => '2026-02-10T21:12:56-03:00',
+        ],
+        'window' => [
+            'from' => '2026-02-10T20:49:44-03:00',
+            'to' => '2026-02-10T21:12:56-03:00',
+        ],
+        'integrity' => [
+            'sync_id' => 'sync-schema-runtime-invalid-001',
+        ],
+    ]);
+    $payload['unexpected_property'] = 'x';
+
+    signedPdvRequest($payload)
+        ->assertStatus(422)
+        ->assertJsonPath('error', 'validation')
+        ->assertJsonPath('message', 'Payload does not match JSON schema.');
+
+    assertDatabaseCount('pdv_syncs', 0);
+});
+
+test('returns 503 when json schema validator is enabled but schema file is missing', function () {
+    config()->set('pdv.json_schema_validation_enabled', true);
+    config()->set('pdv.json_schema_files', [
+        '2.0' => base_path('docs/schema_v2.0.missing.json'),
+    ]);
+
+    $payload = pdvPayload([
+        'agent' => [
+            'sent_at' => '2026-02-10T21:12:56-03:00',
+        ],
+        'window' => [
+            'from' => '2026-02-10T20:49:44-03:00',
+            'to' => '2026-02-10T21:12:56-03:00',
+        ],
+        'integrity' => [
+            'sync_id' => 'sync-schema-runtime-missing-001',
+        ],
+    ]);
+
+    signedPdvRequest($payload)
+        ->assertStatus(503)
+        ->assertJsonPath('message', 'Webhook schema validator unavailable.');
+
+    assertDatabaseCount('pdv_syncs', 0);
+});
+
 test('strict mode rejects new stale sync', function () {
     config()->set('pdv.timestamp_mode', 'strict');
     config()->set('pdv.timestamp_tolerance_seconds', 600);

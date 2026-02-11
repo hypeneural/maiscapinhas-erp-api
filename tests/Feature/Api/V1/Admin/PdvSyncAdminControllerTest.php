@@ -112,6 +112,9 @@ test('super admin can view pdv sync metrics including stale store tracking', fun
         ->assertStatus(200)
         ->assertJsonPath('data.last_24h.total', 2)
         ->assertJsonPath('data.last_24h.failed', 1)
+        ->assertJsonPath('data.status_breakdown.failed', 1)
+        ->assertJsonPath('data.status_breakdown.processed', 1)
+        ->assertJsonPath('data.last_24h.status_breakdown.failed', 1)
         ->json('data');
 
     expect($response['stores']['stale_count'])->toBeGreaterThanOrEqual(1);

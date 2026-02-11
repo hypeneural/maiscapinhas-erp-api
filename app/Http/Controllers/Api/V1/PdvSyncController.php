@@ -13,6 +13,7 @@ use App\Models\PdvSync;
 use App\Models\PdvSyncPayload;
 use App\Support\Audit\AuditContext;
 use App\Support\Pdv\PdvDateTime;
+use App\Support\Pdv\PdvJsonSchemaValidator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -25,6 +26,7 @@ class PdvSyncController extends Controller
     {
         $startedAt = microtime(true);
         $payload = $request->validated();
+        $rawPayloadArray = $request->json()->all();
         $syncId = (string) data_get($payload, 'integrity.sync_id');
         $storePdvId = (int) data_get($payload, 'store.id_ponto_venda');
         $schemaVersion = (string) data_get($payload, 'schema_version');
@@ -37,6 +39,8 @@ class PdvSyncController extends Controller
             Log::info('pdv.sync.ingest', [
                 'sync_id' => $syncId,
                 'store_pdv_id' => $storePdvId,
+                'schema_version' => $existingSync->schema_version,
+                'request_id' => $requestId,
                 'status' => 'duplicate',
                 'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
                 'pdv_sync_id' => $existingSync->id,
@@ -60,9 +64,8 @@ class PdvSyncController extends Controller
         $supportedSchemaVersions = is_array($supportedSchemaVersions) ? $supportedSchemaVersions : ['2.0'];
 
         if ($headerSchemaVersion !== '' && !in_array($headerSchemaVersion, $supportedSchemaVersions, true)) {
-            return $this->error(
+            return $this->pdvValidationError(
                 'Unsupported schema version informed in header.',
-                422,
                 [
                     'X-PDV-Schema-Version' => [
                         'Unsupported schema version in header.',
@@ -72,15 +75,39 @@ class PdvSyncController extends Controller
         }
 
         if ($headerSchemaVersion !== '' && $headerSchemaVersion !== $schemaVersion) {
-            return $this->error(
+            return $this->pdvValidationError(
                 'Schema version header does not match payload.',
-                422,
                 [
                     'schema_version' => [
                         'X-PDV-Schema-Version must match payload schema_version.',
                     ],
                 ]
             );
+        }
+
+        $schemaValidationPayload = is_array($rawPayloadArray) ? $rawPayloadArray : $payload;
+        $schemaValidation = app(PdvJsonSchemaValidator::class)->validate($schemaValidationPayload);
+        if ($schemaValidation['status'] === 'invalid') {
+            return $this->pdvValidationError(
+                'Payload does not match JSON schema.',
+                [
+                    'schema' => $schemaValidation['errors'],
+                ]
+            );
+        }
+
+        if ($schemaValidation['status'] === 'error') {
+            Log::error('pdv.sync.schema_validation', [
+                'sync_id' => $syncId,
+                'store_pdv_id' => $storePdvId,
+                'schema_version' => $schemaVersion,
+                'message' => $schemaValidation['message'],
+                'schema_path' => $schemaValidation['schema_path'],
+            ]);
+
+            return response()->json([
+                'message' => 'Webhook schema validator unavailable.',
+            ], 503);
         }
 
         $rawPayload = $request->getContent();
@@ -101,15 +128,16 @@ class PdvSyncController extends Controller
             Log::warning('pdv.sync.ingest', [
                 'sync_id' => $syncId,
                 'store_pdv_id' => $storePdvId,
+                'schema_version' => $schemaVersion,
+                'request_id' => $requestId,
                 'status' => 'rejected_strict_timestamp',
                 'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
                 'timestamp_skew_seconds' => $timestampSkewSeconds,
                 'auth_mode' => $authMode,
             ]);
 
-            return $this->error(
+            return $this->pdvValidationError(
                 'Timestamp is outside the accepted window for new syncs.',
-                422,
                 [
                     'timestamp' => [
                         "Payload timestamp differs {$timestampSkewSeconds}s from server time.",
@@ -144,9 +172,8 @@ class PdvSyncController extends Controller
         $windowFrom = PdvDateTime::parseToUtc((string) data_get($payload, 'window.from'));
         $windowTo = PdvDateTime::parseToUtc((string) data_get($payload, 'window.to'));
         if ($windowFrom === null || $windowTo === null) {
-            return $this->error(
+            return $this->pdvValidationError(
                 'Invalid window datetime format.',
-                422,
                 [
                     'window' => [
                         'window.from and window.to must be valid datetimes.',
@@ -231,6 +258,8 @@ class PdvSyncController extends Controller
             Log::info('pdv.sync.ingest', [
                 'sync_id' => $syncId,
                 'store_pdv_id' => $storePdvId,
+                'schema_version' => $existingSync?->schema_version,
+                'request_id' => $requestId,
                 'status' => 'duplicate_race',
                 'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
                 'pdv_sync_id' => $existingSync?->id,
@@ -252,6 +281,8 @@ class PdvSyncController extends Controller
         Log::info('pdv.sync.ingest', [
             'sync_id' => $syncId,
             'store_pdv_id' => $storePdvId,
+            'schema_version' => $schemaVersion,
+            'request_id' => $requestId,
             'status' => 'queued',
             'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
             'pdv_sync_id' => $sync?->id,
@@ -275,5 +306,14 @@ class PdvSyncController extends Controller
             'auth_mode' => $authMode,
             'message' => 'Sync received and queued for processing.',
         ]);
+    }
+
+    private function pdvValidationError(string $message, array $details): JsonResponse
+    {
+        return response()->json([
+            'error' => 'validation',
+            'message' => $message,
+            'details' => $details,
+        ], 422);
     }
 }

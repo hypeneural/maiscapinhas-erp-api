@@ -11,9 +11,21 @@ $app = require __DIR__ . '/../bootstrap/app.php';
 $app->make(ConsoleKernel::class)->bootstrap();
 
 $authMode = 'bearer';
+$withLineId = true;
+$withOffset = true;
+$injectInvalidExtra = false;
 foreach (($argv ?? []) as $arg) {
     if (str_starts_with($arg, '--auth=')) {
         $authMode = strtolower(trim(substr($arg, 7)));
+    }
+    if ($arg === '--without-line-id') {
+        $withLineId = false;
+    }
+    if ($arg === '--naive-datetime') {
+        $withOffset = false;
+    }
+    if ($arg === '--invalid-extra') {
+        $injectInvalidExtra = true;
     }
 }
 
@@ -27,12 +39,25 @@ config([
 
 $syncId = 'ingest-real-' . date('YmdHis');
 
+$brt = new DateTimeZone('-03:00');
+$windowFromDt = new DateTimeImmutable('2026-02-10 20:49:44', $brt);
+$windowToDt = new DateTimeImmutable('2026-02-10 21:12:56', $brt);
+$sentAtDt = new DateTimeImmutable('2026-02-10 21:12:56', $brt);
+$turnoStartDt = new DateTimeImmutable('2026-02-10 16:37:05', $brt);
+$vendaAtDt = new DateTimeImmutable('2026-02-10 21:07:05', $brt);
+
+$formatDt = static function (DateTimeImmutable $dt, bool $withOffset): string {
+    return $withOffset
+        ? $dt->format('Y-m-d\TH:i:sP')
+        : $dt->format('Y-m-d\TH:i:s');
+};
+
 $payload = [
     'schema_version' => '2.0',
     'agent' => [
         'version' => '2.0.0',
         'machine' => 'DESKTOP-9TD3UO6',
-        'sent_at' => '2026-02-10T21:12:56.891460',
+        'sent_at' => $formatDt($sentAtDt, $withOffset),
     ],
     'store' => [
         'id_ponto_venda' => 10,
@@ -40,15 +65,15 @@ $payload = [
         'alias' => 'tijucas-01',
     ],
     'window' => [
-        'from' => '2026-02-10T20:49:44.827472',
-        'to' => '2026-02-10T21:12:56.620869',
+        'from' => $formatDt($windowFromDt, $withOffset),
+        'to' => $formatDt($windowToDt, $withOffset),
         'minutes' => 10,
     ],
     'turnos' => [[
         'id_turno' => '2258B1E2-528A-4B68-8172-8F73F7BB7B27',
         'sequencial' => 3,
         'fechado' => false,
-        'data_hora_inicio' => '2026-02-10T16:37:05.380000',
+        'data_hora_inicio' => $formatDt($turnoStartDt, $withOffset),
         'data_hora_termino' => null,
         'operador' => [
             'id_usuario' => 12,
@@ -70,9 +95,11 @@ $payload = [
     ]],
     'vendas' => [[
         'id_operacao' => 13425,
-        'data_hora' => '2026-02-10T21:07:05.037000',
+        'data_hora' => $formatDt($vendaAtDt, $withOffset),
         'id_turno' => '2258B1E2-528A-4B68-8172-8F73F7BB7B27',
         'itens' => [[
+            'line_id' => 900001,
+            'line_no' => 1,
             'id_produto' => 2543,
             'codigo_barras' => '4218',
             'nome' => 'Cabo Type C FAM FCA-EC12',
@@ -83,6 +110,8 @@ $payload = [
             'vendedor' => ['id_usuario' => 92, 'nome' => 'Vitoria'],
         ]],
         'pagamentos' => [[
+            'line_id' => 990001,
+            'line_no' => 1,
             'id_finalizador' => 1,
             'meio' => 'Dinheiro',
             'valor' => '85.00',
@@ -107,6 +136,15 @@ $payload = [
     'ops' => ['count' => 1, 'ids' => [13425]],
     'integrity' => ['sync_id' => $syncId, 'warnings' => []],
 ];
+
+if (!$withLineId) {
+    unset($payload['vendas'][0]['itens'][0]['line_id']);
+    unset($payload['vendas'][0]['pagamentos'][0]['line_id']);
+}
+
+if ($injectInvalidExtra) {
+    $payload['unexpected_property'] = 'invalid';
+}
 
 $body = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 $server = [
@@ -147,11 +185,16 @@ $send = static function () use ($http, $body, $server): array {
 
 $db = $app->make('db');
 $sync = $db->table('pdv_syncs')->where('sync_id', $syncId)->first();
+$syncRaw = $db->table('pdv_syncs')->where('sync_id', $syncId)->first(['window_from', 'window_to']);
+$saleRaw = $db->table('pdv_vendas')->where('store_pdv_id', 10)->where('id_operacao', 13425)->first(['data_hora']);
 $itemRow = $db->table('pdv_venda_itens')->where('store_pdv_id', 10)->where('id_operacao', 13425)->first();
 $paymentRow = $db->table('pdv_venda_pagamentos')->where('store_pdv_id', 10)->where('id_operacao', 13425)->first();
 
 $out = [
     'auth_mode_requested' => $authMode,
+    'with_line_id' => $withLineId,
+    'with_offset' => $withOffset,
+    'inject_invalid_extra' => $injectInvalidExtra,
     'sync_id' => $syncId,
     'http_first' => $status1,
     'body_first' => json_decode((string) $content1, true),
@@ -178,8 +221,16 @@ $out = [
             ->groupBy('row_hash')
             ->havingRaw('COUNT(*) > 1')
             ->count(),
+        'item_line_id' => $itemRow?->line_id,
+        'payment_line_id' => $paymentRow?->line_id,
         'item_row_hash' => $itemRow?->row_hash,
         'payment_row_hash' => $paymentRow?->row_hash,
+        'window_from_db' => $syncRaw?->window_from,
+        'window_to_db' => $syncRaw?->window_to,
+        'sale_data_hora_db' => $saleRaw?->data_hora,
+        'window_from_expected_utc' => $withOffset ? (new DateTimeImmutable((string) $payload['window']['from']))->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s') : null,
+        'window_to_expected_utc' => $withOffset ? (new DateTimeImmutable((string) $payload['window']['to']))->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s') : null,
+        'sale_data_hora_expected_utc' => $withOffset ? (new DateTimeImmutable((string) $payload['vendas'][0]['data_hora']))->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s') : null,
         'sync_status' => $sync?->status,
         'risk_flags' => $sync ? json_decode((string) $sync->risk_flags, true) : null,
     ],

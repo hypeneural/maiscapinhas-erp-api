@@ -539,3 +539,25 @@ Resultados adicionais:
 
 - com mapping de loja (`pdv_store_id=10 -> store_id=1`), o `risk_flag` `store_mapping_missing` foi eliminado;
 - validacao em modo HMAC (`--auth=hmac`) retornou fluxo nominal sem riscos (`risk_flags=[]`).
+
+## 16) Atualizacao de infraestrutura Redis/Fila (2026-02-11)
+
+Com base na nota tecnica de servidor e no estado atual do codigo:
+
+- Redis do host esta adequado para este workload (local-only, nao exposto publicamente).
+- O codigo ja suporta queue/cache em Redis.
+- O maior risco restante e operacional: ambiente subir com `QUEUE_CONNECTION=sync` ou sem worker/scheduler ativos.
+
+Decisoes recomendadas para producao:
+
+1. `QUEUE_CONNECTION=redis` e `CACHE_STORE=redis`.
+2. Worker no Laravel Toolkit com:
+   - timeout `120`/`180`,
+   - `max-jobs=500`,
+   - `max-time=3600`,
+   - sem `stop-when-empty`.
+3. Scheduler a cada minuto (`schedule:run`) no Toolkit.
+4. Alinhar `REDIS_QUEUE_RETRY_AFTER` acima do timeout do worker (ex.: `300` > `180`).
+
+Documento operacional detalhado:
+- `docs/INFRA_REDIS_FILAS_PLESK_PDV.md`.

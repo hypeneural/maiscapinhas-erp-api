@@ -143,6 +143,16 @@ class PdvSyncAdminController extends Controller
             ->pluck('total', 'status')
             ->toArray();
 
+        $statusBreakdown = [
+            'queued' => (int) ($statusCounts[PdvSync::STATUS_QUEUED] ?? 0),
+            'processing' => (int) ($statusCounts[PdvSync::STATUS_PROCESSING] ?? 0),
+            'processed' => (int) ($statusCounts[PdvSync::STATUS_PROCESSED] ?? 0),
+            'failed' => (int) ($statusCounts[PdvSync::STATUS_FAILED] ?? 0),
+            'blocked' => (int) ($statusCounts[PdvSync::STATUS_BLOCKED] ?? 0),
+            // Duplicates are acknowledged at ingest level and are not persisted as a status row.
+            'duplicate' => 0,
+        ];
+
         $last24hStart = now()->subDay();
         $total24h = PdvSync::query()
             ->where('received_at', '>=', $last24hStart)
@@ -155,6 +165,22 @@ class PdvSyncAdminController extends Controller
         $failureRate24h = $total24h > 0
             ? round(($failed24h / $total24h) * 100, 2)
             : 0.0;
+
+        $statusCounts24h = PdvSync::query()
+            ->where('received_at', '>=', $last24hStart)
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->toArray();
+
+        $statusBreakdown24h = [
+            'queued' => (int) ($statusCounts24h[PdvSync::STATUS_QUEUED] ?? 0),
+            'processing' => (int) ($statusCounts24h[PdvSync::STATUS_PROCESSING] ?? 0),
+            'processed' => (int) ($statusCounts24h[PdvSync::STATUS_PROCESSED] ?? 0),
+            'failed' => (int) ($statusCounts24h[PdvSync::STATUS_FAILED] ?? 0),
+            'blocked' => (int) ($statusCounts24h[PdvSync::STATUS_BLOCKED] ?? 0),
+            'duplicate' => 0,
+        ];
 
         $samples = PdvSync::query()
             ->whereNotNull('processing_started_at')
@@ -216,10 +242,12 @@ class PdvSyncAdminController extends Controller
 
         return $this->success([
             'backlog_by_status' => $statusCounts,
+            'status_breakdown' => $statusBreakdown,
             'last_24h' => [
                 'total' => $total24h,
                 'failed' => $failed24h,
                 'failure_rate_percent' => $failureRate24h,
+                'status_breakdown' => $statusBreakdown24h,
             ],
             'latency' => [
                 'avg_queue_delay_ms' => $avgQueueDelayMs,
