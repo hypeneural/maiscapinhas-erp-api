@@ -42,16 +42,22 @@ class PdvInfraCheckCommand extends Command
         $redisBlockFor = config('queue.connections.redis.block_for');
         $pdvQueue = (string) config('pdv.queue_name', 'pdv');
 
+        $queueIsRedis = $queueDefault === 'redis';
         $this->addCheck(
             'Queue connection',
-            $queueDefault === 'redis',
-            "queue.default={$queueDefault}. Expected redis for production ingestion."
+            $queueIsRedis,
+            $queueIsRedis
+                ? "queue.default={$queueDefault}."
+                : "queue.default={$queueDefault}. Expected redis for production ingestion."
         );
 
+        $cacheIsRedis = $cacheDefault === 'redis';
         $this->addCheck(
             'Cache store',
-            $cacheDefault === 'redis',
-            "cache.default={$cacheDefault}. Redis is recommended for lock/metrics consistency.",
+            $cacheIsRedis,
+            $cacheIsRedis
+                ? "cache.default={$cacheDefault}."
+                : "cache.default={$cacheDefault}. Redis is recommended for lock/metrics consistency.",
             'warning'
         );
 
@@ -61,17 +67,25 @@ class PdvInfraCheckCommand extends Command
             "pdv.queue_name={$pdvQueue}."
         );
 
+        $retryAfterOk = $redisRetryAfter > $expectedWorkerTimeout;
         $this->addCheck(
             'Redis retry_after vs worker timeout',
-            $redisRetryAfter > $expectedWorkerTimeout,
-            "retry_after={$redisRetryAfter}s, expected_worker_timeout={$expectedWorkerTimeout}s.",
+            $retryAfterOk,
+            $retryAfterOk
+                ? "retry_after={$redisRetryAfter}s, expected_worker_timeout={$expectedWorkerTimeout}s."
+                : "retry_after={$redisRetryAfter}s must be greater than expected_worker_timeout={$expectedWorkerTimeout}s.",
             'warning'
         );
 
+        $blockForValue = is_numeric($redisBlockFor) ? (int) $redisBlockFor : null;
+        $blockForDisplay = $redisBlockFor === null ? 'null' : (string) $redisBlockFor;
+        $blockForOk = $blockForValue !== null && $blockForValue > 0;
         $this->addCheck(
             'Redis block_for',
-            $redisBlockFor !== null,
-            'queue.connections.redis.block_for is null. A small value (e.g. 5) reduces polling overhead.',
+            $blockForOk,
+            $blockForOk
+                ? "queue.connections.redis.block_for={$blockForValue}s."
+                : "queue.connections.redis.block_for={$blockForDisplay}. Configure REDIS_QUEUE_BLOCK_FOR=5 to reduce polling overhead.",
             'warning'
         );
 

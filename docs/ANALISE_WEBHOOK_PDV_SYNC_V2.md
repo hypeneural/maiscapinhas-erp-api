@@ -559,6 +559,7 @@ Decisoes recomendadas para producao:
 3. Scheduler a cada minuto (`schedule:run`) no Toolkit.
 4. Alinhar `REDIS_QUEUE_RETRY_AFTER` acima do timeout do worker (ex.: `300` > `180`).
 5. Executar `php artisan pdv:infra-check` como gate de prontidao antes do go-live.
+6. Validar worker ativo com `php artisan pdv:queue-smoke --wait=20`.
 
 Documento operacional detalhado:
 - `docs/INFRA_REDIS_FILAS_PLESK_PDV.md`.

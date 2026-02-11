@@ -123,6 +123,7 @@ Comandos essenciais:
 ```bash
 /opt/plesk/php/8.2/bin/php artisan pdv:infra-check
 /opt/plesk/php/8.2/bin/php artisan pdv:infra-check --json
+/opt/plesk/php/8.2/bin/php artisan pdv:queue-smoke --wait=20
 /opt/plesk/php/8.2/bin/php artisan queue:failed
 /opt/plesk/php/8.2/bin/php artisan queue:retry all
 /opt/plesk/php/8.2/bin/php artisan queue:flush
@@ -131,6 +132,10 @@ Comandos essenciais:
 Interpretacao rapida do `pdv:infra-check`:
 - `errors > 0`: nao pronto para go-live (corrigir antes de abrir trafego).
 - `warnings > 0`: operacao possivel, mas com risco/ajustes pendentes.
+
+Interpretacao rapida do `pdv:queue-smoke`:
+- sucesso: worker ativo e consumindo a fila `pdv`;
+- timeout/falha: worker parado, fila errada ou problema de conexao do worker.
 
 Sinais de alerta para acionar time:
 - loja sem sync > 20 min;

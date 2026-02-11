@@ -50,13 +50,14 @@ Subetapas:
   - `REDIS_DB=0`, `REDIS_CACHE_DB=1`, `REDIS_PREFIX=mc:api:`;
   - `REDIS_QUEUE_RETRY_AFTER=300`, `REDIS_QUEUE_BLOCK_FOR=5`.
 - [x] Parametrizar `block_for` no `config/queue.php` (`REDIS_QUEUE_BLOCK_FOR`).
-- [ ] Definir `.env` de producao:
+- [x] Definir `.env` de producao:
   - `QUEUE_CONNECTION=redis`;
   - `CACHE_STORE=redis`;
   - `REDIS_HOST=127.0.0.1`, `REDIS_PORT=6379`.
-- [ ] Rodar no servidor:
+- [x] Rodar no servidor:
   - `/opt/plesk/php/8.2/bin/php artisan config:clear`
   - `/opt/plesk/php/8.2/bin/php artisan cache:clear`
+  - validacao com `/opt/plesk/php/8.3/bin/php artisan pdv:infra-check --json` (`ok=true`).
 
 Criterio de aceite:
 - sync novo gera job em Redis e nao executa inline no request HTTP.
@@ -76,7 +77,8 @@ Subetapas:
 - [ ] Garantir reinicio pos deploy:
   - painel Toolkit, ou
   - `/opt/plesk/php/8.2/bin/php artisan queue:restart`.
-- [ ] Validar consumo da fila `pdv` em tempo real durante ingestao.
+- [x] Criar comando de smoke test de worker: `pdv:queue-smoke --wait=20`.
+- [ ] Validar consumo da fila `pdv` em tempo real durante ingestao (Toolkit) com `pdv:queue-smoke`.
 
 Criterio de aceite:
 - fila `pdv` sem backlog crescente em operacao nominal (15 lojas / 10 min).
