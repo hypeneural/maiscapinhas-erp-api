@@ -105,7 +105,7 @@ Objetivo: evitar redelivery indevido e duplicacao por timeout mal ajustado.
 Subetapas:
 - [ ] Definir regra final:
   - `REDIS_QUEUE_RETRY_AFTER` > timeout max do worker.
-- [ ] Consolidar baseline sugerido:
+- [x] Consolidar baseline sugerido em config/env de referencia:
   - timeout worker `180`;
   - `REDIS_QUEUE_RETRY_AFTER=300`.
 - [ ] Revisar `tries/backoff` dos jobs PDV em producao real.
@@ -120,8 +120,10 @@ Criterio de aceite:
 Objetivo: detectar ruptura em minutos.
 
 Subetapas:
-- [ ] Definir rotina operacional com comandos:
+- [x] Definir rotina operacional com comandos:
   - `queue:failed`, `queue:retry all`, `queue:flush`.
+- [x] Criar comando de prontidao `pdv:infra-check` (Redis/queue/cache/scheduler/backlog).
+- [x] Adicionar heartbeat de scheduler em cache (`pdv:scheduler:heartbeat`) para deteccao de parada.
 - [ ] Monitorar indicadores minimos:
   - backlog por fila;
   - `failed_jobs` por janela;

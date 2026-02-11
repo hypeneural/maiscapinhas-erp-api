@@ -2,11 +2,19 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+Schedule::call(static function (): void {
+    Cache::put('pdv:scheduler:heartbeat', now()->toIso8601String(), now()->addMinutes(30));
+})
+    ->name('pdv.scheduler.heartbeat')
+    ->everyMinute()
+    ->withoutOverlapping();
 
 Schedule::command('pdv:purge-raw-payloads')
     ->dailyAt('03:10')

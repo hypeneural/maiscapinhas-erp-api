@@ -48,6 +48,8 @@ return [
     'rate_limit_per_minute' => (int) env('PDV_RATE_LIMIT_PER_MINUTE', 180),
     'queue_name' => env('PDV_QUEUE_NAME', 'pdv'),
     'store_lock_seconds' => (int) env('PDV_STORE_LOCK_SECONDS', 30),
+    'worker_timeout_seconds' => (int) env('PDV_WORKER_TIMEOUT_SECONDS', 180),
+    'queue_stale_threshold_minutes' => (int) env('PDV_QUEUE_STALE_THRESHOLD_MINUTES', 20),
 
     /*
     |--------------------------------------------------------------------------

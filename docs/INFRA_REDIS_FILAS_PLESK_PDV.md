@@ -23,6 +23,8 @@ Escopo: estabilidade de ingestao e processamento do webhook `POST /api/v1/pdv/sy
 - Scheduler ja possui:
   - `pdv:purge-raw-payloads` (diario);
   - `pdv:retry-failed` (10 em 10 min, por flag).
+- Scheduler heartbeat adicionado:
+  - chave `pdv:scheduler:heartbeat` atualizada a cada minuto quando `schedule:run` esta ativo.
 - Ajuste aplicado: `REDIS_QUEUE_BLOCK_FOR` agora parametriza `block_for` no `config/queue.php`.
 
 ## 1.3 Gap operacional real
@@ -119,10 +121,16 @@ Sem isso:
 Comandos essenciais:
 
 ```bash
+/opt/plesk/php/8.2/bin/php artisan pdv:infra-check
+/opt/plesk/php/8.2/bin/php artisan pdv:infra-check --json
 /opt/plesk/php/8.2/bin/php artisan queue:failed
 /opt/plesk/php/8.2/bin/php artisan queue:retry all
 /opt/plesk/php/8.2/bin/php artisan queue:flush
 ```
+
+Interpretacao rapida do `pdv:infra-check`:
+- `errors > 0`: nao pronto para go-live (corrigir antes de abrir trafego).
+- `warnings > 0`: operacao possivel, mas com risco/ajustes pendentes.
 
 Sinais de alerta para acionar time:
 - loja sem sync > 20 min;
