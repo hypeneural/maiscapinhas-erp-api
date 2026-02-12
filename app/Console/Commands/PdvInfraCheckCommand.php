@@ -120,6 +120,7 @@ class PdvInfraCheckCommand extends Command
         );
 
         $this->checkSchedulerHeartbeat();
+        $this->checkQueueConsumerHeartbeat();
         $this->checkPdvBacklog($maxQueueDelayMinutes);
         $this->checkPdvFailedSyncs();
         $this->checkFailedJobsTable();
@@ -215,6 +216,54 @@ class PdvInfraCheckCommand extends Command
             'Scheduler heartbeat',
             $ageSeconds <= 180,
             "last={$heartbeatAt->toIso8601String()} age={$ageSeconds}s.",
+            'warning'
+        );
+    }
+
+    private function checkQueueConsumerHeartbeat(): void
+    {
+        if (!(bool) config('pdv.cron_queue_consumer_enabled', false)) {
+            $this->addCheck(
+                'Queue consumer heartbeat',
+                true,
+                'Cron queue consumer is disabled by config (PDV_CRON_QUEUE_CONSUMER_ENABLED=false).',
+                'warning'
+            );
+
+            return;
+        }
+
+        $key = (string) config('pdv.queue_consumer_heartbeat_cache_key', 'pdv:queue-consumer:heartbeat');
+        $raw = Cache::get($key);
+        if (!is_string($raw) || trim($raw) === '') {
+            $this->addCheck(
+                'Queue consumer heartbeat',
+                false,
+                "No heartbeat found in cache key {$key}. Cron queue consumer may not be running.",
+                'warning'
+            );
+
+            return;
+        }
+
+        try {
+            $heartbeatAt = CarbonImmutable::parse($raw);
+        } catch (Throwable $e) {
+            $this->addCheck(
+                'Queue consumer heartbeat',
+                false,
+                "Invalid heartbeat value in cache key {$key}: {$raw}.",
+                'warning'
+            );
+
+            return;
+        }
+
+        $ageSeconds = $heartbeatAt->diffInSeconds(now());
+        $this->addCheck(
+            'Queue consumer heartbeat',
+            $ageSeconds <= 180,
+            "key={$key} last={$heartbeatAt->toIso8601String()} age={$ageSeconds}s.",
             'warning'
         );
     }

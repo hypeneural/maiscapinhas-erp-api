@@ -62,6 +62,11 @@ return [
         static fn (string $value): int => (int) trim($value),
         explode(',', (string) env('PDV_JOB_BACKOFF_SECONDS', '10,30,60,120'))
     ), static fn (int $value): bool => $value >= 0)),
+    'cron_queue_consumer_enabled' => (bool) env('PDV_CRON_QUEUE_CONSUMER_ENABLED', false),
+    'cron_queue_consumer_max_time' => max(5, (int) env('PDV_CRON_QUEUE_CONSUMER_MAX_TIME', 50)),
+    'cron_queue_consumer_sleep' => max(0, (int) env('PDV_CRON_QUEUE_CONSUMER_SLEEP', 1)),
+    'cron_queue_consumer_memory' => max(64, (int) env('PDV_CRON_QUEUE_CONSUMER_MEMORY', 256)),
+    'queue_consumer_heartbeat_cache_key' => env('PDV_QUEUE_CONSUMER_HEARTBEAT_CACHE_KEY', 'pdv:queue-consumer:heartbeat'),
 
     /*
     |--------------------------------------------------------------------------

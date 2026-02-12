@@ -92,7 +92,7 @@ class PdvSyncIngestRequest extends FormRequest
             'snapshot_vendas.*.data_hora_termino' => ['nullable', 'date'],
             'snapshot_vendas.*.duracao_segundos' => ['sometimes', 'integer', 'min:0'],
             'snapshot_vendas.*.id_turno' => ['nullable', 'string', 'max:64'],
-            'snapshot_vendas.*.turno_seq' => ['sometimes', 'integer', 'min:0'],
+            'snapshot_vendas.*.turno_seq' => ['nullable', 'integer', 'min:0'],
             'snapshot_vendas.*.qtd_itens' => ['sometimes', 'integer', 'min:0'],
             'snapshot_vendas.*.total_itens' => ['sometimes', 'numeric'],
             'snapshot_vendas.*.vendedor' => ['sometimes', 'nullable', 'array'],

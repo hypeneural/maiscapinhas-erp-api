@@ -34,3 +34,14 @@ Schedule::command('pdv:ops-monitor --json')
     ->everyTenMinutes()
     ->withoutOverlapping()
     ->when(static fn () => (bool) config('pdv.monitor_enabled', true));
+
+Schedule::command(sprintf(
+    'pdv:queue-consume --max-time=%d --sleep=%d --memory=%d',
+    (int) config('pdv.cron_queue_consumer_max_time', 50),
+    (int) config('pdv.cron_queue_consumer_sleep', 1),
+    (int) config('pdv.cron_queue_consumer_memory', 256),
+))
+    ->name('pdv.queue.consume')
+    ->everyMinute()
+    ->withoutOverlapping()
+    ->when(static fn () => (bool) config('pdv.cron_queue_consumer_enabled', false));
