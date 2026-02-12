@@ -1,13 +1,11 @@
 # PDV v3 - Runbook de Ambiente e Fila (shared hosting)
 
-## 1) Fix imediato de schema v3 no `.env` de producao
+## 1) Schema v3 hardcoded (sem dependencia de `.env`)
 
 Ambiente alvo: aceitar somente `schema_version=3.0`.
-
-```env
-PDV_SUPPORTED_SCHEMA_VERSIONS=3.0
-PDV_JSON_SCHEMA_FILE_3_0=docs/schema_v3.0.json
-```
+No codigo atual, as versoes suportadas e o arquivo de schema foram fixados em `config/pdv.php`:
+- `supported_schema_versions = ['3.0']`
+- `json_schema_files['3.0'] = base_path('docs/schema_v3.0.json')`
 
 Opcional (recomendado apos estabilizacao):
 

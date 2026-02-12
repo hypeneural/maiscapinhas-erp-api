@@ -71,11 +71,16 @@ Erro principal retornado:
 
 ## 5) Ajustes Obrigatorios em Producao
 
-### 5.1 `.env` (minimo para v3)
+### 5.1 Schema versionamento (v3-only)
+
+No codigo atual, o versionamento foi hardcoded para `3.0` em `config/pdv.php`:
+- `supported_schema_versions = ['3.0']`
+- `json_schema_files['3.0'] = base_path('docs/schema_v3.0.json')`
+
+No `.env`, apenas manter (opcional) o toggle de validacao formal:
 
 ```env
-PDV_SUPPORTED_SCHEMA_VERSIONS=3.0
-PDV_JSON_SCHEMA_FILE_3_0=docs/schema_v3.0.json
+PDV_JSON_SCHEMA_VALIDATION_ENABLED=false
 ```
 
 Durante teste sem auth (temporario):
@@ -192,15 +197,15 @@ php artisan optimize:clear
 Mudancas aplicadas no codigo para operar somente com `schema_version=3.0` por padrao:
 
 - `config/pdv.php`
-  - default de `PDV_SUPPORTED_SCHEMA_VERSIONS` alterado para `3.0`;
-  - mapa `json_schema_files` padrao mantido apenas para `3.0`.
+  - `supported_schema_versions` hardcoded para `['3.0']` (sem env);
+  - `json_schema_files` hardcoded apenas com `3.0` (sem env).
 - `app/Http/Requests/Pdv/PdvSyncIngestRequest.php`
   - fallback de versoes suportadas alterado para `['3.0']`.
 - `app/Http/Controllers/Api/V1/PdvSyncController.php`
   - fallback de versoes suportadas no header check alterado para `['3.0']`.
 - `.env.example`
-  - `PDV_SUPPORTED_SCHEMA_VERSIONS=3.0`;
-  - removido `PDV_JSON_SCHEMA_FILE_2_0`.
+  - removida configuracao de versao/schema do PDV para evitar ambiguidade;
+  - mantido apenas toggle `PDV_JSON_SCHEMA_VALIDATION_ENABLED`.
 - Runbooks
   - `docs/PDV_V3_ENV_QUEUE_RUNBOOK.md` atualizado para v3-only.
 

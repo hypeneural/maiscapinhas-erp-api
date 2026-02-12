@@ -43,5 +43,6 @@ Schedule::command(sprintf(
 ))
     ->name('pdv.queue.consume')
     ->everyMinute()
-    ->withoutOverlapping()
+    // Shared hosting may kill long-running processes abruptly; keep overlap lock short.
+    ->withoutOverlapping(2)
     ->when(static fn () => (bool) config('pdv.cron_queue_consumer_enabled', false));
