@@ -118,6 +118,14 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'pdv' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/pdv-webhook.log'),
+            'level' => env('PDV_LOG_LEVEL', env('LOG_LEVEL', 'debug')),
+            'days' => env('PDV_LOG_DAILY_DAYS', 30),
+            'replace_placeholders' => true,
+        ],
+
         'null' => [
             'driver' => 'monolog',
             'handler' => NullHandler::class,

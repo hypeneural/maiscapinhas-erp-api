@@ -8,6 +8,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Support\Facades\Log;
 
 class PdvSyncIngestRequest extends FormRequest
 {
@@ -115,6 +116,29 @@ class PdvSyncIngestRequest extends FormRequest
 
     protected function failedValidation(Validator $validator): void
     {
+        $rawPayload = $this->getContent();
+        $payloadMaxChars = (int) config('pdv.log_payload_max_chars', 6000);
+        $shouldLogPayload = (bool) config('pdv.log_payload_on_validation_error', true);
+        $payloadExcerpt = $shouldLogPayload
+            ? substr($rawPayload, 0, $payloadMaxChars)
+            : null;
+
+        Log::channel((string) config('pdv.log_channel', 'stack'))->warning('pdv.sync.request_validation_failed', [
+            'request_id' => (string) $this->header('X-Request-Id', ''),
+            'schema_header' => (string) $this->header('X-PDV-Schema-Version', ''),
+            'remote_ip' => $this->ip(),
+            'auth_header_present' => $this->header('Authorization') !== null,
+            'payload_sha256' => hash('sha256', $rawPayload),
+            'payload_bytes' => strlen($rawPayload),
+            'payload_excerpt' => $payloadExcerpt,
+            'payload_excerpt_truncated' => $shouldLogPayload ? strlen($rawPayload) > $payloadMaxChars : false,
+            'sync_id' => (string) data_get($this->input(), 'integrity.sync_id', ''),
+            'store_pdv_id' => data_get($this->input(), 'store.id_ponto_venda'),
+            'schema_version' => (string) data_get($this->input(), 'schema_version', ''),
+            'event_type' => (string) data_get($this->input(), 'event_type', ''),
+            'errors' => $validator->errors()->toArray(),
+        ]);
+
         throw new HttpResponseException(response()->json([
             'error' => 'validation',
             'message' => 'Validation failed.',

@@ -33,11 +33,26 @@ class PdvSyncController extends Controller
         [$eventType, $unknownEventType] = $this->normalizeEventType(data_get($payload, 'event_type'));
         $authMode = (string) $request->attributes->get('pdv_auth_mode', 'unknown');
         $requestId = app(AuditContext::class)->getRequestId() ?: (string) $request->header('X-Request-Id', '');
+        $rawPayload = $request->getContent();
+        $baseLogContext = [
+            'sync_id' => $syncId,
+            'store_pdv_id' => $storePdvId,
+            'schema_version' => $schemaVersion,
+            'event_type' => $eventType,
+            'request_id' => $requestId,
+            'auth_mode' => $authMode,
+            'remote_ip' => $request->ip(),
+            'forwarded_for' => (string) $request->header('X-Forwarded-For', ''),
+            'schema_header' => (string) $request->header('X-PDV-Schema-Version', ''),
+            'payload_bytes' => strlen($rawPayload),
+        ];
+
+        $this->pdvLog('info', 'pdv.sync.received', $baseLogContext);
 
         // Idempotency first: duplicates are always accepted (200).
         $existingSync = PdvSync::query()->where('sync_id', $syncId)->first();
         if ($existingSync) {
-            Log::info('pdv.sync.ingest', [
+            $this->pdvLog('info', 'pdv.sync.ingest', [
                 'sync_id' => $syncId,
                 'store_pdv_id' => $storePdvId,
                 'schema_version' => $existingSync->schema_version,
@@ -73,7 +88,8 @@ class PdvSyncController extends Controller
                     'X-PDV-Schema-Version' => [
                         'Unsupported schema version in header.',
                     ],
-                ]
+                ],
+                array_merge($baseLogContext, ['header_schema_version' => $headerSchemaVersion])
             );
         }
 
@@ -84,7 +100,8 @@ class PdvSyncController extends Controller
                     'schema_version' => [
                         'X-PDV-Schema-Version must match payload schema_version.',
                     ],
-                ]
+                ],
+                array_merge($baseLogContext, ['header_schema_version' => $headerSchemaVersion])
             );
         }
 
@@ -95,12 +112,13 @@ class PdvSyncController extends Controller
                 'Payload does not match JSON schema.',
                 [
                     'schema' => $schemaValidation['errors'],
-                ]
+                ],
+                $baseLogContext
             );
         }
 
         if ($schemaValidation['status'] === 'error') {
-            Log::error('pdv.sync.schema_validation', [
+            $this->pdvLog('error', 'pdv.sync.schema_validation', [
                 'sync_id' => $syncId,
                 'store_pdv_id' => $storePdvId,
                 'schema_version' => $schemaVersion,
@@ -113,7 +131,6 @@ class PdvSyncController extends Controller
             ], 503);
         }
 
-        $rawPayload = $request->getContent();
         $payloadSha256 = hash('sha256', $rawPayload);
         $payloadBytes = strlen($rawPayload);
         $headerTimestampRaw = (string) $request->header('X-PDV-Timestamp', '');
@@ -128,7 +145,7 @@ class PdvSyncController extends Controller
             : false;
 
         if ($timestampOutOfWindow && $timestampMode === 'strict') {
-            Log::warning('pdv.sync.ingest', [
+            $this->pdvLog('warning', 'pdv.sync.ingest', [
                 'sync_id' => $syncId,
                 'store_pdv_id' => $storePdvId,
                 'schema_version' => $schemaVersion,
@@ -145,7 +162,11 @@ class PdvSyncController extends Controller
                     'timestamp' => [
                         "Payload timestamp differs {$timestampSkewSeconds}s from server time.",
                     ],
-                ]
+                ],
+                array_merge($baseLogContext, [
+                    'timestamp_skew_seconds' => $timestampSkewSeconds,
+                    'timestamp_mode' => $timestampMode,
+                ])
             );
         }
 
@@ -203,7 +224,8 @@ class PdvSyncController extends Controller
                     'window' => [
                         'window.from and window.to must be valid datetimes.',
                     ],
-                ]
+                ],
+                $baseLogContext
             );
         }
 
@@ -305,7 +327,7 @@ class PdvSyncController extends Controller
 
         if ($inserted === 0) {
             $existingSync = PdvSync::query()->where('sync_id', $syncId)->first();
-            Log::info('pdv.sync.ingest', [
+            $this->pdvLog('info', 'pdv.sync.ingest', [
                 'sync_id' => $syncId,
                 'store_pdv_id' => $storePdvId,
                 'schema_version' => $existingSync?->schema_version,
@@ -332,7 +354,7 @@ class PdvSyncController extends Controller
 
         $processingStatus = $shouldBlock ? PdvSync::STATUS_BLOCKED : PdvSync::STATUS_QUEUED;
 
-        Log::info('pdv.sync.ingest', [
+        $this->pdvLog('info', 'pdv.sync.ingest', [
             'sync_id' => $syncId,
             'store_pdv_id' => $storePdvId,
             'schema_version' => $schemaVersion,
@@ -404,7 +426,7 @@ class PdvSyncController extends Controller
             return [$value, false];
         }
 
-        Log::warning('pdv.sync.unknown_event_type', [
+        $this->pdvLog('warning', 'pdv.sync.unknown_event_type', [
             'event_type' => $value,
         ]);
 
@@ -447,7 +469,7 @@ class PdvSyncController extends Controller
         }
 
         if ($riskFlags !== []) {
-            Log::warning('pdv.sync.event_type_inconsistent', [
+            $this->pdvLog('warning', 'pdv.sync.event_type_inconsistent', [
                 'event_type' => $eventType,
                 'vendas_count' => $vendasCount,
                 'has_closed_turno' => $hasClosedTurno,
@@ -458,12 +480,23 @@ class PdvSyncController extends Controller
         return $riskFlags;
     }
 
-    private function pdvValidationError(string $message, array $details): JsonResponse
+    private function pdvValidationError(string $message, array $details, array $context = []): JsonResponse
     {
+        $this->pdvLog('warning', 'pdv.sync.validation_error', array_merge($context, [
+            'message' => $message,
+            'details' => $details,
+        ]));
+
         return response()->json([
             'error' => 'validation',
             'message' => $message,
             'details' => $details,
         ], 422);
+    }
+
+    private function pdvLog(string $level, string $message, array $context = []): void
+    {
+        $channel = (string) config('pdv.log_channel', 'stack');
+        Log::channel($channel)->{$level}($message, $context);
     }
 }

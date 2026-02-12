@@ -16,6 +16,10 @@ class ValidatePdvSignature
     {
         $authMode = $this->resolveAuthMode();
 
+        if ($authMode === 'none') {
+            return $this->handleNoneMode($request, $next);
+        }
+
         if ($authMode === 'bearer') {
             return $this->handleBearerMode($request, $next, 'bearer');
         }
@@ -32,7 +36,7 @@ class ValidatePdvSignature
         // Legacy fallback for transition period: allow Bearer only when HMAC headers are absent.
         if (!$hasHmacHeaders && $this->isBearerFallbackEnabled() && $this->isValidBearerToken($request)) {
             $request->attributes->set('pdv_auth_mode', 'bearer_fallback');
-            Log::warning('PDV webhook authenticated via temporary bearer fallback mode.');
+            $this->pdvLog('warning', 'PDV webhook authenticated via temporary bearer fallback mode.');
 
             return $next($request);
         }
@@ -51,7 +55,7 @@ class ValidatePdvSignature
 
         $secret = config('pdv.hmac_secret');
         if (!is_string($secret) || trim($secret) === '') {
-            Log::error('PDV webhook rejected because PDV_HMAC_SECRET is not configured.');
+            $this->pdvLog('error', 'PDV webhook rejected because PDV_HMAC_SECRET is not configured.');
 
             return response()->json([
                 'message' => 'Webhook service unavailable.',
@@ -76,7 +80,7 @@ class ValidatePdvSignature
     {
         $configuredToken = (string) config('pdv.bearer_token', '');
         if (trim($configuredToken) === '') {
-            Log::error('PDV webhook rejected because PDV_BEARER_TOKEN is not configured.');
+            $this->pdvLog('error', 'PDV webhook rejected because PDV_BEARER_TOKEN is not configured.');
 
             return response()->json([
                 'message' => 'Webhook service unavailable.',
@@ -100,6 +104,32 @@ class ValidatePdvSignature
         }
 
         $request->attributes->set('pdv_auth_mode', $modeLabel);
+
+        return $next($request);
+    }
+
+    private function handleNoneMode(Request $request, Closure $next): Response
+    {
+        $isProduction = app()->environment('production');
+        $allowInProduction = (bool) config('pdv.allow_none_mode_in_production', false);
+
+        if ($isProduction && !$allowInProduction) {
+            $this->pdvLog('critical', 'PDV webhook rejected because auth_mode=none is blocked in production.', [
+                'remote_ip' => $request->ip(),
+                'request_id' => (string) $request->header('X-Request-Id', ''),
+            ]);
+
+            return response()->json([
+                'message' => 'Webhook service unavailable.',
+            ], 503);
+        }
+
+        $request->attributes->set('pdv_auth_mode', 'none');
+        $this->pdvLog('warning', 'PDV webhook accepted with auth_mode=none.', [
+            'remote_ip' => $request->ip(),
+            'request_id' => (string) $request->header('X-Request-Id', ''),
+            'allow_in_production' => $allowInProduction,
+        ]);
 
         return $next($request);
     }
@@ -129,14 +159,14 @@ class ValidatePdvSignature
     {
         $mode = strtolower(trim((string) config('pdv.auth_mode', 'auto')));
 
-        return in_array($mode, ['auto', 'hmac', 'bearer'], true) ? $mode : 'auto';
+        return in_array($mode, ['auto', 'hmac', 'bearer', 'none'], true) ? $mode : 'auto';
     }
 
     private function isValidBearerToken(Request $request): bool
     {
         $configuredToken = (string) config('pdv.bearer_token', '');
         if (trim($configuredToken) === '') {
-            Log::warning('PDV bearer fallback is enabled but PDV_BEARER_TOKEN is empty.');
+            $this->pdvLog('warning', 'PDV bearer fallback is enabled but PDV_BEARER_TOKEN is empty.');
 
             return false;
         }
@@ -152,5 +182,11 @@ class ValidatePdvSignature
         }
 
         return hash_equals($configuredToken, $incomingToken);
+    }
+
+    private function pdvLog(string $level, string $message, array $context = []): void
+    {
+        $channel = (string) config('pdv.log_channel', 'stack');
+        Log::channel($channel)->{$level}($message, $context);
     }
 }

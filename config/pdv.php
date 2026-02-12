@@ -12,12 +12,14 @@ return [
     | - hmac   -> require X-PDV-Timestamp + X-PDV-Signature
     | - bearer -> require Authorization: Bearer <token>
     | - auto   -> prefer HMAC, fallback to bearer only when enabled
+    | - none   -> disable webhook auth (for temporary diagnostics only)
     |
     */
     'auth_mode' => env('PDV_AUTH_MODE', 'auto'),
     'hmac_secret' => env('PDV_HMAC_SECRET'),
     'allow_bearer_fallback' => (bool) env('PDV_ALLOW_BEARER_FALLBACK', false),
     'bearer_token' => env('PDV_BEARER_TOKEN'),
+    'allow_none_mode_in_production' => (bool) env('PDV_ALLOW_NONE_MODE_IN_PRODUCTION', false),
     'supported_schema_versions' => array_values(array_filter(array_map(
         static fn (string $value): string => trim($value),
         explode(',', (string) env('PDV_SUPPORTED_SCHEMA_VERSIONS', '2.0,3.0'))
@@ -27,6 +29,9 @@ return [
         '2.0' => env('PDV_JSON_SCHEMA_FILE_2_0', base_path('docs/schema_v2.0.json')),
         '3.0' => env('PDV_JSON_SCHEMA_FILE_3_0', base_path('docs/schema_v3.0.json')),
     ],
+    'log_channel' => env('PDV_LOG_CHANNEL', 'pdv'),
+    'log_payload_on_validation_error' => (bool) env('PDV_LOG_PAYLOAD_ON_VALIDATION_ERROR', true),
+    'log_payload_max_chars' => max(512, (int) env('PDV_LOG_PAYLOAD_MAX_CHARS', 6000)),
 
     /*
     |--------------------------------------------------------------------------
