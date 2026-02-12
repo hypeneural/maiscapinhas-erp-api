@@ -1,0 +1,185 @@
+# API PDV Reports v3
+
+Data: 2026-02-12  
+Base path: `/api/v1/pdv/reports/*`  
+Auth: `auth:sanctum`
+
+## 1) GET `/api/v1/pdv/reports/turnos`
+
+Consulta fechamento de caixa por turno no modelo `pdv_turnos` + `pdv_turno_pagamentos`.
+
+Query params:
+- `store_id` (int, opcional) ou `store_pdv_id` (int, opcional). Informar pelo menos um.
+- `date` (date, obrigatorio): data de referencia (`YYYY-MM-DD`).
+- `sequencial` (int, opcional).
+- `periodo` (enum, opcional): `MATUTINO`, `VESPERTINO`, `NOTURNO`.
+
+Resposta (resumo):
+
+```json
+{
+  "data": {
+    "filters": {
+      "store_id": 1,
+      "store_pdv_id": 13,
+      "date": "2026-02-11",
+      "sequencial": null,
+      "periodo": "MATUTINO"
+    },
+    "summary": {
+      "qtd_turnos": 1,
+      "qtd_turnos_fechados": 1,
+      "total_sistema": 12500.0,
+      "total_declarado": 12480.0,
+      "total_falta": 20.0
+    },
+    "turnos": [
+      {
+        "id_turno": "656335C4-D6C4-455A-8E3D-FF6B3F570C64",
+        "sequencial": 2,
+        "status": "FECHADO",
+        "operador": { "id_usuario": 12, "nome": "Carlos" },
+        "responsavel": { "id_usuario": 80, "nome": "Daren" },
+        "totais": {
+          "total_sistema": 12500.0,
+          "total_declarado": 12480.0,
+          "total_falta": 20.0
+        },
+        "pagamentos": {
+          "sistema": [],
+          "declarado": [],
+          "falta": []
+        }
+      }
+    ]
+  },
+  "meta": {
+    "request_id": "req-...",
+    "timestamp": "2026-02-12T03:40:00Z"
+  }
+}
+```
+
+## 2) GET `/api/v1/pdv/reports/vendas`
+
+Consulta vendas com filtros v3 e paginacao.
+
+Query params:
+- `store_id` (int, opcional).
+- `store_pdv_id` (int, opcional).
+- `from` (date, opcional, default = hoje-30d).
+- `to` (date, opcional, default = hoje).
+- `vendedor_id` (int, opcional): `vendedor_pdv_id`.
+- `canal` (enum, opcional): `HIPER_CAIXA` ou `HIPER_LOJA`.
+- `id_turno` (string, opcional).
+- `sort` (enum, opcional): `asc` ou `desc` (default `desc`).
+- `per_page` (int, opcional, default `25`, max `100`).
+
+Resposta (resumo):
+
+```json
+{
+  "data": [
+    {
+      "store_id": 1,
+      "store_pdv_id": 13,
+      "id_operacao": 12380,
+      "canal": "HIPER_CAIXA",
+      "id_turno": "656335C4-D6C4-455A-8E3D-FF6B3F570C64",
+      "total": 129.0,
+      "itens": { "qtd_linhas": 3, "qtd_total": 3.0, "valor_total": 129.0 },
+      "pagamentos": { "qtd_linhas": 1, "valor_total": 129.0 }
+    },
+    {
+      "store_id": 1,
+      "store_pdv_id": 13,
+      "id_operacao": 22380,
+      "canal": "HIPER_LOJA",
+      "id_turno": null,
+      "total": 245.5,
+      "itens": { "qtd_linhas": 2, "qtd_total": 2.0, "valor_total": 245.5 },
+      "pagamentos": { "qtd_linhas": 1, "valor_total": 245.5 }
+    }
+  ],
+  "summary": {
+    "total_vendas": 2,
+    "total_vendido": 374.5
+  },
+  "filters": {
+    "canal": null
+  },
+  "meta": {
+    "pagination": {
+      "total": 2,
+      "per_page": 25,
+      "current_page": 1,
+      "last_page": 1
+    }
+  }
+}
+```
+
+Exemplo filtrando somente canal caixa:
+
+`GET /api/v1/pdv/reports/vendas?store_pdv_id=13&from=2026-02-01&to=2026-02-12&canal=HIPER_CAIXA`
+
+Exemplo filtrando somente canal loja:
+
+`GET /api/v1/pdv/reports/vendas?store_pdv_id=13&from=2026-02-01&to=2026-02-12&canal=HIPER_LOJA`
+
+## 3) GET `/api/v1/pdv/reports/ranking-vendedores`
+
+Ranking por vendedor com base em `pdv_venda_itens` + `pdv_vendas`.
+
+Query params:
+- `mode` (enum, opcional): `daily`, `weekly`, `monthly` (default `monthly`).
+- `reference_date` (date, opcional): ancora para `mode`.
+- `from` e `to` (date, opcional): quando informados, sobrescrevem `mode`.
+- `store_id` (int, opcional).
+- `store_pdv_id` (int, opcional).
+- `canal` (enum, opcional): `HIPER_CAIXA` ou `HIPER_LOJA`.
+- `limit` (int, opcional, default `50`, max `200`).
+
+Resposta (resumo):
+
+```json
+{
+  "data": {
+    "mode": "monthly",
+    "period": {
+      "from": "2026-02-01T00:00:00Z",
+      "to": "2026-02-28T23:59:59Z"
+    },
+    "summary": {
+      "vendedores": 2,
+      "total_vendido": 10000.0,
+      "qtd_vendas": 120,
+      "total_itens": 280.0
+    },
+    "ranking": [
+      {
+        "position": 1,
+        "vendedor_id": 80,
+        "vendedor_nome": "Daren",
+        "qtd_vendas": 70,
+        "total_vendido": 6200.0,
+        "total_itens": 170.0
+      },
+      {
+        "position": 2,
+        "vendedor_id": 12,
+        "vendedor_nome": "Carlos",
+        "qtd_vendas": 50,
+        "total_vendido": 3800.0,
+        "total_itens": 110.0
+      }
+    ]
+  }
+}
+```
+
+## 4) Politica de autorizacao
+
+- Super admin: acesso global.
+- Usuario comum: somente lojas com vinculo em `store_users`.
+- Se `store_id`/`store_pdv_id` nao pertencer a uma loja autorizada, retorna `403`.

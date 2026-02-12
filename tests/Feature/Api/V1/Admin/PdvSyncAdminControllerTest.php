@@ -36,6 +36,10 @@ test('super admin can list pdv syncs with filters', function () {
         'store_id' => $store->id,
         'window_from' => now()->subMinutes(10),
         'window_to' => now(),
+        'ops_loja_count' => 1,
+        'ops_loja_ids' => [22380],
+        'snapshot_turnos_count' => 3,
+        'snapshot_vendas_count' => 4,
         'status' => PdvSync::STATUS_QUEUED,
         'payload_sha256' => str_repeat('a', 64),
         'payload_bytes' => 512,
@@ -51,7 +55,11 @@ test('super admin can list pdv syncs with filters', function () {
         ->assertJsonPath('data.0.schema_version', '2.0')
         ->assertJsonPath('data.0.event_type', 'mixed')
         ->assertJsonPath('data.0.request_id', 'req-admin-list-001')
-        ->assertJsonPath('data.0.status', 'queued');
+        ->assertJsonPath('data.0.status', 'queued')
+        ->assertJsonPath('data.0.ops_loja_count', 1)
+        ->assertJsonPath('data.0.ops_loja_ids.0', 22380)
+        ->assertJsonPath('data.0.snapshot_turnos_count', 3)
+        ->assertJsonPath('data.0.snapshot_vendas_count', 4);
 });
 
 test('super admin can view pdv sync metrics including stale store tracking', function () {
@@ -83,6 +91,7 @@ test('super admin can view pdv sync metrics including stale store tracking', fun
 
     PdvSync::query()->create([
         'sync_id' => 'sync-metrics-healthy',
+        'schema_version' => '3.0',
         'event_type' => 'turno_closure',
         'store_pdv_id' => 10,
         'store_id' => $storeHealthy->id,
@@ -91,6 +100,8 @@ test('super admin can view pdv sync metrics including stale store tracking', fun
         'status' => PdvSync::STATUS_PROCESSED,
         'payload_sha256' => str_repeat('b', 64),
         'payload_bytes' => 1024,
+        'snapshot_turnos_count' => 10,
+        'snapshot_vendas_count' => 10,
         'received_at' => now()->subMinutes(5),
         'processing_started_at' => now()->subMinutes(4),
         'processed_at' => now()->subMinutes(3),
@@ -98,6 +109,7 @@ test('super admin can view pdv sync metrics including stale store tracking', fun
 
     PdvSync::query()->create([
         'sync_id' => 'sync-metrics-failed',
+        'schema_version' => '2.0',
         'event_type' => 'sales',
         'store_pdv_id' => 10,
         'store_id' => $storeHealthy->id,
@@ -107,6 +119,8 @@ test('super admin can view pdv sync metrics including stale store tracking', fun
         'payload_sha256' => str_repeat('c', 64),
         'payload_bytes' => 200,
         'attempts' => 3,
+        'snapshot_turnos_count' => 2,
+        'snapshot_vendas_count' => 1,
         'received_at' => now()->subMinutes(20),
         'updated_at' => now()->subMinutes(20),
     ]);
@@ -121,6 +135,14 @@ test('super admin can view pdv sync metrics including stale store tracking', fun
         ->assertJsonPath('data.last_24h.status_breakdown.failed', 1)
         ->assertJsonPath('data.by_event_type.sales', 1)
         ->assertJsonPath('data.by_event_type.turno_closure', 1)
+        ->assertJsonPath('data.by_schema_version.2.0', 1)
+        ->assertJsonPath('data.by_schema_version.3.0', 1)
+        ->assertJsonPath('data.by_canal.totals.HIPER_CAIXA', 0)
+        ->assertJsonPath('data.by_canal.totals.HIPER_LOJA', 0)
+        ->assertJsonPath('data.snapshots.available', true)
+        ->assertJsonPath('data.snapshots.turnos_processed_total', 12)
+        ->assertJsonPath('data.snapshots.vendas_processed_total', 11)
+        ->assertJsonPath('data.stores.max_stale_stores', 0)
         ->json('data');
 
     expect($response['stores']['stale_count'])->toBeGreaterThanOrEqual(1);

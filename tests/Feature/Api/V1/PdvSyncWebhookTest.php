@@ -18,6 +18,11 @@ beforeEach(function () {
     config()->set('pdv.timestamp_tolerance_seconds', 600);
     config()->set('pdv.naive_datetime_timezone', 'America/Sao_Paulo');
     config()->set('pdv.queue_name', 'pdv');
+    config()->set('pdv.supported_schema_versions', ['2.0', '3.0']);
+    config()->set('pdv.json_schema_files', [
+        '2.0' => base_path('docs/schema_v2.0.json'),
+        '3.0' => base_path('docs/schema_v3.0.json'),
+    ]);
     Queue::fake();
 });
 
@@ -52,6 +57,171 @@ function pdvPayload(array $overrides = []): array
     ];
 
     return array_replace_recursive($base, $overrides);
+}
+
+function pdvPayloadV3(array $overrides = []): array
+{
+    $base = [
+        'schema_version' => '3.0',
+        'event_type' => 'mixed',
+        'agent' => [
+            'version' => '3.0.0',
+            'machine' => 'PDV-STORE-01',
+            'sent_at' => now()->toIso8601String(),
+        ],
+        'store' => [
+            'id_ponto_venda' => 10,
+            'nome' => 'Loja 10',
+            'alias' => 'loja-10',
+        ],
+        'window' => [
+            'from' => now()->subMinutes(10)->toIso8601String(),
+            'to' => now()->toIso8601String(),
+            'minutes' => 10,
+        ],
+        'turnos' => [[
+            'id_turno' => 'turno-v3-main-001',
+            'sequencial' => 1,
+            'fechado' => true,
+            'data_hora_inicio' => now()->subHours(8)->toIso8601String(),
+            'data_hora_termino' => now()->subMinutes(5)->toIso8601String(),
+            'duracao_minutos' => 475,
+            'periodo' => 'MATUTINO',
+            'operador' => [
+                'id_usuario' => 12,
+                'nome' => 'Operador V3',
+            ],
+            'responsavel' => [
+                'id_usuario' => 80,
+                'nome' => 'Vendedor Lider',
+            ],
+            'qtd_vendas' => 5,
+            'total_vendas' => 529.90,
+            'qtd_vendedores' => 2,
+            'totais_sistema' => [
+                'total' => 529.90,
+                'qtd_vendas' => 5,
+                'por_pagamento' => [],
+            ],
+            'fechamento_declarado' => [
+                'total' => 529.90,
+                'qtd_vendas' => 5,
+                'por_pagamento' => [],
+            ],
+            'falta_caixa' => [
+                'total' => 0.00,
+                'qtd_vendas' => 0,
+                'por_pagamento' => [],
+            ],
+        ]],
+        'vendas' => [[
+            'id_operacao' => 12380,
+            'canal' => 'HIPER_CAIXA',
+            'data_hora' => now()->subMinutes(6)->toIso8601String(),
+            'id_turno' => 'turno-v3-main-001',
+            'itens' => [[
+                'line_id' => 987001,
+                'line_no' => 1,
+                'id_produto' => 5402,
+                'codigo_barras' => '7891234567890',
+                'nome' => 'Produto V3',
+                'qtd' => 1,
+                'preco_unit' => 129.00,
+                'total' => 129.00,
+                'desconto' => 0,
+                'vendedor' => [
+                    'id_usuario' => 80,
+                    'nome' => 'Vendedor Lider',
+                ],
+            ]],
+            'pagamentos' => [[
+                'line_id' => 987101,
+                'line_no' => 1,
+                'id_finalizador' => 5,
+                'meio' => 'Pix',
+                'valor' => 129.00,
+                'troco' => 0,
+                'parcelas' => 1,
+            ]],
+            'total' => 129.00,
+        ]],
+        'resumo' => [
+            'by_vendor' => [[
+                'id_usuario' => 80,
+                'nome' => 'Vendedor Lider',
+                'qtd_cupons' => 1,
+                'total_vendido' => 129.00,
+            ]],
+            'by_payment' => [[
+                'id_finalizador' => 5,
+                'meio' => 'Pix',
+                'total' => 129.00,
+            ]],
+        ],
+        'snapshot_turnos' => [[
+            'id_turno' => 'turno-v3-snap-001',
+            'sequencial' => 1,
+            'fechado' => true,
+            'data_hora_inicio' => now()->subDay()->setTime(8, 0)->toIso8601String(),
+            'data_hora_termino' => now()->subDay()->setTime(14, 30)->toIso8601String(),
+            'duracao_minutos' => 390,
+            'periodo' => 'MATUTINO',
+            'operador' => [
+                'id_usuario' => 12,
+                'nome' => 'Operador V3',
+            ],
+            'responsavel' => [
+                'id_usuario' => 80,
+                'nome' => 'Vendedor Lider',
+            ],
+            'qtd_vendas' => 45,
+            'total_vendas' => 12500.00,
+            'qtd_vendedores' => 3,
+        ]],
+        'snapshot_vendas' => [[
+            'id_operacao' => 12379,
+            'canal' => 'HIPER_CAIXA',
+            'data_hora_inicio' => now()->subDay()->setTime(16, 26, 44)->toIso8601String(),
+            'data_hora_termino' => now()->subDay()->setTime(16, 26, 59)->toIso8601String(),
+            'duracao_segundos' => 15,
+            'id_turno' => 'turno-v3-snap-001',
+            'turno_seq' => 1,
+            'vendedor' => [
+                'id_usuario' => 80,
+                'nome' => 'Vendedor Lider',
+            ],
+            'qtd_itens' => 3,
+            'total_itens' => 129.00,
+        ]],
+        'ops' => [
+            'count' => 1,
+            'ids' => [12380],
+            'loja_count' => 1,
+            'loja_ids' => [22380],
+        ],
+        'integrity' => [
+            'sync_id' => 'sync-v3-20260211-001',
+            'warnings' => [],
+        ],
+    ];
+
+    return array_replace_recursive($base, $overrides);
+}
+
+function pdvFixtureV3(string $fileName, array $overrides = []): array
+{
+    $path = base_path('tests/Fixtures/pdv/v3/' . $fileName);
+    if (!is_file($path)) {
+        throw new \RuntimeException("Fixture not found: {$path}");
+    }
+
+    $raw = file_get_contents($path);
+    $decoded = is_string($raw) ? json_decode($raw, true) : null;
+    if (!is_array($decoded)) {
+        throw new \RuntimeException("Invalid JSON fixture: {$path}");
+    }
+
+    return array_replace_recursive($decoded, $overrides);
 }
 
 function signedPdvRequest(array $payload, ?int $timestamp = null, ?string $secret = null, array $extraHeaders = [])
@@ -195,6 +365,116 @@ test('rejects when schema header does not match payload schema_version', functio
     ])->assertStatus(422);
 
     assertDatabaseCount('pdv_syncs', 0);
+});
+
+test('accepts valid v3 webhook and queues processing', function () {
+    $payload = pdvPayloadV3();
+
+    $response = signedPdvRequest($payload, null, null, [
+        'HTTP_X_PDV_SCHEMA_VERSION' => '3.0',
+        'HTTP_X_REQUEST_ID' => 'req-pdv-v3-001',
+    ]);
+
+    $response->assertStatus(201)
+        ->assertJsonPath('data.status', 'created')
+        ->assertJsonPath('data.processing_status', 'queued')
+        ->assertJsonPath('data.schema_version', '3.0')
+        ->assertJsonPath('data.event_type', 'mixed')
+        ->assertJsonPath('data.request_id', 'req-pdv-v3-001')
+        ->assertJsonPath('data.duplicate', false)
+        ->assertJsonPath('data.sync_id', 'sync-v3-20260211-001');
+
+    assertDatabaseHas('pdv_syncs', [
+        'sync_id' => 'sync-v3-20260211-001',
+        'schema_version' => '3.0',
+        'event_type' => 'mixed',
+        'request_id' => 'req-pdv-v3-001',
+        'status' => 'queued',
+        'store_pdv_id' => 10,
+        'ops_count' => 1,
+        'ops_loja_count' => 1,
+        'snapshot_turnos_count' => 1,
+        'snapshot_vendas_count' => 1,
+    ]);
+});
+
+test('accepts anonymized mixed fixture with id_operacao collision across canais', function () {
+    $payload = pdvFixtureV3('mixed_caixa_loja_collision.json', [
+        'integrity' => [
+            'sync_id' => 'sync-v3-fixture-mixed-001',
+            'warnings' => [],
+        ],
+        'agent' => [
+            'sent_at' => now()->toIso8601String(),
+        ],
+    ]);
+
+    signedPdvRequest($payload, null, null, [
+        'HTTP_X_PDV_SCHEMA_VERSION' => '3.0',
+    ])->assertStatus(201)
+        ->assertJsonPath('data.schema_version', '3.0')
+        ->assertJsonPath('data.event_type', 'mixed')
+        ->assertJsonPath('data.sync_id', 'sync-v3-fixture-mixed-001');
+
+    assertDatabaseHas('pdv_syncs', [
+        'sync_id' => 'sync-v3-fixture-mixed-001',
+        'schema_version' => '3.0',
+        'event_type' => 'mixed',
+        'ops_count' => 1,
+        'ops_loja_count' => 1,
+        'snapshot_turnos_count' => 1,
+        'snapshot_vendas_count' => 2,
+    ]);
+});
+
+test('accepts anonymized turno_closure fixture with empty vendas', function () {
+    $payload = pdvFixtureV3('turno_closure.json', [
+        'integrity' => [
+            'sync_id' => 'sync-v3-fixture-turno-closure-001',
+            'warnings' => [],
+        ],
+        'agent' => [
+            'sent_at' => now()->toIso8601String(),
+        ],
+    ]);
+
+    signedPdvRequest($payload, null, null, [
+        'HTTP_X_PDV_SCHEMA_VERSION' => '3.0',
+    ])->assertStatus(201)
+        ->assertJsonPath('data.schema_version', '3.0')
+        ->assertJsonPath('data.event_type', 'turno_closure')
+        ->assertJsonPath('data.sync_id', 'sync-v3-fixture-turno-closure-001');
+
+    assertDatabaseHas('pdv_syncs', [
+        'sync_id' => 'sync-v3-fixture-turno-closure-001',
+        'schema_version' => '3.0',
+        'event_type' => 'turno_closure',
+        'ops_count' => 0,
+        'ops_loja_count' => 0,
+        'snapshot_turnos_count' => 1,
+        'snapshot_vendas_count' => 1,
+    ]);
+});
+
+test('accepts v3 payload with json schema validation enabled', function () {
+    config()->set('pdv.json_schema_validation_enabled', true);
+
+    $payload = pdvPayloadV3([
+        'integrity' => [
+            'sync_id' => 'sync-v3-schema-001',
+            'warnings' => [],
+        ],
+    ]);
+
+    signedPdvRequest($payload, null, null, [
+        'HTTP_X_PDV_SCHEMA_VERSION' => '3.0',
+    ])->assertStatus(201)
+        ->assertJsonPath('data.schema_version', '3.0');
+
+    assertDatabaseHas('pdv_syncs', [
+        'sync_id' => 'sync-v3-schema-001',
+        'schema_version' => '3.0',
+    ]);
 });
 
 test('returns validation error when json schema validation is enabled and payload violates schema', function () {
@@ -398,6 +678,117 @@ test('accepts turno_closure event with empty vendas and zero ops', function () {
         'ops_count' => 0,
         'status' => 'queued',
     ]);
+});
+
+test('flags inconsistency when turno_closure event contains vendas', function () {
+    $payload = pdvPayloadV3([
+        'event_type' => 'turno_closure',
+        'turnos' => [[
+            'id_turno' => 'turno-closure-inconsistent-001',
+            'fechado' => true,
+            'data_hora_inicio' => now()->subHours(6)->toIso8601String(),
+            'data_hora_termino' => now()->toIso8601String(),
+            'totais_sistema' => [
+                'total' => 100.00,
+                'qtd_vendas' => 1,
+                'por_pagamento' => [],
+            ],
+            'fechamento_declarado' => [
+                'total' => 100.00,
+                'qtd_vendas' => 1,
+                'por_pagamento' => [],
+            ],
+            'falta_caixa' => [
+                'total' => 0.00,
+                'qtd_vendas' => 0,
+                'por_pagamento' => [],
+            ],
+        ]],
+        'vendas' => [[
+            'id_operacao' => 99881,
+            'canal' => 'HIPER_CAIXA',
+            'data_hora' => now()->subMinutes(5)->toIso8601String(),
+            'total' => 100.00,
+            'itens' => [],
+            'pagamentos' => [],
+        ]],
+        'ops' => [
+            'count' => 1,
+            'ids' => [99881],
+            'loja_count' => 0,
+            'loja_ids' => [],
+        ],
+        'integrity' => [
+            'sync_id' => 'sync-turno-closure-inconsistent-001',
+            'warnings' => [],
+        ],
+    ]);
+
+    $response = signedPdvRequest($payload)
+        ->assertStatus(201)
+        ->assertJsonPath('data.event_type', 'turno_closure');
+
+    expect($response->json('data.risk_flags'))->toContain('event_type_turno_closure_with_vendas');
+
+    $riskFlags = PdvSync::query()
+        ->where('sync_id', 'sync-turno-closure-inconsistent-001')
+        ->value('risk_flags');
+
+    expect(is_array($riskFlags) ? $riskFlags : [])->toContain('event_type_turno_closure_with_vendas');
+});
+
+test('flags inconsistencies when mixed event has no vendas and no closed turno', function () {
+    $payload = pdvPayloadV3([
+        'event_type' => 'mixed',
+        'turnos' => [[
+            'id_turno' => 'turno-mixed-inconsistent-001',
+            'fechado' => false,
+            'data_hora_inicio' => now()->subHours(6)->toIso8601String(),
+            'data_hora_termino' => null,
+            'totais_sistema' => [
+                'total' => 0.00,
+                'qtd_vendas' => 0,
+                'por_pagamento' => [],
+            ],
+            'fechamento_declarado' => [
+                'total' => 0.00,
+                'qtd_vendas' => 0,
+                'por_pagamento' => [],
+            ],
+            'falta_caixa' => [
+                'total' => 0.00,
+                'qtd_vendas' => 0,
+                'por_pagamento' => [],
+            ],
+        ]],
+        'vendas' => [],
+        'ops' => [
+            'count' => 0,
+            'ids' => [],
+            'loja_count' => 0,
+            'loja_ids' => [],
+        ],
+        'integrity' => [
+            'sync_id' => 'sync-mixed-inconsistent-001',
+            'warnings' => [],
+        ],
+    ]);
+
+    $response = signedPdvRequest($payload)
+        ->assertStatus(201)
+        ->assertJsonPath('data.event_type', 'mixed');
+
+    $riskFlagsResponse = $response->json('data.risk_flags');
+    expect($riskFlagsResponse)->toContain('event_type_mixed_without_vendas');
+    expect($riskFlagsResponse)->toContain('event_type_mixed_without_closed_turno');
+
+    $riskFlags = PdvSync::query()
+        ->where('sync_id', 'sync-mixed-inconsistent-001')
+        ->value('risk_flags');
+    $riskFlags = is_array($riskFlags) ? $riskFlags : [];
+
+    expect($riskFlags)->toContain('event_type_mixed_without_vendas');
+    expect($riskFlags)->toContain('event_type_mixed_without_closed_turno');
 });
 
 test('unknown event_type falls back to sales and sets risk flag', function () {

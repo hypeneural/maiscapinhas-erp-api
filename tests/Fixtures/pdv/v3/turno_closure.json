@@ -1,0 +1,95 @@
+{
+  "schema_version": "3.0",
+  "event_type": "turno_closure",
+  "agent": {
+    "version": "3.0.0",
+    "machine": "PDV-ANON-02",
+    "sent_at": "2026-02-11T20:10:00-03:00"
+  },
+  "store": {
+    "id_ponto_venda": 14,
+    "nome": "Loja Anonima 14",
+    "alias": "loja-14"
+  },
+  "window": {
+    "from": "2026-02-11T20:00:00-03:00",
+    "to": "2026-02-11T20:10:00-03:00",
+    "minutes": 10
+  },
+  "turnos": [
+    {
+      "id_turno": "B1C2D3E4-F5A6-4701-8A90-000000000014",
+      "sequencial": 3,
+      "fechado": true,
+      "data_hora_inicio": "2026-02-11T14:10:00-03:00",
+      "data_hora_termino": "2026-02-11T20:05:00-03:00",
+      "duracao_minutos": 355,
+      "periodo": "NOTURNO",
+      "operador": { "id_usuario": 33, "nome": "Operador 33" },
+      "responsavel": { "id_usuario": 44, "nome": "Vendedor 44" },
+      "qtd_vendas": 0,
+      "total_vendas": 0.0,
+      "qtd_vendedores": 0,
+      "totais_sistema": {
+        "total": 0.0,
+        "qtd_vendas": 0,
+        "por_pagamento": []
+      },
+      "fechamento_declarado": {
+        "total": 0.0,
+        "qtd_vendas": 0,
+        "por_pagamento": []
+      },
+      "falta_caixa": {
+        "total": 0.0,
+        "qtd_vendas": 0,
+        "por_pagamento": []
+      }
+    }
+  ],
+  "vendas": [],
+  "resumo": {
+    "by_vendor": [],
+    "by_payment": []
+  },
+  "snapshot_turnos": [
+    {
+      "id_turno": "B1C2D3E4-F5A6-4701-8A90-000000000014",
+      "sequencial": 3,
+      "fechado": true,
+      "data_hora_inicio": "2026-02-11T14:10:00-03:00",
+      "data_hora_termino": "2026-02-11T20:05:00-03:00",
+      "duracao_minutos": 355,
+      "periodo": "NOTURNO",
+      "operador": { "id_usuario": 33, "nome": "Operador 33" },
+      "responsavel": { "id_usuario": 44, "nome": "Vendedor 44" },
+      "qtd_vendas": 0,
+      "total_vendas": 0.0,
+      "qtd_vendedores": 0
+    }
+  ],
+  "snapshot_vendas": [
+    {
+      "id_operacao": 54000,
+      "canal": "HIPER_CAIXA",
+      "data_hora_inicio": "2026-02-11T19:00:00-03:00",
+      "data_hora_termino": "2026-02-11T19:00:30-03:00",
+      "duracao_segundos": 30,
+      "id_turno": "B1C2D3E4-F5A6-4701-8A90-000000000014",
+      "turno_seq": 3,
+      "vendedor": { "id_usuario": 44, "nome": "Vendedor 44" },
+      "qtd_itens": 1,
+      "total_itens": 19.9
+    }
+  ],
+  "ops": {
+    "count": 0,
+    "ids": [],
+    "loja_count": 0,
+    "loja_ids": []
+  },
+  "integrity": {
+    "sync_id": "fixture-v3-turno-closure-001",
+    "warnings": []
+  }
+}

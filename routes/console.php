@@ -29,3 +29,8 @@ Schedule::command(sprintf(
     ->everyTenMinutes()
     ->withoutOverlapping()
     ->when(static fn () => (bool) config('pdv.retry_failed_enabled', false));
+
+Schedule::command('pdv:ops-monitor --json')
+    ->everyTenMinutes()
+    ->withoutOverlapping()
+    ->when(static fn () => (bool) config('pdv.monitor_enabled', true));

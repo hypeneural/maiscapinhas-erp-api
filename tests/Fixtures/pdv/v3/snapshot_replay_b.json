@@ -1,0 +1,65 @@
+{
+  "schema_version": "3.0",
+  "event_type": "sales",
+  "agent": {
+    "version": "3.0.0",
+    "machine": "PDV-ANON-03",
+    "sent_at": "2026-02-11T15:20:00-03:00"
+  },
+  "store": {
+    "id_ponto_venda": 15,
+    "nome": "Loja Anonima 15",
+    "alias": "loja-15"
+  },
+  "window": {
+    "from": "2026-02-11T15:10:00-03:00",
+    "to": "2026-02-11T15:20:00-03:00",
+    "minutes": 10
+  },
+  "turnos": [],
+  "vendas": [],
+  "resumo": {
+    "by_vendor": [],
+    "by_payment": []
+  },
+  "snapshot_turnos": [
+    {
+      "id_turno": "C1D2E3F4-A5B6-4701-8A90-000000000015",
+      "sequencial": 1,
+      "fechado": true,
+      "data_hora_inicio": "2026-02-10T08:00:00-03:00",
+      "data_hora_termino": "2026-02-10T14:00:00-03:00",
+      "duracao_minutos": 360,
+      "periodo": "MATUTINO",
+      "operador": { "id_usuario": 55, "nome": "Operador 55" },
+      "responsavel": { "id_usuario": 67, "nome": "Vendedor 67" },
+      "qtd_vendas": 21,
+      "total_vendas": 5120.5,
+      "qtd_vendedores": 3
+    }
+  ],
+  "snapshot_vendas": [
+    {
+      "id_operacao": 65001,
+      "canal": "HIPER_CAIXA",
+      "data_hora_inicio": "2026-02-10T13:30:00-03:00",
+      "data_hora_termino": "2026-02-10T13:30:20-03:00",
+      "duracao_segundos": 20,
+      "id_turno": "C1D2E3F4-A5B6-4701-8A90-000000000015",
+      "turno_seq": 1,
+      "vendedor": { "id_usuario": 67, "nome": "Vendedor 67" },
+      "qtd_itens": 2,
+      "total_itens": 120.0
+    }
+  ],
+  "ops": {
+    "count": 0,
+    "ids": [],
+    "loja_count": 0,
+    "loja_ids": []
+  },
+  "integrity": {
+    "sync_id": "fixture-v3-replay-b-001",
+    "warnings": ["snapshot_corrected"]
+  }
+}

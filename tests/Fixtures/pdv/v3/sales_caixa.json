@@ -1,0 +1,126 @@
+{
+  "schema_version": "3.0",
+  "event_type": "sales",
+  "agent": {
+    "version": "3.0.0",
+    "machine": "PDV-ANON-01",
+    "sent_at": "2026-02-11T13:10:00-03:00"
+  },
+  "store": {
+    "id_ponto_venda": 13,
+    "nome": "Loja Anonima 13",
+    "alias": "loja-13"
+  },
+  "window": {
+    "from": "2026-02-11T13:00:00-03:00",
+    "to": "2026-02-11T13:10:00-03:00",
+    "minutes": 10
+  },
+  "turnos": [
+    {
+      "id_turno": "A1B2C3D4-E5F6-4701-8A90-000000000013",
+      "sequencial": 1,
+      "fechado": false,
+      "data_hora_inicio": "2026-02-11T08:00:00-03:00",
+      "data_hora_termino": null,
+      "duracao_minutos": null,
+      "periodo": "MATUTINO",
+      "operador": { "id_usuario": 12, "nome": "Operador 12" },
+      "responsavel": { "id_usuario": 80, "nome": "Vendedor 80" },
+      "qtd_vendas": 1,
+      "total_vendas": 129.0,
+      "qtd_vendedores": 1,
+      "totais_sistema": {
+        "total": 129.0,
+        "qtd_vendas": 1,
+        "por_pagamento": [
+          { "id_finalizador": 5, "meio": "Pix", "total": 129.0, "qtd_vendas": 1 }
+        ]
+      },
+      "fechamento_declarado": { "total": 0.0, "qtd_vendas": 0, "por_pagamento": [] },
+      "falta_caixa": { "total": 0.0, "qtd_vendas": 0, "por_pagamento": [] }
+    }
+  ],
+  "vendas": [
+    {
+      "id_operacao": 45001,
+      "canal": "HIPER_CAIXA",
+      "data_hora": "2026-02-11T13:05:15-03:00",
+      "id_turno": "A1B2C3D4-E5F6-4701-8A90-000000000013",
+      "itens": [
+        {
+          "line_id": 900001,
+          "line_no": 1,
+          "id_produto": 5402,
+          "codigo_barras": "7891234567890",
+          "nome": "Produto 5402",
+          "qtd": 1,
+          "preco_unit": 129.0,
+          "total": 129.0,
+          "desconto": 0,
+          "vendedor": { "id_usuario": 80, "nome": "Vendedor 80" }
+        }
+      ],
+      "pagamentos": [
+        {
+          "line_id": 910001,
+          "line_no": 1,
+          "id_finalizador": 5,
+          "meio": "Pix",
+          "valor": 129.0,
+          "troco": 0,
+          "parcelas": 1
+        }
+      ],
+      "total": 129.0
+    }
+  ],
+  "resumo": {
+    "by_vendor": [
+      { "id_usuario": 80, "nome": "Vendedor 80", "qtd_cupons": 1, "total_vendido": 129.0 }
+    ],
+    "by_payment": [
+      { "id_finalizador": 5, "meio": "Pix", "total": 129.0 }
+    ]
+  },
+  "snapshot_turnos": [
+    {
+      "id_turno": "A1B2C3D4-E5F6-4701-8A90-000000000012",
+      "sequencial": 2,
+      "fechado": true,
+      "data_hora_inicio": "2026-02-10T08:00:00-03:00",
+      "data_hora_termino": "2026-02-10T14:30:00-03:00",
+      "duracao_minutos": 390,
+      "periodo": "MATUTINO",
+      "operador": { "id_usuario": 12, "nome": "Operador 12" },
+      "responsavel": { "id_usuario": 80, "nome": "Vendedor 80" },
+      "qtd_vendas": 45,
+      "total_vendas": 12500.0,
+      "qtd_vendedores": 3
+    }
+  ],
+  "snapshot_vendas": [
+    {
+      "id_operacao": 44999,
+      "canal": "HIPER_CAIXA",
+      "data_hora_inicio": "2026-02-10T16:26:44-03:00",
+      "data_hora_termino": "2026-02-10T16:26:59-03:00",
+      "duracao_segundos": 15,
+      "id_turno": "A1B2C3D4-E5F6-4701-8A90-000000000012",
+      "turno_seq": 2,
+      "vendedor": { "id_usuario": 80, "nome": "Vendedor 80" },
+      "qtd_itens": 3,
+      "total_itens": 129.0
+    }
+  ],
+  "ops": {
+    "count": 1,
+    "ids": [45001],
+    "loja_count": 0,
+    "loja_ids": []
+  },
+  "integrity": {
+    "sync_id": "fixture-v3-sales-caixa-001",
+    "warnings": []
+  }
+}

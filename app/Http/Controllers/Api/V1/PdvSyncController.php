@@ -186,6 +186,10 @@ class PdvSyncController extends Controller
         if ($unknownEventType) {
             $riskFlags[] = 'event_type_unknown';
         }
+        $riskFlags = array_values(array_unique(array_merge(
+            $riskFlags,
+            $this->semanticEventTypeRiskFlags($payload, $eventType)
+        )));
 
         $warnings = data_get($payload, 'integrity.warnings', []);
         $warnings = is_array($warnings) ? array_values($warnings) : [];
@@ -206,6 +210,16 @@ class PdvSyncController extends Controller
         $agentVersion = data_get($payload, 'agent.version');
         $agentMachine = data_get($payload, 'agent.machine');
         $opsCount = (int) data_get($payload, 'ops.count', 0);
+        $opsLojaCount = (int) data_get($payload, 'ops.loja_count', 0);
+        $opsLojaIdsRaw = data_get($payload, 'ops.loja_ids', []);
+        $opsLojaIds = is_array($opsLojaIdsRaw) ? array_values(array_filter(array_map(
+            static fn (mixed $value): int => (int) $value,
+            $opsLojaIdsRaw
+        ), static fn (int $value): bool => $value > 0)) : [];
+        $snapshotTurnosRaw = data_get($payload, 'snapshot_turnos', []);
+        $snapshotTurnosCount = is_array($snapshotTurnosRaw) ? count($snapshotTurnosRaw) : 0;
+        $snapshotVendasRaw = data_get($payload, 'snapshot_vendas', []);
+        $snapshotVendasCount = is_array($snapshotVendasRaw) ? count($snapshotVendasRaw) : 0;
 
         $inserted = 0;
         $sync = null;
@@ -225,6 +239,10 @@ class PdvSyncController extends Controller
             $agentVersion,
             $agentMachine,
             $opsCount,
+            $opsLojaCount,
+            $opsLojaIds,
+            $snapshotTurnosCount,
+            $snapshotVendasCount,
             $warnings,
             $timestampSkewSeconds,
             $timestampOutOfWindow,
@@ -250,6 +268,10 @@ class PdvSyncController extends Controller
                 'agent_machine' => $agentMachine,
                 'request_id' => $requestId !== '' ? $requestId : null,
                 'ops_count' => $opsCount,
+                'ops_loja_count' => $opsLojaCount,
+                'ops_loja_ids' => json_encode($opsLojaIds, JSON_UNESCAPED_UNICODE),
+                'snapshot_turnos_count' => $snapshotTurnosCount,
+                'snapshot_vendas_count' => $snapshotVendasCount,
                 'warnings' => json_encode($warnings, JSON_UNESCAPED_UNICODE),
                 'status' => $status,
                 'timestamp_skew_seconds' => $timestampSkewSeconds,
@@ -387,6 +409,53 @@ class PdvSyncController extends Controller
         ]);
 
         return [PdvSync::EVENT_TYPE_SALES, true];
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @return array<int, string>
+     */
+    private function semanticEventTypeRiskFlags(array $payload, string $eventType): array
+    {
+        $vendas = data_get($payload, 'vendas', []);
+        $turnos = data_get($payload, 'turnos', []);
+        $vendasCount = is_array($vendas) ? count($vendas) : 0;
+        $hasClosedTurno = false;
+
+        if (is_array($turnos)) {
+            foreach ($turnos as $turno) {
+                if (!is_array($turno)) {
+                    continue;
+                }
+
+                if ((bool) data_get($turno, 'fechado', false)) {
+                    $hasClosedTurno = true;
+                    break;
+                }
+            }
+        }
+
+        $riskFlags = [];
+        if ($eventType === PdvSync::EVENT_TYPE_TURNO_CLOSURE && $vendasCount > 0) {
+            $riskFlags[] = 'event_type_turno_closure_with_vendas';
+        }
+        if ($eventType === PdvSync::EVENT_TYPE_MIXED && $vendasCount === 0) {
+            $riskFlags[] = 'event_type_mixed_without_vendas';
+        }
+        if ($eventType === PdvSync::EVENT_TYPE_MIXED && !$hasClosedTurno) {
+            $riskFlags[] = 'event_type_mixed_without_closed_turno';
+        }
+
+        if ($riskFlags !== []) {
+            Log::warning('pdv.sync.event_type_inconsistent', [
+                'event_type' => $eventType,
+                'vendas_count' => $vendasCount,
+                'has_closed_turno' => $hasClosedTurno,
+                'risk_flags' => $riskFlags,
+            ]);
+        }
+
+        return $riskFlags;
     }
 
     private function pdvValidationError(string $message, array $details): JsonResponse

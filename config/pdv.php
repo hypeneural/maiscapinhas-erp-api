@@ -20,11 +20,12 @@ return [
     'bearer_token' => env('PDV_BEARER_TOKEN'),
     'supported_schema_versions' => array_values(array_filter(array_map(
         static fn (string $value): string => trim($value),
-        explode(',', (string) env('PDV_SUPPORTED_SCHEMA_VERSIONS', '2.0'))
+        explode(',', (string) env('PDV_SUPPORTED_SCHEMA_VERSIONS', '2.0,3.0'))
     ))),
     'json_schema_validation_enabled' => (bool) env('PDV_JSON_SCHEMA_VALIDATION_ENABLED', false),
     'json_schema_files' => [
         '2.0' => env('PDV_JSON_SCHEMA_FILE_2_0', base_path('docs/schema_v2.0.json')),
+        '3.0' => env('PDV_JSON_SCHEMA_FILE_3_0', base_path('docs/schema_v3.0.json')),
     ],
 
     /*
@@ -73,4 +74,24 @@ return [
     'retry_failed_limit' => (int) env('PDV_RETRY_FAILED_LIMIT', 200),
     'retry_failed_max_attempts' => (int) env('PDV_RETRY_FAILED_MAX_ATTEMPTS', 8),
     'retry_failed_older_than_minutes' => (int) env('PDV_RETRY_FAILED_OLDER_THAN_MINUTES', 15),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Monitoring & Alerts (PR-21)
+    |--------------------------------------------------------------------------
+    */
+    'monitor_enabled' => (bool) env('PDV_MONITOR_ENABLED', true),
+    'monitor_max_queue_backlog' => max(0, (int) env('PDV_MONITOR_MAX_QUEUE_BACKLOG', 3)),
+    'monitor_max_queued_syncs' => max(0, (int) env('PDV_MONITOR_MAX_QUEUED_SYNCS', 5)),
+    'monitor_max_failed_jobs' => max(0, (int) env('PDV_MONITOR_MAX_FAILED_JOBS', 0)),
+    'monitor_silent_store_threshold_minutes' => max(5, (int) env('PDV_MONITOR_SILENT_STORE_THRESHOLD_MINUTES', 120)),
+    'monitor_max_stale_stores' => max(0, (int) env('PDV_MONITOR_MAX_STALE_STORES', 0)),
+    'monitor_alert_cooldown_minutes' => max(1, (int) env('PDV_MONITOR_ALERT_COOLDOWN_MINUTES', 30)),
+    'monitor_alert_webhook_url' => env('PDV_MONITOR_ALERT_WEBHOOK_URL'),
+    'monitor_alert_slack_webhook_url' => env('PDV_MONITOR_ALERT_SLACK_WEBHOOK_URL'),
+    'monitor_alert_emails' => array_values(array_filter(array_map(
+        static fn (string $value): string => trim($value),
+        explode(',', (string) env('PDV_MONITOR_ALERT_EMAILS', ''))
+    ))),
+    'monitor_state_cache_key' => env('PDV_MONITOR_STATE_CACHE_KEY', 'pdv:ops-monitor:state'),
 ];

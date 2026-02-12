@@ -20,7 +20,7 @@ class PdvSyncIngestRequest extends FormRequest
     {
         $supportedSchemaVersions = config('pdv.supported_schema_versions', ['2.0']);
         if (!is_array($supportedSchemaVersions) || $supportedSchemaVersions === []) {
-            $supportedSchemaVersions = ['2.0'];
+            $supportedSchemaVersions = ['2.0', '3.0'];
         }
 
         return [
@@ -48,9 +48,18 @@ class PdvSyncIngestRequest extends FormRequest
             'turnos.*.fechado' => ['sometimes', 'boolean'],
             'turnos.*.data_hora_inicio' => ['sometimes', 'date'],
             'turnos.*.data_hora_termino' => ['nullable', 'date'],
+            'turnos.*.duracao_minutos' => ['sometimes', 'integer', 'min:0'],
+            'turnos.*.periodo' => ['sometimes', 'string', 'max:20'],
+            'turnos.*.responsavel' => ['sometimes', 'nullable', 'array'],
+            'turnos.*.responsavel.id_usuario' => ['nullable', 'integer', 'min:1'],
+            'turnos.*.responsavel.nome' => ['nullable', 'string', 'max:200'],
+            'turnos.*.qtd_vendas' => ['sometimes', 'integer', 'min:0'],
+            'turnos.*.total_vendas' => ['sometimes', 'numeric'],
+            'turnos.*.qtd_vendedores' => ['sometimes', 'integer', 'min:0'],
 
             'vendas' => ['sometimes', 'array'],
             'vendas.*.id_operacao' => ['sometimes', 'integer', 'min:1'],
+            'vendas.*.canal' => ['sometimes', 'string', Rule::in(['HIPER_CAIXA', 'HIPER_LOJA'])],
             'vendas.*.data_hora' => ['sometimes', 'date'],
             'vendas.*.id_turno' => ['nullable', 'string', 'max:64'],
             'vendas.*.total' => ['sometimes', 'numeric'],
@@ -61,11 +70,41 @@ class PdvSyncIngestRequest extends FormRequest
             'vendas.*.pagamentos.*.line_id' => ['sometimes', 'integer', 'min:1'],
             'vendas.*.pagamentos.*.line_no' => ['sometimes', 'integer', 'min:1'],
             'resumo' => ['sometimes', 'array'],
+            'snapshot_turnos' => ['sometimes', 'array'],
+            'snapshot_turnos.*.id_turno' => ['sometimes', 'string', 'max:64'],
+            'snapshot_turnos.*.sequencial' => ['sometimes', 'integer', 'min:1'],
+            'snapshot_turnos.*.fechado' => ['sometimes', 'boolean'],
+            'snapshot_turnos.*.data_hora_inicio' => ['sometimes', 'date'],
+            'snapshot_turnos.*.data_hora_termino' => ['nullable', 'date'],
+            'snapshot_turnos.*.duracao_minutos' => ['sometimes', 'integer', 'min:0'],
+            'snapshot_turnos.*.periodo' => ['sometimes', 'string', 'max:20'],
+            'snapshot_turnos.*.responsavel' => ['sometimes', 'nullable', 'array'],
+            'snapshot_turnos.*.responsavel.id_usuario' => ['nullable', 'integer', 'min:1'],
+            'snapshot_turnos.*.responsavel.nome' => ['nullable', 'string', 'max:200'],
+            'snapshot_turnos.*.qtd_vendas' => ['sometimes', 'integer', 'min:0'],
+            'snapshot_turnos.*.total_vendas' => ['sometimes', 'numeric'],
+            'snapshot_turnos.*.qtd_vendedores' => ['sometimes', 'integer', 'min:0'],
+            'snapshot_vendas' => ['sometimes', 'array'],
+            'snapshot_vendas.*.id_operacao' => ['sometimes', 'integer', 'min:1'],
+            'snapshot_vendas.*.canal' => ['sometimes', 'string', Rule::in(['HIPER_CAIXA', 'HIPER_LOJA'])],
+            'snapshot_vendas.*.data_hora_inicio' => ['sometimes', 'date'],
+            'snapshot_vendas.*.data_hora_termino' => ['nullable', 'date'],
+            'snapshot_vendas.*.duracao_segundos' => ['sometimes', 'integer', 'min:0'],
+            'snapshot_vendas.*.id_turno' => ['nullable', 'string', 'max:64'],
+            'snapshot_vendas.*.turno_seq' => ['sometimes', 'integer', 'min:0'],
+            'snapshot_vendas.*.qtd_itens' => ['sometimes', 'integer', 'min:0'],
+            'snapshot_vendas.*.total_itens' => ['sometimes', 'numeric'],
+            'snapshot_vendas.*.vendedor' => ['sometimes', 'nullable', 'array'],
+            'snapshot_vendas.*.vendedor.id_usuario' => ['nullable', 'integer', 'min:1'],
+            'snapshot_vendas.*.vendedor.nome' => ['nullable', 'string', 'max:200'],
 
             'ops' => ['sometimes', 'array'],
             'ops.count' => ['sometimes', 'integer', 'min:0'],
             'ops.ids' => ['sometimes', 'array'],
             'ops.ids.*' => ['integer', 'min:1'],
+            'ops.loja_count' => ['sometimes', 'integer', 'min:0'],
+            'ops.loja_ids' => ['sometimes', 'array'],
+            'ops.loja_ids.*' => ['integer', 'min:1'],
 
             'integrity' => ['required', 'array'],
             'integrity.sync_id' => ['required', 'string', 'min:8', 'max:128'],

@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\V1\MonthlyGoalController;
 use App\Http\Controllers\Api\V1\PasswordResetController;
 use App\Http\Controllers\Api\V1\PdvSyncController;
 use App\Http\Controllers\Api\V1\PeopleAnalyticsController;
+use App\Http\Controllers\Api\V1\PdvReportsController;
 use App\Http\Controllers\Api\V1\RankingController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\SaleController;
@@ -224,6 +225,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/consolidated', [ReportController::class, 'consolidatedPerformance'])->name('consolidated');
         Route::get('/cash-integrity', [ReportController::class, 'cashIntegrity'])->name('cash-integrity');
         Route::get('/ranking', [RankingController::class, 'index'])->name('ranking');
+    });
+
+    // ============================================
+    // PDV Reports v3 (pdv_* model)
+    // ============================================
+    Route::prefix('pdv/reports')->name('pdv.reports.')->group(function () {
+        Route::get('/turnos', [PdvReportsController::class, 'turnos'])->name('turnos');
+        Route::get('/vendas', [PdvReportsController::class, 'vendas'])->name('vendas');
+        Route::get('/ranking-vendedores', [PdvReportsController::class, 'rankingVendedores'])->name('ranking-vendedores');
     });
 
     // ============================================
