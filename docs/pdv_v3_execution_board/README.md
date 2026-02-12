@@ -30,13 +30,13 @@ PRs concluidos/anteriores permanecem documentados nos arquivos:
 6. [PR-46 - Externo: Alinhamento com time do agente JSON](./PR-46-alinhamento-agente-externo.md)
 
 ## Estado rapido
-- [x] PR-41 (done tecnico, smoke funcional pendente)
+- [x] PR-41 (done validado, smoke funcional concluido)
 - [x] PR-42 (done tecnico, aguardando feature tests em DB de teste)
 - [x] PR-43 (done tecnico, aguardando feature tests em DB de teste)
 - [x] PR-44 (done tecnico, aguardando feature tests em DB de teste)
-- [x] PR-47 (done tecnico, aguardando feature tests em DB de teste)
+- [x] PR-47 (done tecnico + regra KPI documentada + teste admin criado; execucao feature depende DB de teste)
 - [x] PR-45 (done tecnico, ativacao por flag)
-- [x] PR-46 (done externo, manter monitorado)
+- [x] PR-46 (done externo, evidencia sanitizada anexada)
 
 ## Novidades do agente v3.0 (2026-02-12)
 - Header `X-PDV-Schema-Version` corrigido para `3.0`.

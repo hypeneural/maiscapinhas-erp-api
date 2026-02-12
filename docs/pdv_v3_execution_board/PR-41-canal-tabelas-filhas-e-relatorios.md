@@ -1,6 +1,6 @@
 # PR-41 - P0: Canal nas tabelas filhas e joins de relatorio
 
-Status: `done_tecnico`  
+Status: `done_validado`  
 Prioridade: `P0`  
 Dependencias: PR-32, PR-39
 
@@ -68,11 +68,19 @@ Eliminar risco de mistura de dados entre `HIPER_CAIXA` e `HIPER_LOJA` em itens/p
 - [x] Executar suite de unidade do job PDV.
 
 ## 6) Validacao manual (smoke)
-- [ ] Ingerir payload `mixed` com colisao de `id_operacao`.
-- [ ] Confirmar linhas em `pdv_venda_itens` separadas por `canal`.
-- [ ] Confirmar linhas em `pdv_venda_pagamentos` separadas por `canal`.
-- [ ] Validar `GET /api/v1/pdv/reports/vendas?canal=HIPER_CAIXA`.
-- [ ] Validar `GET /api/v1/pdv/reports/vendas?canal=HIPER_LOJA`.
+- [x] Ingerir payload `mixed` com colisao de `id_operacao`.
+- [x] Confirmar linhas em `pdv_venda_itens` separadas por `canal`.
+- [x] Confirmar linhas em `pdv_venda_pagamentos` separadas por `canal`.
+- [x] Validar `GET /api/v1/pdv/reports/vendas?canal=HIPER_CAIXA`.
+- [x] Validar `GET /api/v1/pdv/reports/vendas?canal=HIPER_LOJA`.
+
+## Evidencias de smoke
+- Sync real de validacao: `sync_id=smoke-pr41-9f4243cc4bd1` (`pdv_syncs.id=33`, status `processed`).
+- `pdv_vendas` para `store_pdv_id=13` e `id_operacao=55001`: 2 linhas (`HIPER_CAIXA` e `HIPER_LOJA`).
+- `pdv_venda_itens` para `store_pdv_id=13` e `id_operacao=55001`: linhas separadas por `canal` (`line_id` 920001/920101).
+- `pdv_venda_pagamentos` para `store_pdv_id=13` e `id_operacao=55001`: linhas separadas por `canal` (`line_id` 930001/930101).
+- `PdvReportsController@vendas` com filtro `canal=HIPER_CAIXA`: retorno apenas `HIPER_CAIXA`, `total_vendas=1`, `total_vendido=175`.
+- `PdvReportsController@vendas` com filtro `canal=HIPER_LOJA`: retorno apenas `HIPER_LOJA`, `total_vendas=1`, `total_vendido=245`.
 
 ## Criterio de aceite
 - Nao existe sobrescrita cross-canal em itens/pagamentos.

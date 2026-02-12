@@ -243,3 +243,16 @@ Resposta (resumo):
 - Super admin: acesso global.
 - Usuario comum: somente lojas com vinculo em `store_users`.
 - Se `store_id`/`store_pdv_id` nao pertencer a uma loja autorizada, retorna `403`.
+
+## 6) Regra operacional para warning `GESTAO_DB_FAILURE`
+
+Quando o webhook chegar com `integrity.warnings[]` contendo prefixo `GESTAO_DB_FAILURE`, o backend mapeia para `risk_flags=["gestao_db_failure"]`.
+
+Regras para KPI e agregacoes:
+- Nao zerar metricas do canal `HIPER_LOJA` automaticamente nesse ciclo.
+- Marcar a leitura como potencialmente incompleta e manter o ultimo valor confiavel para comparativos.
+- Expor essa condicao no monitor/admin para triagem operacional.
+- Nao rejeitar payload valido apenas por warning operacional.
+
+Consulta administrativa para triagem:
+- `GET /api/v1/admin/pdv/syncs?risk_flag=gestao_db_failure`

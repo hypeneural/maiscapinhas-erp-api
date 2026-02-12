@@ -30,18 +30,23 @@ Transformar `integrity.warnings[]` em sinal operacional confiavel no backend, co
 - [x] Definir threshold de alerta (ex.: > 3 ocorrencias por loja em 30 min).
 
 ## 3) Regras de negocio
-- [ ] Documentar que warning de gestao nao deve "zerar" metricas de loja automaticamente.
-- [ ] Em agregacoes de KPI, tratar warning como dado potencialmente incompleto.
+- [x] Documentar que warning de gestao nao deve "zerar" metricas de loja automaticamente.
+- [x] Em agregacoes de KPI, tratar warning como dado potencialmente incompleto.
 
 ## 4) Testes
 - [x] Teste de ingestao: payload com `GESTAO_DB_FAILURE` adiciona `gestao_db_failure` em `risk_flags`.
-- [ ] Teste admin: consulta por `risk_flag=gestao_db_failure` retorna syncs esperados.
+- [x] Teste admin: consulta por `risk_flag=gestao_db_failure` retorna syncs esperados.
 - [x] Teste unitario do mapeamento de warnings (`warningRiskFlags`).
 - [x] Teste unitario do monitor: gera issue `gestao_db_failure_high` acima do threshold.
 
 ## Criterio de aceite
 - Time operacional consegue detectar rapidamente falha de coleta do canal `HIPER_LOJA`.
 - Nenhum payload valido e descartado apenas por warning operacional.
+
+## Evidencias
+- Filtro admin por risk flag implementado: `GET /api/v1/admin/pdv/syncs?risk_flag=gestao_db_failure`.
+- Documentacao de KPI atualizada em `docs/API_PDV_REPORTS_V3.md` (secao 6).
+- Monitor operacional com threshold dedicado: `monitor_max_gestao_db_failures_30m`.
 
 ## Riscos e mitigacoes
 - Risco: excesso de alerta em flaps curtos da conexao de gestao.

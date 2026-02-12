@@ -20,7 +20,7 @@ Fechar itens fora do backend Laravel que impactam contrato e confiabilidade de i
 ## 1) Header de schema
 - [x] Corrigir no agente: `X-PDV-Schema-Version` envia `3.0` (na mesma versao do body).
 - [x] Validar em ambiente real com payload bruto (header e body iguais).
-- [ ] Compartilhar evidencias de request real (sanitizado) para anexar na trilha de deploy.
+- [x] Compartilhar evidencias de request real (sanitizado) para anexar na trilha de deploy.
 
 ## 2) Pacote de payloads oficiais
 - [x] Entregar payload `sales` (caixa).
@@ -45,3 +45,9 @@ Fechar itens fora do backend Laravel que impactam contrato e confiabilidade de i
 ## Criterio de aceite
 - Backend recebe payload v3 sem mismatch de header/body.
 - Time backend possui fixtures oficiais para regressao automatizada.
+
+## Evidencia sanitizada (producao)
+- Request real: `sync_id=smoke-pr41-9f4243cc4bd1` (payload v3 `event_type=mixed`).
+- Resposta do endpoint: `201 created`, `schema_version=3.0`, `processing_status=queued`, `request_id=99014fe0-02c5-4767-982e-5176381639e9`.
+- Persistencia backend: `pdv_syncs.id=33`, `status=processed`, `last_error=null`.
+- Resultado funcional associado: `id_operacao=55001` persistido em `pdv_vendas` com dois canais (`HIPER_CAIXA` e `HIPER_LOJA`) sem colisao.

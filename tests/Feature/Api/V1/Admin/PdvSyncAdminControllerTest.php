@@ -62,6 +62,55 @@ test('super admin can list pdv syncs with filters', function () {
         ->assertJsonPath('data.0.snapshot_vendas_count', 4);
 });
 
+test('super admin can filter pdv syncs by gestao_db_failure risk flag', function () {
+    $user = User::factory()->create([
+        'is_super_admin' => true,
+    ]);
+
+    $store = Store::factory()->create();
+
+    PdvSync::query()->create([
+        'sync_id' => 'sync-risk-gestao-001',
+        'schema_version' => '3.0',
+        'event_type' => 'sales',
+        'store_pdv_id' => 13,
+        'store_id' => $store->id,
+        'window_from' => now()->subMinutes(10),
+        'window_to' => now(),
+        'warnings' => ['GESTAO_DB_FAILURE: timeout'],
+        'risk_flags' => ['gestao_db_failure'],
+        'status' => PdvSync::STATUS_PROCESSED,
+        'payload_sha256' => str_repeat('d', 64),
+        'payload_bytes' => 300,
+        'received_at' => now(),
+        'queued_at' => now(),
+    ]);
+
+    PdvSync::query()->create([
+        'sync_id' => 'sync-risk-other-001',
+        'schema_version' => '3.0',
+        'event_type' => 'sales',
+        'store_pdv_id' => 13,
+        'store_id' => $store->id,
+        'window_from' => now()->subMinutes(20),
+        'window_to' => now()->subMinutes(10),
+        'warnings' => ['OUTRO_WARNING'],
+        'risk_flags' => ['store_alias_mismatch'],
+        'status' => PdvSync::STATUS_PROCESSED,
+        'payload_sha256' => str_repeat('e', 64),
+        'payload_bytes' => 320,
+        'received_at' => now(),
+        'queued_at' => now(),
+    ]);
+
+    actingAs($user)
+        ->getJson('/api/v1/admin/pdv/syncs?risk_flag=gestao_db_failure')
+        ->assertStatus(200)
+        ->assertJsonPath('meta.pagination.total', 1)
+        ->assertJsonPath('data.0.sync_id', 'sync-risk-gestao-001')
+        ->assertJsonPath('data.0.risk_flags.0', 'gestao_db_failure');
+});
+
 test('super admin can view pdv sync metrics including stale store tracking', function () {
     $user = User::factory()->create([
         'is_super_admin' => true,

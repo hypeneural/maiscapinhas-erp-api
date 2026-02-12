@@ -71,9 +71,16 @@ Fechar qualidade, performance e operacao para rollout seguro do v3 em ondas.
 - Mitigacao: manter monitoramento por schema_version e canal durante ondas.
 
 ## Validacao manual sugerida
-- [ ] Rodar smoke de fila e ingestao.
-- [ ] Validar painel admin de syncs e metricas.
+- [x] Rodar smoke de fila e ingestao.
+- [x] Validar painel admin de syncs e metricas.
 - [ ] Confirmar alertas e stale stores funcionando.
+
+## Evidencias de validacao manual
+- Ingestao real `sync_id=smoke-pr41-9f4243cc4bd1` retornou `201 created` e processou com sucesso (`pdv_syncs.status=processed`).
+- Painel admin (`PdvSyncAdminController@metrics`) retornou:
+  - `status_breakdown.processed=33`, `queued=0`, `failed=0`.
+  - `stores.active_mapped_stores=12`, `stores.stale_count=11`.
+- Observacao: execucao local de `php artisan pdv:ops-monitor --json` depende da extensao PHP Redis no host local; em ambiente sem `ext-redis` o comando falha antes de avaliar alertas.
 
 ## Entregaveis implementados
 - `tests/Fixtures/pdv/v3/sales_caixa.json`
