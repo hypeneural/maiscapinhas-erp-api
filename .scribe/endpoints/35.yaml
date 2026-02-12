@@ -1,329 +1,122 @@
-name: 'Admin - User Permission Overrides'
-description: ''
+name: 'Fábrica - Pedidos de Produção'
+description: |-
+
+  Portal da fábrica para gestão de pedidos de produção de capas personalizadas.
+  Estes endpoints são exclusivos para usuários com papel de fábrica (middleware `fabrica`).
+
+  **Fluxo de produção:**
+  1. Admin envia capas para produção → Pedido criado com status `pending`
+  2. Fábrica aceita pedido (informa valor) → Status `accepted`
+  3. Fábrica despacha pedido (informa rastreio) → Status `dispatched`
+  4. Admin recebe pedido → Status `received`
+
+  **Permissões:** Apenas usuários com papel de fábrica.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/admin/users/{user_id}/permission-overrides'
+    uri: api/v1/fabrica/pedidos
     metadata:
       custom: []
-      groupName: 'Admin - User Permission Overrides'
-      groupDescription: ''
+      groupName: 'Fábrica - Pedidos de Produção'
+      groupDescription: |-
+
+        Portal da fábrica para gestão de pedidos de produção de capas personalizadas.
+        Estes endpoints são exclusivos para usuários com papel de fábrica (middleware `fabrica`).
+
+        **Fluxo de produção:**
+        1. Admin envia capas para produção → Pedido criado com status `pending`
+        2. Fábrica aceita pedido (informa valor) → Status `accepted`
+        3. Fábrica despacha pedido (informa rastreio) → Status `dispatched`
+        4. Admin recebe pedido → Status `received`
+
+        **Permissões:** Apenas usuários com papel de fábrica.
       subgroup: ''
       subgroupDescription: ''
-      title: 'List all overrides for a user.'
-      description: ''
+      title: 'Listar pedidos de produção'
+      description: |-
+        Retorna lista paginada de pedidos visíveis à fábrica.
+        Apenas pedidos com status visível à fábrica são retornados.
+
+        **Quem pode usar:** Usuários da fábrica.
       authenticated: true
       deprecated: false
     headers:
       Authorization: 'Bearer {SEU_TOKEN}'
       Content-Type: application/json
       Accept: application/json
-    urlParameters:
-      user_id:
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      status:
         custom: []
-        name: user_id
-        description: 'The ID of the user.'
-        required: true
-        example: 1
-        type: integer
+        name: status
+        description: 'Filtrar por status: `pending`, `accepted`, `dispatched`.'
+        required: false
+        example: pending
+        type: string
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: false
         deprecated: false
-    cleanUrlParameters:
-      user_id: 1
-    queryParameters: []
-    cleanQueryParameters: []
+      initial_date:
+        custom: []
+        name: initial_date
+        description: 'Data inicial (ISO 8601).'
+        required: false
+        example: '2026-01-01'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      final_date:
+        custom: []
+        name: final_date
+        description: 'Data final (ISO 8601).'
+        required: false
+        example: '2026-01-31'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      per_page:
+        custom: []
+        name: per_page
+        description: 'Itens por página (máx 100).'
+        required: false
+        example: 15
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      status: pending
+      initial_date: '2026-01-01'
+      final_date: '2026-01-31'
+      per_page: 15
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
     responses:
       -
         custom: []
-        status: 404
+        status: 200
         content: |-
           {
-              "message": "The route api.maiscapinhas.com.br//api/v1/admin/users/1/permission-overrides could not be found."
+            "data": [{
+              "id": 1,
+              "status": "pending",
+              "items_count": 10,
+              "created_at": "2026-01-13T15:00:00+00:00"
+            }],
+            "meta": {"current_page": 1, "total": 25}
           }
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-        description: null
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - POST
-    uri: 'api/v1/admin/users/{user_id}/permission-overrides'
-    metadata:
-      custom: []
-      groupName: 'Admin - User Permission Overrides'
-      groupDescription: ''
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Grant or deny a permission to a user.'
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      user_id:
-        custom: []
-        name: user_id
-        description: 'The ID of the user.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      user_id: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      permission_id:
-        custom: []
-        name: permission_id
-        description: 'The <code>id</code> of an existing record in the permissions table.'
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      store_id:
-        custom: []
-        name: store_id
-        description: 'The <code>id</code> of an existing record in the stores table.'
-        required: false
-        example: null
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      granted:
-        custom: []
-        name: granted
-        description: ''
-        required: true
-        example: true
-        type: boolean
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      expires_at:
-        custom: []
-        name: expires_at
-        description: 'Must be a valid date. Must be a date after <code>now</code>.'
-        required: false
-        example: '2052-02-10'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      reason:
-        custom: []
-        name: reason
-        description: 'Must not be greater than 500 characters.'
-        required: false
-        example: 'n'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-    cleanBodyParameters:
-      permission_id: architecto
-      granted: true
-      expires_at: '2052-02-10'
-      reason: 'n'
-    fileParameters: []
-    responses: []
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - POST
-    uri: 'api/v1/admin/users/{user_id}/permission-overrides/bulk'
-    metadata:
-      custom: []
-      groupName: 'Admin - User Permission Overrides'
-      groupDescription: ''
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Bulk grant/deny permissions.'
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      user_id:
-        custom: []
-        name: user_id
-        description: 'The ID of the user.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      user_id: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      overrides:
-        custom: []
-        name: overrides
-        description: 'Must have at least 1 items.'
-        required: true
-        example:
-          - []
-        type: 'object[]'
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      'overrides[].permission_id':
-        custom: []
-        name: 'overrides[].permission_id'
-        description: 'The <code>id</code> of an existing record in the permissions table.'
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      'overrides[].store_id':
-        custom: []
-        name: 'overrides[].store_id'
-        description: 'The <code>id</code> of an existing record in the stores table.'
-        required: false
-        example: null
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      'overrides[].granted':
-        custom: []
-        name: 'overrides[].granted'
-        description: ''
-        required: true
-        example: true
-        type: boolean
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      'overrides[].expires_at':
-        custom: []
-        name: 'overrides[].expires_at'
-        description: 'Must be a valid date. Must be a date after <code>now</code>.'
-        required: false
-        example: '2052-02-10'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      'overrides[].reason':
-        custom: []
-        name: 'overrides[].reason'
-        description: 'Must not be greater than 500 characters.'
-        required: false
-        example: 'n'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-    cleanBodyParameters:
-      overrides:
-        -
-          permission_id: architecto
-          granted: true
-          expires_at: '2052-02-10'
-          reason: 'n'
-    fileParameters: []
-    responses: []
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - DELETE
-    uri: 'api/v1/admin/users/{user_id}/permission-overrides/clear'
-    metadata:
-      custom: []
-      groupName: 'Admin - User Permission Overrides'
-      groupDescription: ''
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Remove all overrides for a user (optionally filtered by store).'
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      user_id:
-        custom: []
-        name: user_id
-        description: 'The ID of the user.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      user_id: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses: []
+        headers: []
+        description: 'Lista de pedidos'
     responseFields: []
     auth:
       - headers
@@ -336,17 +129,29 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/admin/users/{user_id}/permission-overrides/effective'
+    uri: 'api/v1/fabrica/pedidos/{id}'
     metadata:
       custom: []
-      groupName: 'Admin - User Permission Overrides'
-      groupDescription: ''
+      groupName: 'Fábrica - Pedidos de Produção'
+      groupDescription: |-
+
+        Portal da fábrica para gestão de pedidos de produção de capas personalizadas.
+        Estes endpoints são exclusivos para usuários com papel de fábrica (middleware `fabrica`).
+
+        **Fluxo de produção:**
+        1. Admin envia capas para produção → Pedido criado com status `pending`
+        2. Fábrica aceita pedido (informa valor) → Status `accepted`
+        3. Fábrica despacha pedido (informa rastreio) → Status `dispatched`
+        4. Admin recebe pedido → Status `received`
+
+        **Permissões:** Apenas usuários com papel de fábrica.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Get effective permissions for a user with source information.'
+      title: 'Detalhes do pedido'
       description: |-
-        This endpoint shows the final resolved state of all permissions
-        for a user, including where each permission comes from (role, store override, user override).
+        Retorna detalhes completos do pedido com itens e eventos de timeline.
+
+        **Quem pode usar:** Usuários da fábrica.
       authenticated: true
       deprecated: false
     headers:
@@ -354,19 +159,31 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      user_id:
+      id:
         custom: []
-        name: user_id
-        description: 'The ID of the user.'
+        name: id
+        description: 'The ID of the pedido.'
         required: true
-        example: 1
+        example: 5
         type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
+      pedido:
+        custom: []
+        name: pedido
+        description: 'ID do pedido.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
     cleanUrlParameters:
-      user_id: 1
+      id: 5
+      pedido: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -375,15 +192,30 @@ endpoints:
     responses:
       -
         custom: []
-        status: 404
+        status: 200
         content: |-
           {
-              "message": "The route api.maiscapinhas.com.br//api/v1/admin/users/1/permission-overrides/effective could not be found."
+            "data": {
+              "id": 1,
+              "status": "pending",
+              "items": [{"id": 1, "capa_id": 10, "photo_url": "https://..."}],
+              "events": [{"type": "created", "created_at": "2026-01-13T15:00:00+00:00"}]
+            }
           }
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-        description: null
+        headers: []
+        description: 'Detalhes do pedido'
+      -
+        custom: []
+        status: 403
+        content: '{"message": "Pedido não disponível."}'
+        headers: []
+        description: 'Pedido não disponível'
+      -
+        custom: []
+        status: 404
+        content: '{"message": "Not found."}'
+        headers: []
+        description: 'Não encontrado'
     responseFields: []
     auth:
       - headers
@@ -395,16 +227,35 @@ endpoints:
   -
     custom: []
     httpMethods:
-      - PUT
-    uri: 'api/v1/admin/users/{user_id}/permission-overrides/{override_id}'
+      - PATCH
+    uri: 'api/v1/fabrica/pedidos/{pedido_id}/aceitar'
     metadata:
       custom: []
-      groupName: 'Admin - User Permission Overrides'
-      groupDescription: ''
+      groupName: 'Fábrica - Pedidos de Produção'
+      groupDescription: |-
+
+        Portal da fábrica para gestão de pedidos de produção de capas personalizadas.
+        Estes endpoints são exclusivos para usuários com papel de fábrica (middleware `fabrica`).
+
+        **Fluxo de produção:**
+        1. Admin envia capas para produção → Pedido criado com status `pending`
+        2. Fábrica aceita pedido (informa valor) → Status `accepted`
+        3. Fábrica despacha pedido (informa rastreio) → Status `dispatched`
+        4. Admin recebe pedido → Status `received`
+
+        **Permissões:** Apenas usuários com papel de fábrica.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Update an existing override.'
-      description: ''
+      title: 'Aceitar pedido'
+      description: |-
+        A fábrica aceita o pedido e informa o valor total de produção.
+        O status do pedido muda de `pending` para `accepted`.
+
+        **Quem pode usar:** Usuários da fábrica.
+
+        **Regras de negócio:**
+        - Apenas pedidos com status `pending` podem ser aceitos
+        - O valor total é obrigatório
       authenticated: true
       deprecated: false
     headers:
@@ -412,73 +263,77 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      user_id:
+      pedido_id:
         custom: []
-        name: user_id
-        description: 'The ID of the user.'
+        name: pedido_id
+        description: 'The ID of the pedido.'
+        required: true
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      pedido:
+        custom: []
+        name: pedido
+        description: 'ID do pedido.'
         required: true
         example: 1
         type: integer
         enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      override_id:
-        custom: []
-        name: override_id
-        description: 'The ID of the override.'
-        required: true
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      user_id: 1
-      override_id: 16
+      pedido_id: 5
+      pedido: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      granted:
+      factory_total:
         custom: []
-        name: granted
-        description: ''
-        required: false
-        example: false
-        type: boolean
+        name: factory_total
+        description: 'Valor total da produção (R$).'
+        required: true
+        example: 150.0
+        type: number
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: false
         deprecated: false
-      expires_at:
+      factory_notes:
         custom: []
-        name: expires_at
-        description: 'Must be a valid date. Must be a date after <code>now</code>.'
+        name: factory_notes
+        description: 'Observações da fábrica.'
         required: false
-        example: '2052-02-10'
+        example: 'Prazo de 5 dias úteis'
         type: string
         enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      reason:
-        custom: []
-        name: reason
-        description: 'Must not be greater than 500 characters.'
-        required: false
-        example: 'n'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: true
         deprecated: false
     cleanBodyParameters:
-      granted: false
-      expires_at: '2052-02-10'
-      reason: 'n'
+      factory_total: 150.0
+      factory_notes: 'Prazo de 5 dias úteis'
     fileParameters: []
-    responses: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "message": "Pedido aceito com sucesso.",
+            "data": {"id": 1, "status": "accepted", "factory_total": 150.00}
+          }
+        headers: []
+        description: 'Pedido aceito'
+      -
+        custom: []
+        status: 422
+        content: '{"message": "The factory_total field is required."}'
+        headers: []
+        description: 'Validação falhou'
     responseFields: []
     auth:
       - headers
@@ -490,16 +345,34 @@ endpoints:
   -
     custom: []
     httpMethods:
-      - DELETE
-    uri: 'api/v1/admin/users/{user_id}/permission-overrides/{override_id}'
+      - PATCH
+    uri: 'api/v1/fabrica/pedidos/{pedido_id}/despachar'
     metadata:
       custom: []
-      groupName: 'Admin - User Permission Overrides'
-      groupDescription: ''
+      groupName: 'Fábrica - Pedidos de Produção'
+      groupDescription: |-
+
+        Portal da fábrica para gestão de pedidos de produção de capas personalizadas.
+        Estes endpoints são exclusivos para usuários com papel de fábrica (middleware `fabrica`).
+
+        **Fluxo de produção:**
+        1. Admin envia capas para produção → Pedido criado com status `pending`
+        2. Fábrica aceita pedido (informa valor) → Status `accepted`
+        3. Fábrica despacha pedido (informa rastreio) → Status `dispatched`
+        4. Admin recebe pedido → Status `received`
+
+        **Permissões:** Apenas usuários com papel de fábrica.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Remove an override (reverts to role-based permission).'
-      description: ''
+      title: 'Despachar pedido'
+      description: |-
+        A fábrica registra o despacho do pedido, opcionalmente informando código de rastreio.
+        O status do pedido muda de `accepted` para `dispatched`.
+
+        **Quem pode usar:** Usuários da fábrica.
+
+        **Regras de negócio:**
+        - Apenas pedidos com status `accepted` podem ser despachados
       authenticated: true
       deprecated: false
     headers:
@@ -507,37 +380,294 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      user_id:
+      pedido_id:
         custom: []
-        name: user_id
-        description: 'The ID of the user.'
+        name: pedido_id
+        description: 'The ID of the pedido.'
+        required: true
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      pedido:
+        custom: []
+        name: pedido
+        description: 'ID do pedido.'
         required: true
         example: 1
         type: integer
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: false
         deprecated: false
-      override_id:
+    cleanUrlParameters:
+      pedido_id: 5
+      pedido: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      tracking_code:
         custom: []
-        name: override_id
-        description: 'The ID of the override.'
+        name: tracking_code
+        description: 'Código de rastreio dos Correios/transportadora.'
+        required: false
+        example: BR123456789XX
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      factory_notes:
+        custom: []
+        name: factory_notes
+        description: 'Observações do despacho.'
+        required: false
+        example: 'Enviado via Sedex'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      tracking_code: BR123456789XX
+      factory_notes: 'Enviado via Sedex'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "message": "Pedido despachado com sucesso.",
+            "data": {"id": 1, "status": "dispatched", "tracking_code": "BR123456789XX"}
+          }
+        headers: []
+        description: 'Pedido despachado'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/fabrica/pedidos/{pedido_id}/recusar-itens'
+    metadata:
+      custom: []
+      groupName: 'Fábrica - Pedidos de Produção'
+      groupDescription: |-
+
+        Portal da fábrica para gestão de pedidos de produção de capas personalizadas.
+        Estes endpoints são exclusivos para usuários com papel de fábrica (middleware `fabrica`).
+
+        **Fluxo de produção:**
+        1. Admin envia capas para produção → Pedido criado com status `pending`
+        2. Fábrica aceita pedido (informa valor) → Status `accepted`
+        3. Fábrica despacha pedido (informa rastreio) → Status `dispatched`
+        4. Admin recebe pedido → Status `received`
+
+        **Permissões:** Apenas usuários com papel de fábrica.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Recusar itens do pedido'
+      description: |-
+        A fábrica recusa um ou mais itens do pedido, informando justificativa para cada.
+        As capas recusadas são removidas do pedido e voltam para status "Recusada pela Fábrica".
+
+        **Quem pode usar:** Usuários da fábrica.
+
+        **Regras de negócio:**
+        - Apenas pedidos com status `pending` ou `accepted` podem ter itens recusados
+        - Cada item recusado deve ter uma justificativa
+        - As capas recusadas voltam ao admin para reprocessamento
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      pedido_id:
+        custom: []
+        name: pedido_id
+        description: 'The ID of the pedido.'
         required: true
-        example: 16
+        example: 5
         type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
+      pedido:
+        custom: []
+        name: pedido
+        description: 'ID do pedido.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
     cleanUrlParameters:
-      user_id: 1
-      override_id: 16
+      pedido_id: 5
+      pedido: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      rejections:
+        custom: []
+        name: rejections
+        description: 'Mapa de item_id => motivo da recusa.'
+        required: true
+        example: []
+        type: object
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'rejections.*':
+        custom: []
+        name: 'rejections.*'
+        description: 'Motivo da recusa para o item.'
+        required: false
+        example: 'Imagem com baixa resolução'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      rejections:
+        '*': 'Imagem com baixa resolução'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "message": "2 item(ns) recusado(s) com sucesso.",
+            "data": {"id": 1, "total_itens": 8, "rejected_count": 2}
+          }
+        headers: []
+        description: 'Itens recusados'
+      -
+        custom: []
+        status: 422
+        content: '{"message": "Itens não podem ser recusados no status atual."}'
+        headers: []
+        description: 'Status inválido'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/fabrica/pedidos/{pedido_id}/itens/{item}/foto'
+    metadata:
+      custom: []
+      groupName: 'Fábrica - Pedidos de Produção'
+      groupDescription: |-
+
+        Portal da fábrica para gestão de pedidos de produção de capas personalizadas.
+        Estes endpoints são exclusivos para usuários com papel de fábrica (middleware `fabrica`).
+
+        **Fluxo de produção:**
+        1. Admin envia capas para produção → Pedido criado com status `pending`
+        2. Fábrica aceita pedido (informa valor) → Status `accepted`
+        3. Fábrica despacha pedido (informa rastreio) → Status `dispatched`
+        4. Admin recebe pedido → Status `received`
+
+        **Permissões:** Apenas usuários com papel de fábrica.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Download da foto do item'
+      description: |-
+        Faz download da foto da capa personalizada de um item do pedido.
+        Útil para a fábrica baixar as artes para produção.
+
+        **Quem pode usar:** Usuários da fábrica.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      pedido_id:
+        custom: []
+        name: pedido_id
+        description: 'The ID of the pedido.'
+        required: true
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      item:
+        custom: []
+        name: item
+        description: 'ID do item.'
+        required: true
+        example: 10
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      pedido:
+        custom: []
+        name: pedido
+        description: 'ID do pedido.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      pedido_id: 5
+      item: 10
+      pedido: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
-    responses: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: file
+        headers: []
+        description: 'Download da foto'
+      -
+        custom: []
+        status: 404
+        content: '{"message": "Foto não disponível."}'
+        headers: []
+        description: 'Foto não disponível'
+      -
+        custom: []
+        status: 404
+        content: '{"message": "Arquivo não encontrado."}'
+        headers: []
+        description: 'Arquivo não encontrado'
     responseFields: []
     auth:
       - headers

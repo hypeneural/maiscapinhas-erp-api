@@ -28,6 +28,7 @@ Transformar `integrity.warnings[]` em sinal operacional confiavel no backend, co
 - [x] Confirmar filtro/admin para `risk_flag=gestao_db_failure`.
 - [x] Atualizar dashboard operacional para destacar incidencias recentes.
 - [x] Definir threshold de alerta (ex.: > 3 ocorrencias por loja em 30 min).
+- [x] Incluir monitoramento de warnings de qualidade adicionais (`vendedor_null`, `meio_pagamento_null`) em metrics admin.
 
 ## 3) Regras de negocio
 - [x] Documentar que warning de gestao nao deve "zerar" metricas de loja automaticamente.
@@ -47,6 +48,9 @@ Transformar `integrity.warnings[]` em sinal operacional confiavel no backend, co
 - Filtro admin por risk flag implementado: `GET /api/v1/admin/pdv/syncs?risk_flag=gestao_db_failure`.
 - Documentacao de KPI atualizada em `docs/API_PDV_REPORTS_V3.md` (secao 6).
 - Monitor operacional com threshold dedicado: `monitor_max_gestao_db_failures_30m`.
+- Mapping no ingest de warnings:
+  - `Vendedor NULL` -> `vendedor_null`
+  - `Meio de pagamento NULL` -> `meio_pagamento_null`
 
 ## Riscos e mitigacoes
 - Risco: excesso de alerta em flaps curtos da conexao de gestao.

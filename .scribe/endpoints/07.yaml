@@ -1,39 +1,85 @@
-name: 'Turnos de Caixa'
+name: Vendas
 description: |-
 
-  Endpoints para gerenciar turnos de caixa.
-  Cada turno representa um período de trabalho de um vendedor em uma loja.
+  Gerenciamento de vendas registradas no sistema MaisCapinhas ERP.
+
+  As vendas são o **coração do sistema financeiro**, pois a partir delas
+  são calculados:
+  - **Bônus diário** - baseado no total de vendas do dia
+  - **Comissão mensal** - baseado no atingimento de meta
+  - **KPIs de desempenho** - taxa de conversão, ticket médio
+
+  **Fontes de Vendas:**
+  | Origem | Descrição |
+  |--------|-----------|
+  | `pdv` | Importação automática do sistema de PDV |
+  | `manual` | Cadastro manual via esta API |
+  | `import` | Importação em lote (planilha CSV) |
+
+  **Regras de Negócio Importantes:**
+  - Cada venda pertence a uma **loja** (`store_id`) e um **vendedor** (`seller_id`)
+  - A venda conta para a meta da **loja** onde foi realizada
+  - A comissão vai para o **vendedor**, mesmo que seja "volante"
+  - Alterações em vendas disparam recálculo automático de bônus/comissão
+
+  **Impacto no Bônus:**
+  Quando uma venda é criada/alterada, o sistema automaticamente
+  recalcula o bônus diário do vendedor (via Job assíncrono).
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/cash/shifts
+    uri: api/v1/sales
     metadata:
       custom: []
-      groupName: 'Turnos de Caixa'
+      groupName: Vendas
       groupDescription: |-
 
-        Endpoints para gerenciar turnos de caixa.
-        Cada turno representa um período de trabalho de um vendedor em uma loja.
+        Gerenciamento de vendas registradas no sistema MaisCapinhas ERP.
+
+        As vendas são o **coração do sistema financeiro**, pois a partir delas
+        são calculados:
+        - **Bônus diário** - baseado no total de vendas do dia
+        - **Comissão mensal** - baseado no atingimento de meta
+        - **KPIs de desempenho** - taxa de conversão, ticket médio
+
+        **Fontes de Vendas:**
+        | Origem | Descrição |
+        |--------|-----------|
+        | `pdv` | Importação automática do sistema de PDV |
+        | `manual` | Cadastro manual via esta API |
+        | `import` | Importação em lote (planilha CSV) |
+
+        **Regras de Negócio Importantes:**
+        - Cada venda pertence a uma **loja** (`store_id`) e um **vendedor** (`seller_id`)
+        - A venda conta para a meta da **loja** onde foi realizada
+        - A comissão vai para o **vendedor**, mesmo que seja "volante"
+        - Alterações em vendas disparam recálculo automático de bônus/comissão
+
+        **Impacto no Bônus:**
+        Quando uma venda é criada/alterada, o sistema automaticamente
+        recalcula o bônus diário do vendedor (via Job assíncrono).
       subgroup: ''
       subgroupDescription: ''
-      title: 'Listar turnos de caixa'
+      title: 'Listar vendas'
       description: |-
-        Retorna os turnos de caixa das lojas às quais o usuário tem acesso,
-        com filtros por loja, data e status.
+        Retorna a lista paginada de vendas das lojas às quais o
+        usuário tem acesso, com diversos filtros disponíveis.
 
-        **Quem pode usar:** Qualquer usuário autenticado.
+        **Visibilidade:**
+        - Vendedor: vê vendas de todas as lojas onde trabalha
+        - Gerente: vê todas as vendas das lojas que gerencia
+        - Admin: vê todas as vendas do sistema
 
         **Filtros disponíveis:**
         - `store_id` - Filtrar por loja específica
-        - `date` - Filtrar por data específica (YYYY-MM-DD)
-        - `status` - Filtrar por status (open, closed, pending)
+        - `seller_id` - Filtrar por vendedor
+        - `from`/`to` - Período de datas
 
-        **Códigos de turno:**
-        - `1` ou `M` - Manhã
-        - `2` ou `T` - Tarde
-        - `3` ou `N` - Noite
+        **Ordenação:** Por data de venda, mais recentes primeiro.
+
+        **Quem pode usar:** Qualquer usuário autenticado (vê apenas suas lojas).
       authenticated: true
       deprecated: false
     headers:
@@ -46,7 +92,7 @@ endpoints:
       store_id:
         custom: []
         name: store_id
-        description: 'ID da loja para filtrar.'
+        description: 'Filtrar por loja (deve ter acesso).'
         required: false
         example: 1
         type: integer
@@ -54,23 +100,34 @@ endpoints:
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-      date:
+      seller_id:
         custom: []
-        name: date
-        description: 'Data específica (YYYY-MM-DD).'
+        name: seller_id
+        description: 'Filtrar por vendedor específico.'
         required: false
-        example: '2026-01-07'
+        example: 6
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      from:
+        custom: []
+        name: from
+        description: 'Data inicial (YYYY-MM-DD).'
+        required: false
+        example: '2026-01-01'
         type: string
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-      status:
+      to:
         custom: []
-        name: status
-        description: 'Status do turno.'
+        name: to
+        description: 'Data final (YYYY-MM-DD).'
         required: false
-        example: open
+        example: '2026-01-31'
         type: string
         enumValues: []
         exampleWasSpecified: true
@@ -79,7 +136,7 @@ endpoints:
       per_page:
         custom: []
         name: per_page
-        description: 'Itens por página (1-100).'
+        description: 'Itens por página (1-100, default: 25).'
         required: false
         example: 25
         type: integer
@@ -89,8 +146,9 @@ endpoints:
         deprecated: false
     cleanQueryParameters:
       store_id: 1
-      date: '2026-01-07'
-      status: open
+      seller_id: 6
+      from: '2026-01-01'
+      to: '2026-01-31'
       per_page: 25
     bodyParameters:
       store_id:
@@ -104,28 +162,36 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      date:
+      seller_id:
         custom: []
-        name: date
+        name: seller_id
+        description: 'The <code>id</code> of an existing record in the users table.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      from:
+        custom: []
+        name: from
         description: 'Must be a valid date.'
         required: false
-        example: '2026-01-16T19:10:25'
+        example: '2026-02-12T06:51:04'
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      status:
+      to:
         custom: []
-        name: status
-        description: ''
+        name: to
+        description: 'Must be a valid date.'
         required: false
-        example: pending
+        example: '2026-02-12T06:51:04'
         type: string
-        enumValues:
-          - open
-          - closed
-          - pending
+        enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
@@ -142,8 +208,9 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      date: '2026-01-16T19:10:25'
-      status: pending
+      seller_id: 16
+      from: '2026-02-12T06:51:04'
+      to: '2026-02-12T06:51:04'
       per_page: 22
     fileParameters: []
     responses:
@@ -156,198 +223,27 @@ endpoints:
               {
                 "id": 1,
                 "store_id": 1,
-                "date": "2026-01-07",
-                "shift_code": "M",
                 "seller_id": 6,
-                "status": "open",
+                "sold_at": "2026-01-07T10:30:00Z",
+                "amount": 150.00,
+                "source": "pdv",
                 "store": { "id": 1, "name": "Mais Capinhas Tijucas" },
-                "seller": { "id": 6, "name": "João Vendedor" },
-                "cash_closing": null
+                "seller": { "id": 6, "name": "João Vendedor" }
               }
             ],
-            "meta": { "current_page": 1, "per_page": 25, "total": 84 }
+            "meta": { "current_page": 1, "per_page": 25, "total": 150, "last_page": 6 }
           }
         headers: []
-        description: 'Lista de turnos'
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: api/v1/cash/shifts/pending
-    metadata:
-      custom: []
-      groupName: 'Turnos de Caixa'
-      groupDescription: |-
-
-        Endpoints para gerenciar turnos de caixa.
-        Cada turno representa um período de trabalho de um vendedor em uma loja.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Turnos pendentes de conferência'
-      description: |-
-        Lista turnos que ainda não foram aprovados, ordenados por prioridade
-        (mais antigos primeiro).
-
-        **Quem pode usar:** Conferentes, Gerentes e Admins.
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters:
-      store_id:
-        custom: []
-        name: store_id
-        description: 'Filtrar por loja.'
-        required: false
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanQueryParameters:
-      store_id: 1
-    bodyParameters:
-      store_id:
-        custom: []
-        name: store_id
-        description: 'The <code>id</code> of an existing record in the stores table.'
-        required: false
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      store_id: 16
-    fileParameters: []
-    responses:
+        description: 'Lista de vendas'
       -
         custom: []
-        status: 200
+        status: 403
         content: |-
           {
-            "data": {
-              "total_pending": 12,
-              "shifts": [
-                {
-                  "id": 5,
-                  "date": "2026-01-06",
-                  "shift_code": "T",
-                  "days_pending": 2,
-                  "priority": "high",
-                  "store_name": "Tijucas",
-                  "seller_name": "João Silva",
-                  "system_total": 4500.00
-                }
-              ]
-            }
+            "message": "You do not have access to this store."
           }
         headers: []
-        description: 'Turnos pendentes'
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: api/v1/cash/shifts/divergent
-    metadata:
-      custom: []
-      groupName: 'Turnos de Caixa'
-      groupDescription: |-
-
-        Endpoints para gerenciar turnos de caixa.
-        Cada turno representa um período de trabalho de um vendedor em uma loja.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Turnos com divergência'
-      description: |-
-        Lista turnos que possuem divergência não justificada entre
-        valores do sistema e valores reais.
-
-        **Quem pode usar:** Conferentes, Gerentes e Admins.
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters:
-      store_id:
-        custom: []
-        name: store_id
-        description: 'Filtrar por loja.'
-        required: false
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanQueryParameters:
-      store_id: 1
-    bodyParameters:
-      store_id:
-        custom: []
-        name: store_id
-        description: 'The <code>id</code> of an existing record in the stores table.'
-        required: false
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      store_id: 16
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "data": {
-              "total_divergent": 3,
-              "total_divergence_value": -85.00,
-              "shifts": [
-                {
-                  "id": 8,
-                  "date": "2026-01-05",
-                  "shift_code": "N",
-                  "store_name": "Bombinhas",
-                  "seller_name": "Maria Santos",
-                  "divergence": -50.00,
-                  "has_justification": false,
-                  "days_pending": 3
-                }
-              ]
-            }
-          }
-        headers: []
-        description: 'Turnos divergentes'
+        description: 'Loja sem acesso'
     responseFields: []
     auth:
       - headers
@@ -360,31 +256,61 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/v1/cash/shifts
+    uri: api/v1/sales
     metadata:
       custom: []
-      groupName: 'Turnos de Caixa'
+      groupName: Vendas
       groupDescription: |-
 
-        Endpoints para gerenciar turnos de caixa.
-        Cada turno representa um período de trabalho de um vendedor em uma loja.
+        Gerenciamento de vendas registradas no sistema MaisCapinhas ERP.
+
+        As vendas são o **coração do sistema financeiro**, pois a partir delas
+        são calculados:
+        - **Bônus diário** - baseado no total de vendas do dia
+        - **Comissão mensal** - baseado no atingimento de meta
+        - **KPIs de desempenho** - taxa de conversão, ticket médio
+
+        **Fontes de Vendas:**
+        | Origem | Descrição |
+        |--------|-----------|
+        | `pdv` | Importação automática do sistema de PDV |
+        | `manual` | Cadastro manual via esta API |
+        | `import` | Importação em lote (planilha CSV) |
+
+        **Regras de Negócio Importantes:**
+        - Cada venda pertence a uma **loja** (`store_id`) e um **vendedor** (`seller_id`)
+        - A venda conta para a meta da **loja** onde foi realizada
+        - A comissão vai para o **vendedor**, mesmo que seja "volante"
+        - Alterações em vendas disparam recálculo automático de bônus/comissão
+
+        **Impacto no Bônus:**
+        Quando uma venda é criada/alterada, o sistema automaticamente
+        recalcula o bônus diário do vendedor (via Job assíncrono).
       subgroup: ''
       subgroupDescription: ''
-      title: 'Criar novo turno de caixa'
+      title: 'Criar venda manual'
       description: |-
-        Cria um novo turno de caixa para uma loja/data/período.
+        Registra uma nova venda no sistema de forma manual.
 
-        **Quem pode usar:** Usuários com acesso à loja.
+        **Quando usar:**
+        - Vendas feitas fora do PDV (dinheiro em espécie direto)
+        - Correções de vendas não registradas
+        - Vendas de quiosques sem sistema
 
-        **Regras de negócio:**
-        - Não pode haver dois turnos com mesma loja + data + turno + vendedor
-        - O turno inicia com status `open`
-        - Se `seller_id` não for informado, assume o usuário atual
+        **Efeitos automáticos:**
+        Após criar a venda, o sistema automaticamente dispara:
+        1. `RecalculateSellerDailyBonusJob` - recalcula bônus do dia
+        2. `RecalculateSellerMonthlyCommissionJob` - recalcula comissão do mês
 
-        **Códigos de turno:**
-        - `1` ou `M` - Manhã (08h-14h)
-        - `2` ou `T` - Tarde (14h-20h)
-        - `3` ou `N` - Noite (20h-00h)
+        **Regras de Negócio:**
+        - `store_id` deve ser uma loja onde o usuário tem acesso
+        - `seller_id` default é o usuário logado
+        - `source` default é "manual"
+        - `amount` deve ser positivo
+
+        **Quem pode usar:**
+        - Vendedores (podem registrar próprias vendas)
+        - Gerentes/Admins (podem registrar para qualquer vendedor)
       authenticated: true
       deprecated: false
     headers:
@@ -399,7 +325,7 @@ endpoints:
       store_id:
         custom: []
         name: store_id
-        description: 'ID da loja.'
+        description: 'Loja onde a venda foi realizada.'
         required: true
         example: 1
         type: integer
@@ -407,32 +333,10 @@ endpoints:
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-      date:
-        custom: []
-        name: date
-        description: 'Data do turno (YYYY-MM-DD).'
-        required: true
-        example: '2026-01-07'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      shift_code:
-        custom: []
-        name: shift_code
-        description: 'Código do turno (1, 2, 3 ou M, T, N).'
-        required: true
-        example: '1'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
       seller_id:
         custom: []
         name: seller_id
-        description: 'ID do vendedor (padrão: usuário atual).'
+        description: 'Vendedor que realizou (default: você).'
         required: false
         example: 6
         type: integer
@@ -440,11 +344,45 @@ endpoints:
         exampleWasSpecified: true
         nullable: false
         deprecated: false
+      sold_at:
+        custom: []
+        name: sold_at
+        description: 'Data/hora da venda (ISO 8601).'
+        required: true
+        example: '2026-01-07T15:30:00'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      amount:
+        custom: []
+        name: amount
+        description: 'Valor total da venda.'
+        required: true
+        example: 175.5
+        type: number
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      source:
+        custom: []
+        name: source
+        description: 'Origem: pdv, manual, import (default: manual).'
+        required: false
+        example: manual
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
     cleanBodyParameters:
       store_id: 1
-      date: '2026-01-07'
-      shift_code: '1'
       seller_id: 6
+      sold_at: '2026-01-07T15:30:00'
+      amount: 175.5
+      source: manual
     fileParameters: []
     responses:
       -
@@ -453,28 +391,27 @@ endpoints:
         content: |-
           {
             "data": {
-              "id": 1,
+              "id": 501,
               "store_id": 1,
-              "date": "2026-01-07",
-              "shift_code": "M",
               "seller_id": 6,
-              "status": "open",
+              "sold_at": "2026-01-07T15:30:00Z",
+              "amount": 175.50,
+              "source": "manual",
               "store": { "id": 1, "name": "Mais Capinhas Tijucas" },
               "seller": { "id": 6, "name": "João Vendedor" }
-            },
-            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+            }
           }
         headers: []
-        description: 'Turno criado'
+        description: 'Venda criada'
       -
         custom: []
         status: 403
         content: |-
           {
-            "error": { "code": 403, "message": "You do not have access to this store." }
+            "message": "Você não tem acesso a esta loja."
           }
         headers: []
-        description: 'Sem acesso'
+        description: 'Sem acesso à loja'
     responseFields: []
     auth:
       - headers
@@ -487,21 +424,49 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/cash/shifts/{id}'
+    uri: 'api/v1/sales/{id}'
     metadata:
       custom: []
-      groupName: 'Turnos de Caixa'
+      groupName: Vendas
       groupDescription: |-
 
-        Endpoints para gerenciar turnos de caixa.
-        Cada turno representa um período de trabalho de um vendedor em uma loja.
+        Gerenciamento de vendas registradas no sistema MaisCapinhas ERP.
+
+        As vendas são o **coração do sistema financeiro**, pois a partir delas
+        são calculados:
+        - **Bônus diário** - baseado no total de vendas do dia
+        - **Comissão mensal** - baseado no atingimento de meta
+        - **KPIs de desempenho** - taxa de conversão, ticket médio
+
+        **Fontes de Vendas:**
+        | Origem | Descrição |
+        |--------|-----------|
+        | `pdv` | Importação automática do sistema de PDV |
+        | `manual` | Cadastro manual via esta API |
+        | `import` | Importação em lote (planilha CSV) |
+
+        **Regras de Negócio Importantes:**
+        - Cada venda pertence a uma **loja** (`store_id`) e um **vendedor** (`seller_id`)
+        - A venda conta para a meta da **loja** onde foi realizada
+        - A comissão vai para o **vendedor**, mesmo que seja "volante"
+        - Alterações em vendas disparam recálculo automático de bônus/comissão
+
+        **Impacto no Bônus:**
+        Quando uma venda é criada/alterada, o sistema automaticamente
+        recalcula o bônus diário do vendedor (via Job assíncrono).
       subgroup: ''
       subgroupDescription: ''
-      title: 'Obter detalhes de um turno'
+      title: 'Ver detalhes da venda'
       description: |-
-        Retorna os detalhes de um turno específico, incluindo o fechamento se existir.
+        Retorna informações completas de uma venda específica.
 
-        **Quem pode usar:** Usuários com acesso à loja.
+        **Dados retornados:**
+        - Informações básicas: `id`, `store_id`, `seller_id`, `sold_at`, `amount`, `source`
+        - Loja: `store.id`, `store.name`
+        - Vendedor: `seller.id`, `seller.name`
+        - Timestamps: `created_at`, `updated_at`
+
+        **Quem pode usar:** Usuários com acesso à loja da venda.
       authenticated: true
       deprecated: false
     headers:
@@ -512,7 +477,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the shift.'
+        description: 'The ID of the sale.'
         required: true
         example: 16
         type: integer
@@ -520,10 +485,10 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      shift:
+      sale:
         custom: []
-        name: shift
-        description: 'ID do turno.'
+        name: sale
+        description: 'ID da venda.'
         required: true
         example: 1
         type: integer
@@ -533,7 +498,7 @@ endpoints:
         deprecated: false
     cleanUrlParameters:
       id: 16
-      shift: 1
+      sale: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -548,19 +513,295 @@ endpoints:
             "data": {
               "id": 1,
               "store_id": 1,
-              "date": "2026-01-07",
-              "shift_code": "M",
-              "status": "closed",
-              "cash_closing": {
-                "id": 1,
-                "status": "approved",
-                "lines": []
-              }
-            },
-            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+              "seller_id": 6,
+              "sold_at": "2026-01-07T10:30:00Z",
+              "amount": 150.00,
+              "source": "pdv",
+              "created_at": "2026-01-07T10:31:00Z",
+              "store": { "id": 1, "name": "Mais Capinhas Tijucas" },
+              "seller": { "id": 6, "name": "João Vendedor" }
+            }
           }
         headers: []
-        description: 'Turno encontrado'
+        description: 'Detalhes da venda'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+    uri: 'api/v1/sales/{id}'
+    metadata:
+      custom: []
+      groupName: Vendas
+      groupDescription: |-
+
+        Gerenciamento de vendas registradas no sistema MaisCapinhas ERP.
+
+        As vendas são o **coração do sistema financeiro**, pois a partir delas
+        são calculados:
+        - **Bônus diário** - baseado no total de vendas do dia
+        - **Comissão mensal** - baseado no atingimento de meta
+        - **KPIs de desempenho** - taxa de conversão, ticket médio
+
+        **Fontes de Vendas:**
+        | Origem | Descrição |
+        |--------|-----------|
+        | `pdv` | Importação automática do sistema de PDV |
+        | `manual` | Cadastro manual via esta API |
+        | `import` | Importação em lote (planilha CSV) |
+
+        **Regras de Negócio Importantes:**
+        - Cada venda pertence a uma **loja** (`store_id`) e um **vendedor** (`seller_id`)
+        - A venda conta para a meta da **loja** onde foi realizada
+        - A comissão vai para o **vendedor**, mesmo que seja "volante"
+        - Alterações em vendas disparam recálculo automático de bônus/comissão
+
+        **Impacto no Bônus:**
+        Quando uma venda é criada/alterada, o sistema automaticamente
+        recalcula o bônus diário do vendedor (via Job assíncrono).
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Atualizar venda'
+      description: |-
+        Edita dados de uma venda existente.
+
+        **Importante:**
+        Alterações disparam recálculo automático de bônus e comissão
+        para o vendedor afetado.
+
+        **Casos de uso:**
+        - Corrigir valor digitado errado
+        - Ajustar data de venda
+        - Corrigir fonte da venda
+
+        **Regras de Negócio:**
+        - Não é possível alterar `store_id` ou `seller_id` após criação
+        - Apenas gerentes e admins podem editar vendas
+        - Histórico de alterações é registrado para auditoria
+
+        **Quem pode usar:** Gerentes e Admins da loja.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the sale.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      sale:
+        custom: []
+        name: sale
+        description: 'ID da venda.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 16
+      sale: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      sold_at:
+        custom: []
+        name: sold_at
+        description: 'Nova data/hora.'
+        required: false
+        example: '2026-01-07T16:00:00'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      amount:
+        custom: []
+        name: amount
+        description: 'Novo valor.'
+        required: false
+        example: 180.0
+        type: number
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      source:
+        custom: []
+        name: source
+        description: 'Nova origem: pdv, manual, import.'
+        required: false
+        example: pdv
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      sold_at: '2026-01-07T16:00:00'
+      amount: 180.0
+      source: pdv
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "id": 1,
+              "amount": 180.00,
+              "sold_at": "2026-01-07T16:00:00Z"
+            }
+          }
+        headers: []
+        description: 'Venda atualizada'
+      -
+        custom: []
+        status: 403
+        content: |-
+          {
+            "message": "Apenas gerentes e admins podem editar vendas."
+          }
+        headers: []
+        description: 'Sem permissão'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/v1/sales/{id}'
+    metadata:
+      custom: []
+      groupName: Vendas
+      groupDescription: |-
+
+        Gerenciamento de vendas registradas no sistema MaisCapinhas ERP.
+
+        As vendas são o **coração do sistema financeiro**, pois a partir delas
+        são calculados:
+        - **Bônus diário** - baseado no total de vendas do dia
+        - **Comissão mensal** - baseado no atingimento de meta
+        - **KPIs de desempenho** - taxa de conversão, ticket médio
+
+        **Fontes de Vendas:**
+        | Origem | Descrição |
+        |--------|-----------|
+        | `pdv` | Importação automática do sistema de PDV |
+        | `manual` | Cadastro manual via esta API |
+        | `import` | Importação em lote (planilha CSV) |
+
+        **Regras de Negócio Importantes:**
+        - Cada venda pertence a uma **loja** (`store_id`) e um **vendedor** (`seller_id`)
+        - A venda conta para a meta da **loja** onde foi realizada
+        - A comissão vai para o **vendedor**, mesmo que seja "volante"
+        - Alterações em vendas disparam recálculo automático de bônus/comissão
+
+        **Impacto no Bônus:**
+        Quando uma venda é criada/alterada, o sistema automaticamente
+        recalcula o bônus diário do vendedor (via Job assíncrono).
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Excluir venda'
+      description: |-
+        Remove permanentemente uma venda do sistema.
+
+        **Atenção:**
+        - Esta ação é **irreversível**
+        - O bônus/comissão do vendedor será recalculado automaticamente
+        - Recomendado documentar o motivo da exclusão
+
+        **Casos de uso:**
+        - Venda cadastrada em duplicidade
+        - Venda cancelada pelo cliente
+        - Teste registrado acidentalmente em produção
+
+        **Regras de Negócio:**
+        - Apenas administradores podem excluir vendas
+        - A exclusão é registrada no log de auditoria
+
+        **Quem pode usar:** Apenas Admins.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the sale.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      sale:
+        custom: []
+        name: sale
+        description: 'ID da venda.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 16
+      sale: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": { "message": "Venda excluída com sucesso." }
+          }
+        headers: []
+        description: 'Venda excluída'
+      -
+        custom: []
+        status: 403
+        content: |-
+          {
+            "message": "Apenas admins podem excluir vendas."
+          }
+        headers: []
+        description: 'Sem permissão'
     responseFields: []
     auth:
       - headers

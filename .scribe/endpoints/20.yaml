@@ -1,34 +1,21 @@
-name: 'Catálogo - Modelos de Telefone'
-description: |-
-
-  Gestão de modelos de telefone do catálogo.
-  Modelos são vinculados a marcas e usados para associar dispositivos de clientes.
-
-  **Leitura:** Todos os usuários autenticados.
-  **Escrita:** Apenas administradores.
+name: Outros
+description: ''
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/phone-models
+    uri: api/v1/users/kpis
     metadata:
       custom: []
-      groupName: 'Catálogo - Modelos de Telefone'
-      groupDescription: |-
-
-        Gestão de modelos de telefone do catálogo.
-        Modelos são vinculados a marcas e usados para associar dispositivos de clientes.
-
-        **Leitura:** Todos os usuários autenticados.
-        **Escrita:** Apenas administradores.
+      groupName: Outros
+      groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Listar modelos'
+      title: 'Get aggregated KPIs for users.'
       description: |-
-        Retorna lista paginada de modelos com dados da marca.
-
-        **Quem pode usar:** Todos os usuários autenticados.
+        Returns statistical data about users without exposing personal information.
+        Useful for dashboard cards and charts.
       authenticated: true
       deprecated: false
     headers:
@@ -37,108 +24,84 @@ endpoints:
       Accept: application/json
     urlParameters: []
     cleanUrlParameters: []
-    queryParameters:
-      search:
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      active:
         custom: []
-        name: search
-        description: 'Buscar por nome.'
+        name: active
+        description: ''
         required: false
-        example: iPhone
+        example: '0'
+        type: string
+        enumValues:
+          - '0'
+          - '1'
+          - all
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      state:
+        custom: []
+        name: state
+        description: 'Must be 2 characters.'
+        required: false
+        example: bn
         type: string
         enumValues: []
-        exampleWasSpecified: true
-        nullable: false
+        exampleWasSpecified: false
+        nullable: true
         deprecated: false
-      brand_id:
+      city:
         custom: []
-        name: brand_id
-        description: 'Filtrar por marca.'
+        name: city
+        description: 'Must not be greater than 255 characters.'
         required: false
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      form_factor:
-        custom: []
-        name: form_factor
-        description: 'Filtrar por formato.'
-        required: false
-        example: smartphone
+        example: g
         type: string
         enumValues: []
-        exampleWasSpecified: true
-        nullable: false
+        exampleWasSpecified: false
+        nullable: true
         deprecated: false
-      release_year:
+      date_from:
         custom: []
-        name: release_year
-        description: 'Filtrar por ano de lançamento.'
+        name: date_from
+        description: 'Must be a valid date in the format <code>Y-m-d</code>.'
         required: false
-        example: 2024
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      sort:
-        custom: []
-        name: sort
-        description: 'Campo para ordenação.'
-        required: false
-        example: marketing_name
+        example: '2026-02-12'
         type: string
         enumValues: []
-        exampleWasSpecified: true
-        nullable: false
+        exampleWasSpecified: false
+        nullable: true
         deprecated: false
-      direction:
+      date_to:
         custom: []
-        name: direction
-        description: 'Direção: `asc` ou `desc`.'
+        name: date_to
+        description: 'Must be a valid date in the format <code>Y-m-d</code>. Must be a date after or equal to <code>date_from</code>.'
         required: false
-        example: asc
+        example: '2052-03-07'
         type: string
         enumValues: []
-        exampleWasSpecified: true
-        nullable: false
+        exampleWasSpecified: false
+        nullable: true
         deprecated: false
-      per_page:
-        custom: []
-        name: per_page
-        description: 'Itens por página (máx 100).'
-        required: false
-        example: 50
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanQueryParameters:
-      search: iPhone
-      brand_id: 1
-      form_factor: smartphone
-      release_year: 2024
-      sort: marketing_name
-      direction: asc
-      per_page: 50
-    bodyParameters: []
-    cleanBodyParameters: []
+    cleanBodyParameters:
+      active: '0'
+      state: bn
+      city: g
+      date_from: '2026-02-12'
+      date_to: '2052-03-07'
     fileParameters: []
     responses:
       -
         custom: []
-        status: 200
-        content: |-
-          {
-            "data": [
-              {"id": 1, "marketing_name": "iPhone 15", "brand": {"id": 1, "brand_name": "Apple"}}
-            ],
-            "meta": {"current_page": 1, "total": 100}
-          }
-        headers: []
-        description: 'Lista de modelos'
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
     responseFields: []
     auth:
       - headers
@@ -151,114 +114,100 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/v1/phone-models
+    uri: 'api/v1/wheel/screens/{screenKey}/auth'
     metadata:
       custom: []
-      groupName: 'Catálogo - Modelos de Telefone'
-      groupDescription: |-
-
-        Gestão de modelos de telefone do catálogo.
-        Modelos são vinculados a marcas e usados para associar dispositivos de clientes.
-
-        **Leitura:** Todos os usuários autenticados.
-        **Escrita:** Apenas administradores.
+      groupName: Outros
+      groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Criar modelo'
-      description: |-
-        Cria um novo modelo de telefone vinculado a uma marca.
-
-        **Quem pode usar:** Apenas administradores.
+      title: 'POST /screens/{screenKey}/auth'
+      description: 'Autenticação da TV. Retorna token + configuração Ably.'
       authenticated: true
       deprecated: false
     headers:
       Authorization: 'Bearer {SEU_TOKEN}'
       Content-Type: application/json
       Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
+    urlParameters:
+      screenKey:
+        custom: []
+        name: screenKey
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      screenKey: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      brand_id:
+      secret_token:
         custom: []
-        name: brand_id
-        description: 'ID da marca.'
+        name: secret_token
+        description: ''
         required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      marketing_name:
-        custom: []
-        name: marketing_name
-        description: 'Nome comercial.'
-        required: true
-        example: 'Galaxy S24'
+        example: architecto
         type: string
         enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      release_year:
-        custom: []
-        name: release_year
-        description: 'Ano de lançamento.'
-        required: false
-        example: 2024
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      form_factor:
-        custom: []
-        name: form_factor
-        description: 'Formato do dispositivo.'
-        required: false
-        example: smartphone
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      model_number:
-        custom: []
-        name: model_number
-        description: 'Número do modelo.'
-        required: false
-        example: SM-S921B
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
+        exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      brand_id: 1
-      marketing_name: 'Galaxy S24'
-      release_year: 2024
-      form_factor: smartphone
-      model_number: SM-S921B
+      secret_token: architecto
     fileParameters: []
-    responses:
-      -
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/wheel/screens/{screenKey}/sessions'
+    metadata:
+      custom: []
+      groupName: Outros
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'POST /screens/{screenKey}/sessions'
+      description: 'Criar nova sessão (gera QR Code).'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      screenKey:
         custom: []
-        status: 201
-        content: |-
-          {
-            "message": "Modelo criado com sucesso.",
-            "data": {"id": 1, "marketing_name": "Galaxy S24", "brand": {"brand_name": "Samsung"}}
-          }
-        headers: []
-        description: 'Modelo criado'
-      -
-        custom: []
-        status: 403
-        content: '{"message": "Apenas administradores podem gerenciar modelos."}'
-        headers: []
-        description: 'Sem permissão'
+        name: screenKey
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      screenKey: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
     responseFields: []
     auth:
       - headers
@@ -271,24 +220,15 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/phone-models/{id}'
+    uri: 'api/v1/wheel/screens/{screenKey}/state'
     metadata:
       custom: []
-      groupName: 'Catálogo - Modelos de Telefone'
-      groupDescription: |-
-
-        Gestão de modelos de telefone do catálogo.
-        Modelos são vinculados a marcas e usados para associar dispositivos de clientes.
-
-        **Leitura:** Todos os usuários autenticados.
-        **Escrita:** Apenas administradores.
+      groupName: Outros
+      groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Detalhes do modelo'
-      description: |-
-        Retorna detalhes de um modelo com dados da marca.
-
-        **Quem pode usar:** Todos os usuários autenticados.
+      title: 'GET /screens/{screenKey}/state'
+      description: 'Estado atual da screen (sessão, fila, jogador).'
       authenticated: true
       deprecated: false
     headers:
@@ -296,31 +236,19 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      id:
+      screenKey:
         custom: []
-        name: id
-        description: 'The ID of the phone model.'
+        name: screenKey
+        description: ''
         required: true
-        example: 1
-        type: integer
+        example: architecto
+        type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      phoneModel:
-        custom: []
-        name: phoneModel
-        description: 'ID do modelo.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
     cleanUrlParameters:
-      id: 1
-      phoneModel: 1
+      screenKey: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -329,13 +257,13 @@ endpoints:
     responses:
       -
         custom: []
-        status: 200
-        content: |-
-          {
-            "data": {"id": 1, "marketing_name": "iPhone 15", "brand": {"id": 1, "brand_name": "Apple"}}
-          }
-        headers: []
-        description: 'Detalhes do modelo'
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
     responseFields: []
     auth:
       - headers
@@ -347,26 +275,16 @@ endpoints:
   -
     custom: []
     httpMethods:
-      - PUT
-      - PATCH
-    uri: 'api/v1/phone-models/{id}'
+      - POST
+    uri: 'api/v1/wheel/screens/{screenKey}/heartbeat'
     metadata:
       custom: []
-      groupName: 'Catálogo - Modelos de Telefone'
-      groupDescription: |-
-
-        Gestão de modelos de telefone do catálogo.
-        Modelos são vinculados a marcas e usados para associar dispositivos de clientes.
-
-        **Leitura:** Todos os usuários autenticados.
-        **Escrita:** Apenas administradores.
+      groupName: Outros
+      groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Atualizar modelo'
-      description: |-
-        Atualiza dados de um modelo existente.
-
-        **Quem pode usar:** Apenas administradores.
+      title: 'POST /screens/{screenKey}/heartbeat'
+      description: 'Heartbeat da TV (atualiza last_seen).'
       authenticated: true
       deprecated: false
     headers:
@@ -374,111 +292,25 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      id:
+      screenKey:
         custom: []
-        name: id
-        description: 'The ID of the phone model.'
+        name: screenKey
+        description: ''
         required: true
-        example: 1
-        type: integer
+        example: architecto
+        type: string
         enumValues: []
         exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      phoneModel:
-        custom: []
-        name: phoneModel
-        description: 'ID do modelo.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 1
-      phoneModel: 1
+      screenKey: architecto
     queryParameters: []
     cleanQueryParameters: []
-    bodyParameters:
-      brand_id:
-        custom: []
-        name: brand_id
-        description: 'The <code>id</code> of an existing record in the phone_brands table.'
-        required: false
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      marketing_name:
-        custom: []
-        name: marketing_name
-        description: 'Nome comercial.'
-        required: false
-        example: 'iPhone 15 Pro'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      release_year:
-        custom: []
-        name: release_year
-        description: 'Must be at least 1990. Must not be greater than 2100.'
-        required: false
-        example: 7
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      form_factor:
-        custom: []
-        name: form_factor
-        description: ''
-        required: false
-        example: architecto
-        type: string
-        enumValues:
-          - smartphone
-          - tablet
-          - watch
-          - feature_phone
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      model_number:
-        custom: []
-        name: model_number
-        description: 'Número do modelo.'
-        required: false
-        example: A3101
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      brand_id: 16
-      marketing_name: 'iPhone 15 Pro'
-      release_year: 7
-      form_factor: architecto
-      model_number: A3101
+    bodyParameters: []
+    cleanBodyParameters: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "message": "Modelo atualizado com sucesso.",
-            "data": {"id": 1, "marketing_name": "iPhone 15 Pro"}
-          }
-        headers: []
-        description: 'Modelo atualizado'
+    responses: []
     responseFields: []
     auth:
       - headers
@@ -491,27 +323,15 @@ endpoints:
     custom: []
     httpMethods:
       - DELETE
-    uri: 'api/v1/phone-models/{id}'
+    uri: 'api/v1/wheel/sessions/{sessionKey}'
     metadata:
       custom: []
-      groupName: 'Catálogo - Modelos de Telefone'
-      groupDescription: |-
-
-        Gestão de modelos de telefone do catálogo.
-        Modelos são vinculados a marcas e usados para associar dispositivos de clientes.
-
-        **Leitura:** Todos os usuários autenticados.
-        **Escrita:** Apenas administradores.
+      groupName: Outros
+      groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Excluir modelo'
-      description: |-
-        Remove um modelo do catálogo.
-
-        **Quem pode usar:** Apenas administradores.
-
-        **Regras de negócio:**
-        - Modelos com dispositivos vinculados não podem ser excluídos
+      title: 'DELETE /sessions/{sessionKey}'
+      description: 'Expirar/cancelar sessão.'
       authenticated: true
       deprecated: false
     headers:
@@ -519,31 +339,304 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      id:
+      sessionKey:
         custom: []
-        name: id
-        description: 'The ID of the phone model.'
+        name: sessionKey
+        description: ''
         required: true
-        example: 1
-        type: integer
+        example: architecto
+        type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      phoneModel:
+    cleanUrlParameters:
+      sessionKey: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/wheel/sessions/{sessionKey}/join'
+    metadata:
+      custom: []
+      groupName: Outros
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'POST /sessions/{sessionKey}/join'
+      description: |-
+        Entrar na fila via QR Code.
+        Busca/cria Player pelo WhatsApp e cria SessionPlayer para esta sessão.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      sessionKey:
         custom: []
-        name: phoneModel
-        description: 'ID do modelo.'
+        name: sessionKey
+        description: ''
         required: true
-        example: 1
-        type: integer
+        example: architecto
+        type: string
         enumValues: []
-        exampleWasSpecified: true
+        exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 1
-      phoneModel: 1
+      sessionKey: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      phone:
+        custom: []
+        name: phone
+        description: 'Must be at least 10 characters. Must not be greater than 20 characters.'
+        required: true
+        example: bngzmiyvdljnikhw
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      name:
+        custom: []
+        name: name
+        description: 'Must not be greater than 100 characters.'
+        required: false
+        example: a
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      terms_accepted:
+        custom: []
+        name: terms_accepted
+        description: ''
+        required: true
+        example: false
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      device_fingerprint:
+        custom: []
+        name: device_fingerprint
+        description: 'Must not be greater than 100 characters.'
+        required: false
+        example: 'y'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      phone: bngzmiyvdljnikhw
+      name: a
+      terms_accepted: false
+      device_fingerprint: 'y'
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/wheel/sessions/{sessionKey}/request-code'
+    metadata:
+      custom: []
+      groupName: Outros
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'POST /sessions/{sessionKey}/request-code'
+      description: 'Solicitar código de verificação via WhatsApp.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      sessionKey:
+        custom: []
+        name: sessionKey
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      sessionKey: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/wheel/sessions/{sessionKey}/verify'
+    metadata:
+      custom: []
+      groupName: Outros
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'POST /sessions/{sessionKey}/verify'
+      description: 'Verificar telefone via código WhatsApp.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      sessionKey:
+        custom: []
+        name: sessionKey
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      sessionKey: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      code:
+        custom: []
+        name: code
+        description: 'Must be at least 4 characters. Must not be greater than 6 characters.'
+        required: true
+        example: bngz
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      code: bngz
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/wheel/mobile/spins
+    metadata:
+      custom: []
+      groupName: Outros
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'POST /mobile/spins'
+      description: 'Solicitar giro (com idempotência via client_nonce).'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      client_nonce:
+        custom: []
+        name: client_nonce
+        description: 'Must not be greater than 100 characters.'
+        required: false
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      client_nonce: b
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/wheel/mobile/state
+    metadata:
+      custom: []
+      groupName: Outros
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'GET /mobile/state'
+      description: 'Estado do player.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -552,16 +645,202 @@ endpoints:
     responses:
       -
         custom: []
-        status: 200
-        content: '{"message": "Modelo excluído com sucesso."}'
-        headers: []
-        description: 'Modelo excluído'
-      -
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/wheel/mobile/address
+    metadata:
+      custom: []
+      groupName: Outros
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'POST /mobile/address'
+      description: 'Atualizar endereço do player via CEP (ViaCEP).'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      cep:
         custom: []
-        status: 422
-        content: '{"message": "Não é possível excluir modelo com dispositivos vinculados."}'
-        headers: []
-        description: 'Tem dispositivos'
+        name: cep
+        description: 'Must be 8 characters.'
+        required: true
+        example: bngzmiyv
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      number:
+        custom: []
+        name: number
+        description: 'Must not be greater than 20 characters.'
+        required: false
+        example: dljnikhwaykcmyuw
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      complement:
+        custom: []
+        name: complement
+        description: 'Must not be greater than 100 characters.'
+        required: false
+        example: p
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      cep: bngzmiyv
+      number: dljnikhwaykcmyuw
+      complement: p
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/wheel/spins/{spinKey}/ack'
+    metadata:
+      custom: []
+      groupName: Outros
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'POST /spins/{spinKey}/ack'
+      description: 'ACK da animação (telemetria).'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      spinKey:
+        custom: []
+        name: spinKey
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      spinKey: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      animation_duration_ms:
+        custom: []
+        name: animation_duration_ms
+        description: ''
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      fps:
+        custom: []
+        name: fps
+        description: ''
+        required: false
+        example: 4326.41688
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      latency_ms:
+        custom: []
+        name: latency_ms
+        description: ''
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      animation_duration_ms: 16
+      fps: 4326.41688
+      latency_ms: 16
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/wheel/realtime/auth
+    metadata:
+      custom: []
+      groupName: Outros
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'POST /realtime/auth'
+      description: 'Gera token Ably para TV ou Mobile.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
     responseFields: []
     auth:
       - headers

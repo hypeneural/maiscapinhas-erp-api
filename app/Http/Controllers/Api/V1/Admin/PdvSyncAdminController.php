@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Pdv\PdvSyncAdminIndexRequest;
+use App\Http\Requests\Pdv\PdvSyncAdminMetricsRequest;
 use App\Http\Traits\ApiResponse;
 use App\Models\PdvSync;
 use Carbon\CarbonImmutable;
@@ -13,27 +15,73 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * @group PDV - Admin
+ *
+ * Endpoints administrativos para observabilidade do pipeline PDV Sync.
+ *
+ * Inclui:
+ * - consulta de syncs recebidos (`/admin/pdv/syncs`)
+ * - metricas operacionais consolidadas (`/admin/pdv/syncs/metrics`)
+ *
+ * Acesso:
+ * - super admin, ou
+ * - usuario com role `admin` em alguma loja
+ */
 class PdvSyncAdminController extends Controller
 {
     use ApiResponse;
 
-    public function index(Request $request): JsonResponse
+    /**
+     * Listar syncs PDV
+     *
+     * Retorna os syncs armazenados com filtros de status, risco, loja e periodo.
+     *
+     * @authenticated
+     * @queryParam status string Filtrar por status (`queued`, `processing`, `processed`, `failed`, `blocked`). Example: queued
+     * @queryParam event_type string Filtrar por tipo de evento (`sales`, `turno_closure`, `mixed`). Example: mixed
+     * @queryParam sync_id string Busca parcial por `sync_id`. Example: a1b2
+     * @queryParam schema_version string Filtrar por versao de schema. Example: 3.0
+     * @queryParam request_id string Busca parcial por `request_id`. Example: req-pdv
+     * @queryParam risk_flag string Filtrar por risk flag (JSON contains). Example: gestao_db_failure
+     * @queryParam store_pdv_id integer Filtrar por loja PDV. Example: 13
+     * @queryParam store_id integer Filtrar por loja interna. Example: 1
+     * @queryParam from string Inicio do periodo de `received_at` (`YYYY-MM-DD`). Example: 2026-02-01
+     * @queryParam to string Fim do periodo de `received_at` (`YYYY-MM-DD`). Example: 2026-02-12
+     * @queryParam per_page integer Tamanho da pagina (1-100). Default: 25. Example: 25
+     *
+     * @response 200 {
+     *   "data": [
+     *     {
+     *       "id": 31,
+     *       "sync_id": "a1b2c3d4e5f6",
+     *       "schema_version": "3.0",
+     *       "event_type": "mixed",
+     *       "store_pdv_id": 13,
+     *       "store_id": 1,
+     *       "status": "processed",
+     *       "ops_count": 1,
+     *       "ops_loja_count": 1,
+     *       "risk_flags": [],
+     *       "queue_delay_ms": 90,
+     *       "processing_ms": 45,
+     *       "end_to_end_ms": 150
+     *     }
+     *   ],
+     *   "meta": {
+     *     "request_id": "req-admin-1",
+     *     "timestamp": "2026-02-12T10:00:00+00:00",
+     *     "pagination": {"total": 1, "per_page": 25, "current_page": 1, "last_page": 1}
+     *   }
+     * }
+     * @response 401 {"message":"Unauthenticated."}
+     * @response 403 {"message":"Apenas administradores podem acessar este recurso."}
+     */
+    public function index(PdvSyncAdminIndexRequest $request): JsonResponse
     {
         $this->authorizeAdmin($request);
 
-        $validated = $request->validate([
-            'status' => ['sometimes', 'string', 'max:20'],
-            'event_type' => ['sometimes', 'string', 'max:30'],
-            'sync_id' => ['sometimes', 'string', 'max:128'],
-            'schema_version' => ['sometimes', 'string', 'max:10'],
-            'request_id' => ['sometimes', 'string', 'max:64'],
-            'risk_flag' => ['sometimes', 'string', 'max:80'],
-            'store_pdv_id' => ['sometimes', 'integer', 'min:1'],
-            'store_id' => ['sometimes', 'integer', 'min:1'],
-            'from' => ['sometimes', 'date'],
-            'to' => ['sometimes', 'date'],
-            'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
-        ]);
+        $validated = $request->validated();
 
         $query = PdvSync::query();
 
@@ -142,13 +190,34 @@ class PdvSyncAdminController extends Controller
         ]);
     }
 
-    public function metrics(Request $request): JsonResponse
+    /**
+     * Metricas operacionais do PDV Sync
+     *
+     * Retorna painel consolidado de backlog, risco, latencia e saude por loja.
+     *
+     * @authenticated
+     * @queryParam minutes_without_sync integer Limite para considerar loja silenciosa (5-1440 min). Default: config do monitor. Example: 120
+     *
+     * @response 200 {
+     *   "data": {
+     *     "status_breakdown": {"queued": 0, "processing": 0, "processed": 31, "failed": 0, "blocked": 0, "duplicate": 0},
+     *     "risk_flags": {"gestao_db_failure": 0, "vendedor_null": 0, "meio_pagamento_null": 0},
+     *     "by_event_type": {"sales": 20, "turno_closure": 2, "mixed": 9},
+     *     "by_schema_version": {"3.0": 31},
+     *     "by_canal": {"source": "pdv_vendas", "totals": {"HIPER_CAIXA": 150, "HIPER_LOJA": 23}},
+     *     "last_24h": {"total": 12, "failed": 0, "failure_rate_percent": 0},
+     *     "latency": {"avg_queue_delay_ms": 120, "avg_processing_ms": 35}
+     *   },
+     *   "meta": {"request_id":"req-admin-1","timestamp":"2026-02-12T10:00:00+00:00"}
+     * }
+     * @response 401 {"message":"Unauthenticated."}
+     * @response 403 {"message":"Apenas administradores podem acessar este recurso."}
+     */
+    public function metrics(PdvSyncAdminMetricsRequest $request): JsonResponse
     {
         $this->authorizeAdmin($request);
 
-        $validated = $request->validate([
-            'minutes_without_sync' => ['sometimes', 'integer', 'min:5', 'max:1440'],
-        ]);
+        $validated = $request->validated();
 
         $defaultThresholdMinutes = max(5, (int) config('pdv.monitor_silent_store_threshold_minutes', 120));
         $thresholdMinutes = (int) ($validated['minutes_without_sync'] ?? $defaultThresholdMinutes);
@@ -192,6 +261,12 @@ class PdvSyncAdminController extends Controller
                 ->count(),
             'gestao_db_failure' => (int) PdvSync::query()
                 ->whereJsonContains('risk_flags', 'gestao_db_failure')
+                ->count(),
+            'vendedor_null' => (int) PdvSync::query()
+                ->whereJsonContains('risk_flags', 'vendedor_null')
+                ->count(),
+            'meio_pagamento_null' => (int) PdvSync::query()
+                ->whereJsonContains('risk_flags', 'meio_pagamento_null')
                 ->count(),
         ];
 

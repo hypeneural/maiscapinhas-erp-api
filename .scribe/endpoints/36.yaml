@@ -1,18 +1,22 @@
-name: 'Admin - Store Permission Overrides'
-description: ''
+name: Comunicados
+description: |-
+
+  API para gerenciamento de comunicados.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/admin/stores/{store_id}/permission-overrides'
+    uri: api/v1/comunicados
     metadata:
       custom: []
-      groupName: 'Admin - Store Permission Overrides'
-      groupDescription: ''
+      groupName: Comunicados
+      groupDescription: |-
+
+        API para gerenciamento de comunicados.
       subgroup: ''
       subgroupDescription: ''
-      title: 'List all overrides for a store.'
+      title: 'Listar comunicados.'
       description: ''
       authenticated: true
       deprecated: false
@@ -20,234 +24,8 @@ endpoints:
       Authorization: 'Bearer {SEU_TOKEN}'
       Content-Type: application/json
       Accept: application/json
-    urlParameters:
-      store_id:
-        custom: []
-        name: store_id
-        description: 'The ID of the store.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      store_id: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 404
-        content: |-
-          {
-              "message": "The route api.maiscapinhas.com.br//api/v1/admin/stores/1/permission-overrides could not be found."
-          }
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-        description: null
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - POST
-    uri: 'api/v1/admin/stores/{store_id}/permission-overrides'
-    metadata:
-      custom: []
-      groupName: 'Admin - Store Permission Overrides'
-      groupDescription: ''
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Grant or deny a permission for all users in a store.'
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      store_id:
-        custom: []
-        name: store_id
-        description: 'The ID of the store.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      store_id: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      permission_id:
-        custom: []
-        name: permission_id
-        description: 'The <code>id</code> of an existing record in the permissions table.'
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      granted:
-        custom: []
-        name: granted
-        description: ''
-        required: true
-        example: true
-        type: boolean
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      permission_id: architecto
-      granted: true
-    fileParameters: []
-    responses: []
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - POST
-    uri: 'api/v1/admin/stores/{store_id}/permission-overrides/bulk'
-    metadata:
-      custom: []
-      groupName: 'Admin - Store Permission Overrides'
-      groupDescription: ''
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Bulk grant/deny permissions for a store.'
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      store_id:
-        custom: []
-        name: store_id
-        description: 'The ID of the store.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      store_id: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      overrides:
-        custom: []
-        name: overrides
-        description: 'Must have at least 1 items.'
-        required: true
-        example:
-          - []
-        type: 'object[]'
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      'overrides[].permission_id':
-        custom: []
-        name: 'overrides[].permission_id'
-        description: 'The <code>id</code> of an existing record in the permissions table.'
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      'overrides[].granted':
-        custom: []
-        name: 'overrides[].granted'
-        description: ''
-        required: true
-        example: true
-        type: boolean
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      overrides:
-        -
-          permission_id: architecto
-          granted: true
-    fileParameters: []
-    responses: []
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - DELETE
-    uri: 'api/v1/admin/stores/{store_id}/permission-overrides/clear'
-    metadata:
-      custom: []
-      groupName: 'Admin - Store Permission Overrides'
-      groupDescription: ''
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Remove all overrides for a store.'
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      store_id:
-        custom: []
-        name: store_id
-        description: 'The ID of the store.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      store_id: 1
+    urlParameters: []
+    cleanUrlParameters: []
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -265,15 +43,78 @@ endpoints:
   -
     custom: []
     httpMethods:
-      - PUT
-    uri: 'api/v1/admin/stores/{store_id}/permission-overrides/{override}'
+      - POST
+    uri: api/v1/comunicados
     metadata:
       custom: []
-      groupName: 'Admin - Store Permission Overrides'
-      groupDescription: ''
+      groupName: Comunicados
+      groupDescription: |-
+
+        API para gerenciamento de comunicados.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Update an existing store override.'
+      title: 'Criar comunicado.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      title:
+        custom: []
+        name: title
+        description: 'Must not be greater than 255 characters.'
+        required: true
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      description:
+        custom: []
+        name: description
+        description: ''
+        required: false
+        example: 'Eius et animi quos velit et.'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      title: b
+      description: 'Eius et animi quos velit et.'
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/comunicados/{id}'
+    metadata:
+      custom: []
+      groupName: Comunicados
+      groupDescription: |-
+
+        API para gerenciamento de comunicados.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Exibir comunicado.'
       description: ''
       authenticated: true
       deprecated: false
@@ -282,47 +123,108 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      store_id:
+      id:
         custom: []
-        name: store_id
-        description: 'The ID of the store.'
+        name: id
+        description: 'The ID of the comunicado.'
         required: true
-        example: 1
+        example: 16
         type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      override:
+    cleanUrlParameters:
+      id: 16
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: 'api/v1/comunicados/{id}'
+    metadata:
+      custom: []
+      groupName: Comunicados
+      groupDescription: |-
+
+        API para gerenciamento de comunicados.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Atualizar comunicado.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
         custom: []
-        name: override
-        description: ''
+        name: id
+        description: 'The ID of the comunicado.'
         required: true
-        example: architecto
-        type: string
+        example: 16
+        type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      store_id: 1
-      override: architecto
+      id: 16
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      granted:
+      title:
         custom: []
-        name: granted
+        name: title
+        description: 'Must not be greater than 255 characters.'
+        required: false
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      description:
+        custom: []
+        name: description
         description: ''
-        required: true
-        example: true
-        type: boolean
+        required: false
+        example: 'Eius et animi quos velit et.'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      status:
+        custom: []
+        name: status
+        description: ''
+        required: false
+        example: 16
+        type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      granted: true
+      title: b
+      description: 'Eius et animi quos velit et.'
+      status: 16
     fileParameters: []
     responses: []
     responseFields: []
@@ -337,14 +239,16 @@ endpoints:
     custom: []
     httpMethods:
       - DELETE
-    uri: 'api/v1/admin/stores/{store_id}/permission-overrides/{override}'
+    uri: 'api/v1/comunicados/{id}'
     metadata:
       custom: []
-      groupName: 'Admin - Store Permission Overrides'
-      groupDescription: ''
+      groupName: Comunicados
+      groupDescription: |-
+
+        API para gerenciamento de comunicados.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Remove an override (reverts to role-based permission).'
+      title: 'Excluir comunicado.'
       description: ''
       authenticated: true
       deprecated: false
@@ -353,31 +257,19 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      store_id:
+      id:
         custom: []
-        name: store_id
-        description: 'The ID of the store.'
+        name: id
+        description: 'The ID of the comunicado.'
         required: true
-        example: 1
+        example: 16
         type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      override:
-        custom: []
-        name: override
-        description: ''
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
     cleanUrlParameters:
-      store_id: 1
-      override: architecto
+      id: 16
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []

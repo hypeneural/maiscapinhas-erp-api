@@ -1,152 +1,90 @@
-name: 'WhatsApp - Mensagens'
-description: |-
-
-  Endpoints para envio de mensagens e verificação de números via WhatsApp.
-
-  Estes endpoints permitem que o sistema envie mensagens através
-  das instâncias WhatsApp configuradas.
-
-  **Autorização:**
-  - Super admin: acesso total a qualquer instância
-  - Usuários: acesso a instâncias do seu escopo (user/store/global)
-
-  **Resolução de Instância:**
-  Se não informar instance_id, o sistema resolve automaticamente:
-  1. Instância do usuário (se existir)
-  2. Instância da loja (se usuário tiver vínculo)
-  3. Instância global favorita
+name: 'Admin - Permissions'
+description: ''
 endpoints:
   -
     custom: []
     httpMethods:
-      - POST
-    uri: 'api/v1/whatsapp/instances/{instance_id}/messages/text'
+      - GET
+    uri: api/v1/admin/permissions
     metadata:
       custom: []
-      groupName: 'WhatsApp - Mensagens'
-      groupDescription: |-
-
-        Endpoints para envio de mensagens e verificação de números via WhatsApp.
-
-        Estes endpoints permitem que o sistema envie mensagens através
-        das instâncias WhatsApp configuradas.
-
-        **Autorização:**
-        - Super admin: acesso total a qualquer instância
-        - Usuários: acesso a instâncias do seu escopo (user/store/global)
-
-        **Resolução de Instância:**
-        Se não informar instance_id, o sistema resolve automaticamente:
-        1. Instância do usuário (se existir)
-        2. Instância da loja (se usuário tiver vínculo)
-        3. Instância global favorita
+      groupName: 'Admin - Permissions'
+      groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Enviar mensagem de texto'
-      description: 'Envia uma mensagem de texto via WhatsApp.'
+      title: 'List all permissions with filtering and grouping options.'
+      description: ''
       authenticated: true
       deprecated: false
     headers:
       Authorization: 'Bearer {SEU_TOKEN}'
       Content-Type: application/json
       Accept: application/json
-    urlParameters:
-      instance_id:
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      type:
         custom: []
-        name: instance_id
-        description: 'The ID of the instance.'
-        required: true
-        example: 4
-        type: integer
+        name: type
+        description: 'Filter by type: ability, screen, feature'
+        required: false
+        example: architecto
+        type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      instance:
+      module:
         custom: []
-        name: instance
-        description: 'ID da instância WhatsApp.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      instance_id: 4
-      instance: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      number:
-        custom: []
-        name: number
-        description: 'Número do destinatário (com DDI, só dígitos).'
-        required: true
-        example: '5548999999999'
+        name: module
+        description: 'Filter by module name'
+        required: false
+        example: architecto
         type: string
         enumValues: []
-        exampleWasSpecified: true
+        exampleWasSpecified: false
         nullable: false
         deprecated: false
-      text:
+      search:
         custom: []
-        name: text
-        description: 'Texto da mensagem (max 4000 chars).'
-        required: true
-        example: 'Olá! Seu pedido está pronto.'
+        name: search
+        description: 'Search in name or display_name'
+        required: false
+        example: architecto
         type: string
         enumValues: []
-        exampleWasSpecified: true
+        exampleWasSpecified: false
         nullable: false
         deprecated: false
-    cleanBodyParameters:
-      number: '5548999999999'
-      text: 'Olá! Seu pedido está pronto.'
+      group_by:
+        custom: []
+        name: group_by
+        description: 'Group results by: module, type'
+        required: false
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      type: architecto
+      module: architecto
+      search: architecto
+      group_by: architecto
+    bodyParameters: []
+    cleanBodyParameters: []
     fileParameters: []
     responses:
       -
         custom: []
-        status: 200
-        content: |-
-          {
-            "data": {
-              "ok": true,
-              "message_id": "3EB0C767D097B3C5C12345",
-              "provider_data": { "key": { "id": "..." } }
-            }
-          }
-        headers: []
-        description: 'Mensagem enviada'
-      -
-        custom: []
-        status: 403
-        content: |-
-          {
-            "message": "Instância não está ativa."
-          }
-        headers: []
-        description: 'Instância inativa'
-      -
-        custom: []
-        status: 422
-        content: |-
-          {
-            "message": "Instância sem API Key configurada."
-          }
-        headers: []
-        description: 'Instância sem API Key'
-      -
-        custom: []
-        status: 502
-        content: |-
-          {
-            "message": "Erro ao enviar mensagem.",
-            "errors": { "provider_status": 500 }
-          }
-        headers: []
-        description: 'Erro no provedor'
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
     responseFields: []
     auth:
       - headers
@@ -159,149 +97,277 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: 'api/v1/whatsapp/instances/{instance_id}/messages/media'
+    uri: api/v1/admin/permissions
     metadata:
       custom: []
-      groupName: 'WhatsApp - Mensagens'
-      groupDescription: |-
-
-        Endpoints para envio de mensagens e verificação de números via WhatsApp.
-
-        Estes endpoints permitem que o sistema envie mensagens através
-        das instâncias WhatsApp configuradas.
-
-        **Autorização:**
-        - Super admin: acesso total a qualquer instância
-        - Usuários: acesso a instâncias do seu escopo (user/store/global)
-
-        **Resolução de Instância:**
-        Se não informar instance_id, o sistema resolve automaticamente:
-        1. Instância do usuário (se existir)
-        2. Instância da loja (se usuário tiver vínculo)
-        3. Instância global favorita
+      groupName: 'Admin - Permissions'
+      groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Enviar mensagem com mídia'
-      description: 'Envia uma mensagem com mídia (imagem, vídeo, documento, áudio) via WhatsApp.'
+      title: 'Create a new permission.'
+      description: ''
       authenticated: true
       deprecated: false
     headers:
       Authorization: 'Bearer {SEU_TOKEN}'
       Content-Type: application/json
       Accept: application/json
-    urlParameters:
-      instance_id:
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      name:
         custom: []
-        name: instance_id
-        description: 'The ID of the instance.'
+        name: name
+        description: 'Must match the regex /^[a-z0-9\-\.]+$/. Must not be greater than 100 characters.'
         required: true
-        example: 4
-        type: integer
+        example: b
+        type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      instance:
+      display_name:
         custom: []
-        name: instance
-        description: 'ID da instância WhatsApp.'
+        name: display_name
+        description: 'Must not be greater than 150 characters.'
         required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      instance_id: 4
-      instance: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      number:
-        custom: []
-        name: number
-        description: 'Número do destinatário (com DDI).'
-        required: true
-        example: '5548999999999'
+        example: 'n'
         type: string
         enumValues: []
-        exampleWasSpecified: true
+        exampleWasSpecified: false
         nullable: false
         deprecated: false
-      mediatype:
+      type:
         custom: []
-        name: mediatype
-        description: 'Tipo: image, video, document, audio.'
+        name: type
+        description: ''
         required: true
-        example: image
+        example: architecto
         type: string
         enumValues: []
-        exampleWasSpecified: true
+        exampleWasSpecified: false
         nullable: false
         deprecated: false
-      mimetype:
+      module:
         custom: []
-        name: mimetype
-        description: 'MIME type do arquivo.'
+        name: module
+        description: 'Must not be greater than 50 characters.'
         required: true
-        example: image/jpeg
+        example: 'n'
         type: string
         enumValues: []
-        exampleWasSpecified: true
+        exampleWasSpecified: false
         nullable: false
         deprecated: false
-      media:
+      description:
         custom: []
-        name: media
-        description: 'URL pública do arquivo.'
-        required: true
-        example: 'https://example.com/image.jpg'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      fileName:
-        custom: []
-        name: fileName
-        description: 'Nome do arquivo (para documents).'
+        name: description
+        description: 'Must not be greater than 500 characters.'
         required: false
-        example: documento.pdf
+        example: 'Animi quos velit et fugiat.'
         type: string
         enumValues: []
-        exampleWasSpecified: true
+        exampleWasSpecified: false
         nullable: true
         deprecated: false
-      caption:
+      sort_order:
         custom: []
-        name: caption
-        description: 'Legenda da mídia.'
+        name: sort_order
+        description: 'Must be at least 0.'
         required: false
-        example: 'Aqui está seu comprovante!'
-        type: string
+        example: 42
+        type: integer
         enumValues: []
-        exampleWasSpecified: true
+        exampleWasSpecified: false
         nullable: true
         deprecated: false
     cleanBodyParameters:
-      number: '5548999999999'
-      mediatype: image
-      mimetype: image/jpeg
-      media: 'https://example.com/image.jpg'
-      fileName: documento.pdf
-      caption: 'Aqui está seu comprovante!'
+      name: b
+      display_name: 'n'
+      type: architecto
+      module: 'n'
+      description: 'Animi quos velit et fugiat.'
+      sort_order: 42
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/admin/permissions/grouped
+    metadata:
+      custom: []
+      groupName: 'Admin - Permissions'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get permissions grouped by module (optimized for frontend).'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
     fileParameters: []
     responses:
       -
         custom: []
-        status: 200
-        content: |-
-          {
-            "data": { "ok": true, "message_id": "3EB0C767D097B3C5C12345" }
-          }
-        headers: []
-        description: 'Mídia enviada'
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/admin/permissions/by-type
+    metadata:
+      custom: []
+      groupName: 'Admin - Permissions'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get permissions organized by type (abilities, screens, features).'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/admin/permissions/modules
+    metadata:
+      custom: []
+      groupName: 'Admin - Permissions'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get list of available modules.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/admin/permissions/conventions
+    metadata:
+      custom: []
+      groupName: 'Admin - Permissions'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get permission naming conventions and examples.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
     responseFields: []
     auth:
       - headers
@@ -314,99 +380,725 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: 'api/v1/whatsapp/instances/{instance_id}/numbers/check'
+    uri: api/v1/admin/permissions/bulk
     metadata:
       custom: []
-      groupName: 'WhatsApp - Mensagens'
-      groupDescription: |-
-
-        Endpoints para envio de mensagens e verificação de números via WhatsApp.
-
-        Estes endpoints permitem que o sistema envie mensagens através
-        das instâncias WhatsApp configuradas.
-
-        **Autorização:**
-        - Super admin: acesso total a qualquer instância
-        - Usuários: acesso a instâncias do seu escopo (user/store/global)
-
-        **Resolução de Instância:**
-        Se não informar instance_id, o sistema resolve automaticamente:
-        1. Instância do usuário (se existir)
-        2. Instância da loja (se usuário tiver vínculo)
-        3. Instância global favorita
+      groupName: 'Admin - Permissions'
+      groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Verificar números WhatsApp'
-      description: 'Verifica se uma lista de números possui WhatsApp.'
+      title: 'Bulk create permissions.'
+      description: ''
       authenticated: true
       deprecated: false
     headers:
       Authorization: 'Bearer {SEU_TOKEN}'
       Content-Type: application/json
       Accept: application/json
-    urlParameters:
-      instance_id:
-        custom: []
-        name: instance_id
-        description: 'The ID of the instance.'
-        required: true
-        example: 4
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      instance:
-        custom: []
-        name: instance
-        description: 'ID da instância WhatsApp.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      instance_id: 4
-      instance: 1
+    urlParameters: []
+    cleanUrlParameters: []
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      numbers:
+      permissions:
         custom: []
-        name: numbers
-        description: 'Lista de números (max 200).'
+        name: permissions
+        description: 'Must have at least 1 items.'
         required: true
         example:
-          - '5548999999999'
-          - '5548888888888'
+          - []
+        type: 'object[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'permissions[].name':
+        custom: []
+        name: 'permissions[].name'
+        description: 'Must match the regex /^[a-z0-9\-\.]+$/. Must not be greater than 100 characters.'
+        required: true
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'permissions[].display_name':
+        custom: []
+        name: 'permissions[].display_name'
+        description: 'Must not be greater than 150 characters.'
+        required: true
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'permissions[].type':
+        custom: []
+        name: 'permissions[].type'
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'permissions[].module':
+        custom: []
+        name: 'permissions[].module'
+        description: 'Must not be greater than 50 characters.'
+        required: true
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'permissions[].description':
+        custom: []
+        name: 'permissions[].description'
+        description: 'Must not be greater than 500 characters.'
+        required: false
+        example: 'Animi quos velit et fugiat.'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      permissions:
+        -
+          name: b
+          display_name: 'n'
+          type: architecto
+          module: 'n'
+          description: 'Animi quos velit et fugiat.'
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/admin/permissions/preview
+    metadata:
+      custom: []
+      groupName: 'Admin - Permissions'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Preview permission changes before applying.'
+      description: 'Shows what permissions will be added/removed.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      user_id:
+        custom: []
+        name: user_id
+        description: 'The <code>id</code> of an existing record in the users table.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      add_permissions:
+        custom: []
+        name: add_permissions
+        description: 'The <code>name</code> of an existing record in the permissions table.'
+        required: false
+        example:
+          - architecto
         type: 'string[]'
         enumValues: []
-        exampleWasSpecified: true
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      remove_permissions:
+        custom: []
+        name: remove_permissions
+        description: 'The <code>name</code> of an existing record in the permissions table.'
+        required: false
+        example:
+          - architecto
+        type: 'string[]'
+        enumValues: []
+        exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      numbers:
-        - '5548999999999'
-        - '5548888888888'
+      user_id: 16
+      add_permissions:
+        - architecto
+      remove_permissions:
+        - architecto
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/admin/permissions/bulk-grant
+    metadata:
+      custom: []
+      groupName: 'Admin - Permissions'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Bulk grant permissions to multiple users.'
+      description: 'Limited to 10 users per request for safety.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      user_ids:
+        custom: []
+        name: user_ids
+        description: 'The <code>id</code> of an existing record in the users table.'
+        required: false
+        example:
+          - 16
+        type: 'integer[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      permissions:
+        custom: []
+        name: permissions
+        description: 'The <code>name</code> of an existing record in the permissions table.'
+        required: false
+        example:
+          - architecto
+        type: 'string[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      expires_at:
+        custom: []
+        name: expires_at
+        description: 'Must be a valid date. Must be a date after <code>now</code>.'
+        required: false
+        example: '2052-03-07'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      reason:
+        custom: []
+        name: reason
+        description: 'Must not be greater than 500 characters.'
+        required: false
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      user_ids:
+        - 16
+      permissions:
+        - architecto
+      expires_at: '2052-03-07'
+      reason: 'n'
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/admin/permissions/most-granted
+    metadata:
+      custom: []
+      groupName: 'Admin - Permissions'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get most granted permissions via overrides.'
+      description: 'Useful for UX: show popular permissions when adding overrides.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
     fileParameters: []
     responses:
       -
         custom: []
-        status: 200
-        content: |-
-          {
-            "data": {
-              "ok": true,
-              "results": [
-                { "number": "5548999999999", "exists": true, "jid": "5548999999999@s.whatsapp.net" },
-                { "number": "5548888888888", "exists": false, "jid": null }
-              ]
-            }
-          }
-        headers: []
-        description: 'Verificação realizada'
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/admin/permissions/{id}'
+    metadata:
+      custom: []
+      groupName: 'Admin - Permissions'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get a specific permission.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the permission.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+    uri: 'api/v1/admin/permissions/{id}'
+    metadata:
+      custom: []
+      groupName: 'Admin - Permissions'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Update a permission.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the permission.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      name:
+        custom: []
+        name: name
+        description: 'Must match the regex /^[a-z0-9\-\.]+$/. Must not be greater than 100 characters.'
+        required: false
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      display_name:
+        custom: []
+        name: display_name
+        description: 'Must not be greater than 150 characters.'
+        required: false
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      type:
+        custom: []
+        name: type
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      module:
+        custom: []
+        name: module
+        description: 'Must not be greater than 50 characters.'
+        required: false
+        example: g
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      description:
+        custom: []
+        name: description
+        description: 'Must not be greater than 500 characters.'
+        required: false
+        example: 'Quos velit et fugiat sunt nihil accusantium harum.'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      sort_order:
+        custom: []
+        name: sort_order
+        description: 'Must be at least 0.'
+        required: false
+        example: 8
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      name: b
+      display_name: 'n'
+      module: g
+      description: 'Quos velit et fugiat sunt nihil accusantium harum.'
+      sort_order: 8
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/v1/admin/permissions/{id}'
+    metadata:
+      custom: []
+      groupName: 'Admin - Permissions'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Delete a permission.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the permission.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/admin/permissions/{permission}/users'
+    metadata:
+      custom: []
+      groupName: 'Admin - Permissions'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get users who have a specific permission.'
+      description: 'Useful for audit: "Who can delete orders?"'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      permission:
+        custom: []
+        name: permission
+        description: 'The permission.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      permission: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/admin/users/{user}/permissions/copy-from/{source}'
+    metadata:
+      custom: []
+      groupName: 'Admin - Permissions'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Copy permissions from one user to another.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      user:
+        custom: []
+        name: user
+        description: 'The user.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      source:
+        custom: []
+        name: source
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      user: 1
+      source: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      include_temporary:
+        custom: []
+        name: include_temporary
+        description: ''
+        required: false
+        example: false
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      expires_at:
+        custom: []
+        name: expires_at
+        description: 'Must be a valid date. Must be a date after <code>now</code>.'
+        required: false
+        example: '2052-03-07'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      include_temporary: false
+      expires_at: '2052-03-07'
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/admin/users/{user}/permissions/audit-log'
+    metadata:
+      custom: []
+      groupName: 'Admin - Permissions'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: "Get audit log for a user's permissions."
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      user:
+        custom: []
+        name: user
+        description: 'The user.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      user: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
     responseFields: []
     auth:
       - headers

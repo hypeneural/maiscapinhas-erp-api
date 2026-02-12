@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Pdv\PdvReportsRankingVendedorLojaRequest;
+use App\Http\Requests\Pdv\PdvReportsRankingVendedoresRequest;
+use App\Http\Requests\Pdv\PdvReportsTurnosRequest;
+use App\Http\Requests\Pdv\PdvReportsVendasRequest;
 use App\Http\Traits\ApiResponse;
 use App\Support\Audit\AuditContext;
 use Carbon\CarbonImmutable;
@@ -16,40 +20,77 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * @group PDV - Relatorios
+ *
+ * Endpoints de consulta e analytics do PDV Sync v3.
+ *
+ * Escopo:
+ * - Vendas por periodo, vendedor, canal, turno e meio de pagamento
+ * - Turnos com totais de sistema/declarado/falta
+ * - Rankings de vendedores e vendedor x loja
+ *
+ * Autorizacao:
+ * - Requer `auth:sanctum`
+ * - Usuario comum: apenas lojas vinculadas em `store_users`
+ * - Super admin: visao global
+ */
 class PdvReportsController extends Controller
 {
     use ApiResponse;
 
-    public function turnos(Request $request): JsonResponse
+    /**
+     * Listar turnos PDV por data
+     *
+     * Retorna os turnos da data informada com consolidado de fechamento de caixa
+     * e totais por tipo de pagamento (`sistema`, `declarado`, `falta`).
+     *
+     * @authenticated
+     * @queryParam store_id integer ID da loja interna (`stores.id`). Obrigatorio se `store_pdv_id` nao for informado. Example: 1
+     * @queryParam store_pdv_id integer ID da loja no PDV (`store.id_ponto_venda`). Obrigatorio se `store_id` nao for informado. Example: 13
+     * @queryParam date string required Data de referencia no formato `YYYY-MM-DD`. Example: 2026-02-12
+     * @queryParam sequencial integer Filtrar por numero sequencial do turno. Example: 2
+     * @queryParam periodo string Filtrar por periodo do turno. Valores: `MATUTINO`, `VESPERTINO`, `NOTURNO`. Example: MATUTINO
+     * @queryParam fechado boolean Filtrar status do turno (`true/false` ou `1/0`). Example: true
+     * @queryParam operador_id integer Filtrar por operador do turno (`operador_pdv_id`). Example: 12
+     * @queryParam responsavel_id integer Filtrar por responsavel do turno (`responsavel_pdv_id`). Example: 80
+     *
+     * @response 200 {
+     *   "data": {
+     *     "filters": {
+     *       "store_id": 1,
+     *       "store_pdv_id": 13,
+     *       "date": "2026-02-12",
+     *       "sequencial": null,
+     *       "periodo": null,
+     *       "fechado": null,
+     *       "operador_id": null,
+     *       "responsavel_id": null
+     *     },
+     *     "summary": {
+     *       "qtd_turnos": 1,
+     *       "qtd_turnos_fechados": 1,
+     *       "qtd_turnos_falta": 1,
+     *       "qtd_turnos_sobra": 0,
+     *       "qtd_turnos_conferido": 0,
+     *       "total_sistema": 1250.9,
+     *       "total_declarado": 1240,
+     *       "total_falta": 10.9,
+     *       "total_falta_absoluto": 10.9
+     *     },
+     *     "turnos": []
+     *   },
+     *   "meta": {
+     *     "request_id": "req-123",
+     *     "timestamp": "2026-02-12T10:00:00+00:00"
+     *   }
+     * }
+     * @response 403 {"message":"Voce nao tem acesso a esta loja."}
+     * @response 422 {"message":"The given data was invalid.","errors":{"store":["Informe store_id ou store_pdv_id."]}}
+     */
+    public function turnos(PdvReportsTurnosRequest $request): JsonResponse
     {
-        $validated = $request->validate(
-            [
-                'store_id' => ['nullable', 'integer', 'exists:stores,id'],
-                'store_pdv_id' => ['nullable', 'integer', 'min:1'],
-                'date' => ['required', 'date'],
-                'sequencial' => ['nullable', 'integer', 'min:1'],
-                'periodo' => ['nullable', 'string', 'in:MATUTINO,VESPERTINO,NOTURNO'],
-                'fechado' => ['nullable', 'boolean'],
-                'operador_id' => ['nullable', 'integer', 'min:1'],
-                'responsavel_id' => ['nullable', 'integer', 'min:1'],
-            ],
-            [
-                'store_id.integer' => 'O campo store_id deve ser numerico.',
-                'store_id.exists' => 'A loja informada em store_id nao foi encontrada.',
-                'store_pdv_id.integer' => 'O campo store_pdv_id deve ser numerico.',
-                'store_pdv_id.min' => 'O campo store_pdv_id deve ser maior que zero.',
-                'date.required' => 'O campo date e obrigatorio.',
-                'date.date' => 'O campo date deve estar no formato de data valido (YYYY-MM-DD).',
-                'sequencial.integer' => 'O campo sequencial deve ser numerico.',
-                'sequencial.min' => 'O campo sequencial deve ser maior que zero.',
-                'periodo.in' => 'O campo periodo deve ser MATUTINO, VESPERTINO ou NOTURNO.',
-                'fechado.boolean' => 'O campo fechado deve ser true/false (ou 1/0).',
-                'operador_id.integer' => 'O campo operador_id deve ser numerico.',
-                'operador_id.min' => 'O campo operador_id deve ser maior que zero.',
-                'responsavel_id.integer' => 'O campo responsavel_id deve ser numerico.',
-                'responsavel_id.min' => 'O campo responsavel_id deve ser maior que zero.',
-            ]
-        );
+        $validated = $request->validated();
 
         $storeId = isset($validated['store_id']) ? (int) $validated['store_id'] : null;
         $storePdvId = isset($validated['store_pdv_id']) ? (int) $validated['store_pdv_id'] : null;
@@ -186,43 +227,52 @@ class PdvReportsController extends Controller
         ]);
     }
 
-    public function vendas(Request $request): JsonResponse
+    /**
+     * Listar vendas PDV com filtros inteligentes
+     *
+     * Retorna vendas com agregados de itens e pagamentos por operacao.
+     *
+     * @authenticated
+     * @queryParam store_id integer ID da loja interna (`stores.id`). Example: 1
+     * @queryParam store_pdv_id integer ID da loja no PDV (`store.id_ponto_venda`). Example: 13
+     * @queryParam from string Data inicial (`YYYY-MM-DD`). Default: hoje-30d. Example: 2026-02-01
+     * @queryParam to string Data final (`YYYY-MM-DD`). Default: hoje. Example: 2026-02-12
+     * @queryParam vendedor_id integer Filtrar por vendedor (`vendedor_pdv_id`). Example: 80
+     * @queryParam canal string Filtrar por canal. Valores: `HIPER_CAIXA`, `HIPER_LOJA`. Example: HIPER_LOJA
+     * @queryParam id_turno string Filtrar por ID de turno (UUID/string). Example: 656335C4-D6C4-455A-8E3D-FF6B3F570C64
+     * @queryParam id_finalizador integer Filtrar por finalizador (ex.: Pix, credito). Example: 5
+     * @queryParam meio_pagamento string Filtrar por nome do meio de pagamento. Example: Pix
+     * @queryParam per_page integer Tamanho da pagina (1-100). Default: 25. Example: 25
+     * @queryParam sort string Ordenacao por data. Valores: `asc`, `desc`. Default: `desc`. Example: desc
+     *
+     * @response 200 {
+     *   "data": [
+     *     {
+     *       "store_id": 1,
+     *       "store_pdv_id": 13,
+     *       "id_operacao": 12345,
+     *       "canal": "HIPER_CAIXA",
+     *       "id_turno": "656335C4-D6C4-455A-8E3D-FF6B3F570C64",
+     *       "data_hora": "2026-02-12T09:55:00+00:00",
+     *       "total": 49.9,
+     *       "itens": {"qtd_linhas": 1, "qtd_total": 1, "valor_total": 49.9},
+     *       "pagamentos": {"qtd_linhas": 1, "valor_total": 50}
+     *     }
+     *   ],
+     *   "summary": {"total_vendas": 1, "total_vendido": 49.9},
+     *   "filters": {"canal": "HIPER_CAIXA"},
+     *   "meta": {
+     *     "request_id": "req-123",
+     *     "timestamp": "2026-02-12T10:00:00+00:00",
+     *     "pagination": {"total": 1, "per_page": 25, "current_page": 1, "last_page": 1}
+     *   }
+     * }
+     * @response 403 {"message":"Voce nao tem acesso a esta loja."}
+     * @response 422 {"message":"The given data was invalid.","errors":{"to":["O campo to deve ser maior ou igual ao campo from."]}}
+     */
+    public function vendas(PdvReportsVendasRequest $request): JsonResponse
     {
-        $validated = $request->validate(
-            [
-                'store_id' => ['nullable', 'integer', 'exists:stores,id'],
-                'store_pdv_id' => ['nullable', 'integer', 'min:1'],
-                'from' => ['nullable', 'date'],
-                'to' => ['nullable', 'date', 'after_or_equal:from'],
-                'vendedor_id' => ['nullable', 'integer', 'min:1'],
-                'canal' => ['nullable', 'string', 'in:HIPER_CAIXA,HIPER_LOJA'],
-                'id_turno' => ['nullable', 'string', 'max:64'],
-                'id_finalizador' => ['nullable', 'integer', 'min:1'],
-                'meio_pagamento' => ['nullable', 'string', 'max:120'],
-                'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
-                'sort' => ['nullable', 'string', 'in:asc,desc'],
-            ],
-            [
-                'store_id.integer' => 'O campo store_id deve ser numerico.',
-                'store_id.exists' => 'A loja informada em store_id nao foi encontrada.',
-                'store_pdv_id.integer' => 'O campo store_pdv_id deve ser numerico.',
-                'store_pdv_id.min' => 'O campo store_pdv_id deve ser maior que zero.',
-                'from.date' => 'O campo from deve ser uma data valida.',
-                'to.date' => 'O campo to deve ser uma data valida.',
-                'to.after_or_equal' => 'O campo to deve ser maior ou igual ao campo from.',
-                'vendedor_id.integer' => 'O campo vendedor_id deve ser numerico.',
-                'vendedor_id.min' => 'O campo vendedor_id deve ser maior que zero.',
-                'canal.in' => 'O campo canal deve ser HIPER_CAIXA ou HIPER_LOJA.',
-                'id_turno.max' => 'O campo id_turno excede o tamanho maximo permitido.',
-                'id_finalizador.integer' => 'O campo id_finalizador deve ser numerico.',
-                'id_finalizador.min' => 'O campo id_finalizador deve ser maior que zero.',
-                'meio_pagamento.max' => 'O campo meio_pagamento excede o tamanho maximo permitido.',
-                'per_page.integer' => 'O campo per_page deve ser numerico.',
-                'per_page.min' => 'O campo per_page deve ser maior que zero.',
-                'per_page.max' => 'O campo per_page nao pode ser maior que 100.',
-                'sort.in' => 'O campo sort deve ser asc ou desc.',
-            ]
-        );
+        $validated = $request->validated();
 
         $storeId = isset($validated['store_id']) ? (int) $validated['store_id'] : null;
         $storePdvId = isset($validated['store_pdv_id']) ? (int) $validated['store_pdv_id'] : null;
@@ -395,18 +445,44 @@ class PdvReportsController extends Controller
         ]);
     }
 
-    public function rankingVendedores(Request $request): JsonResponse
+    /**
+     * Ranking de vendedores por periodo
+     *
+     * Consolida vendas por vendedor a partir de `pdv_venda_itens` + `pdv_vendas`.
+     *
+     * Regras de periodo:
+     * - Se `from/to` forem enviados, eles prevalecem sobre `mode`
+     * - Sem `from/to`, usa `mode` + `reference_date`
+     *
+     * @authenticated
+     * @queryParam mode string Modo de periodo: `daily`, `weekly`, `monthly`. Default: `monthly`. Example: monthly
+     * @queryParam reference_date string Data base para `mode` (`YYYY-MM-DD`). Example: 2026-02-12
+     * @queryParam from string Data inicial custom (`YYYY-MM-DD`). Example: 2026-02-01
+     * @queryParam to string Data final custom (`YYYY-MM-DD`). Example: 2026-02-12
+     * @queryParam store_id integer Filtrar por loja interna. Example: 1
+     * @queryParam store_pdv_id integer Filtrar por loja PDV. Example: 13
+     * @queryParam canal string Filtrar por canal (`HIPER_CAIXA` ou `HIPER_LOJA`). Example: HIPER_CAIXA
+     * @queryParam limit integer Limite de linhas do ranking (1-200). Default: 50. Example: 20
+     *
+     * @response 200 {
+     *   "data": {
+     *     "mode": "monthly",
+     *     "period": {
+     *       "from": "2026-02-01T00:00:00+00:00",
+     *       "to": "2026-02-28T23:59:59+00:00"
+     *     },
+     *     "filters": {"store_id": 1, "store_pdv_id": 13, "canal": null, "limit": 50},
+     *     "summary": {"vendedores": 2, "total_vendido": 10000, "qtd_vendas": 120, "total_itens": 280},
+     *     "ranking": [{"position": 1, "vendedor_id": 80, "vendedor_nome": "Daren", "qtd_vendas": 70, "total_vendido": 6200, "total_itens": 170}]
+     *   },
+     *   "meta": {"request_id": "req-123", "timestamp": "2026-02-12T10:00:00+00:00"}
+     * }
+     * @response 403 {"message":"Voce nao tem acesso a esta loja."}
+     * @response 422 {"message":"The given data was invalid.","errors":{"mode":["The selected mode is invalid."]}}
+     */
+    public function rankingVendedores(PdvReportsRankingVendedoresRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'mode' => ['nullable', 'string', 'in:daily,weekly,monthly'],
-            'reference_date' => ['nullable', 'date'],
-            'from' => ['nullable', 'date'],
-            'to' => ['nullable', 'date', 'after_or_equal:from'],
-            'store_id' => ['nullable', 'integer', 'exists:stores,id'],
-            'store_pdv_id' => ['nullable', 'integer', 'min:1'],
-            'canal' => ['nullable', 'string', 'in:HIPER_CAIXA,HIPER_LOJA'],
-            'limit' => ['nullable', 'integer', 'min:1', 'max:200'],
-        ]);
+        $validated = $request->validated();
 
         $storeId = isset($validated['store_id']) ? (int) $validated['store_id'] : null;
         $storePdvId = isset($validated['store_pdv_id']) ? (int) $validated['store_pdv_id'] : null;
@@ -476,19 +552,50 @@ class PdvReportsController extends Controller
         ]);
     }
 
-    public function rankingVendedorLoja(Request $request): JsonResponse
+    /**
+     * Ranking vendedor x loja por periodo
+     *
+     * Consolida performance por combinacao `store` + `vendedor`, com paginacao.
+     *
+     * @authenticated
+     * @queryParam from string required Data inicial (`YYYY-MM-DD`). Example: 2026-02-01
+     * @queryParam to string required Data final (`YYYY-MM-DD`). Example: 2026-02-12
+     * @queryParam store_id integer Filtrar por loja interna. Example: 1
+     * @queryParam store_pdv_id integer Filtrar por loja PDV. Example: 13
+     * @queryParam vendedor_id integer Filtrar por vendedor. Example: 80
+     * @queryParam canal string Filtrar por canal (`HIPER_CAIXA` ou `HIPER_LOJA`). Example: HIPER_CAIXA
+     * @queryParam sort_by string Campo de ordenacao: `total_vendido`, `qtd_vendas`, `total_itens`. Default: `total_vendido`. Example: total_vendido
+     * @queryParam sort string Direcao da ordenacao: `asc` ou `desc`. Default: `desc`. Example: desc
+     * @queryParam per_page integer Tamanho da pagina (1-200). Default: 50. Example: 50
+     *
+     * @response 200 {
+     *   "data": [
+     *     {
+     *       "position": 1,
+     *       "store_id": 2,
+     *       "store_pdv_id": 14,
+     *       "store_nome": "Loja Centro",
+     *       "vendedor_id": 80,
+     *       "vendedor_nome": "Daren",
+     *       "qtd_vendas": 32,
+     *       "total_vendido": 8450,
+     *       "total_itens": 126
+     *     }
+     *   ],
+     *   "summary": {"linhas": 1, "total_vendido": 8450, "qtd_vendas": 32, "total_itens": 126},
+     *   "filters": {"canal": "HIPER_CAIXA", "sort_by": "total_vendido", "sort": "desc"},
+     *   "meta": {
+     *     "request_id": "req-123",
+     *     "timestamp": "2026-02-12T10:00:00+00:00",
+     *     "pagination": {"total": 1, "per_page": 50, "current_page": 1, "last_page": 1}
+     *   }
+     * }
+     * @response 403 {"message":"Voce nao tem acesso a esta loja."}
+     * @response 422 {"message":"The given data was invalid.","errors":{"from":["The from field is required."]}}
+     */
+    public function rankingVendedorLoja(PdvReportsRankingVendedorLojaRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'from' => ['required', 'date'],
-            'to' => ['required', 'date', 'after_or_equal:from'],
-            'store_id' => ['nullable', 'integer', 'exists:stores,id'],
-            'store_pdv_id' => ['nullable', 'integer', 'min:1'],
-            'vendedor_id' => ['nullable', 'integer', 'min:1'],
-            'canal' => ['nullable', 'string', 'in:HIPER_CAIXA,HIPER_LOJA'],
-            'sort_by' => ['nullable', 'string', 'in:total_vendido,qtd_vendas,total_itens'],
-            'sort' => ['nullable', 'string', 'in:asc,desc'],
-            'per_page' => ['nullable', 'integer', 'min:1', 'max:200'],
-        ]);
+        $validated = $request->validated();
 
         $storeId = isset($validated['store_id']) ? (int) $validated['store_id'] : null;
         $storePdvId = isset($validated['store_pdv_id']) ? (int) $validated['store_pdv_id'] : null;

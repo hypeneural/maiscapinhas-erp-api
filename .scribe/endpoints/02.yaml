@@ -1,27 +1,549 @@
-name: Bio
+name: Autenticação
 description: |-
 
-  Endpoints públicos para exibição na Bio do Instagram.
-  Estes endpoints não requerem autenticação.
+  Endpoints para autenticação via Bearer Token (Sanctum).
+  A API suporta dois modos de autenticação:
+
+  1. **Bearer Token** (recomendado para desenvolvimento e integrações)
+  2. **Cookie SPA** (para frontends React/Vue com `withCredentials`)
+
+  **Auditoria:** Todas as ações de autenticação (login, logout) são
+  registradas no log de auditoria com IP e user-agent.
 endpoints:
   -
     custom: []
     httpMethods:
-      - GET
-    uri: api/v1/bio/stores
+      - POST
+    uri: api/v1/auth/login
     metadata:
       custom: []
-      groupName: Bio
+      groupName: Autenticação
       groupDescription: |-
 
-        Endpoints públicos para exibição na Bio do Instagram.
-        Estes endpoints não requerem autenticação.
+        Endpoints para autenticação via Bearer Token (Sanctum).
+        A API suporta dois modos de autenticação:
+
+        1. **Bearer Token** (recomendado para desenvolvimento e integrações)
+        2. **Cookie SPA** (para frontends React/Vue com `withCredentials`)
+
+        **Auditoria:** Todas as ações de autenticação (login, logout) são
+        registradas no log de auditoria com IP e user-agent.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Listar lojas habilitadas para Bio'
+      title: 'Fazer login e obter token'
       description: |-
-        Retorna todas as lojas ativas com bio_enabled = true.
-        Este endpoint é público e não requer autenticação.
+        Autentica o usuário e retorna um Bearer Token para uso nas próximas requisições.
+
+        **Quem pode usar:** Qualquer usuário ativo com email e senha válidos.
+
+        **Regras de negócio:**
+        - Usuários inativos (`active = false`) não podem fazer login
+        - O token não expira automaticamente, mas pode ser revogado via logout
+        - Cada login gera um novo token (múltiplos dispositivos são permitidos)
+        - Todas as tentativas de login são registradas para auditoria
+
+        **Erros possíveis:**
+        - `422` - Credenciais inválidas ou conta desativada
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
+        custom: []
+        name: email
+        description: 'Email do usuário.'
+        required: true
+        example: admin@maiscapinhas.com.br
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      password:
+        custom: []
+        name: password
+        description: 'Senha do usuário.'
+        required: true
+        example: password
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      device_name:
+        custom: []
+        name: device_name
+        description: 'Nome do dispositivo (opcional, usado para identificar tokens).'
+        required: false
+        example: postman-dev
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      email: admin@maiscapinhas.com.br
+      password: password
+      device_name: postman-dev
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "token": "1|abc123xyz...",
+              "token_type": "Bearer",
+              "user": {
+                "id": 1,
+                "name": "Admin Sistema",
+                "email": "admin@maiscapinhas.com.br"
+              }
+            },
+            "meta": { "request_id": "abc-123", "timestamp": "2026-01-07T12:00:00Z" }
+          }
+        headers: []
+        description: 'Login bem-sucedido'
+      -
+        custom: []
+        status: 422
+        content: |-
+          {
+            "message": "The provided credentials are incorrect.",
+            "errors": { "email": ["The provided credentials are incorrect."] }
+          }
+        headers: []
+        description: 'Credenciais inválidas'
+      -
+        custom: []
+        status: 422
+        content: |-
+          {
+            "message": "This account is deactivated.",
+            "errors": { "email": ["This account is deactivated."] }
+          }
+        headers: []
+        description: 'Conta desativada'
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/auth/forgot-password
+    metadata:
+      custom: []
+      groupName: Autenticação
+      groupDescription: |-
+
+        Endpoints para recuperação e alteração de senha.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Solicitar recuperação de senha'
+      description: |-
+        Envia um email com link para redefinir a senha.
+        O link expira em 60 minutos.
+
+        **Quem pode usar:** Qualquer usuário com email cadastrado.
+
+        **Rate Limit:** 3 tentativas por minuto por IP.
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
+        custom: []
+        name: email
+        description: 'Email cadastrado.'
+        required: true
+        example: joao@maiscapinhas.com.br
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      email: joao@maiscapinhas.com.br
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": { "message": "Email de recuperação enviado." },
+            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+          }
+        headers: []
+        description: 'Email enviado'
+      -
+        custom: []
+        status: 422
+        content: |-
+          {
+            "message": "Não encontramos um usuário com esse email."
+          }
+        headers: []
+        description: 'Email não encontrado'
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/auth/forgot-password/whatsapp
+    metadata:
+      custom: []
+      groupName: Autenticação
+      groupDescription: |-
+
+        Endpoints para recuperação e alteração de senha.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Solicitar recuperação de senha via WhatsApp'
+      description: |-
+        Envia um código de 6 dígitos via WhatsApp para redefinir a senha.
+        O código expira em 15 minutos.
+
+        **Quem pode usar:** Qualquer usuário com email ou WhatsApp cadastrado.
+
+        **Rate Limit:** 3 tentativas por minuto por IP.
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
+        custom: []
+        name: email
+        description: 'Email cadastrado (obrigatório se whatsapp não informado).'
+        required: false
+        example: joao@maiscapinhas.com.br
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      whatsapp:
+        custom: []
+        name: whatsapp
+        description: 'WhatsApp cadastrado (obrigatório se email não informado).'
+        required: false
+        example: '48999999999'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      email: joao@maiscapinhas.com.br
+      whatsapp: '48999999999'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "message": "Código enviado via WhatsApp.",
+              "phone_masked": "****9999",
+              "expires_in_minutes": 15
+            },
+            "meta": { "timestamp": "2026-01-13T12:00:00Z" }
+          }
+        headers: []
+        description: 'Código enviado'
+      -
+        custom: []
+        status: 422
+        content: |-
+          {
+            "message": "Usuário não encontrado."
+          }
+        headers: []
+        description: 'Usuário não encontrado'
+      -
+        custom: []
+        status: 422
+        content: |-
+          {
+            "message": "Usuário não possui WhatsApp cadastrado."
+          }
+        headers: []
+        description: 'Usuário sem WhatsApp'
+      -
+        custom: []
+        status: 502
+        content: |-
+          {
+            "message": "Falha ao enviar código via WhatsApp. Tente novamente."
+          }
+        headers: []
+        description: 'Falha ao enviar'
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/auth/reset-password
+    metadata:
+      custom: []
+      groupName: Autenticação
+      groupDescription: |-
+
+        Endpoints para recuperação e alteração de senha.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Redefinir senha'
+      description: |-
+        Redefine a senha usando o token recebido por email.
+
+        **Quem pode usar:** Qualquer usuário com token válido.
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      token:
+        custom: []
+        name: token
+        description: 'Token recebido por email.'
+        required: true
+        example: abc123...
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      email:
+        custom: []
+        name: email
+        description: 'Email do usuário.'
+        required: true
+        example: joao@maiscapinhas.com.br
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      password:
+        custom: []
+        name: password
+        description: 'Nova senha (mínimo 8 caracteres).'
+        required: true
+        example: novaSenha123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      password_confirmation:
+        custom: []
+        name: password_confirmation
+        description: 'Confirmação da nova senha.'
+        required: true
+        example: novaSenha123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      token: abc123...
+      email: joao@maiscapinhas.com.br
+      password: novaSenha123
+      password_confirmation: novaSenha123
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": { "message": "Senha alterada com sucesso." },
+            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+          }
+        headers: []
+        description: 'Senha alterada'
+      -
+        custom: []
+        status: 422
+        content: |-
+          {
+            "message": "Token de recuperação inválido ou expirado."
+          }
+        headers: []
+        description: 'Token inválido'
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/auth/reset-password/code
+    metadata:
+      custom: []
+      groupName: Autenticação
+      groupDescription: |-
+
+        Endpoints para recuperação e alteração de senha.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Redefinir senha com código WhatsApp'
+      description: |-
+        Redefine a senha usando o código de 6 dígitos recebido via WhatsApp.
+
+        **Quem pode usar:** Qualquer usuário com código válido.
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      code:
+        custom: []
+        name: code
+        description: 'Código de 6 dígitos recebido via WhatsApp.'
+        required: true
+        example: '123456'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      email:
+        custom: []
+        name: email
+        description: 'Email do usuário.'
+        required: true
+        example: joao@maiscapinhas.com.br
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      password:
+        custom: []
+        name: password
+        description: 'Nova senha (mínimo 8 caracteres).'
+        required: true
+        example: novaSenha123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      password_confirmation:
+        custom: []
+        name: password_confirmation
+        description: 'Confirmação da nova senha.'
+        required: true
+        example: novaSenha123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      code: '123456'
+      email: joao@maiscapinhas.com.br
+      password: novaSenha123
+      password_confirmation: novaSenha123
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": { "message": "Senha alterada com sucesso." },
+            "meta": { "timestamp": "2026-01-13T12:00:00Z" }
+          }
+        headers: []
+        description: 'Senha alterada'
+      -
+        custom: []
+        status: 422
+        content: |-
+          {
+            "message": "Código inválido ou expirado."
+          }
+        headers: []
+        description: 'Código inválido'
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/auth/logout
+    metadata:
+      custom: []
+      groupName: Autenticação
+      groupDescription: |-
+
+        Endpoints para autenticação via Bearer Token (Sanctum).
+        A API suporta dois modos de autenticação:
+
+        1. **Bearer Token** (recomendado para desenvolvimento e integrações)
+        2. **Cookie SPA** (para frontends React/Vue com `withCredentials`)
+
+        **Auditoria:** Todas as ações de autenticação (login, logout) são
+        registradas no log de auditoria com IP e user-agent.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Fazer logout (revogar token atual)'
+      description: |-
+        Revoga o token que foi usado para autenticar esta requisição.
+        Os demais tokens do usuário (outros dispositivos) permanecem válidos.
+
+        **Quem pode usar:** Qualquer usuário autenticado.
+
+        **Auditoria:** A ação de logout é registrada com IP e horário.
       authenticated: true
       deprecated: false
     headers:
@@ -30,105 +552,6 @@ endpoints:
       Accept: application/json
     urlParameters: []
     cleanUrlParameters: []
-    queryParameters:
-      city:
-        custom: []
-        name: city
-        description: 'Filtrar por cidade.'
-        required: false
-        example: Tijucas
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanQueryParameters:
-      city: Tijucas
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "data": [
-              {
-                "id": 1,
-                "name": "Mais Capinhas Tijucas",
-                "city": "Tijucas",
-                "photo_url": "/storage/stores/1/photo.jpg",
-                "hours_human": {
-                  "is_open_now": true,
-                  "status_label": "Aberto agora • Fecha às 20:30"
-                }
-              }
-            ],
-            "meta": {
-              "total": 1
-            }
-          }
-        headers: []
-        description: ''
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: 'api/v1/bio/stores/{id}'
-    metadata:
-      custom: []
-      groupName: Bio
-      groupDescription: |-
-
-        Endpoints públicos para exibição na Bio do Instagram.
-        Estes endpoints não requerem autenticação.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Obter detalhes de uma loja para Bio'
-      description: |-
-        Retorna os detalhes de uma loja específica habilitada para Bio.
-        Retorna 404 se a loja não existir ou não estiver habilitada para Bio.
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        custom: []
-        name: id
-        description: 'The ID of the store.'
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      store:
-        custom: []
-        name: store
-        description: 'ID da loja.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      id: architecto
-      store: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -140,37 +563,165 @@ endpoints:
         status: 200
         content: |-
           {
-            "data": {
-              "id": 1,
-              "name": "Mais Capinhas Tijucas",
-              "city": "Tijucas",
-              "hours_human": {
-                "timezone": "America/Sao_Paulo",
-                "is_open_now": true,
-                "status": "open",
-                "status_label": "Aberto agora • Fecha às 20:30",
-                "today_hours_label": "Hoje: 08:30–20:30",
-                "opens_at": null,
-                "closes_at": "20:30",
-                "next_change_at": "2026-01-10T20:30:00-03:00",
-                "weekly_label": "Seg–Sáb 08:30–20:30 | Dom Fechado"
-              }
-            }
+            "data": { "message": "Successfully logged out." },
+            "meta": { "request_id": "abc-123", "timestamp": "2026-01-07T12:00:00Z" }
           }
         headers: []
-        description: ''
+        description: 'Logout bem-sucedido'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/auth/logout-all
+    metadata:
+      custom: []
+      groupName: Autenticação
+      groupDescription: |-
+
+        Endpoints para autenticação via Bearer Token (Sanctum).
+        A API suporta dois modos de autenticação:
+
+        1. **Bearer Token** (recomendado para desenvolvimento e integrações)
+        2. **Cookie SPA** (para frontends React/Vue com `withCredentials`)
+
+        **Auditoria:** Todas as ações de autenticação (login, logout) são
+        registradas no log de auditoria com IP e user-agent.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Revogar todos os tokens'
+      description: |-
+        Revoga **todos** os tokens do usuário, desconectando-o de todos os dispositivos.
+
+        **Quem pode usar:** Qualquer usuário autenticado.
+
+        **Auditoria:** A ação é registrada como logout_all.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
       -
         custom: []
-        status: 404
+        status: 200
         content: |-
           {
-            "error": {
-              "code": 404,
-              "message": "Loja não encontrada ou não habilitada para Bio."
-            }
+            "data": { "message": "All tokens revoked." },
+            "meta": { "request_id": "abc-123", "timestamp": "2026-01-07T12:00:00Z" }
           }
         headers: []
-        description: ''
+        description: 'Todos tokens revogados'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+    uri: api/v1/auth/password
+    metadata:
+      custom: []
+      groupName: Autenticação
+      groupDescription: |-
+
+        Endpoints para recuperação e alteração de senha.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Alterar própria senha'
+      description: |-
+        Permite ao usuário logado alterar sua própria senha.
+
+        **Quem pode usar:** Qualquer usuário autenticado.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      current_password:
+        custom: []
+        name: current_password
+        description: 'Senha atual.'
+        required: true
+        example: senhaAtual123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      password:
+        custom: []
+        name: password
+        description: 'Nova senha (mínimo 8 caracteres).'
+        required: true
+        example: novaSenha123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      password_confirmation:
+        custom: []
+        name: password_confirmation
+        description: 'Confirmação da nova senha.'
+        required: true
+        example: novaSenha123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      current_password: senhaAtual123
+      password: novaSenha123
+      password_confirmation: novaSenha123
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": { "message": "Senha alterada com sucesso." },
+            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+          }
+        headers: []
+        description: 'Senha alterada'
+      -
+        custom: []
+        status: 422
+        content: |-
+          {
+            "message": "A senha atual está incorreta."
+          }
+        headers: []
+        description: 'Senha atual incorreta'
     responseFields: []
     auth:
       - headers

@@ -15,13 +15,93 @@ use App\Support\Audit\AuditContext;
 use App\Support\Pdv\PdvDateTime;
 use App\Support\Pdv\PdvJsonSchemaValidator;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * @group PDV - Sync
+ *
+ * Endpoint de ingestao do webhook PDV Sync Agent v3.
+ *
+ * Contrato:
+ * - `schema_version` suportado: `3.0`
+ * - idempotencia por `integrity.sync_id`
+ * - payload validado por regras Laravel + JSON Schema
+ * - enfileiramento assincorno para processamento (`ProcessPdvSyncJob`)
+ *
+ * Seguranca:
+ * - Middleware custom `pdv.signature`
+ * - Pode operar em modo HMAC, Bearer, Auto ou None (controlado por `config('pdv.*')`)
+ */
 class PdvSyncController extends Controller
 {
     use ApiResponse;
 
+    /**
+     * Ingerir payload do PDV Sync
+     *
+     * Recebe o payload bruto do agente PDV e cria o registro de sync.
+     * O processamento pesado e executado em fila.
+     *
+     * @unauthenticated
+     *
+     * @header X-PDV-Schema-Version string Versao do schema enviada no header. Esperado: `3.0`. Example: 3.0
+     * @header X-PDV-Timestamp integer Timestamp Unix para assinatura HMAC (obrigatorio em modo HMAC). Example: 1765212000
+     * @header X-PDV-Signature string Assinatura HMAC SHA-256 no formato hex (ou `sha256=...`). Example: 9b7a3f...
+     * @header Authorization string Token bearer legado/alternativo (`Bearer {token}`), quando habilitado por config. Example: Bearer abc123
+     * @header X-Request-Id string ID de correlacao opcional. Example: req-pdv-001
+     *
+     * @bodyParam schema_version string required Versao do schema. Valor aceito: `3.0`. Example: 3.0
+     * @bodyParam event_type string Tipo do evento (`sales`, `turno_closure`, `mixed`). Example: mixed
+     * @bodyParam store object required Dados da loja origem.
+     * @bodyParam store.id_ponto_venda integer required ID da loja no PDV. Example: 13
+     * @bodyParam store.nome string Nome da loja no PDV. Example: Mais Capinhas Porto Belo
+     * @bodyParam store.alias string Alias da loja no agente. Example: porto-belo-13
+     * @bodyParam window object required Janela de sincronizacao.
+     * @bodyParam window.from string required Inicio da janela (ISO-8601). Example: 2026-02-12T09:50:00-03:00
+     * @bodyParam window.to string required Fim da janela (ISO-8601). Example: 2026-02-12T10:00:00-03:00
+     * @bodyParam window.minutes integer Duracao da janela em minutos. Example: 10
+     * @bodyParam vendas array Lista de vendas da janela.
+     * @bodyParam turnos array Lista de turnos relacionados.
+     * @bodyParam snapshot_turnos array Snapshot dos ultimos turnos fechados.
+     * @bodyParam snapshot_vendas array Snapshot das ultimas vendas.
+     * @bodyParam ops object Metadados operacionais da janela.
+     * @bodyParam ops.count integer Quantidade de operacoes de caixa (`HIPER_CAIXA`). Example: 5
+     * @bodyParam ops.ids integer[] IDs de operacao do canal caixa. Example: [12345,12346]
+     * @bodyParam ops.loja_count integer Quantidade de operacoes do canal loja (`HIPER_LOJA`). Example: 2
+     * @bodyParam ops.loja_ids integer[] IDs de operacao do canal loja. Example: [99001,99002]
+     * @bodyParam integrity object required Bloco de integridade.
+     * @bodyParam integrity.sync_id string required Identificador deterministico do sync. Example: a1b2c3d4e5f6
+     * @bodyParam integrity.warnings string[] Warnings operacionais emitidos pelo agente.
+     *
+     * @response 201 {
+     *   "data": {
+     *     "status": "created",
+     *     "processing_status": "queued",
+     *     "duplicate": false,
+     *     "sync_id": "a1b2c3d4e5f6",
+     *     "pdv_sync_id": 31,
+     *     "schema_version": "3.0",
+     *     "event_type": "mixed",
+     *     "request_id": "req-pdv-001",
+     *     "timestamp_mode": "tolerant",
+     *     "timestamp_out_of_window": false,
+     *     "risk_flags": [],
+     *     "auth_mode": "hmac",
+     *     "message": "Sync received and queued for processing."
+     *   },
+     *   "meta": {
+     *     "request_id": "req-pdv-001",
+     *     "timestamp": "2026-02-12T10:00:00+00:00"
+     *   }
+     * }
+     * @response 200 {"data":{"status":"duplicate","duplicate":true,"sync_id":"a1b2c3d4e5f6","message":"Sync already received."}}
+     * @response 401 {"message":"Missing or invalid webhook authentication headers."}
+     * @response 403 {"message":"Invalid webhook signature."}
+     * @response 422 {"error":"validation","message":"Payload does not match JSON schema.","details":{"schema":["..."]}}
+     * @response 503 {"message":"Webhook service unavailable."}
+     */
     public function ingest(PdvSyncIngestRequest $request): JsonResponse
     {
         $startedAt = microtime(true);
@@ -490,13 +570,21 @@ class PdvSyncController extends Controller
         $riskFlags = [];
 
         foreach ($warnings as $warning) {
-            $value = is_string($warning) ? strtoupper(trim($warning)) : '';
+            $value = is_string($warning)
+                ? Str::upper(Str::ascii(trim($warning)))
+                : '';
             if ($value === '') {
                 continue;
             }
 
             if (str_starts_with($value, 'GESTAO_DB_FAILURE')) {
                 $riskFlags[] = 'gestao_db_failure';
+            }
+            if (str_contains($value, 'VENDEDOR NULL')) {
+                $riskFlags[] = 'vendedor_null';
+            }
+            if (str_contains($value, 'MEIO DE PAGAMENTO NULL')) {
+                $riskFlags[] = 'meio_pagamento_null';
             }
         }
 

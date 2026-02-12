@@ -1,25 +1,84 @@
-name: 'Extrato Financeiro'
+name: 'Regras de Comissão'
 description: |-
 
-  Endpoints para consultar o extrato de bônus diário e comissão mensal.
-  Vendedores veem apenas seus próprios dados; gerentes/admins veem todos.
+  Gerenciamento de regras de comissão mensal.
+  Regras definem faixas de atingimento de meta e taxas de comissão.
+
+  **Hierarquia de regras:**
+  - Regra específica de loja tem prioridade sobre global
+  - Comissão calculada: vendas × taxa (baseada no % de atingimento)
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/finance/bonus
+    uri: api/v1/rules/commission
     metadata:
       custom: []
-      groupName: 'Extrato Financeiro'
+      groupName: 'Regras de Comissão'
       groupDescription: |-
 
-        Endpoints para consultar o extrato de bônus diário e comissão mensal.
-        Vendedores veem apenas seus próprios dados; gerentes/admins veem todos.
+        Gerenciamento de regras de comissão mensal.
+        Regras definem faixas de atingimento de meta e taxas de comissão.
+
+        **Hierarquia de regras:**
+        - Regra específica de loja tem prioridade sobre global
+        - Comissão calculada: vendas × taxa (baseada no % de atingimento)
       subgroup: ''
       subgroupDescription: ''
-      title: 'Get bonus ledger.'
-      description: 'GET /api/v1/finance/bonus?store_id=&from=&to='
+      title: 'List commission rules.'
+      description: 'GET /api/v1/rules/commission'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/rules/commission
+    metadata:
+      custom: []
+      groupName: 'Regras de Comissão'
+      groupDescription: |-
+
+        Gerenciamento de regras de comissão mensal.
+        Regras definem faixas de atingimento de meta e taxas de comissão.
+
+        **Hierarquia de regras:**
+        - Regra específica de loja tem prioridade sobre global
+        - Comissão calculada: vendas × taxa (baseada no % de atingimento)
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Create a new commission rule.'
+      description: 'POST /api/v1/rules/commission'
       authenticated: true
       deprecated: false
     headers:
@@ -40,121 +99,34 @@ endpoints:
         type: integer
         enumValues: []
         exampleWasSpecified: false
-        nullable: false
+        nullable: true
         deprecated: false
-      from:
+      effective_from:
         custom: []
-        name: from
+        name: effective_from
         description: 'Must be a valid date.'
-        required: false
-        example: '2026-01-16T19:10:27'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      to:
-        custom: []
-        name: to
-        description: 'Must be a valid date.'
-        required: false
-        example: '2026-01-16T19:10:27'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      per_page:
-        custom: []
-        name: per_page
-        description: 'Must be at least 1. Must not be greater than 100.'
-        required: false
-        example: 22
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      store_id: 16
-      from: '2026-01-16T19:10:27'
-      to: '2026-01-16T19:10:27'
-      per_page: 22
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 404
-        content: |-
-          {
-              "message": "The route api.maiscapinhas.com.br//api/v1/finance/bonus could not be found."
-          }
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-        description: null
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: api/v1/finance/bonus/calculate
-    metadata:
-      custom: []
-      groupName: 'Extrato Financeiro'
-      groupDescription: |-
-
-        Endpoints para consultar o extrato de bônus diário e comissão mensal.
-        Vendedores veem apenas seus próprios dados; gerentes/admins veem todos.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Simulador de bônus'
-      description: 'Calcula o bônus para um valor de venda (simulação).'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters:
-      amount:
-        custom: []
-        name: amount
-        description: 'Valor da venda.'
         required: true
-        example: 1250.0
-        type: number
+        example: '2026-02-12T06:51:05'
+        type: string
         enumValues: []
-        exampleWasSpecified: true
+        exampleWasSpecified: false
         nullable: false
         deprecated: false
-      store_id:
+      config_json:
         custom: []
-        name: store_id
-        description: 'ID da loja (usa regra específica se houver).'
-        required: false
-        example: 1
-        type: integer
+        name: config_json
+        description: 'Must have at least 1 items.'
+        required: true
+        example:
+          - []
+        type: 'object[]'
         enumValues: []
-        exampleWasSpecified: true
+        exampleWasSpecified: false
         nullable: false
         deprecated: false
-    cleanQueryParameters:
-      amount: 1250.0
-      store_id: 1
-    bodyParameters:
-      amount:
+      'config_json[].min_attainment':
         custom: []
-        name: amount
+        name: 'config_json[].min_attainment'
         description: 'Must be at least 0.'
         required: true
         example: 27
@@ -163,36 +135,26 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      store_id:
+      'config_json[].rate':
         custom: []
-        name: store_id
-        description: 'The <code>id</code> of an existing record in the stores table.'
-        required: false
-        example: 16
-        type: integer
+        name: 'config_json[].rate'
+        description: 'Must be at least 0. Must not be greater than 100.'
+        required: true
+        example: 22
+        type: number
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      amount: 27
       store_id: 16
+      effective_from: '2026-02-12T06:51:05'
+      config_json:
+        -
+          min_attainment: 27
+          rate: 22
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "data": {
-              "amount": 1250.00,
-              "current_tier": { "min_sales": 1000, "bonus": 50.00 },
-              "bonus_value": 50.00,
-              "next_tier": { "min_sales": 1500, "bonus": 75.00, "gap": 250.00 }
-            }
-          }
-        headers: []
-        description: Simulação
+    responses: []
     responseFields: []
     auth:
       - headers
@@ -205,21 +167,22 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/finance/bonus/seller/{seller_id}'
+    uri: 'api/v1/rules/commission/{rule_id}'
     metadata:
       custom: []
-      groupName: 'Extrato Financeiro'
+      groupName: 'Regras de Comissão'
       groupDescription: |-
 
-        Endpoints para consultar o extrato de bônus diário e comissão mensal.
-        Vendedores veem apenas seus próprios dados; gerentes/admins veem todos.
+        Gerenciamento de regras de comissão mensal.
+        Regras definem faixas de atingimento de meta e taxas de comissão.
+
+        **Hierarquia de regras:**
+        - Regra específica de loja tem prioridade sobre global
+        - Comissão calculada: vendas × taxa (baseada no % de atingimento)
       subgroup: ''
       subgroupDescription: ''
-      title: 'Extrato de bônus de um vendedor'
-      description: |-
-        Retorna o histórico de bônus de um vendedor específico com resumo.
-
-        **Quem pode usar:** O próprio vendedor ou Gerentes/Admins.
+      title: 'Show a specific commission rule.'
+      description: 'GET /api/v1/rules/commission/{rule}'
       authenticated: true
       deprecated: false
     headers:
@@ -227,10 +190,10 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      seller_id:
+      rule_id:
         custom: []
-        name: seller_id
-        description: 'The ID of the seller.'
+        name: rule_id
+        description: 'The ID of the rule.'
         required: true
         example: 1
         type: integer
@@ -238,90 +201,23 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      seller:
-        custom: []
-        name: seller
-        description: 'ID do vendedor.'
-        required: true
-        example: 5
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
     cleanUrlParameters:
-      seller_id: 1
-      seller: 5
-    queryParameters:
-      from:
-        custom: []
-        name: from
-        description: 'Data inicial (YYYY-MM-DD).'
-        required: false
-        example: '2026-01-01'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      to:
-        custom: []
-        name: to
-        description: 'Data final (YYYY-MM-DD).'
-        required: false
-        example: '2026-01-31'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanQueryParameters:
-      from: '2026-01-01'
-      to: '2026-01-31'
-    bodyParameters:
-      from:
-        custom: []
-        name: from
-        description: 'Must be a valid date.'
-        required: false
-        example: '2026-01-16T19:10:27'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      to:
-        custom: []
-        name: to
-        description: 'Must be a valid date.'
-        required: false
-        example: '2026-01-16T19:10:27'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      from: '2026-01-16T19:10:27'
-      to: '2026-01-16T19:10:27'
+      rule_id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
     fileParameters: []
     responses:
       -
         custom: []
-        status: 200
-        content: |-
-          {
-            "data": {
-              "seller": { "id": 5, "name": "João Silva" },
-              "period": { "from": "2026-01-01", "to": "2026-01-31" },
-              "summary": { "approved": 350.00, "pending": 50.00, "rejected": 25.00, "total_shifts": 22 },
-              "items": [
-                { "date": "2026-01-08", "shift_code": "M", "store_name": "Tijucas", "sales_total": 1250.00, "bonus": 50.00, "status": "approved" }
-              ]
-            }
-          }
-        headers: []
-        description: 'Extrato de bônus'
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
     responseFields: []
     auth:
       - headers
@@ -333,27 +229,44 @@ endpoints:
   -
     custom: []
     httpMethods:
-      - GET
-    uri: api/v1/finance/commission
+      - PUT
+      - PATCH
+    uri: 'api/v1/rules/commission/{rule_id}'
     metadata:
       custom: []
-      groupName: 'Extrato Financeiro'
+      groupName: 'Regras de Comissão'
       groupDescription: |-
 
-        Endpoints para consultar o extrato de bônus diário e comissão mensal.
-        Vendedores veem apenas seus próprios dados; gerentes/admins veem todos.
+        Gerenciamento de regras de comissão mensal.
+        Regras definem faixas de atingimento de meta e taxas de comissão.
+
+        **Hierarquia de regras:**
+        - Regra específica de loja tem prioridade sobre global
+        - Comissão calculada: vendas × taxa (baseada no % de atingimento)
       subgroup: ''
       subgroupDescription: ''
-      title: 'Get commission ledger.'
-      description: 'GET /api/v1/finance/commission?store_id=&month='
+      title: 'Update a commission rule.'
+      description: 'PUT /api/v1/rules/commission/{rule}'
       authenticated: true
       deprecated: false
     headers:
       Authorization: 'Bearer {SEU_TOKEN}'
       Content-Type: application/json
       Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
+    urlParameters:
+      rule_id:
+        custom: []
+        name: rule_id
+        description: 'The ID of the rule.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      rule_id: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
@@ -366,47 +279,62 @@ endpoints:
         type: integer
         enumValues: []
         exampleWasSpecified: false
-        nullable: false
+        nullable: true
         deprecated: false
-      month:
+      effective_from:
         custom: []
-        name: month
-        description: 'Must match the regex /^\d{4}-\d{2}$/.'
-        required: false
-        example: 6425-59
+        name: effective_from
+        description: 'Must be a valid date.'
+        required: true
+        example: '2026-02-12T06:51:05'
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      per_page:
+      config_json:
         custom: []
-        name: per_page
-        description: 'Must be at least 1. Must not be greater than 100.'
-        required: false
-        example: 19
-        type: integer
+        name: config_json
+        description: 'Must have at least 1 items.'
+        required: true
+        example:
+          - []
+        type: 'object[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'config_json[].min_attainment':
+        custom: []
+        name: 'config_json[].min_attainment'
+        description: 'Must be at least 0.'
+        required: true
+        example: 27
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'config_json[].rate':
+        custom: []
+        name: 'config_json[].rate'
+        description: 'Must be at least 0. Must not be greater than 100.'
+        required: true
+        example: 22
+        type: number
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      month: 6425-59
-      per_page: 19
+      effective_from: '2026-02-12T06:51:05'
+      config_json:
+        -
+          min_attainment: 27
+          rate: 22
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 404
-        content: |-
-          {
-              "message": "The route api.maiscapinhas.com.br//api/v1/finance/commission could not be found."
-          }
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-        description: null
+    responses: []
     responseFields: []
     auth:
       - headers
@@ -418,19 +346,23 @@ endpoints:
   -
     custom: []
     httpMethods:
-      - GET
-    uri: 'api/v1/finance/commission/seller/{seller_id}'
+      - DELETE
+    uri: 'api/v1/rules/commission/{rule_id}'
     metadata:
       custom: []
-      groupName: 'Extrato Financeiro'
+      groupName: 'Regras de Comissão'
       groupDescription: |-
 
-        Endpoints para consultar o extrato de bônus diário e comissão mensal.
-        Vendedores veem apenas seus próprios dados; gerentes/admins veem todos.
+        Gerenciamento de regras de comissão mensal.
+        Regras definem faixas de atingimento de meta e taxas de comissão.
+
+        **Hierarquia de regras:**
+        - Regra específica de loja tem prioridade sobre global
+        - Comissão calculada: vendas × taxa (baseada no % de atingimento)
       subgroup: ''
       subgroupDescription: ''
-      title: 'Comissão de um vendedor'
-      description: 'Retorna a comissão de um vendedor para um mês específico.'
+      title: 'Delete a commission rule.'
+      description: 'DELETE /api/v1/rules/commission/{rule}'
       authenticated: true
       deprecated: false
     headers:
@@ -438,10 +370,10 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      seller_id:
+      rule_id:
         custom: []
-        name: seller_id
-        description: 'The ID of the seller.'
+        name: rule_id
+        description: 'The ID of the rule.'
         required: true
         example: 1
         type: integer
@@ -449,165 +381,14 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      seller:
-        custom: []
-        name: seller
-        description: 'ID do vendedor.'
-        required: true
-        example: 5
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
     cleanUrlParameters:
-      seller_id: 1
-      seller: 5
-    queryParameters:
-      month:
-        custom: []
-        name: month
-        description: 'Mês (YYYY-MM).'
-        required: false
-        example: 2026-01
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanQueryParameters:
-      month: 2026-01
-    bodyParameters:
-      month:
-        custom: []
-        name: month
-        description: 'Must match the regex /^\d{4}-\d{2}$/.'
-        required: false
-        example: 6425-59
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      month: 6425-59
+      rule_id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 404
-        content: |-
-          {
-              "message": "The route api.maiscapinhas.com.br//api/v1/finance/commission/seller/1 could not be found."
-          }
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-        description: null
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: 'api/v1/finance/commission/projection/{seller_id}'
-    metadata:
-      custom: []
-      groupName: 'Extrato Financeiro'
-      groupDescription: |-
-
-        Endpoints para consultar o extrato de bônus diário e comissão mensal.
-        Vendedores veem apenas seus próprios dados; gerentes/admins veem todos.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Projeção de comissão'
-      description: 'Projeta a comissão do vendedor baseada no ritmo atual de vendas.'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      seller_id:
-        custom: []
-        name: seller_id
-        description: 'The ID of the seller.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      seller:
-        custom: []
-        name: seller
-        description: 'ID do vendedor.'
-        required: true
-        example: 5
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      seller_id: 1
-      seller: 5
-    queryParameters:
-      month:
-        custom: []
-        name: month
-        description: 'Mês (YYYY-MM).'
-        required: false
-        example: 2026-01
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanQueryParameters:
-      month: 2026-01
-    bodyParameters:
-      month:
-        custom: []
-        name: month
-        description: 'Must match the regex /^\d{4}-\d{2}$/.'
-        required: false
-        example: 6425-59
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      month: 6425-59
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "data": {
-              "seller": { "id": 5, "name": "João" },
-              "current": { "sold": 28000, "goal": 75000, "achievement": 37.33, "daily_average": 3500 },
-              "projection": { "estimated_total": 77000, "estimated_achievement": 102.67, "estimated_commission": 2310 },
-              "scenarios": [
-                { "scenario": "pessimist", "achievement": 85, "commission": 1275 },
-                { "scenario": "realistic", "achievement": 103, "commission": 2310 },
-                { "scenario": "optimist", "achievement": 125, "commission": 3750 }
-              ]
-            }
-          }
-        headers: []
-        description: Projeção
+    responses: []
     responseFields: []
     auth:
       - headers

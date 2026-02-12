@@ -41,3 +41,32 @@ test('warningRiskFlags ignores warnings that are not gestao database failures', 
     expect($flags)->toHaveCount(0);
 });
 
+test('warningRiskFlags maps vendedor null warning to dedicated risk flag', function () {
+    $flags = invokeWarningRiskFlags([
+        'Vendedor NULL encontrado em 3 cupom(s)',
+    ]);
+
+    expect($flags)->toContain('vendedor_null');
+});
+
+test('warningRiskFlags maps payment method null warning to dedicated risk flag', function () {
+    $flags = invokeWarningRiskFlags([
+        'Meio de pagamento NULL encontrado',
+    ]);
+
+    expect($flags)->toContain('meio_pagamento_null');
+});
+
+test('warningRiskFlags maps multiple warning categories without duplicates', function () {
+    $flags = invokeWarningRiskFlags([
+        'GESTAO_DB_FAILURE: timeout',
+        'Vendedor NULL encontrado em 2 cupom(s)',
+        'Meio de pagamento NULL encontrado',
+        'Vendedor NULL encontrado em 5 cupom(s)',
+    ]);
+
+    expect($flags)->toContain('gestao_db_failure');
+    expect($flags)->toContain('vendedor_null');
+    expect($flags)->toContain('meio_pagamento_null');
+    expect($flags)->toHaveCount(3);
+});

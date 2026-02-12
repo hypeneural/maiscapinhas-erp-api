@@ -1,0 +1,806 @@
+name: 'Wheel - Campaigns'
+description: |-
+
+  API para gerenciamento de Campanhas do módulo Roleta.
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/admin/wheel/campaigns
+    metadata:
+      custom: []
+      groupName: 'Wheel - Campaigns'
+      groupDescription: |-
+
+        API para gerenciamento de Campanhas do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Listar campanhas.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/admin/wheel/campaigns
+    metadata:
+      custom: []
+      groupName: 'Wheel - Campaigns'
+      groupDescription: |-
+
+        API para gerenciamento de Campanhas do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Criar campanha.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      campaign_key:
+        custom: []
+        name: campaign_key
+        description: 'Must match the regex /^[a-z0-9_]+$/. Must not be greater than 50 characters.'
+        required: false
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      name:
+        custom: []
+        name: name
+        description: 'Must not be greater than 150 characters.'
+        required: true
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      status:
+        custom: []
+        name: status
+        description: ''
+        required: false
+        example: draft
+        type: string
+        enumValues:
+          - draft
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      starts_at:
+        custom: []
+        name: starts_at
+        description: 'Must be a valid date.'
+        required: false
+        example: '2026-02-12T06:51:16'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      ends_at:
+        custom: []
+        name: ends_at
+        description: 'Must be a valid date. Must be a date after <code>starts_at</code>.'
+        required: false
+        example: '2052-03-07'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      terms_version:
+        custom: []
+        name: terms_version
+        description: 'Must not be greater than 20 characters.'
+        required: false
+        example: ngzmiyvdljnikhwa
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      settings:
+        custom: []
+        name: settings
+        description: ''
+        required: false
+        example: null
+        type: object
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      settings.qr_ttl_seconds:
+        custom: []
+        name: settings.qr_ttl_seconds
+        description: 'Must be at least 30. Must not be greater than 600.'
+        required: false
+        example: 24
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      settings.spin_duration_ms:
+        custom: []
+        name: settings.spin_duration_ms
+        description: 'Must be at least 3000. Must not be greater than 15000.'
+        required: false
+        example: 18
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      settings.min_rotations:
+        custom: []
+        name: settings.min_rotations
+        description: 'Must be at least 3. Must not be greater than 10.'
+        required: false
+        example: 3
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      settings.max_rotations:
+        custom: []
+        name: settings.max_rotations
+        description: 'Must be at least 5. Must not be greater than 15.'
+        required: false
+        example: 4
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      settings.max_queue_size:
+        custom: []
+        name: settings.max_queue_size
+        description: 'Must be at least 1. Must not be greater than 50.'
+        required: false
+        example: 8
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      settings.per_phone_limit:
+        custom: []
+        name: settings.per_phone_limit
+        description: ''
+        required: false
+        example: 1_per_day
+        type: string
+        enumValues:
+          - 1_per_campaign
+          - 1_per_day
+          - unlimited
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      campaign_key: b
+      name: 'n'
+      status: draft
+      starts_at: '2026-02-12T06:51:16'
+      ends_at: '2052-03-07'
+      terms_version: ngzmiyvdljnikhwa
+      settings:
+        qr_ttl_seconds: 24
+        spin_duration_ms: 18
+        min_rotations: 3
+        max_rotations: 4
+        max_queue_size: 8
+        per_phone_limit: 1_per_day
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}'
+    metadata:
+      custom: []
+      groupName: 'Wheel - Campaigns'
+      groupDescription: |-
+
+        API para gerenciamento de Campanhas do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Exibir campanha.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      campaign_key:
+        custom: []
+        name: campaign_key
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      campaign_key: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+      - PATCH
+    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}'
+    metadata:
+      custom: []
+      groupName: 'Wheel - Campaigns'
+      groupDescription: |-
+
+        API para gerenciamento de Campanhas do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Atualizar campanha.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      campaign_key:
+        custom: []
+        name: campaign_key
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      campaign_key: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      name:
+        custom: []
+        name: name
+        description: 'Must not be greater than 150 characters.'
+        required: false
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      starts_at:
+        custom: []
+        name: starts_at
+        description: 'Must be a valid date.'
+        required: false
+        example: '2026-02-12T06:51:17'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      ends_at:
+        custom: []
+        name: ends_at
+        description: 'Must be a valid date. Must be a date after <code>starts_at</code>.'
+        required: false
+        example: '2052-03-07'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      terms_version:
+        custom: []
+        name: terms_version
+        description: 'Must not be greater than 20 characters.'
+        required: false
+        example: ngzmiyvdljnikhwa
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      settings:
+        custom: []
+        name: settings
+        description: ''
+        required: false
+        example: null
+        type: object
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      settings.qr_ttl_seconds:
+        custom: []
+        name: settings.qr_ttl_seconds
+        description: 'Must be at least 30. Must not be greater than 600.'
+        required: false
+        example: 24
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      settings.spin_duration_ms:
+        custom: []
+        name: settings.spin_duration_ms
+        description: 'Must be at least 3000. Must not be greater than 15000.'
+        required: false
+        example: 18
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      settings.min_rotations:
+        custom: []
+        name: settings.min_rotations
+        description: 'Must be at least 3. Must not be greater than 10.'
+        required: false
+        example: 3
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      settings.max_rotations:
+        custom: []
+        name: settings.max_rotations
+        description: 'Must be at least 5. Must not be greater than 15.'
+        required: false
+        example: 4
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      settings.max_queue_size:
+        custom: []
+        name: settings.max_queue_size
+        description: 'Must be at least 1. Must not be greater than 50.'
+        required: false
+        example: 8
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      settings.per_phone_limit:
+        custom: []
+        name: settings.per_phone_limit
+        description: ''
+        required: false
+        example: 1_per_campaign
+        type: string
+        enumValues:
+          - 1_per_campaign
+          - 1_per_day
+          - unlimited
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      name: b
+      starts_at: '2026-02-12T06:51:17'
+      ends_at: '2052-03-07'
+      terms_version: ngzmiyvdljnikhwa
+      settings:
+        qr_ttl_seconds: 24
+        spin_duration_ms: 18
+        min_rotations: 3
+        max_rotations: 4
+        max_queue_size: 8
+        per_phone_limit: 1_per_campaign
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}'
+    metadata:
+      custom: []
+      groupName: 'Wheel - Campaigns'
+      groupDescription: |-
+
+        API para gerenciamento de Campanhas do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Excluir campanha.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      campaign_key:
+        custom: []
+        name: campaign_key
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      campaign_key: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}/activate'
+    metadata:
+      custom: []
+      groupName: 'Wheel - Campaigns'
+      groupDescription: |-
+
+        API para gerenciamento de Campanhas do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Ativar campanha.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      campaign_key:
+        custom: []
+        name: campaign_key
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      campaign_key: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}/pause'
+    metadata:
+      custom: []
+      groupName: 'Wheel - Campaigns'
+      groupDescription: |-
+
+        API para gerenciamento de Campanhas do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Pausar campanha.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      campaign_key:
+        custom: []
+        name: campaign_key
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      campaign_key: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}/end'
+    metadata:
+      custom: []
+      groupName: 'Wheel - Campaigns'
+      groupDescription: |-
+
+        API para gerenciamento de Campanhas do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Encerrar campanha.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      campaign_key:
+        custom: []
+        name: campaign_key
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      campaign_key: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}/duplicate'
+    metadata:
+      custom: []
+      groupName: 'Wheel - Campaigns'
+      groupDescription: |-
+
+        API para gerenciamento de Campanhas do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Duplicar campanha.'
+      description: 'Cria uma cópia da campanha com status draft, incluindo segmentos e inventário.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      campaign_key:
+        custom: []
+        name: campaign_key
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      campaign_key: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      new_name:
+        custom: []
+        name: new_name
+        description: 'Must not be greater than 100 characters.'
+        required: false
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      new_name: b
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}/preview'
+    metadata:
+      custom: []
+      groupName: 'Wheel - Campaigns'
+      groupDescription: |-
+
+        API para gerenciamento de Campanhas do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Preview da roleta.'
+      description: 'Retorna dados formatados para renderização visual da roleta.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      campaign_key:
+        custom: []
+        name: campaign_key
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      campaign_key: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

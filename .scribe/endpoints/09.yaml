@@ -1,43 +1,81 @@
-name: 'Regras de Bônus'
+name: 'Fechamento de Caixa'
 description: |-
 
-  Gerenciamento de regras de bônus diário.
-  Regras definem faixas de vendas mínimas e valores de bônus correspondentes.
+  Endpoints para gerenciar o fluxo de fechamento de caixa.
 
-  **Hierarquia de regras:**
-  - Regra específica de loja (`store_id` preenchido) tem prioridade sobre regra global
-  - Regra mais recente (`effective_from` maior) tem prioridade
-  - Versionamento automático a cada atualização
+  **Workflow de Estados:**
+  ```
+  draft → submitted → approved
+                    → rejected → draft → ...
+  ```
+
+  - `draft` - Rascunho (editável)
+  - `submitted` - Enviado para conferência
+  - `approved` - Aprovado (imutável)
+  - `rejected` - Rejeitado (volta para draft para correção)
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/rules/bonus
+    uri: 'api/v1/cash/closings/{shift_id}'
     metadata:
       custom: []
-      groupName: 'Regras de Bônus'
+      groupName: 'Fechamento de Caixa'
       groupDescription: |-
 
-        Gerenciamento de regras de bônus diário.
-        Regras definem faixas de vendas mínimas e valores de bônus correspondentes.
+        Endpoints para gerenciar o fluxo de fechamento de caixa.
 
-        **Hierarquia de regras:**
-        - Regra específica de loja (`store_id` preenchido) tem prioridade sobre regra global
-        - Regra mais recente (`effective_from` maior) tem prioridade
-        - Versionamento automático a cada atualização
+        **Workflow de Estados:**
+        ```
+        draft → submitted → approved
+                          → rejected → draft → ...
+        ```
+
+        - `draft` - Rascunho (editável)
+        - `submitted` - Enviado para conferência
+        - `approved` - Aprovado (imutável)
+        - `rejected` - Rejeitado (volta para draft para correção)
       subgroup: ''
       subgroupDescription: ''
-      title: 'List bonus rules.'
-      description: 'GET /api/v1/rules/bonus'
+      title: 'Obter detalhes do fechamento'
+      description: |-
+        Retorna os detalhes completos de um fechamento de caixa,
+        incluindo todas as linhas e a justificativa geral.
+
+        **Quem pode usar:** Qualquer usuário com acesso à loja.
       authenticated: true
       deprecated: false
     headers:
       Authorization: 'Bearer {SEU_TOKEN}'
       Content-Type: application/json
       Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
+    urlParameters:
+      shift_id:
+        custom: []
+        name: shift_id
+        description: 'The ID of the shift.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      shift:
+        custom: []
+        name: shift
+        description: 'ID do turno.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      shift_id: 16
+      shift: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -46,15 +84,26 @@ endpoints:
     responses:
       -
         custom: []
-        status: 404
+        status: 200
         content: |-
           {
-              "message": "The route api.maiscapinhas.com.br//api/v1/rules/bonus could not be found."
+            "data": {
+              "id": 1,
+              "status": "approved",
+              "version": 2,
+              "justification_text": "Troco incorreto no início do turno",
+              "justified": true,
+              "closed_at": "2026-01-07T12:00:00+00:00",
+              "lines": [
+                { "id": 1, "label": "Dinheiro", "system_value": 500.00, "real_value": 495.00, "diff_value": -5.00 }
+              ],
+              "cash_shift": { "id": 1, "date": "2026-01-07", "shift_code": "M" },
+              "closed_by_user": { "id": 3, "name": "Ana Conferente" }
+            },
+            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
           }
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-        description: null
+        headers: []
+        description: 'Detalhes do fechamento'
     responseFields: []
     auth:
       - headers
@@ -67,82 +116,123 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/v1/rules/bonus
+    uri: 'api/v1/cash/closings/{shift_id}'
     metadata:
       custom: []
-      groupName: 'Regras de Bônus'
+      groupName: 'Fechamento de Caixa'
       groupDescription: |-
 
-        Gerenciamento de regras de bônus diário.
-        Regras definem faixas de vendas mínimas e valores de bônus correspondentes.
+        Endpoints para gerenciar o fluxo de fechamento de caixa.
 
-        **Hierarquia de regras:**
-        - Regra específica de loja (`store_id` preenchido) tem prioridade sobre regra global
-        - Regra mais recente (`effective_from` maior) tem prioridade
-        - Versionamento automático a cada atualização
+        **Workflow de Estados:**
+        ```
+        draft → submitted → approved
+                          → rejected → draft → ...
+        ```
+
+        - `draft` - Rascunho (editável)
+        - `submitted` - Enviado para conferência
+        - `approved` - Aprovado (imutável)
+        - `rejected` - Rejeitado (volta para draft para correção)
       subgroup: ''
       subgroupDescription: ''
-      title: 'Create a new bonus rule.'
-      description: 'POST /api/v1/rules/bonus'
+      title: 'Criar fechamento de caixa'
+      description: |-
+        Cria um novo fechamento de caixa para um turno existente,
+        incluindo os valores por meio de pagamento.
+
+        **Quem pode usar:** Qualquer usuário com acesso à loja.
+
+        **Regras de negócio:**
+        - O turno não pode ter um fechamento existente
+        - A justificativa é opcional e se aplica ao turno inteiro (não por linha)
+        - O campo `justified` indica se a divergência foi justificada (usado para cálculo de bônus)
       authenticated: true
       deprecated: false
     headers:
       Authorization: 'Bearer {SEU_TOKEN}'
       Content-Type: application/json
       Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      store_id:
+    urlParameters:
+      shift_id:
         custom: []
-        name: store_id
-        description: 'The <code>id</code> of an existing record in the stores table.'
-        required: false
+        name: shift_id
+        description: 'The ID of the shift.'
+        required: true
         example: 16
         type: integer
         enumValues: []
         exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      shift:
+        custom: []
+        name: shift
+        description: 'ID do turno.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      shift_id: 16
+      shift: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      lines:
+        custom: []
+        name: lines
+        description: 'Lista de linhas (meios de pagamento).'
+        required: true
+        example:
+          -
+            label: Dinheiro
+            system_value: 1000
+            real_value: 950
+        type: 'string[]'
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      justification_text:
+        custom: []
+        name: justification_text
+        description: 'Justificativa geral para divergências (opcional).'
+        required: false
+        example: 'Troco dado incorretamente'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
         nullable: true
         deprecated: false
-      effective_from:
+      justified:
         custom: []
-        name: effective_from
-        description: 'Must be a valid date.'
+        name: justified
+        description: 'Se a divergência está justificada (usado para bônus).'
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      'lines[].label':
+        custom: []
+        name: 'lines[].label'
+        description: ''
         required: true
-        example: '2026-01-16T19:10:26'
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      config_json:
+      'lines[].system_value':
         custom: []
-        name: config_json
-        description: 'Must have at least 1 items.'
-        required: true
-        example:
-          - []
-        type: 'object[]'
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      'config_json[].min_sales':
-        custom: []
-        name: 'config_json[].min_sales'
-        description: 'Must be at least 0.'
-        required: true
-        example: 27
-        type: number
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      'config_json[].bonus':
-        custom: []
-        name: 'config_json[].bonus'
+        name: 'lines[].system_value'
         description: 'Must be at least 0.'
         required: true
         example: 39
@@ -151,81 +241,88 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-    cleanBodyParameters:
-      store_id: 16
-      effective_from: '2026-01-16T19:10:26'
-      config_json:
-        -
-          min_sales: 27
-          bonus: 39
-    fileParameters: []
-    responses: []
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: 'api/v1/rules/bonus/{rule_id}'
-    metadata:
-      custom: []
-      groupName: 'Regras de Bônus'
-      groupDescription: |-
-
-        Gerenciamento de regras de bônus diário.
-        Regras definem faixas de vendas mínimas e valores de bônus correspondentes.
-
-        **Hierarquia de regras:**
-        - Regra específica de loja (`store_id` preenchido) tem prioridade sobre regra global
-        - Regra mais recente (`effective_from` maior) tem prioridade
-        - Versionamento automático a cada atualização
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Show a specific bonus rule.'
-      description: 'GET /api/v1/rules/bonus/{rule}'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      rule_id:
+      'lines[].real_value':
         custom: []
-        name: rule_id
-        description: 'The ID of the rule.'
+        name: 'lines[].real_value'
+        description: 'Must be at least 0.'
         required: true
-        example: 1
-        type: integer
+        example: 84
+        type: number
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-    cleanUrlParameters:
-      rule_id: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
+      'lines.*.label':
+        custom: []
+        name: 'lines.*.label'
+        description: 'Nome do meio de pagamento.'
+        required: true
+        example: Dinheiro
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      'lines.*.system_value':
+        custom: []
+        name: 'lines.*.system_value'
+        description: 'Valor informado no sistema.'
+        required: true
+        example: 1000.0
+        type: number
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      'lines.*.real_value':
+        custom: []
+        name: 'lines.*.real_value'
+        description: 'Valor real contado.'
+        required: true
+        example: 950.0
+        type: number
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      lines:
+        -
+          label: Dinheiro
+          system_value: 1000
+          real_value: 950
+      justification_text: 'Troco dado incorretamente'
+      justified: true
     fileParameters: []
     responses:
       -
         custom: []
-        status: 404
+        status: 201
         content: |-
           {
-              "message": "The route api.maiscapinhas.com.br//api/v1/rules/bonus/1 could not be found."
+            "data": {
+              "id": 1,
+              "status": "draft",
+              "version": 1,
+              "justification_text": "Troco dado incorretamente",
+              "justified": true,
+              "lines": [
+                { "id": 1, "label": "Dinheiro", "system_value": 1000.00, "real_value": 950.00, "diff_value": -50.00 }
+              ]
+            },
+            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
           }
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-        description: null
+        headers: []
+        description: 'Fechamento criado'
+      -
+        custom: []
+        status: 409
+        content: |-
+          {
+            "error": { "code": 409, "message": "Closing already exists for this shift." }
+          }
+        headers: []
+        description: 'Fechamento já existe'
     responseFields: []
     auth:
       - headers
@@ -238,24 +335,36 @@ endpoints:
     custom: []
     httpMethods:
       - PUT
-      - PATCH
-    uri: 'api/v1/rules/bonus/{rule_id}'
+    uri: 'api/v1/cash/closings/{shift_id}'
     metadata:
       custom: []
-      groupName: 'Regras de Bônus'
+      groupName: 'Fechamento de Caixa'
       groupDescription: |-
 
-        Gerenciamento de regras de bônus diário.
-        Regras definem faixas de vendas mínimas e valores de bônus correspondentes.
+        Endpoints para gerenciar o fluxo de fechamento de caixa.
 
-        **Hierarquia de regras:**
-        - Regra específica de loja (`store_id` preenchido) tem prioridade sobre regra global
-        - Regra mais recente (`effective_from` maior) tem prioridade
-        - Versionamento automático a cada atualização
+        **Workflow de Estados:**
+        ```
+        draft → submitted → approved
+                          → rejected → draft → ...
+        ```
+
+        - `draft` - Rascunho (editável)
+        - `submitted` - Enviado para conferência
+        - `approved` - Aprovado (imutável)
+        - `rejected` - Rejeitado (volta para draft para correção)
       subgroup: ''
       subgroupDescription: ''
-      title: 'Update a bonus rule.'
-      description: 'PUT /api/v1/rules/bonus/{rule}'
+      title: 'Atualizar fechamento de caixa'
+      description: |-
+        Atualiza um fechamento de caixa existente (apenas em status draft ou rejected).
+
+        **Quem pode usar:** Qualquer usuário com acesso à loja.
+
+        **Regras de negócio:**
+        - O fechamento deve estar em status `draft` ou `rejected`
+        - A justificativa é opcional e se aplica ao turno inteiro
+        - Todas as linhas são substituídas pelos novos valores
       authenticated: true
       deprecated: false
     headers:
@@ -263,70 +372,85 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      rule_id:
+      shift_id:
         custom: []
-        name: rule_id
-        description: 'The ID of the rule.'
+        name: shift_id
+        description: 'The ID of the shift.'
         required: true
-        example: 1
+        example: 16
         type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
+      shift:
+        custom: []
+        name: shift
+        description: 'ID do turno.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
     cleanUrlParameters:
-      rule_id: 1
+      shift_id: 16
+      shift: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      store_id:
+      lines:
         custom: []
-        name: store_id
-        description: 'The <code>id</code> of an existing record in the stores table.'
-        required: false
-        example: 16
-        type: integer
+        name: lines
+        description: 'Lista de linhas (meios de pagamento).'
+        required: true
+        example:
+          -
+            label: Dinheiro
+            system_value: 1000
+            real_value: 1000
+        type: 'string[]'
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      justification_text:
+        custom: []
+        name: justification_text
+        description: 'Justificativa geral para divergências (opcional).'
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
         nullable: true
         deprecated: false
-      effective_from:
+      justified:
         custom: []
-        name: effective_from
-        description: 'Must be a valid date.'
+        name: justified
+        description: 'Se a divergência está justificada.'
+        required: false
+        example: false
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      'lines[].label':
+        custom: []
+        name: 'lines[].label'
+        description: ''
         required: true
-        example: '2026-01-16T19:10:26'
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      config_json:
+      'lines[].system_value':
         custom: []
-        name: config_json
-        description: 'Must have at least 1 items.'
-        required: true
-        example:
-          - []
-        type: 'object[]'
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      'config_json[].min_sales':
-        custom: []
-        name: 'config_json[].min_sales'
-        description: 'Must be at least 0.'
-        required: true
-        example: 27
-        type: number
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      'config_json[].bonus':
-        custom: []
-        name: 'config_json[].bonus'
+        name: 'lines[].system_value'
         description: 'Must be at least 0.'
         required: true
         example: 39
@@ -335,15 +459,52 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
+      'lines[].real_value':
+        custom: []
+        name: 'lines[].real_value'
+        description: 'Must be at least 0.'
+        required: true
+        example: 84
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
     cleanBodyParameters:
-      store_id: 16
-      effective_from: '2026-01-16T19:10:26'
-      config_json:
+      lines:
         -
-          min_sales: 27
-          bonus: 39
+          label: Dinheiro
+          system_value: 1000
+          real_value: 1000
+      justification_text: null
+      justified: false
     fileParameters: []
-    responses: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "id": 1,
+              "status": "draft",
+              "version": 2,
+              "justification_text": null,
+              "justified": false,
+              "lines": [...]
+            }
+          }
+        headers: []
+        description: 'Fechamento atualizado'
+      -
+        custom: []
+        status: 409
+        content: |-
+          {
+            "error": { "code": 409, "message": "Cannot update closing with status 'approved'." }
+          }
+        headers: []
+        description: 'Não pode atualizar'
     responseFields: []
     auth:
       - headers
@@ -355,24 +516,43 @@ endpoints:
   -
     custom: []
     httpMethods:
-      - DELETE
-    uri: 'api/v1/rules/bonus/{rule_id}'
+      - POST
+    uri: 'api/v1/cash/closings/{shift_id}/submit'
     metadata:
       custom: []
-      groupName: 'Regras de Bônus'
+      groupName: 'Fechamento de Caixa'
       groupDescription: |-
 
-        Gerenciamento de regras de bônus diário.
-        Regras definem faixas de vendas mínimas e valores de bônus correspondentes.
+        Endpoints para gerenciar o fluxo de fechamento de caixa.
 
-        **Hierarquia de regras:**
-        - Regra específica de loja (`store_id` preenchido) tem prioridade sobre regra global
-        - Regra mais recente (`effective_from` maior) tem prioridade
-        - Versionamento automático a cada atualização
+        **Workflow de Estados:**
+        ```
+        draft → submitted → approved
+                          → rejected → draft → ...
+        ```
+
+        - `draft` - Rascunho (editável)
+        - `submitted` - Enviado para conferência
+        - `approved` - Aprovado (imutável)
+        - `rejected` - Rejeitado (volta para draft para correção)
       subgroup: ''
       subgroupDescription: ''
-      title: 'Delete a bonus rule.'
-      description: 'DELETE /api/v1/rules/bonus/{rule}'
+      title: 'Enviar fechamento para conferência'
+      description: |-
+        Envia um fechamento de caixa para ser conferido/aprovado.
+        O fechamento deve estar em status `draft` ou `rejected` para ser enviado.
+
+        **Quem pode usar:** Vendedor responsável pelo turno ou níveis superiores.
+
+        **Regras de negócio:**
+        - Todas as divergências (diff_value ≠ 0) devem ter justificativa preenchida
+        - O status deve ser `draft` ou `rejected` para poder enviar
+
+        **Erros possíveis:**
+        - `409` - Status inválido (já enviado ou aprovado)
+        - `422` - Divergências sem justificativa
+        - `403` - Sem acesso à loja
+        - `404` - Fechamento não encontrado
       authenticated: true
       deprecated: false
     headers:
@@ -380,25 +560,302 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      rule_id:
+      shift_id:
         custom: []
-        name: rule_id
-        description: 'The ID of the rule.'
+        name: shift_id
+        description: 'The ID of the shift.'
         required: true
-        example: 1
+        example: 16
         type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
+      shift:
+        custom: []
+        name: shift
+        description: 'ID do turno.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
     cleanUrlParameters:
-      rule_id: 1
+      shift_id: 16
+      shift: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
-    responses: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "id": 1,
+              "status": "submitted",
+              "version": 1,
+              "lines": [],
+              "cash_shift": { "id": 1, "date": "2026-01-07", "shift_code": "M" }
+            },
+            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+          }
+        headers: []
+        description: 'Enviado com sucesso'
+      -
+        custom: []
+        status: 409
+        content: |-
+          {
+            "error": { "code": 409, "message": "Cannot submit closing with status 'approved'." }
+          }
+        headers: []
+        description: 'Status inválido'
+      -
+        custom: []
+        status: 422
+        content: |-
+          {
+            "message": "All divergences must be justified before submitting.",
+            "errors": { "lines": ["Linha 'Dinheiro' possui divergência sem justificativa."] }
+          }
+        headers: []
+        description: 'Divergência sem justificativa'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/cash/closings/{shift_id}/approve'
+    metadata:
+      custom: []
+      groupName: 'Fechamento de Caixa'
+      groupDescription: |-
+
+        Endpoints para gerenciar o fluxo de fechamento de caixa.
+
+        **Workflow de Estados:**
+        ```
+        draft → submitted → approved
+                          → rejected → draft → ...
+        ```
+
+        - `draft` - Rascunho (editável)
+        - `submitted` - Enviado para conferência
+        - `approved` - Aprovado (imutável)
+        - `rejected` - Rejeitado (volta para draft para correção)
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Aprovar fechamento de caixa'
+      description: |-
+        Aprova um fechamento que foi enviado para conferência.
+        Esta ação é **irreversível** - fechamentos aprovados não podem ser editados.
+
+        **Quem pode usar:** Conferentes, Gerentes ou Admins da loja.
+
+        **Regras de negócio:**
+        - O fechamento deve estar em status `submitted`
+        - Após aprovação, os dados são considerados oficiais para cálculo de bônus/comissão
+
+        **Erros possíveis:**
+        - `409` - Status inválido (não está em submitted)
+        - `403` - Sem permissão para aprovar
+        - `404` - Fechamento não encontrado
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      shift_id:
+        custom: []
+        name: shift_id
+        description: 'The ID of the shift.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      shift:
+        custom: []
+        name: shift
+        description: 'ID do turno.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      shift_id: 16
+      shift: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "id": 1,
+              "status": "approved",
+              "closed_by": 3,
+              "closed_at": "2026-01-07T12:00:00+00:00"
+            },
+            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+          }
+        headers: []
+        description: 'Aprovado com sucesso'
+      -
+        custom: []
+        status: 409
+        content: |-
+          {
+            "error": { "code": 409, "message": "Cannot approve closing with status 'draft'." }
+          }
+        headers: []
+        description: 'Não pode aprovar'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/cash/closings/{shift_id}/reject'
+    metadata:
+      custom: []
+      groupName: 'Fechamento de Caixa'
+      groupDescription: |-
+
+        Endpoints para gerenciar o fluxo de fechamento de caixa.
+
+        **Workflow de Estados:**
+        ```
+        draft → submitted → approved
+                          → rejected → draft → ...
+        ```
+
+        - `draft` - Rascunho (editável)
+        - `submitted` - Enviado para conferência
+        - `approved` - Aprovado (imutável)
+        - `rejected` - Rejeitado (volta para draft para correção)
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Rejeitar fechamento de caixa'
+      description: |-
+        Rejeita um fechamento enviado para conferência, retornando-o ao status `draft`
+        para que o vendedor possa corrigir os problemas apontados.
+
+        **Quem pode usar:** Conferentes, Gerentes ou Admins da loja.
+
+        **Regras de negócio:**
+        - O fechamento deve estar em status `submitted`
+        - É obrigatório informar o motivo da rejeição (mín. 10 caracteres)
+        - O vendedor será notificado e poderá reenviar após correções
+
+        **Erros possíveis:**
+        - `409` - Status inválido (não está em submitted)
+        - `403` - Sem permissão para rejeitar
+        - `422` - Motivo não informado ou muito curto
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      shift_id:
+        custom: []
+        name: shift_id
+        description: 'The ID of the shift.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      shift:
+        custom: []
+        name: shift
+        description: 'ID do turno.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      shift_id: 16
+      shift: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      reason:
+        custom: []
+        name: reason
+        description: 'Motivo da rejeição (mín. 10, máx. 500 caracteres).'
+        required: true
+        example: 'Valores de cartão não conferem com relatório do PDV.'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      reason: 'Valores de cartão não conferem com relatório do PDV.'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "id": 1,
+              "status": "rejected"
+            },
+            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+          }
+        headers: []
+        description: 'Rejeitado com sucesso'
+      -
+        custom: []
+        status: 422
+        content: |-
+          {
+            "message": "The reason field is required.",
+            "errors": { "reason": ["The reason field is required."] }
+          }
+        headers: []
+        description: 'Motivo não informado'
     responseFields: []
     auth:
       - headers

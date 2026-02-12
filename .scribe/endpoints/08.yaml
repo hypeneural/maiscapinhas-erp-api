@@ -1,85 +1,238 @@
-name: 'Fechamento de Caixa'
+name: 'Turnos de Caixa'
 description: |-
 
-  Endpoints para gerenciar o fluxo de fechamento de caixa.
-
-  **Workflow de Estados:**
-  ```
-  draft → submitted → approved
-                    → rejected → draft → ...
-  ```
-
-  - `draft` - Rascunho (editável)
-  - `submitted` - Enviado para conferência
-  - `approved` - Aprovado (imutável)
-  - `rejected` - Rejeitado (volta para draft para correção)
+  Endpoints para gerenciar turnos de caixa.
+  Cada turno representa um período de trabalho de um vendedor em uma loja.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/cash/closings/{shift_id}'
+    uri: api/v1/cash/shifts
     metadata:
       custom: []
-      groupName: 'Fechamento de Caixa'
+      groupName: 'Turnos de Caixa'
       groupDescription: |-
 
-        Endpoints para gerenciar o fluxo de fechamento de caixa.
-
-        **Workflow de Estados:**
-        ```
-        draft → submitted → approved
-                          → rejected → draft → ...
-        ```
-
-        - `draft` - Rascunho (editável)
-        - `submitted` - Enviado para conferência
-        - `approved` - Aprovado (imutável)
-        - `rejected` - Rejeitado (volta para draft para correção)
+        Endpoints para gerenciar turnos de caixa.
+        Cada turno representa um período de trabalho de um vendedor em uma loja.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Obter detalhes do fechamento'
+      title: 'Listar turnos de caixa'
       description: |-
-        Retorna os detalhes completos de um fechamento de caixa,
-        incluindo todas as linhas e a justificativa geral.
+        Retorna os turnos de caixa das lojas às quais o usuário tem acesso,
+        com filtros por loja, data e status.
 
-        **Quem pode usar:** Qualquer usuário com acesso à loja.
+        **Quem pode usar:** Qualquer usuário autenticado.
+
+        **Filtros disponíveis:**
+        - `store_id` - Filtrar por loja específica
+        - `date` - Filtrar por data específica (YYYY-MM-DD)
+        - `status` - Filtrar por status (open, closed, pending)
+
+        **Códigos de turno:**
+        - `1` ou `M` - Manhã
+        - `2` ou `T` - Tarde
+        - `3` ou `N` - Noite
       authenticated: true
       deprecated: false
     headers:
       Authorization: 'Bearer {SEU_TOKEN}'
       Content-Type: application/json
       Accept: application/json
-    urlParameters:
-      shift_id:
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      store_id:
         custom: []
-        name: shift_id
-        description: 'The ID of the shift.'
-        required: true
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      shift:
-        custom: []
-        name: shift
-        description: 'ID do turno.'
-        required: true
+        name: store_id
+        description: 'ID da loja para filtrar.'
+        required: false
         example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-    cleanUrlParameters:
-      shift_id: 16
-      shift: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
+      date:
+        custom: []
+        name: date
+        description: 'Data específica (YYYY-MM-DD).'
+        required: false
+        example: '2026-01-07'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      status:
+        custom: []
+        name: status
+        description: 'Status do turno.'
+        required: false
+        example: open
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      per_page:
+        custom: []
+        name: per_page
+        description: 'Itens por página (1-100).'
+        required: false
+        example: 25
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      store_id: 1
+      date: '2026-01-07'
+      status: open
+      per_page: 25
+    bodyParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'The <code>id</code> of an existing record in the stores table.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      date:
+        custom: []
+        name: date
+        description: 'Must be a valid date.'
+        required: false
+        example: '2026-02-12T06:51:04'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      status:
+        custom: []
+        name: status
+        description: ''
+        required: false
+        example: closed
+        type: string
+        enumValues:
+          - open
+          - closed
+          - pending
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      per_page:
+        custom: []
+        name: per_page
+        description: 'Must be at least 1. Must not be greater than 100.'
+        required: false
+        example: 22
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      store_id: 16
+      date: '2026-02-12T06:51:04'
+      status: closed
+      per_page: 22
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": [
+              {
+                "id": 1,
+                "store_id": 1,
+                "date": "2026-01-07",
+                "shift_code": "M",
+                "seller_id": 6,
+                "status": "open",
+                "store": { "id": 1, "name": "Mais Capinhas Tijucas" },
+                "seller": { "id": 6, "name": "João Vendedor" },
+                "cash_closing": null
+              }
+            ],
+            "meta": { "current_page": 1, "per_page": 25, "total": 84 }
+          }
+        headers: []
+        description: 'Lista de turnos'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/cash/shifts/pending
+    metadata:
+      custom: []
+      groupName: 'Turnos de Caixa'
+      groupDescription: |-
+
+        Endpoints para gerenciar turnos de caixa.
+        Cada turno representa um período de trabalho de um vendedor em uma loja.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Turnos pendentes de conferência'
+      description: |-
+        Lista turnos que ainda não foram aprovados, ordenados por prioridade
+        (mais antigos primeiro).
+
+        **Quem pode usar:** Conferentes, Gerentes e Admins.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'Filtrar por loja.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      store_id: 1
+    bodyParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'The <code>id</code> of an existing record in the stores table.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      store_id: 16
     fileParameters: []
     responses:
       -
@@ -88,22 +241,113 @@ endpoints:
         content: |-
           {
             "data": {
-              "id": 1,
-              "status": "approved",
-              "version": 2,
-              "justification_text": "Troco incorreto no início do turno",
-              "justified": true,
-              "closed_at": "2026-01-07T12:00:00+00:00",
-              "lines": [
-                { "id": 1, "label": "Dinheiro", "system_value": 500.00, "real_value": 495.00, "diff_value": -5.00 }
-              ],
-              "cash_shift": { "id": 1, "date": "2026-01-07", "shift_code": "M" },
-              "closed_by_user": { "id": 3, "name": "Ana Conferente" }
-            },
-            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+              "total_pending": 12,
+              "shifts": [
+                {
+                  "id": 5,
+                  "date": "2026-01-06",
+                  "shift_code": "T",
+                  "days_pending": 2,
+                  "priority": "high",
+                  "store_name": "Tijucas",
+                  "seller_name": "João Silva",
+                  "system_total": 4500.00
+                }
+              ]
+            }
           }
         headers: []
-        description: 'Detalhes do fechamento'
+        description: 'Turnos pendentes'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/cash/shifts/divergent
+    metadata:
+      custom: []
+      groupName: 'Turnos de Caixa'
+      groupDescription: |-
+
+        Endpoints para gerenciar turnos de caixa.
+        Cada turno representa um período de trabalho de um vendedor em uma loja.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Turnos com divergência'
+      description: |-
+        Lista turnos que possuem divergência não justificada entre
+        valores do sistema e valores reais.
+
+        **Quem pode usar:** Conferentes, Gerentes e Admins.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'Filtrar por loja.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      store_id: 1
+    bodyParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'The <code>id</code> of an existing record in the stores table.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      store_id: 16
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "total_divergent": 3,
+              "total_divergence_value": -85.00,
+              "shifts": [
+                {
+                  "id": 8,
+                  "date": "2026-01-05",
+                  "shift_code": "N",
+                  "store_name": "Bombinhas",
+                  "seller_name": "Maria Santos",
+                  "divergence": -50.00,
+                  "has_justification": false,
+                  "days_pending": 3
+                }
+              ]
+            }
+          }
+        headers: []
+        description: 'Turnos divergentes'
     responseFields: []
     auth:
       - headers
@@ -116,59 +360,46 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: 'api/v1/cash/closings/{shift_id}'
+    uri: api/v1/cash/shifts
     metadata:
       custom: []
-      groupName: 'Fechamento de Caixa'
+      groupName: 'Turnos de Caixa'
       groupDescription: |-
 
-        Endpoints para gerenciar o fluxo de fechamento de caixa.
-
-        **Workflow de Estados:**
-        ```
-        draft → submitted → approved
-                          → rejected → draft → ...
-        ```
-
-        - `draft` - Rascunho (editável)
-        - `submitted` - Enviado para conferência
-        - `approved` - Aprovado (imutável)
-        - `rejected` - Rejeitado (volta para draft para correção)
+        Endpoints para gerenciar turnos de caixa.
+        Cada turno representa um período de trabalho de um vendedor em uma loja.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Criar fechamento de caixa'
+      title: 'Criar novo turno de caixa'
       description: |-
-        Cria um novo fechamento de caixa para um turno existente,
-        incluindo os valores por meio de pagamento.
+        Cria um novo turno de caixa para uma loja/data/período.
 
-        **Quem pode usar:** Qualquer usuário com acesso à loja.
+        **Quem pode usar:** Usuários com acesso à loja.
 
         **Regras de negócio:**
-        - O turno não pode ter um fechamento existente
-        - A justificativa é opcional e se aplica ao turno inteiro (não por linha)
-        - O campo `justified` indica se a divergência foi justificada (usado para cálculo de bônus)
+        - Não pode haver dois turnos com mesma loja + data + turno + vendedor
+        - O turno inicia com status `open`
+        - Se `seller_id` não for informado, assume o usuário atual
+
+        **Códigos de turno:**
+        - `1` ou `M` - Manhã (08h-14h)
+        - `2` ou `T` - Tarde (14h-20h)
+        - `3` ou `N` - Noite (20h-00h)
       authenticated: true
       deprecated: false
     headers:
       Authorization: 'Bearer {SEU_TOKEN}'
       Content-Type: application/json
       Accept: application/json
-    urlParameters:
-      shift_id:
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      store_id:
         custom: []
-        name: shift_id
-        description: 'The ID of the shift.'
-        required: true
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      shift:
-        custom: []
-        name: shift
-        description: 'ID do turno.'
+        name: store_id
+        description: 'ID da loja.'
         required: true
         example: 1
         type: integer
@@ -176,123 +407,44 @@ endpoints:
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-    cleanUrlParameters:
-      shift_id: 16
-      shift: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      lines:
+      date:
         custom: []
-        name: lines
-        description: 'Lista de linhas (meios de pagamento).'
+        name: date
+        description: 'Data do turno (YYYY-MM-DD).'
         required: true
-        example:
-          -
-            label: Dinheiro
-            system_value: 1000
-            real_value: 950
-        type: 'string[]'
+        example: '2026-01-07'
+        type: string
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-      justification_text:
+      shift_code:
         custom: []
-        name: justification_text
-        description: 'Justificativa geral para divergências (opcional).'
+        name: shift_code
+        description: 'Código do turno (1, 2, 3 ou M, T, N).'
+        required: true
+        example: '1'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      seller_id:
+        custom: []
+        name: seller_id
+        description: 'ID do vendedor (padrão: usuário atual).'
         required: false
-        example: 'Troco dado incorretamente'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      justified:
-        custom: []
-        name: justified
-        description: 'Se a divergência está justificada (usado para bônus).'
-        required: false
-        example: true
-        type: boolean
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      'lines[].label':
-        custom: []
-        name: 'lines[].label'
-        description: ''
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      'lines[].system_value':
-        custom: []
-        name: 'lines[].system_value'
-        description: 'Must be at least 0.'
-        required: true
-        example: 39
-        type: number
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      'lines[].real_value':
-        custom: []
-        name: 'lines[].real_value'
-        description: 'Must be at least 0.'
-        required: true
-        example: 84
-        type: number
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      'lines.*.label':
-        custom: []
-        name: 'lines.*.label'
-        description: 'Nome do meio de pagamento.'
-        required: true
-        example: Dinheiro
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      'lines.*.system_value':
-        custom: []
-        name: 'lines.*.system_value'
-        description: 'Valor informado no sistema.'
-        required: true
-        example: 1000.0
-        type: number
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      'lines.*.real_value':
-        custom: []
-        name: 'lines.*.real_value'
-        description: 'Valor real contado.'
-        required: true
-        example: 950.0
-        type: number
+        example: 6
+        type: integer
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      lines:
-        -
-          label: Dinheiro
-          system_value: 1000
-          real_value: 950
-      justification_text: 'Troco dado incorretamente'
-      justified: true
+      store_id: 1
+      date: '2026-01-07'
+      shift_code: '1'
+      seller_id: 6
     fileParameters: []
     responses:
       -
@@ -302,27 +454,27 @@ endpoints:
           {
             "data": {
               "id": 1,
-              "status": "draft",
-              "version": 1,
-              "justification_text": "Troco dado incorretamente",
-              "justified": true,
-              "lines": [
-                { "id": 1, "label": "Dinheiro", "system_value": 1000.00, "real_value": 950.00, "diff_value": -50.00 }
-              ]
+              "store_id": 1,
+              "date": "2026-01-07",
+              "shift_code": "M",
+              "seller_id": 6,
+              "status": "open",
+              "store": { "id": 1, "name": "Mais Capinhas Tijucas" },
+              "seller": { "id": 6, "name": "João Vendedor" }
             },
             "meta": { "timestamp": "2026-01-07T12:00:00Z" }
           }
         headers: []
-        description: 'Fechamento criado'
+        description: 'Turno criado'
       -
         custom: []
-        status: 409
+        status: 403
         content: |-
           {
-            "error": { "code": 409, "message": "Closing already exists for this shift." }
+            "error": { "code": 403, "message": "You do not have access to this store." }
           }
         headers: []
-        description: 'Fechamento já existe'
+        description: 'Sem acesso'
     responseFields: []
     auth:
       - headers
@@ -334,37 +486,22 @@ endpoints:
   -
     custom: []
     httpMethods:
-      - PUT
-    uri: 'api/v1/cash/closings/{shift_id}'
+      - GET
+    uri: 'api/v1/cash/shifts/{id}'
     metadata:
       custom: []
-      groupName: 'Fechamento de Caixa'
+      groupName: 'Turnos de Caixa'
       groupDescription: |-
 
-        Endpoints para gerenciar o fluxo de fechamento de caixa.
-
-        **Workflow de Estados:**
-        ```
-        draft → submitted → approved
-                          → rejected → draft → ...
-        ```
-
-        - `draft` - Rascunho (editável)
-        - `submitted` - Enviado para conferência
-        - `approved` - Aprovado (imutável)
-        - `rejected` - Rejeitado (volta para draft para correção)
+        Endpoints para gerenciar turnos de caixa.
+        Cada turno representa um período de trabalho de um vendedor em uma loja.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Atualizar fechamento de caixa'
+      title: 'Obter detalhes de um turno'
       description: |-
-        Atualiza um fechamento de caixa existente (apenas em status draft ou rejected).
+        Retorna os detalhes de um turno específico, incluindo o fechamento se existir.
 
-        **Quem pode usar:** Qualquer usuário com acesso à loja.
-
-        **Regras de negócio:**
-        - O fechamento deve estar em status `draft` ou `rejected`
-        - A justificativa é opcional e se aplica ao turno inteiro
-        - Todas as linhas são substituídas pelos novos valores
+        **Quem pode usar:** Usuários com acesso à loja.
       authenticated: true
       deprecated: false
     headers:
@@ -372,9 +509,9 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      shift_id:
+      id:
         custom: []
-        name: shift_id
+        name: id
         description: 'The ID of the shift.'
         required: true
         example: 16
@@ -395,195 +532,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      shift_id: 16
-      shift: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      lines:
-        custom: []
-        name: lines
-        description: 'Lista de linhas (meios de pagamento).'
-        required: true
-        example:
-          -
-            label: Dinheiro
-            system_value: 1000
-            real_value: 1000
-        type: 'string[]'
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      justification_text:
-        custom: []
-        name: justification_text
-        description: 'Justificativa geral para divergências (opcional).'
-        required: false
-        example: null
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      justified:
-        custom: []
-        name: justified
-        description: 'Se a divergência está justificada.'
-        required: false
-        example: false
-        type: boolean
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      'lines[].label':
-        custom: []
-        name: 'lines[].label'
-        description: ''
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      'lines[].system_value':
-        custom: []
-        name: 'lines[].system_value'
-        description: 'Must be at least 0.'
-        required: true
-        example: 39
-        type: number
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      'lines[].real_value':
-        custom: []
-        name: 'lines[].real_value'
-        description: 'Must be at least 0.'
-        required: true
-        example: 84
-        type: number
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      lines:
-        -
-          label: Dinheiro
-          system_value: 1000
-          real_value: 1000
-      justification_text: null
-      justified: false
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "data": {
-              "id": 1,
-              "status": "draft",
-              "version": 2,
-              "justification_text": null,
-              "justified": false,
-              "lines": [...]
-            }
-          }
-        headers: []
-        description: 'Fechamento atualizado'
-      -
-        custom: []
-        status: 409
-        content: |-
-          {
-            "error": { "code": 409, "message": "Cannot update closing with status 'approved'." }
-          }
-        headers: []
-        description: 'Não pode atualizar'
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - POST
-    uri: 'api/v1/cash/closings/{shift_id}/submit'
-    metadata:
-      custom: []
-      groupName: 'Fechamento de Caixa'
-      groupDescription: |-
-
-        Endpoints para gerenciar o fluxo de fechamento de caixa.
-
-        **Workflow de Estados:**
-        ```
-        draft → submitted → approved
-                          → rejected → draft → ...
-        ```
-
-        - `draft` - Rascunho (editável)
-        - `submitted` - Enviado para conferência
-        - `approved` - Aprovado (imutável)
-        - `rejected` - Rejeitado (volta para draft para correção)
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Enviar fechamento para conferência'
-      description: |-
-        Envia um fechamento de caixa para ser conferido/aprovado.
-        O fechamento deve estar em status `draft` ou `rejected` para ser enviado.
-
-        **Quem pode usar:** Vendedor responsável pelo turno ou níveis superiores.
-
-        **Regras de negócio:**
-        - Todas as divergências (diff_value ≠ 0) devem ter justificativa preenchida
-        - O status deve ser `draft` ou `rejected` para poder enviar
-
-        **Erros possíveis:**
-        - `409` - Status inválido (já enviado ou aprovado)
-        - `422` - Divergências sem justificativa
-        - `403` - Sem acesso à loja
-        - `404` - Fechamento não encontrado
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      shift_id:
-        custom: []
-        name: shift_id
-        description: 'The ID of the shift.'
-        required: true
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      shift:
-        custom: []
-        name: shift
-        description: 'ID do turno.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      shift_id: 16
+      id: 16
       shift: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -598,264 +547,20 @@ endpoints:
           {
             "data": {
               "id": 1,
-              "status": "submitted",
-              "version": 1,
-              "lines": [],
-              "cash_shift": { "id": 1, "date": "2026-01-07", "shift_code": "M" }
+              "store_id": 1,
+              "date": "2026-01-07",
+              "shift_code": "M",
+              "status": "closed",
+              "cash_closing": {
+                "id": 1,
+                "status": "approved",
+                "lines": []
+              }
             },
             "meta": { "timestamp": "2026-01-07T12:00:00Z" }
           }
         headers: []
-        description: 'Enviado com sucesso'
-      -
-        custom: []
-        status: 409
-        content: |-
-          {
-            "error": { "code": 409, "message": "Cannot submit closing with status 'approved'." }
-          }
-        headers: []
-        description: 'Status inválido'
-      -
-        custom: []
-        status: 422
-        content: |-
-          {
-            "message": "All divergences must be justified before submitting.",
-            "errors": { "lines": ["Linha 'Dinheiro' possui divergência sem justificativa."] }
-          }
-        headers: []
-        description: 'Divergência sem justificativa'
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - POST
-    uri: 'api/v1/cash/closings/{shift_id}/approve'
-    metadata:
-      custom: []
-      groupName: 'Fechamento de Caixa'
-      groupDescription: |-
-
-        Endpoints para gerenciar o fluxo de fechamento de caixa.
-
-        **Workflow de Estados:**
-        ```
-        draft → submitted → approved
-                          → rejected → draft → ...
-        ```
-
-        - `draft` - Rascunho (editável)
-        - `submitted` - Enviado para conferência
-        - `approved` - Aprovado (imutável)
-        - `rejected` - Rejeitado (volta para draft para correção)
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Aprovar fechamento de caixa'
-      description: |-
-        Aprova um fechamento que foi enviado para conferência.
-        Esta ação é **irreversível** - fechamentos aprovados não podem ser editados.
-
-        **Quem pode usar:** Conferentes, Gerentes ou Admins da loja.
-
-        **Regras de negócio:**
-        - O fechamento deve estar em status `submitted`
-        - Após aprovação, os dados são considerados oficiais para cálculo de bônus/comissão
-
-        **Erros possíveis:**
-        - `409` - Status inválido (não está em submitted)
-        - `403` - Sem permissão para aprovar
-        - `404` - Fechamento não encontrado
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      shift_id:
-        custom: []
-        name: shift_id
-        description: 'The ID of the shift.'
-        required: true
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      shift:
-        custom: []
-        name: shift
-        description: 'ID do turno.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      shift_id: 16
-      shift: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "data": {
-              "id": 1,
-              "status": "approved",
-              "closed_by": 3,
-              "closed_at": "2026-01-07T12:00:00+00:00"
-            },
-            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
-          }
-        headers: []
-        description: 'Aprovado com sucesso'
-      -
-        custom: []
-        status: 409
-        content: |-
-          {
-            "error": { "code": 409, "message": "Cannot approve closing with status 'draft'." }
-          }
-        headers: []
-        description: 'Não pode aprovar'
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - POST
-    uri: 'api/v1/cash/closings/{shift_id}/reject'
-    metadata:
-      custom: []
-      groupName: 'Fechamento de Caixa'
-      groupDescription: |-
-
-        Endpoints para gerenciar o fluxo de fechamento de caixa.
-
-        **Workflow de Estados:**
-        ```
-        draft → submitted → approved
-                          → rejected → draft → ...
-        ```
-
-        - `draft` - Rascunho (editável)
-        - `submitted` - Enviado para conferência
-        - `approved` - Aprovado (imutável)
-        - `rejected` - Rejeitado (volta para draft para correção)
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Rejeitar fechamento de caixa'
-      description: |-
-        Rejeita um fechamento enviado para conferência, retornando-o ao status `draft`
-        para que o vendedor possa corrigir os problemas apontados.
-
-        **Quem pode usar:** Conferentes, Gerentes ou Admins da loja.
-
-        **Regras de negócio:**
-        - O fechamento deve estar em status `submitted`
-        - É obrigatório informar o motivo da rejeição (mín. 10 caracteres)
-        - O vendedor será notificado e poderá reenviar após correções
-
-        **Erros possíveis:**
-        - `409` - Status inválido (não está em submitted)
-        - `403` - Sem permissão para rejeitar
-        - `422` - Motivo não informado ou muito curto
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      shift_id:
-        custom: []
-        name: shift_id
-        description: 'The ID of the shift.'
-        required: true
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      shift:
-        custom: []
-        name: shift
-        description: 'ID do turno.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      shift_id: 16
-      shift: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      reason:
-        custom: []
-        name: reason
-        description: 'Motivo da rejeição (mín. 10, máx. 500 caracteres).'
-        required: true
-        example: 'Valores de cartão não conferem com relatório do PDV.'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      reason: 'Valores de cartão não conferem com relatório do PDV.'
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "data": {
-              "id": 1,
-              "status": "rejected"
-            },
-            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
-          }
-        headers: []
-        description: 'Rejeitado com sucesso'
-      -
-        custom: []
-        status: 422
-        content: |-
-          {
-            "message": "The reason field is required.",
-            "errors": { "reason": ["The reason field is required."] }
-          }
-        headers: []
-        description: 'Motivo não informado'
+        description: 'Turno encontrado'
     responseFields: []
     auth:
       - headers

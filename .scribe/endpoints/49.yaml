@@ -1,0 +1,320 @@
+name: 'Wheel - Inventory'
+description: |-
+
+  API para gerenciamento de Inventário/Estoque de prêmios do módulo Roleta.
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}/inventory'
+    metadata:
+      custom: []
+      groupName: 'Wheel - Inventory'
+      groupDescription: |-
+
+        API para gerenciamento de Inventário/Estoque de prêmios do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Listar inventário de uma campanha.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      campaign_key:
+        custom: []
+        name: campaign_key
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      campaign_key: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}/inventory'
+    metadata:
+      custom: []
+      groupName: 'Wheel - Inventory'
+      groupDescription: |-
+
+        API para gerenciamento de Inventário/Estoque de prêmios do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Sincronizar inventário (batch update).'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      campaign_key:
+        custom: []
+        name: campaign_key
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      campaign_key: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      inventory:
+        custom: []
+        name: inventory
+        description: ''
+        required: true
+        example:
+          - []
+        type: 'object[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'inventory[].prize_id':
+        custom: []
+        name: 'inventory[].prize_id'
+        description: 'The <code>id</code> of an existing record in the wheel_prizes table.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'inventory[].total_limit':
+        custom: []
+        name: 'inventory[].total_limit'
+        description: 'Must be at least 0.'
+        required: false
+        example: 39
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      'inventory[].remaining':
+        custom: []
+        name: 'inventory[].remaining'
+        description: 'Must be at least 0.'
+        required: false
+        example: 84
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      'inventory[].daily_limit':
+        custom: []
+        name: 'inventory[].daily_limit'
+        description: 'Must be at least 0.'
+        required: false
+        example: 12
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      'inventory[].daily_remaining':
+        custom: []
+        name: 'inventory[].daily_remaining'
+        description: 'Must be at least 0.'
+        required: false
+        example: 77
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      inventory:
+        -
+          prize_id: architecto
+          total_limit: 39
+          remaining: 84
+          daily_limit: 12
+          daily_remaining: 77
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}/inventory/{prize_key}/add'
+    metadata:
+      custom: []
+      groupName: 'Wheel - Inventory'
+      groupDescription: |-
+
+        API para gerenciamento de Inventário/Estoque de prêmios do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Adicionar estoque a um prêmio.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      campaign_key:
+        custom: []
+        name: campaign_key
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      prize_key:
+        custom: []
+        name: prize_key
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      campaign_key: architecto
+      prize_key: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      quantity:
+        custom: []
+        name: quantity
+        description: 'Must be at least 1.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      quantity: 16
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}/inventory/{prize_key}/reset-daily'
+    metadata:
+      custom: []
+      groupName: 'Wheel - Inventory'
+      groupDescription: |-
+
+        API para gerenciamento de Inventário/Estoque de prêmios do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Resetar limite diário de um prêmio.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      campaign_key:
+        custom: []
+        name: campaign_key
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      prize_key:
+        custom: []
+        name: prize_key
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      campaign_key: architecto
+      prize_key: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

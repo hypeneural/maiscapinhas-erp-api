@@ -850,6 +850,34 @@ test('sets gestao_db_failure risk flag when integrity warning reports gestao dat
     expect($riskFlags)->toContain('gestao_db_failure');
 });
 
+test('sets warning risk flags for vendedor null and meio de pagamento null warnings', function () {
+    $payload = pdvPayloadV3([
+        'integrity' => [
+            'sync_id' => 'sync-warning-risk-flags-001',
+            'warnings' => [
+                'Vendedor NULL encontrado em 2 cupom(s)',
+                'Meio de pagamento NULL encontrado',
+            ],
+        ],
+    ]);
+
+    $response = signedPdvRequest($payload, null, null, [
+        'HTTP_X_PDV_SCHEMA_VERSION' => '3.0',
+    ])->assertStatus(201)
+        ->assertJsonPath('data.status', 'created');
+
+    expect($response->json('data.risk_flags'))->toContain('vendedor_null');
+    expect($response->json('data.risk_flags'))->toContain('meio_pagamento_null');
+
+    $riskFlags = PdvSync::query()
+        ->where('sync_id', 'sync-warning-risk-flags-001')
+        ->value('risk_flags');
+    $riskFlags = is_array($riskFlags) ? $riskFlags : [];
+
+    expect($riskFlags)->toContain('vendedor_null');
+    expect($riskFlags)->toContain('meio_pagamento_null');
+});
+
 test('rejects bearer token when auth mode is bearer and token is invalid', function () {
     config()->set('pdv.auth_mode', 'bearer');
 
