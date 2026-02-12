@@ -263,3 +263,48 @@ Conclusao: fila ainda nao esta consumindo no ambiente publicado.
 - `schema 3`: **reprovado** no endpoint publicado.
 - fila/worker via cron: **reprovado** (sem consumo observado).
 - estado geral: **nao 100%**.
+
+## 12) Reteste apos ajustes no servidor (2026-02-12 02:56 UTC)
+
+### 12.1 Probes de schema (resultado atual)
+
+- Probe `schema_version=3.0`:
+  - `sync_id=probe3-d231a0b300`
+  - HTTP `201 created`
+  - persistido em `pdv_syncs.id=24` com `schema_version=3.0`.
+- Probe `schema_version=2.0`:
+  - `sync_id=probe2-5a7a5d6f26`
+  - HTTP `422 validation`
+  - erro: `schema_version invalid`.
+
+Conclusao: ingress agora esta correto em v3-only.
+
+### 12.2 Fila (resultado atual)
+
+- Evidencia de consumo manual:
+  - execucao manual de `php artisan pdv:queue-consume --json` no servidor processou jobs (incluindo IDs antigos `21`, `22`, `23`).
+- Evidencia de pendencia automatica:
+  - novos registros v3 (`id=24` ate `id=30`) permaneceram `queued` por varios minutos sem `processing_started_at`.
+  - snapshot atual:
+    - `total=30`
+    - `queued=8`
+    - `processing=0`
+    - `processed=22`
+    - `failed=0`
+
+Conclusao: consumo manual funciona; consumo automatico por scheduler/cron ainda nao esta drenando continuamente.
+
+### 12.3 Replay 6 JSON reais (estado atual)
+
+- `1.json` a `6.json`: `6/6` aceitos com `201 created`.
+- `schema_version` persistido: `3.0`.
+- `pdv_sync_id`: `25` a `30`.
+- Estado de processamento apos janela de observacao: ainda `queued`.
+
+### 12.4 Ajuste aplicado no codigo para ambiente de revenda
+
+- Em `routes/console.php`, o job agendado `pdv:queue-consume` foi alterado para:
+  - `->withoutOverlapping(2)` (TTL de lock de 2 minutos).
+- Objetivo: evitar lock stale longo quando processo e interrompido pela hospedagem.
+
+Esse ajuste precisa estar no deploy ativo para validar se resolve o bloqueio do consumo automatico.

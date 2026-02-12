@@ -116,3 +116,19 @@ Eventos chave:
    - `pdv_venda_pagamentos`
    - `pdv_turnos`
    - `pdv_vendas_resumo`
+
+## 7) Diagnostico rapido em shell
+
+Comando tinker sem erro de aspas:
+
+```bash
+php artisan tinker --execute='dump(config("pdv.supported_schema_versions"), config("pdv.cron_queue_consumer_enabled"), app()->basePath());'
+```
+
+Se os syncs ficarem em `queued`, validar em sequencia:
+
+```bash
+php artisan schedule:list
+php artisan schedule:run -v
+php artisan pdv:queue-consume --max-time=50 --sleep=1 --memory=256 --json
+```
