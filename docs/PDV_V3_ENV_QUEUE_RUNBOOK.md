@@ -2,9 +2,10 @@
 
 ## 1) Fix imediato de schema v3 no `.env` de producao
 
+Ambiente alvo: aceitar somente `schema_version=3.0`.
+
 ```env
-PDV_SUPPORTED_SCHEMA_VERSIONS=2.0,3.0
-PDV_JSON_SCHEMA_FILE_2_0=docs/schema_v2.0.json
+PDV_SUPPORTED_SCHEMA_VERSIONS=3.0
 PDV_JSON_SCHEMA_FILE_3_0=docs/schema_v3.0.json
 ```
 

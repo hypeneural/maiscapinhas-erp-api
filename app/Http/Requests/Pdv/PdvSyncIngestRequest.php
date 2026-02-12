@@ -19,9 +19,9 @@ class PdvSyncIngestRequest extends FormRequest
 
     public function rules(): array
     {
-        $supportedSchemaVersions = config('pdv.supported_schema_versions', ['2.0']);
+        $supportedSchemaVersions = config('pdv.supported_schema_versions', ['3.0']);
         if (!is_array($supportedSchemaVersions) || $supportedSchemaVersions === []) {
-            $supportedSchemaVersions = ['2.0', '3.0'];
+            $supportedSchemaVersions = ['3.0'];
         }
 
         return [

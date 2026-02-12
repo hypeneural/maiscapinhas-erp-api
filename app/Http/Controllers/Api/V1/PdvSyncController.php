@@ -78,8 +78,8 @@ class PdvSyncController extends Controller
         }
 
         $headerSchemaVersion = trim((string) $request->header('X-PDV-Schema-Version', ''));
-        $supportedSchemaVersions = config('pdv.supported_schema_versions', ['2.0']);
-        $supportedSchemaVersions = is_array($supportedSchemaVersions) ? $supportedSchemaVersions : ['2.0'];
+        $supportedSchemaVersions = config('pdv.supported_schema_versions', ['3.0']);
+        $supportedSchemaVersions = is_array($supportedSchemaVersions) ? $supportedSchemaVersions : ['3.0'];
 
         if ($headerSchemaVersion !== '' && !in_array($headerSchemaVersion, $supportedSchemaVersions, true)) {
             return $this->pdvValidationError(

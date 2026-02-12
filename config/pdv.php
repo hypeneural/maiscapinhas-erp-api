@@ -22,11 +22,10 @@ return [
     'allow_none_mode_in_production' => (bool) env('PDV_ALLOW_NONE_MODE_IN_PRODUCTION', false),
     'supported_schema_versions' => array_values(array_filter(array_map(
         static fn (string $value): string => trim($value),
-        explode(',', (string) env('PDV_SUPPORTED_SCHEMA_VERSIONS', '2.0,3.0'))
+        explode(',', (string) env('PDV_SUPPORTED_SCHEMA_VERSIONS', '3.0'))
     ))),
     'json_schema_validation_enabled' => (bool) env('PDV_JSON_SCHEMA_VALIDATION_ENABLED', false),
     'json_schema_files' => [
-        '2.0' => env('PDV_JSON_SCHEMA_FILE_2_0', base_path('docs/schema_v2.0.json')),
         '3.0' => env('PDV_JSON_SCHEMA_FILE_3_0', base_path('docs/schema_v3.0.json')),
     ],
     'log_channel' => env('PDV_LOG_CHANNEL', 'pdv'),
