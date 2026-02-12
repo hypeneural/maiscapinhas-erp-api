@@ -185,6 +185,9 @@ class PdvSyncController extends Controller
         $blockOnAliasMismatch = (bool) config('pdv.block_on_alias_mismatch', false);
         $shouldBlock = $aliasMismatch && $blockOnAliasMismatch;
 
+        $warnings = data_get($payload, 'integrity.warnings', []);
+        $warnings = is_array($warnings) ? array_values($warnings) : [];
+
         $riskFlags = [];
         if ($timestampOutOfWindow) {
             $riskFlags[] = 'timestamp_out_of_window';
@@ -209,11 +212,9 @@ class PdvSyncController extends Controller
         }
         $riskFlags = array_values(array_unique(array_merge(
             $riskFlags,
-            $this->semanticEventTypeRiskFlags($payload, $eventType)
+            $this->semanticEventTypeRiskFlags($payload, $eventType),
+            $this->warningRiskFlags($warnings)
         )));
-
-        $warnings = data_get($payload, 'integrity.warnings', []);
-        $warnings = is_array($warnings) ? array_values($warnings) : [];
 
         $windowFrom = PdvDateTime::parseToUtc((string) data_get($payload, 'window.from'));
         $windowTo = PdvDateTime::parseToUtc((string) data_get($payload, 'window.to'));
@@ -478,6 +479,28 @@ class PdvSyncController extends Controller
         }
 
         return $riskFlags;
+    }
+
+    /**
+     * @param array<int, mixed> $warnings
+     * @return array<int, string>
+     */
+    private function warningRiskFlags(array $warnings): array
+    {
+        $riskFlags = [];
+
+        foreach ($warnings as $warning) {
+            $value = is_string($warning) ? strtoupper(trim($warning)) : '';
+            if ($value === '') {
+                continue;
+            }
+
+            if (str_starts_with($value, 'GESTAO_DB_FAILURE')) {
+                $riskFlags[] = 'gestao_db_failure';
+            }
+        }
+
+        return array_values(array_unique($riskFlags));
     }
 
     private function pdvValidationError(string $message, array $details, array $context = []): JsonResponse

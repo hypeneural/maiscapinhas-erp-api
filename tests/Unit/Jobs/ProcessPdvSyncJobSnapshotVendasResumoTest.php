@@ -86,6 +86,19 @@ beforeEach(function () {
 
         $table->unique(['store_pdv_id', 'canal', 'id_operacao'], 'pdv_vendas_resumo_unique_key');
     });
+
+    Schema::create('pdv_vendas', function (Blueprint $table) {
+        $table->id();
+        $table->unsignedBigInteger('store_pdv_id');
+        $table->unsignedBigInteger('store_id')->nullable();
+        $table->string('canal', 20)->default('HIPER_CAIXA');
+        $table->unsignedBigInteger('id_operacao');
+        $table->dateTime('last_seen_in_snapshot_at')->nullable();
+        $table->dateTime('created_at')->nullable();
+        $table->dateTime('updated_at')->nullable();
+
+        $table->unique(['store_pdv_id', 'canal', 'id_operacao'], 'pdv_vendas_unique_key');
+    });
 });
 
 /**
@@ -310,4 +323,53 @@ test('adds risk flag when snapshot_vendas entry is malformed', function () {
 
     expect($riskFlags)->toContain('snapshot_venda_malformed');
     expect(DB::table('pdv_vendas_resumo')->count())->toBe(0);
+});
+
+test('snapshot_vendas updates last_seen_in_snapshot_at only for canonical keys present in snapshot', function () {
+    DB::table('pdv_vendas')->insert([
+        [
+            'store_pdv_id' => 10,
+            'store_id' => 1,
+            'canal' => 'HIPER_LOJA',
+            'id_operacao' => 5001,
+            'last_seen_in_snapshot_at' => null,
+            'created_at' => now()->subDay(),
+            'updated_at' => now()->subDay(),
+        ],
+        [
+            'store_pdv_id' => 10,
+            'store_id' => 1,
+            'canal' => 'HIPER_CAIXA',
+            'id_operacao' => 5002,
+            'last_seen_in_snapshot_at' => null,
+            'created_at' => now()->subDay(),
+            'updated_at' => now()->subDay(),
+        ],
+    ]);
+
+    $sync = createSyncForSnapshotVendasTest([
+        [
+            'id_operacao' => 5001,
+            'canal' => 'HIPER_LOJA',
+            'data_hora_inicio' => '2026-02-11T13:05:00-03:00',
+            'qtd_itens' => 2,
+            'total_itens' => 90.00,
+        ],
+    ], 'sync-pr45-last-seen-001');
+
+    (new ProcessPdvSyncJob($sync->id))->handle();
+
+    $updated = DB::table('pdv_vendas')
+        ->where('store_pdv_id', 10)
+        ->where('canal', 'HIPER_LOJA')
+        ->where('id_operacao', 5001)
+        ->value('last_seen_in_snapshot_at');
+    $untouched = DB::table('pdv_vendas')
+        ->where('store_pdv_id', 10)
+        ->where('canal', 'HIPER_CAIXA')
+        ->where('id_operacao', 5002)
+        ->value('last_seen_in_snapshot_at');
+
+    expect($updated)->not->toBeNull();
+    expect($untouched)->toBeNull();
 });

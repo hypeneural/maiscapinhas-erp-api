@@ -234,6 +234,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/turnos', [PdvReportsController::class, 'turnos'])->name('turnos');
         Route::get('/vendas', [PdvReportsController::class, 'vendas'])->name('vendas');
         Route::get('/ranking-vendedores', [PdvReportsController::class, 'rankingVendedores'])->name('ranking-vendedores');
+        Route::get('/ranking-vendedor-loja', [PdvReportsController::class, 'rankingVendedorLoja'])->name('ranking-vendedor-loja');
     });
 
     // ============================================

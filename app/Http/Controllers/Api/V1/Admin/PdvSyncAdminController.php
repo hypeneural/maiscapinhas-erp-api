@@ -190,6 +190,9 @@ class PdvSyncAdminController extends Controller
             'event_type_mixed_without_closed_turno' => (int) PdvSync::query()
                 ->whereJsonContains('risk_flags', 'event_type_mixed_without_closed_turno')
                 ->count(),
+            'gestao_db_failure' => (int) PdvSync::query()
+                ->whereJsonContains('risk_flags', 'gestao_db_failure')
+                ->count(),
         ];
 
         $statusBreakdown = [

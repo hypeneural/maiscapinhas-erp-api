@@ -22,13 +22,34 @@ class PdvReportsController extends Controller
 
     public function turnos(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'store_id' => ['nullable', 'integer', 'exists:stores,id'],
-            'store_pdv_id' => ['nullable', 'integer', 'min:1'],
-            'date' => ['required', 'date'],
-            'sequencial' => ['nullable', 'integer', 'min:1'],
-            'periodo' => ['nullable', 'string', 'in:MATUTINO,VESPERTINO,NOTURNO'],
-        ]);
+        $validated = $request->validate(
+            [
+                'store_id' => ['nullable', 'integer', 'exists:stores,id'],
+                'store_pdv_id' => ['nullable', 'integer', 'min:1'],
+                'date' => ['required', 'date'],
+                'sequencial' => ['nullable', 'integer', 'min:1'],
+                'periodo' => ['nullable', 'string', 'in:MATUTINO,VESPERTINO,NOTURNO'],
+                'fechado' => ['nullable', 'boolean'],
+                'operador_id' => ['nullable', 'integer', 'min:1'],
+                'responsavel_id' => ['nullable', 'integer', 'min:1'],
+            ],
+            [
+                'store_id.integer' => 'O campo store_id deve ser numerico.',
+                'store_id.exists' => 'A loja informada em store_id nao foi encontrada.',
+                'store_pdv_id.integer' => 'O campo store_pdv_id deve ser numerico.',
+                'store_pdv_id.min' => 'O campo store_pdv_id deve ser maior que zero.',
+                'date.required' => 'O campo date e obrigatorio.',
+                'date.date' => 'O campo date deve estar no formato de data valido (YYYY-MM-DD).',
+                'sequencial.integer' => 'O campo sequencial deve ser numerico.',
+                'sequencial.min' => 'O campo sequencial deve ser maior que zero.',
+                'periodo.in' => 'O campo periodo deve ser MATUTINO, VESPERTINO ou NOTURNO.',
+                'fechado.boolean' => 'O campo fechado deve ser true/false (ou 1/0).',
+                'operador_id.integer' => 'O campo operador_id deve ser numerico.',
+                'operador_id.min' => 'O campo operador_id deve ser maior que zero.',
+                'responsavel_id.integer' => 'O campo responsavel_id deve ser numerico.',
+                'responsavel_id.min' => 'O campo responsavel_id deve ser maior que zero.',
+            ]
+        );
 
         $storeId = isset($validated['store_id']) ? (int) $validated['store_id'] : null;
         $storePdvId = isset($validated['store_pdv_id']) ? (int) $validated['store_pdv_id'] : null;
@@ -73,6 +94,15 @@ class PdvReportsController extends Controller
         if (!empty($validated['periodo'])) {
             $query->where('t.periodo', (string) $validated['periodo']);
         }
+        if (array_key_exists('fechado', $validated)) {
+            $query->where('t.fechado', (bool) $validated['fechado']);
+        }
+        if (isset($validated['operador_id'])) {
+            $query->where('t.operador_pdv_id', (int) $validated['operador_id']);
+        }
+        if (isset($validated['responsavel_id'])) {
+            $query->where('t.responsavel_pdv_id', (int) $validated['responsavel_id']);
+        }
 
         $turnos = $query
             ->orderBy('t.sequencial')
@@ -87,6 +117,13 @@ class PdvReportsController extends Controller
                 'declarado' => [],
                 'falta' => [],
             ];
+            $totalFalta = $turno->total_falta !== null ? (float) $turno->total_falta : null;
+            $faltaCaixaTipo = match (true) {
+                $totalFalta === null => null,
+                $totalFalta > 0 => 'FALTA',
+                $totalFalta < 0 => 'SOBRA',
+                default => 'CONFERIDO',
+            };
 
             return [
                 'store_id' => $turno->store_id !== null ? (int) $turno->store_id : null,
@@ -110,7 +147,9 @@ class PdvReportsController extends Controller
                 'totais' => [
                     'total_sistema' => (float) $turno->total_sistema,
                     'total_declarado' => $turno->total_declarado !== null ? (float) $turno->total_declarado : null,
-                    'total_falta' => $turno->total_falta !== null ? (float) $turno->total_falta : null,
+                    'total_falta' => $totalFalta,
+                    'falta_caixa_tipo' => $faltaCaixaTipo,
+                    'falta_caixa_valor_absoluto' => $totalFalta !== null ? abs($totalFalta) : null,
                     'qtd_vendas' => $turno->qtd_vendas !== null ? (int) $turno->qtd_vendas : 0,
                     'total_vendas' => $turno->total_vendas !== null ? (float) $turno->total_vendas : 0.0,
                     'qtd_vendedores' => $turno->qtd_vendedores !== null ? (int) $turno->qtd_vendedores : 0,
@@ -126,13 +165,22 @@ class PdvReportsController extends Controller
                 'date' => $date,
                 'sequencial' => isset($validated['sequencial']) ? (int) $validated['sequencial'] : null,
                 'periodo' => $validated['periodo'] ?? null,
+                'fechado' => array_key_exists('fechado', $validated) ? (bool) $validated['fechado'] : null,
+                'operador_id' => isset($validated['operador_id']) ? (int) $validated['operador_id'] : null,
+                'responsavel_id' => isset($validated['responsavel_id']) ? (int) $validated['responsavel_id'] : null,
             ],
             'summary' => [
                 'qtd_turnos' => $rows->count(),
                 'qtd_turnos_fechados' => $rows->where('fechado', true)->count(),
+                'qtd_turnos_falta' => $rows->where('totais.falta_caixa_tipo', 'FALTA')->count(),
+                'qtd_turnos_sobra' => $rows->where('totais.falta_caixa_tipo', 'SOBRA')->count(),
+                'qtd_turnos_conferido' => $rows->where('totais.falta_caixa_tipo', 'CONFERIDO')->count(),
                 'total_sistema' => round((float) $rows->sum('totais.total_sistema'), 2),
                 'total_declarado' => round((float) $rows->sum('totais.total_declarado'), 2),
                 'total_falta' => round((float) $rows->sum('totais.total_falta'), 2),
+                'total_falta_absoluto' => round((float) $rows->sum(
+                    static fn (array $row): float => abs((float) data_get($row, 'totais.total_falta', 0))
+                ), 2),
             ],
             'turnos' => $rows->all(),
         ]);
@@ -140,17 +188,41 @@ class PdvReportsController extends Controller
 
     public function vendas(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'store_id' => ['nullable', 'integer', 'exists:stores,id'],
-            'store_pdv_id' => ['nullable', 'integer', 'min:1'],
-            'from' => ['nullable', 'date'],
-            'to' => ['nullable', 'date', 'after_or_equal:from'],
-            'vendedor_id' => ['nullable', 'integer', 'min:1'],
-            'canal' => ['nullable', 'string', 'in:HIPER_CAIXA,HIPER_LOJA'],
-            'id_turno' => ['nullable', 'string', 'max:64'],
-            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
-            'sort' => ['nullable', 'string', 'in:asc,desc'],
-        ]);
+        $validated = $request->validate(
+            [
+                'store_id' => ['nullable', 'integer', 'exists:stores,id'],
+                'store_pdv_id' => ['nullable', 'integer', 'min:1'],
+                'from' => ['nullable', 'date'],
+                'to' => ['nullable', 'date', 'after_or_equal:from'],
+                'vendedor_id' => ['nullable', 'integer', 'min:1'],
+                'canal' => ['nullable', 'string', 'in:HIPER_CAIXA,HIPER_LOJA'],
+                'id_turno' => ['nullable', 'string', 'max:64'],
+                'id_finalizador' => ['nullable', 'integer', 'min:1'],
+                'meio_pagamento' => ['nullable', 'string', 'max:120'],
+                'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+                'sort' => ['nullable', 'string', 'in:asc,desc'],
+            ],
+            [
+                'store_id.integer' => 'O campo store_id deve ser numerico.',
+                'store_id.exists' => 'A loja informada em store_id nao foi encontrada.',
+                'store_pdv_id.integer' => 'O campo store_pdv_id deve ser numerico.',
+                'store_pdv_id.min' => 'O campo store_pdv_id deve ser maior que zero.',
+                'from.date' => 'O campo from deve ser uma data valida.',
+                'to.date' => 'O campo to deve ser uma data valida.',
+                'to.after_or_equal' => 'O campo to deve ser maior ou igual ao campo from.',
+                'vendedor_id.integer' => 'O campo vendedor_id deve ser numerico.',
+                'vendedor_id.min' => 'O campo vendedor_id deve ser maior que zero.',
+                'canal.in' => 'O campo canal deve ser HIPER_CAIXA ou HIPER_LOJA.',
+                'id_turno.max' => 'O campo id_turno excede o tamanho maximo permitido.',
+                'id_finalizador.integer' => 'O campo id_finalizador deve ser numerico.',
+                'id_finalizador.min' => 'O campo id_finalizador deve ser maior que zero.',
+                'meio_pagamento.max' => 'O campo meio_pagamento excede o tamanho maximo permitido.',
+                'per_page.integer' => 'O campo per_page deve ser numerico.',
+                'per_page.min' => 'O campo per_page deve ser maior que zero.',
+                'per_page.max' => 'O campo per_page nao pode ser maior que 100.',
+                'sort.in' => 'O campo sort deve ser asc ou desc.',
+            ]
+        );
 
         $storeId = isset($validated['store_id']) ? (int) $validated['store_id'] : null;
         $storePdvId = isset($validated['store_pdv_id']) ? (int) $validated['store_pdv_id'] : null;
@@ -172,29 +244,33 @@ class PdvReportsController extends Controller
         $itemAgg = DB::table('pdv_venda_itens as vi')
             ->select([
                 'vi.store_pdv_id',
+                'vi.canal',
                 'vi.id_operacao',
                 DB::raw('COUNT(*) as itens_count'),
                 DB::raw('COALESCE(SUM(vi.qtd), 0) as itens_qtd_total'),
                 DB::raw('COALESCE(SUM(vi.total), 0) as itens_valor_total'),
             ])
-            ->groupBy('vi.store_pdv_id', 'vi.id_operacao');
+            ->groupBy('vi.store_pdv_id', 'vi.canal', 'vi.id_operacao');
 
         $paymentAgg = DB::table('pdv_venda_pagamentos as vp')
             ->select([
                 'vp.store_pdv_id',
+                'vp.canal',
                 'vp.id_operacao',
                 DB::raw('COUNT(*) as pagamentos_count'),
                 DB::raw('COALESCE(SUM(vp.valor), 0) as pagamentos_valor_total'),
             ])
-            ->groupBy('vp.store_pdv_id', 'vp.id_operacao');
+            ->groupBy('vp.store_pdv_id', 'vp.canal', 'vp.id_operacao');
 
         $query = DB::table('pdv_vendas as v')
             ->leftJoinSub($itemAgg, 'it', function ($join): void {
                 $join->on('it.store_pdv_id', '=', 'v.store_pdv_id')
+                    ->on('it.canal', '=', 'v.canal')
                     ->on('it.id_operacao', '=', 'v.id_operacao');
             })
             ->leftJoinSub($paymentAgg, 'pg', function ($join): void {
                 $join->on('pg.store_pdv_id', '=', 'v.store_pdv_id')
+                    ->on('pg.canal', '=', 'v.canal')
                     ->on('pg.id_operacao', '=', 'v.id_operacao');
             })
             ->select([
@@ -228,8 +304,39 @@ class PdvReportsController extends Controller
                 $sub->selectRaw('1')
                     ->from('pdv_venda_itens as vi')
                     ->whereColumn('vi.store_pdv_id', 'v.store_pdv_id')
+                    ->whereColumn('vi.canal', 'v.canal')
                     ->whereColumn('vi.id_operacao', 'v.id_operacao')
                     ->where('vi.vendedor_pdv_id', $vendedorId);
+            });
+        }
+        if (isset($validated['id_finalizador']) || !empty($validated['meio_pagamento'])) {
+            $isMysqlConnection = DB::connection()->getDriverName() === 'mysql';
+            $idFinalizador = isset($validated['id_finalizador']) ? (int) $validated['id_finalizador'] : null;
+            $meioPagamento = null;
+            if (!empty($validated['meio_pagamento'])) {
+                $meioPagamentoRaw = trim((string) $validated['meio_pagamento']);
+                $meioPagamento = $meioPagamentoRaw !== '' ? $meioPagamentoRaw : null;
+            }
+
+            $query->whereExists(function ($sub) use ($idFinalizador, $meioPagamento, $isMysqlConnection): void {
+                $sub->selectRaw('1')
+                    ->from('pdv_venda_pagamentos as vp')
+                    ->whereColumn('vp.store_pdv_id', 'v.store_pdv_id')
+                    ->whereColumn('vp.canal', 'v.canal')
+                    ->whereColumn('vp.id_operacao', 'v.id_operacao');
+
+                if ($idFinalizador !== null) {
+                    $sub->where('vp.id_finalizador', $idFinalizador);
+                }
+
+                if ($meioPagamento !== null) {
+                    if ($isMysqlConnection) {
+                        // meio_pagamento is utf8mb4_unicode_ci on MySQL (case-insensitive by collation).
+                        $sub->where('vp.meio_pagamento', $meioPagamento);
+                    } else {
+                        $sub->whereRaw('LOWER(vp.meio_pagamento) = LOWER(?)', [$meioPagamento]);
+                    }
+                }
             });
         }
 
@@ -280,6 +387,8 @@ class PdvReportsController extends Controller
                 'vendedor_id' => isset($validated['vendedor_id']) ? (int) $validated['vendedor_id'] : null,
                 'canal' => $validated['canal'] ?? null,
                 'id_turno' => $validated['id_turno'] ?? null,
+                'id_finalizador' => isset($validated['id_finalizador']) ? (int) $validated['id_finalizador'] : null,
+                'meio_pagamento' => $validated['meio_pagamento'] ?? null,
                 'sort' => $sortDirection,
             ],
             'meta' => $this->meta($paginator),
@@ -309,6 +418,7 @@ class PdvReportsController extends Controller
         $query = DB::table('pdv_venda_itens as vi')
             ->join('pdv_vendas as v', function ($join): void {
                 $join->on('v.store_pdv_id', '=', 'vi.store_pdv_id')
+                    ->on('v.canal', '=', 'vi.canal')
                     ->on('v.id_operacao', '=', 'vi.id_operacao');
             })
             ->leftJoin('pdv_usuarios as pu', 'pu.id_usuario_hiper', '=', 'vi.vendedor_pdv_id')
@@ -363,6 +473,115 @@ class PdvReportsController extends Controller
                 'total_itens' => round((float) $ranking->sum('total_itens'), 3),
             ],
             'ranking' => $ranking->all(),
+        ]);
+    }
+
+    public function rankingVendedorLoja(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'from' => ['required', 'date'],
+            'to' => ['required', 'date', 'after_or_equal:from'],
+            'store_id' => ['nullable', 'integer', 'exists:stores,id'],
+            'store_pdv_id' => ['nullable', 'integer', 'min:1'],
+            'vendedor_id' => ['nullable', 'integer', 'min:1'],
+            'canal' => ['nullable', 'string', 'in:HIPER_CAIXA,HIPER_LOJA'],
+            'sort_by' => ['nullable', 'string', 'in:total_vendido,qtd_vendas,total_itens'],
+            'sort' => ['nullable', 'string', 'in:asc,desc'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:200'],
+        ]);
+
+        $storeId = isset($validated['store_id']) ? (int) $validated['store_id'] : null;
+        $storePdvId = isset($validated['store_pdv_id']) ? (int) $validated['store_pdv_id'] : null;
+        $scope = $this->resolveStoreScope($request, $storeId, $storePdvId);
+
+        $from = CarbonImmutable::parse((string) $validated['from'])->startOfDay();
+        $to = CarbonImmutable::parse((string) $validated['to'])->endOfDay();
+        $sortBy = (string) ($validated['sort_by'] ?? 'total_vendido');
+        $sortDirection = (string) ($validated['sort'] ?? 'desc');
+        $perPage = (int) ($validated['per_page'] ?? 50);
+
+        $query = DB::table('pdv_venda_itens as vi')
+            ->join('pdv_vendas as v', function ($join): void {
+                $join->on('v.store_pdv_id', '=', 'vi.store_pdv_id')
+                    ->on('v.canal', '=', 'vi.canal')
+                    ->on('v.id_operacao', '=', 'vi.id_operacao');
+            })
+            ->leftJoin('pdv_usuarios as pu', 'pu.id_usuario_hiper', '=', 'vi.vendedor_pdv_id')
+            ->leftJoin('pdv_store_mappings as psm', function ($join): void {
+                $join->on('psm.pdv_store_id', '=', 'v.store_pdv_id')
+                    ->where('psm.active', true);
+            })
+            ->leftJoin('stores as s', 's.id', '=', 'psm.store_id')
+            ->whereNotNull('vi.vendedor_pdv_id')
+            ->whereBetween('v.data_hora', [$from->toDateTimeString(), $to->toDateTimeString()])
+            ->selectRaw('v.store_id as store_id')
+            ->selectRaw('v.store_pdv_id as store_pdv_id')
+            ->selectRaw("MAX(COALESCE(s.name, CONCAT('Loja PDV ', v.store_pdv_id))) as store_nome")
+            ->selectRaw('vi.vendedor_pdv_id as vendedor_id')
+            ->selectRaw('MAX(COALESCE(pu.nome_padronizado, pu.nome_hiper, vi.vendedor_nome)) as vendedor_nome')
+            ->selectRaw('COUNT(DISTINCT v.id) as qtd_vendas')
+            ->selectRaw('COALESCE(SUM(vi.total), 0) as total_vendido')
+            ->selectRaw('COALESCE(SUM(vi.qtd), 0) as total_itens')
+            ->groupBy('v.store_id', 'v.store_pdv_id', 'vi.vendedor_pdv_id');
+
+        $this->applyStoreScopeToQuery($query, $scope, 'v');
+
+        if (!empty($validated['canal'])) {
+            $query->where('v.canal', (string) $validated['canal']);
+        }
+        if (isset($validated['vendedor_id'])) {
+            $query->where('vi.vendedor_pdv_id', (int) $validated['vendedor_id']);
+        }
+
+        $summaryQuery = DB::query()->fromSub(clone $query, 'ranking_base');
+        $totalRows = (int) (clone $summaryQuery)->count();
+        $totalVendido = (float) ((clone $summaryQuery)->sum('total_vendido') ?? 0);
+        $totalItens = (float) ((clone $summaryQuery)->sum('total_itens') ?? 0);
+        $totalVendas = (int) ((clone $summaryQuery)->sum('qtd_vendas') ?? 0);
+
+        $paginator = $query
+            ->orderBy($sortBy, $sortDirection)
+            ->orderBy('store_pdv_id')
+            ->orderBy('vendedor_id')
+            ->paginate($perPage);
+
+        $offset = ($paginator->currentPage() - 1) * $paginator->perPage();
+        $rows = collect($paginator->items())
+            ->values()
+            ->map(function ($row, int $index) use ($offset): array {
+                return [
+                    'position' => $offset + $index + 1,
+                    'store_id' => $row->store_id !== null ? (int) $row->store_id : null,
+                    'store_pdv_id' => (int) $row->store_pdv_id,
+                    'store_nome' => $row->store_nome,
+                    'vendedor_id' => $row->vendedor_id !== null ? (int) $row->vendedor_id : null,
+                    'vendedor_nome' => $row->vendedor_nome ?? 'Vendedor sem nome',
+                    'qtd_vendas' => (int) $row->qtd_vendas,
+                    'total_vendido' => round((float) $row->total_vendido, 2),
+                    'total_itens' => round((float) $row->total_itens, 3),
+                ];
+            })
+            ->all();
+
+        return response()->json([
+            'data' => $rows,
+            'summary' => [
+                'linhas' => $totalRows,
+                'total_vendido' => round($totalVendido, 2),
+                'qtd_vendas' => $totalVendas,
+                'total_itens' => round($totalItens, 3),
+            ],
+            'filters' => [
+                'store_id' => $scope['store_id'],
+                'store_pdv_id' => $scope['store_pdv_id'],
+                'from' => $from->toIso8601String(),
+                'to' => $to->toIso8601String(),
+                'vendedor_id' => isset($validated['vendedor_id']) ? (int) $validated['vendedor_id'] : null,
+                'canal' => $validated['canal'] ?? null,
+                'sort_by' => $sortBy,
+                'sort' => $sortDirection,
+            ],
+            'meta' => $this->meta($paginator),
         ]);
     }
 

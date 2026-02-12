@@ -101,10 +101,17 @@ function seedPdvVendaItem(array $overrides = []): void
     $storePdvId = (int) ($overrides['store_pdv_id'] ?? 13);
     $idOperacao = (int) ($overrides['id_operacao'] ?? 100);
     $lineId = (int) ($overrides['line_id'] ?? random_int(100000, 999999));
+    $canal = (string) ($overrides['canal']
+        ?? DB::table('pdv_vendas')
+            ->where('store_pdv_id', $storePdvId)
+            ->where('id_operacao', $idOperacao)
+            ->value('canal')
+        ?? 'HIPER_CAIXA');
 
     $row = array_merge([
         'store_pdv_id' => $storePdvId,
         'store_id' => $overrides['store_id'] ?? null,
+        'canal' => $canal,
         'id_operacao' => $idOperacao,
         'line_id' => $lineId,
         'line_no' => 1,
@@ -130,10 +137,17 @@ function seedPdvVendaPagamento(array $overrides = []): void
     $storePdvId = (int) ($overrides['store_pdv_id'] ?? 13);
     $idOperacao = (int) ($overrides['id_operacao'] ?? 100);
     $lineId = (int) ($overrides['line_id'] ?? random_int(200000, 999999));
+    $canal = (string) ($overrides['canal']
+        ?? DB::table('pdv_vendas')
+            ->where('store_pdv_id', $storePdvId)
+            ->where('id_operacao', $idOperacao)
+            ->value('canal')
+        ?? 'HIPER_CAIXA');
 
     $row = array_merge([
         'store_pdv_id' => $storePdvId,
         'store_id' => $overrides['store_id'] ?? null,
+        'canal' => $canal,
         'id_operacao' => $idOperacao,
         'line_id' => $lineId,
         'line_no' => 1,
@@ -162,6 +176,27 @@ test('pdv reports turnos enforces store authorization', function () {
     actingAs($user)
         ->getJson('/api/v1/pdv/reports/turnos?store_id=' . $storeBlocked->id . '&date=' . now()->toDateString())
         ->assertStatus(403);
+});
+
+test('pdv reports turnos returns empty dataset when store has no turnos for selected date', function () {
+    $user = User::factory()->create(['is_super_admin' => false]);
+    $store = Store::factory()->create();
+    linkUserToStore($user, $store, 'admin');
+    mapPdvStore(13, $store);
+
+    actingAs($user)
+        ->getJson('/api/v1/pdv/reports/turnos?store_id=' . $store->id . '&date=' . now()->toDateString())
+        ->assertStatus(200)
+        ->assertJsonPath('data.summary.qtd_turnos', 0)
+        ->assertJsonPath('data.summary.qtd_turnos_fechados', 0)
+        ->assertJsonPath('data.summary.qtd_turnos_falta', 0)
+        ->assertJsonPath('data.summary.qtd_turnos_sobra', 0)
+        ->assertJsonPath('data.summary.qtd_turnos_conferido', 0)
+        ->assertJsonPath('data.summary.total_sistema', 0.0)
+        ->assertJsonPath('data.summary.total_declarado', 0.0)
+        ->assertJsonPath('data.summary.total_falta', 0.0)
+        ->assertJsonPath('data.summary.total_falta_absoluto', 0.0)
+        ->assertJsonCount(0, 'data.turnos');
 });
 
 test('pdv reports turnos returns totals and pagamentos grouped by tipo', function () {
@@ -202,6 +237,94 @@ test('pdv reports turnos returns totals and pagamentos grouped by tipo', functio
         ->assertJsonPath('data.summary.total_falta', 20.0)
         ->assertJsonPath('data.turnos.0.pagamentos.sistema.0.total', 1000.0)
         ->assertJsonPath('data.turnos.0.pagamentos.declarado.0.total', 980.0);
+});
+
+test('pdv reports turnos applies fechado, operador_id and responsavel_id filters', function () {
+    $user = User::factory()->create(['is_super_admin' => false]);
+    $store = Store::factory()->create();
+    linkUserToStore($user, $store, 'admin');
+    mapPdvStore(13, $store);
+
+    $today = now()->toDateString();
+
+    seedPdvTurno([
+        'store_id' => $store->id,
+        'id_turno' => 'turno-filter-001',
+        'sequencial' => 1,
+        'fechado' => true,
+        'operador_pdv_id' => 12,
+        'operador_nome' => 'Carlos',
+        'responsavel_pdv_id' => 80,
+        'responsavel_nome' => 'Daren',
+        'data_hora_inicio' => now()->setTime(8, 0, 0)->toDateTimeString(),
+    ]);
+    seedPdvTurno([
+        'store_id' => $store->id,
+        'id_turno' => 'turno-filter-002',
+        'sequencial' => 2,
+        'fechado' => false,
+        'operador_pdv_id' => 34,
+        'operador_nome' => 'Maria',
+        'responsavel_pdv_id' => 91,
+        'responsavel_nome' => 'Joao',
+        'data_hora_inicio' => now()->setTime(10, 0, 0)->toDateTimeString(),
+    ]);
+
+    actingAs($user)
+        ->getJson('/api/v1/pdv/reports/turnos?' . http_build_query([
+            'store_id' => $store->id,
+            'date' => $today,
+            'fechado' => 1,
+            'operador_id' => 12,
+            'responsavel_id' => 80,
+        ]))
+        ->assertStatus(200)
+        ->assertJsonPath('data.summary.qtd_turnos', 1)
+        ->assertJsonPath('data.turnos.0.id_turno', 'turno-filter-001')
+        ->assertJsonPath('data.turnos.0.fechado', true)
+        ->assertJsonPath('data.filters.fechado', true)
+        ->assertJsonPath('data.filters.operador_id', 12)
+        ->assertJsonPath('data.filters.responsavel_id', 80);
+});
+
+test('pdv reports turnos classifies falta_caixa as falta, sobra or conferido', function () {
+    $user = User::factory()->create(['is_super_admin' => false]);
+    $store = Store::factory()->create();
+    linkUserToStore($user, $store, 'admin');
+    mapPdvStore(13, $store);
+
+    seedPdvTurno([
+        'store_id' => $store->id,
+        'id_turno' => 'turno-falta-001',
+        'sequencial' => 1,
+        'total_falta' => 20.00,
+    ]);
+    seedPdvTurno([
+        'store_id' => $store->id,
+        'id_turno' => 'turno-falta-002',
+        'sequencial' => 2,
+        'total_falta' => -15.50,
+    ]);
+    seedPdvTurno([
+        'store_id' => $store->id,
+        'id_turno' => 'turno-falta-003',
+        'sequencial' => 3,
+        'total_falta' => 0.00,
+    ]);
+
+    actingAs($user)
+        ->getJson('/api/v1/pdv/reports/turnos?store_id=' . $store->id . '&date=' . now()->toDateString())
+        ->assertStatus(200)
+        ->assertJsonPath('data.turnos.0.totais.falta_caixa_tipo', 'FALTA')
+        ->assertJsonPath('data.turnos.0.totais.falta_caixa_valor_absoluto', 20.0)
+        ->assertJsonPath('data.turnos.1.totais.falta_caixa_tipo', 'SOBRA')
+        ->assertJsonPath('data.turnos.1.totais.falta_caixa_valor_absoluto', 15.5)
+        ->assertJsonPath('data.turnos.2.totais.falta_caixa_tipo', 'CONFERIDO')
+        ->assertJsonPath('data.turnos.2.totais.falta_caixa_valor_absoluto', 0.0)
+        ->assertJsonPath('data.summary.qtd_turnos_falta', 1)
+        ->assertJsonPath('data.summary.qtd_turnos_sobra', 1)
+        ->assertJsonPath('data.summary.qtd_turnos_conferido', 1)
+        ->assertJsonPath('data.summary.total_falta_absoluto', 35.5);
 });
 
 test('pdv reports vendas applies canal filter and supports pagination', function () {
@@ -276,6 +399,89 @@ test('pdv reports vendas applies canal filter and supports pagination', function
         ->assertJsonPath('meta.pagination.last_page', 2);
 });
 
+test('pdv reports vendas applies payment filters id_finalizador and meio_pagamento', function () {
+    $user = User::factory()->create(['is_super_admin' => false]);
+    $store = Store::factory()->create();
+    linkUserToStore($user, $store, 'admin');
+    mapPdvStore(13, $store);
+
+    seedPdvVenda([
+        'store_id' => $store->id,
+        'id_operacao' => 401,
+        'canal' => 'HIPER_CAIXA',
+        'total' => 120.0,
+        'data_hora' => now()->subHours(6)->toDateTimeString(),
+    ]);
+    seedPdvVenda([
+        'store_id' => $store->id,
+        'id_operacao' => 402,
+        'canal' => 'HIPER_CAIXA',
+        'total' => 180.0,
+        'data_hora' => now()->subHours(5)->toDateTimeString(),
+    ]);
+    seedPdvVenda([
+        'store_id' => $store->id,
+        'id_operacao' => 403,
+        'canal' => 'HIPER_LOJA',
+        'total' => 220.0,
+        'data_hora' => now()->subHours(4)->toDateTimeString(),
+    ]);
+
+    seedPdvVendaItem(['store_id' => $store->id, 'id_operacao' => 401, 'line_id' => 401001, 'total' => 120.0]);
+    seedPdvVendaItem(['store_id' => $store->id, 'id_operacao' => 402, 'line_id' => 402001, 'total' => 180.0]);
+    seedPdvVendaItem(['store_id' => $store->id, 'id_operacao' => 403, 'line_id' => 403001, 'total' => 220.0]);
+
+    seedPdvVendaPagamento([
+        'store_id' => $store->id,
+        'id_operacao' => 401,
+        'line_id' => 501001,
+        'id_finalizador' => 5,
+        'meio_pagamento' => 'Pix',
+        'valor' => 120.0,
+    ]);
+    seedPdvVendaPagamento([
+        'store_id' => $store->id,
+        'id_operacao' => 402,
+        'line_id' => 502001,
+        'id_finalizador' => 4,
+        'meio_pagamento' => 'Cartao de Credito',
+        'valor' => 180.0,
+    ]);
+    seedPdvVendaPagamento([
+        'store_id' => $store->id,
+        'id_operacao' => 403,
+        'line_id' => 503001,
+        'id_finalizador' => 5,
+        'meio_pagamento' => 'PIX',
+        'valor' => 220.0,
+    ]);
+
+    actingAs($user)
+        ->getJson('/api/v1/pdv/reports/vendas?' . http_build_query([
+            'store_id' => $store->id,
+            'from' => now()->subDays(2)->toDateString(),
+            'to' => now()->toDateString(),
+            'id_finalizador' => 5,
+            'canal' => 'HIPER_CAIXA',
+        ]))
+        ->assertStatus(200)
+        ->assertJsonPath('summary.total_vendas', 1)
+        ->assertJsonPath('data.0.id_operacao', 401)
+        ->assertJsonPath('data.0.canal', 'HIPER_CAIXA')
+        ->assertJsonPath('filters.id_finalizador', 5);
+
+    actingAs($user)
+        ->getJson('/api/v1/pdv/reports/vendas?' . http_build_query([
+            'store_id' => $store->id,
+            'from' => now()->subDays(2)->toDateString(),
+            'to' => now()->toDateString(),
+            'meio_pagamento' => 'pix',
+        ]))
+        ->assertStatus(200)
+        ->assertJsonPath('summary.total_vendas', 2)
+        ->assertJsonPath('filters.meio_pagamento', 'pix');
+});
+
 test('pdv reports ranking vendedores keeps aggregation consistency and canal filter', function () {
     $user = User::factory()->create(['is_super_admin' => false]);
     $store = Store::factory()->create();
@@ -348,4 +554,189 @@ test('pdv reports ranking vendedores keeps aggregation consistency and canal fil
         ->assertJsonPath('data.ranking.0.vendedor_id', 80)
         ->assertJsonPath('data.ranking.0.total_vendido', 150.0)
         ->assertJsonPath('data.ranking.0.qtd_vendas', 2);
+});
+
+test('pdv reports ranking vendedor x loja returns grouped rows with filters', function () {
+    $user = User::factory()->create(['is_super_admin' => false]);
+    $storeA = Store::factory()->create();
+    $storeB = Store::factory()->create();
+    linkUserToStore($user, $storeA, 'admin');
+    linkUserToStore($user, $storeB, 'admin');
+    mapPdvStore(13, $storeA);
+    mapPdvStore(14, $storeB);
+
+    seedPdvVenda([
+        'store_pdv_id' => 13,
+        'store_id' => $storeA->id,
+        'id_operacao' => 901,
+        'canal' => 'HIPER_CAIXA',
+        'total' => 100.0,
+        'data_hora' => now()->subHours(8)->toDateTimeString(),
+    ]);
+    seedPdvVenda([
+        'store_pdv_id' => 14,
+        'store_id' => $storeB->id,
+        'id_operacao' => 902,
+        'canal' => 'HIPER_CAIXA',
+        'total' => 150.0,
+        'data_hora' => now()->subHours(7)->toDateTimeString(),
+    ]);
+    seedPdvVenda([
+        'store_pdv_id' => 14,
+        'store_id' => $storeB->id,
+        'id_operacao' => 903,
+        'canal' => 'HIPER_LOJA',
+        'total' => 200.0,
+        'data_hora' => now()->subHours(6)->toDateTimeString(),
+    ]);
+
+    seedPdvVendaItem([
+        'store_pdv_id' => 13,
+        'store_id' => $storeA->id,
+        'id_operacao' => 901,
+        'line_id' => 901001,
+        'vendedor_pdv_id' => 80,
+        'vendedor_nome' => 'Daren',
+        'total' => 100.0,
+        'qtd' => 1,
+    ]);
+    seedPdvVendaItem([
+        'store_pdv_id' => 14,
+        'store_id' => $storeB->id,
+        'id_operacao' => 902,
+        'line_id' => 902001,
+        'vendedor_pdv_id' => 80,
+        'vendedor_nome' => 'Daren',
+        'total' => 150.0,
+        'qtd' => 2,
+    ]);
+    seedPdvVendaItem([
+        'store_pdv_id' => 14,
+        'store_id' => $storeB->id,
+        'id_operacao' => 903,
+        'line_id' => 903001,
+        'vendedor_pdv_id' => 12,
+        'vendedor_nome' => 'Carlos',
+        'total' => 200.0,
+        'qtd' => 3,
+    ]);
+
+    actingAs($user)
+        ->getJson('/api/v1/pdv/reports/ranking-vendedor-loja?' . http_build_query([
+            'from' => now()->subDays(2)->toDateString(),
+            'to' => now()->toDateString(),
+            'canal' => 'HIPER_CAIXA',
+            'sort_by' => 'total_vendido',
+            'sort' => 'desc',
+            'per_page' => 50,
+        ]))
+        ->assertStatus(200)
+        ->assertJsonPath('summary.linhas', 2)
+        ->assertJsonPath('summary.total_vendido', 250.0)
+        ->assertJsonPath('summary.qtd_vendas', 2)
+        ->assertJsonPath('data.0.store_pdv_id', 14)
+        ->assertJsonPath('data.0.vendedor_id', 80)
+        ->assertJsonPath('data.0.total_vendido', 150.0);
+
+    actingAs($user)
+        ->getJson('/api/v1/pdv/reports/ranking-vendedor-loja?' . http_build_query([
+            'from' => now()->subDays(2)->toDateString(),
+            'to' => now()->toDateString(),
+            'vendedor_id' => 80,
+            'sort_by' => 'total_vendido',
+            'sort' => 'desc',
+        ]))
+        ->assertStatus(200)
+        ->assertJsonPath('summary.linhas', 2)
+        ->assertJsonPath('summary.total_vendido', 250.0)
+        ->assertJsonPath('filters.vendedor_id', 80);
+});
+
+test('pdv reports ranking vendedor x loja supports specific store filter', function () {
+    $user = User::factory()->create(['is_super_admin' => false]);
+    $storeA = Store::factory()->create();
+    $storeB = Store::factory()->create();
+    linkUserToStore($user, $storeA, 'admin');
+    linkUserToStore($user, $storeB, 'admin');
+    mapPdvStore(13, $storeA);
+    mapPdvStore(14, $storeB);
+
+    seedPdvVenda([
+        'store_pdv_id' => 13,
+        'store_id' => $storeA->id,
+        'id_operacao' => 910,
+        'canal' => 'HIPER_CAIXA',
+        'total' => 100.0,
+        'data_hora' => now()->subHours(8)->toDateTimeString(),
+    ]);
+    seedPdvVenda([
+        'store_pdv_id' => 14,
+        'store_id' => $storeB->id,
+        'id_operacao' => 911,
+        'canal' => 'HIPER_CAIXA',
+        'total' => 150.0,
+        'data_hora' => now()->subHours(7)->toDateTimeString(),
+    ]);
+
+    seedPdvVendaItem([
+        'store_pdv_id' => 13,
+        'store_id' => $storeA->id,
+        'id_operacao' => 910,
+        'line_id' => 910001,
+        'vendedor_pdv_id' => 80,
+        'vendedor_nome' => 'Daren',
+        'total' => 100.0,
+        'qtd' => 1,
+    ]);
+    seedPdvVendaItem([
+        'store_pdv_id' => 14,
+        'store_id' => $storeB->id,
+        'id_operacao' => 911,
+        'line_id' => 911001,
+        'vendedor_pdv_id' => 12,
+        'vendedor_nome' => 'Carlos',
+        'total' => 150.0,
+        'qtd' => 2,
+    ]);
+
+    actingAs($user)
+        ->getJson('/api/v1/pdv/reports/ranking-vendedor-loja?' . http_build_query([
+            'from' => now()->subDays(2)->toDateString(),
+            'to' => now()->toDateString(),
+            'store_id' => $storeB->id,
+            'sort_by' => 'total_vendido',
+            'sort' => 'desc',
+        ]))
+        ->assertStatus(200)
+        ->assertJsonPath('summary.linhas', 1)
+        ->assertJsonPath('summary.total_vendido', 150.0)
+        ->assertJsonPath('data.0.store_id', $storeB->id)
+        ->assertJsonPath('data.0.store_pdv_id', 14)
+        ->assertJsonPath('filters.store_id', $storeB->id);
+});
+
+test('pdv reports ranking vendedor x loja enforces store authorization', function () {
+    $user = User::factory()->create(['is_super_admin' => false]);
+    $storeAllowed = Store::factory()->create();
+    $storeBlocked = Store::factory()->create();
+
+    linkUserToStore($user, $storeAllowed, 'admin');
+    mapPdvStore(13, $storeAllowed);
+    mapPdvStore(14, $storeBlocked);
+
+    actingAs($user)
+        ->getJson('/api/v1/pdv/reports/ranking-vendedor-loja?' . http_build_query([
+            'from' => now()->subDays(2)->toDateString(),
+            'to' => now()->toDateString(),
+            'store_id' => $storeBlocked->id,
+        ]))
+        ->assertStatus(403);
+
+    actingAs($user)
+        ->getJson('/api/v1/pdv/reports/ranking-vendedor-loja?' . http_build_query([
+            'from' => now()->subDays(2)->toDateString(),
+            'to' => now()->toDateString(),
+            'store_pdv_id' => 14,
+        ]))
+        ->assertStatus(403);
 });

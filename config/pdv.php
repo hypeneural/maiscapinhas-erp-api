@@ -63,6 +63,10 @@ return [
     'cron_queue_consumer_sleep' => max(0, (int) env('PDV_CRON_QUEUE_CONSUMER_SLEEP', 1)),
     'cron_queue_consumer_memory' => max(64, (int) env('PDV_CRON_QUEUE_CONSUMER_MEMORY', 256)),
     'queue_consumer_heartbeat_cache_key' => env('PDV_QUEUE_CONSUMER_HEARTBEAT_CACHE_KEY', 'pdv:queue-consumer:heartbeat'),
+    'stale_vendas_check_enabled' => (bool) env('PDV_STALE_VENDAS_CHECK_ENABLED', false),
+    'stale_vendas_threshold_hours' => max(1, (int) env('PDV_STALE_VENDAS_THRESHOLD_HOURS', 72)),
+    'stale_vendas_recent_window_days' => max(1, (int) env('PDV_STALE_VENDAS_RECENT_WINDOW_DAYS', 7)),
+    'stale_vendas_limit' => max(1, (int) env('PDV_STALE_VENDAS_LIMIT', 200)),
 
     /*
     |--------------------------------------------------------------------------
@@ -92,6 +96,7 @@ return [
     'monitor_max_failed_jobs' => max(0, (int) env('PDV_MONITOR_MAX_FAILED_JOBS', 0)),
     'monitor_silent_store_threshold_minutes' => max(5, (int) env('PDV_MONITOR_SILENT_STORE_THRESHOLD_MINUTES', 120)),
     'monitor_max_stale_stores' => max(0, (int) env('PDV_MONITOR_MAX_STALE_STORES', 0)),
+    'monitor_max_gestao_db_failures_30m' => max(0, (int) env('PDV_MONITOR_MAX_GESTAO_DB_FAILURES_30M', 3)),
     'monitor_alert_cooldown_minutes' => max(1, (int) env('PDV_MONITOR_ALERT_COOLDOWN_MINUTES', 30)),
     'monitor_alert_webhook_url' => env('PDV_MONITOR_ALERT_WEBHOOK_URL'),
     'monitor_alert_slack_webhook_url' => env('PDV_MONITOR_ALERT_SLACK_WEBHOOK_URL'),

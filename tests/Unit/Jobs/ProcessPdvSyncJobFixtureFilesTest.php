@@ -133,6 +133,7 @@ beforeEach(function () {
         $table->id();
         $table->unsignedBigInteger('store_pdv_id');
         $table->unsignedBigInteger('store_id')->nullable();
+        $table->string('canal', 20)->default('HIPER_CAIXA');
         $table->unsignedBigInteger('id_operacao');
         $table->unsignedBigInteger('line_id')->nullable();
         $table->unsignedInteger('line_no');
@@ -151,14 +152,16 @@ beforeEach(function () {
         $table->dateTime('created_at')->nullable();
         $table->dateTime('updated_at')->nullable();
 
-        $table->unique(['store_pdv_id', 'line_id'], 'pdv_venda_itens_unique_line_id');
-        $table->unique(['store_pdv_id', 'id_operacao', 'row_hash'], 'pdv_venda_itens_unique_row_hash');
+        $table->unique(['store_pdv_id', 'canal', 'line_id'], 'pdv_venda_itens_unique_canal_line_id');
+        $table->unique(['store_pdv_id', 'canal', 'id_operacao', 'row_hash'], 'pdv_venda_itens_unique_canal_row_hash');
+        $table->unique(['store_pdv_id', 'canal', 'id_operacao', 'line_no'], 'pdv_venda_itens_unique_canal_line');
     });
 
     Schema::create('pdv_venda_pagamentos', function (Blueprint $table) {
         $table->id();
         $table->unsignedBigInteger('store_pdv_id');
         $table->unsignedBigInteger('store_id')->nullable();
+        $table->string('canal', 20)->default('HIPER_CAIXA');
         $table->unsignedBigInteger('id_operacao');
         $table->unsignedBigInteger('line_id')->nullable();
         $table->unsignedInteger('line_no');
@@ -171,8 +174,9 @@ beforeEach(function () {
         $table->dateTime('created_at')->nullable();
         $table->dateTime('updated_at')->nullable();
 
-        $table->unique(['store_pdv_id', 'line_id'], 'pdv_venda_pagamentos_unique_line_id');
-        $table->unique(['store_pdv_id', 'id_operacao', 'row_hash'], 'pdv_venda_pagamentos_unique_row_hash');
+        $table->unique(['store_pdv_id', 'canal', 'line_id'], 'pdv_venda_pagamentos_unique_canal_line_id');
+        $table->unique(['store_pdv_id', 'canal', 'id_operacao', 'row_hash'], 'pdv_venda_pagamentos_unique_canal_row_hash');
+        $table->unique(['store_pdv_id', 'canal', 'id_operacao', 'line_no'], 'pdv_venda_pagamentos_unique_canal_line');
     });
 
     Schema::create('pdv_vendas_resumo', function (Blueprint $table) {
@@ -334,4 +338,128 @@ test('snapshot replay fixture updates persisted turno and venda resumo', functio
     expect($resumo->vendedor_nome)->toBe('Vendedor 67');
     expect((float) $resumo->total_itens)->toBe(120.0);
     expect($resumo->last_sync_id)->toBe('sync-pr40-replay-b');
+});
+
+test('keeps child rows isolated when line_id collides across canais', function () {
+    $payload = [
+        'schema_version' => '3.0',
+        'event_type' => 'mixed',
+        'agent' => [
+            'version' => '3.0.0',
+            'machine' => 'PDV-STORE-13',
+            'sent_at' => '2026-02-12T10:00:00-03:00',
+        ],
+        'store' => [
+            'id_ponto_venda' => 13,
+            'nome' => 'Loja 13',
+            'alias' => 'loja-13',
+        ],
+        'window' => [
+            'from' => '2026-02-12T09:50:00-03:00',
+            'to' => '2026-02-12T10:00:00-03:00',
+            'minutes' => 10,
+        ],
+        'turnos' => [],
+        'vendas' => [
+            [
+                'id_operacao' => 77701,
+                'canal' => 'HIPER_CAIXA',
+                'data_hora' => '2026-02-12T09:55:00-03:00',
+                'total' => 100.00,
+                'itens' => [[
+                    'line_id' => 50000,
+                    'line_no' => 1,
+                    'id_produto' => 1,
+                    'nome' => 'Item Caixa',
+                    'qtd' => 1,
+                    'preco_unit' => 100,
+                    'total' => 100,
+                    'desconto' => 0,
+                ]],
+                'pagamentos' => [[
+                    'line_id' => 70000,
+                    'line_no' => 1,
+                    'id_finalizador' => 5,
+                    'meio' => 'Pix',
+                    'valor' => 100,
+                    'troco' => 0,
+                    'parcelas' => 1,
+                ]],
+            ],
+            [
+                'id_operacao' => 77701,
+                'canal' => 'HIPER_LOJA',
+                'data_hora' => '2026-02-12T09:56:00-03:00',
+                'total' => 200.00,
+                'itens' => [[
+                    'line_id' => 50000,
+                    'line_no' => 1,
+                    'id_produto' => 2,
+                    'nome' => 'Item Loja',
+                    'qtd' => 1,
+                    'preco_unit' => 200,
+                    'total' => 200,
+                    'desconto' => 0,
+                ]],
+                'pagamentos' => [[
+                    'line_id' => 70000,
+                    'line_no' => 1,
+                    'id_finalizador' => 4,
+                    'meio' => 'Credito',
+                    'valor' => 200,
+                    'troco' => 0,
+                    'parcelas' => 1,
+                ]],
+            ],
+        ],
+        'resumo' => [
+            'by_vendor' => [],
+            'by_payment' => [],
+        ],
+        'snapshot_turnos' => [],
+        'snapshot_vendas' => [],
+        'ops' => [
+            'count' => 1,
+            'ids' => [77701],
+            'loja_count' => 1,
+            'loja_ids' => [77701],
+        ],
+        'integrity' => [
+            'sync_id' => 'sync-pr41-child-collision-001',
+            'warnings' => [],
+        ],
+    ];
+
+    $sync = createSyncFromFixturePayload($payload, 'sync-pr41-child-collision-001');
+    (new ProcessPdvSyncJob($sync->id))->handle();
+
+    expect(DB::table('pdv_venda_itens')
+        ->where('store_pdv_id', 13)
+        ->where('line_id', 50000)
+        ->count())->toBe(2);
+    expect(DB::table('pdv_venda_itens')
+        ->where('store_pdv_id', 13)
+        ->where('line_id', 50000)
+        ->where('canal', 'HIPER_CAIXA')
+        ->exists())->toBeTrue();
+    expect(DB::table('pdv_venda_itens')
+        ->where('store_pdv_id', 13)
+        ->where('line_id', 50000)
+        ->where('canal', 'HIPER_LOJA')
+        ->exists())->toBeTrue();
+
+    expect(DB::table('pdv_venda_pagamentos')
+        ->where('store_pdv_id', 13)
+        ->where('line_id', 70000)
+        ->count())->toBe(2);
+    expect(DB::table('pdv_venda_pagamentos')
+        ->where('store_pdv_id', 13)
+        ->where('line_id', 70000)
+        ->where('canal', 'HIPER_CAIXA')
+        ->exists())->toBeTrue();
+    expect(DB::table('pdv_venda_pagamentos')
+        ->where('store_pdv_id', 13)
+        ->where('line_id', 70000)
+        ->where('canal', 'HIPER_LOJA')
+        ->exists())->toBeTrue();
 });

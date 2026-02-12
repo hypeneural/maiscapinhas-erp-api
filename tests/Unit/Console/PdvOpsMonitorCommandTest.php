@@ -50,6 +50,7 @@ beforeEach(function () {
         $table->id();
         $table->unsignedBigInteger('store_pdv_id');
         $table->string('status', 20)->default('queued');
+        $table->json('risk_flags')->nullable();
         $table->dateTime('received_at')->nullable();
         $table->dateTime('created_at')->nullable();
         $table->dateTime('updated_at')->nullable();
@@ -140,6 +141,7 @@ function seedSync(int $pdvStoreId, string $status, \Carbon\CarbonInterface $rece
     DB::table('pdv_syncs')->insert([
         'store_pdv_id' => $pdvStoreId,
         'status' => $status,
+        'risk_flags' => json_encode([], JSON_UNESCAPED_UNICODE),
         'received_at' => $receivedAt->toDateTimeString(),
         'created_at' => now(),
         'updated_at' => now(),
@@ -202,4 +204,29 @@ test('monitor stays healthy when thresholds are respected', function () {
     expect($result['status'])->toBe('ok');
     expect(data_get($result, 'metrics.stale_stores_count'))->toBe(0);
     expect($result['issues'])->toBeArray()->toHaveCount(0);
+});
+
+test('monitor raises gestao_db_failure_high when risk flag spikes in last 30 minutes', function () {
+    config()->set('pdv.monitor_max_stale_stores', 10);
+    config()->set('pdv.monitor_max_gestao_db_failures_30m', 0);
+
+    seedMappedStore(10, 'loja-10', 'Loja 10');
+    seedSync(10, 'processed', now()->subMinutes(5));
+
+    DB::table('pdv_syncs')->insert([
+        'store_pdv_id' => 10,
+        'status' => 'processed',
+        'risk_flags' => json_encode(['gestao_db_failure'], JSON_UNESCAPED_UNICODE),
+        'received_at' => now()->subMinutes(3)->toDateTimeString(),
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $result = runOpsMonitor();
+
+    expect($result['_exit_code'])->toBe(1);
+    expect($result['status'])->toBe('alert');
+    expect(data_get($result, 'metrics.gestao_db_failures_30m'))->toBe(1);
+    $issueNames = collect($result['issues'] ?? [])->pluck('name')->all();
+    expect($issueNames)->toContain('gestao_db_failure_high');
 });

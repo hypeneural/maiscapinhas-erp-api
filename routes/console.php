@@ -35,6 +35,11 @@ Schedule::command('pdv:ops-monitor --json')
     ->withoutOverlapping()
     ->when(static fn () => (bool) config('pdv.monitor_enabled', true));
 
+Schedule::command('pdv:stale-vendas-check --json')
+    ->hourly()
+    ->withoutOverlapping()
+    ->when(static fn () => (bool) config('pdv.stale_vendas_check_enabled', false));
+
 Schedule::command(sprintf(
     'pdv:queue-consume --max-time=%d --sleep=%d --memory=%d',
     (int) config('pdv.cron_queue_consumer_max_time', 50),

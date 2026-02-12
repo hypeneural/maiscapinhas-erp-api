@@ -41,6 +41,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
     private ?bool $hasPdvLojasTable = null;
     private ?bool $hasPdvUsuariosTable = null;
     private ?bool $hasPdvMeiosPagamentoTable = null;
+    private ?bool $hasPdvVendasLastSeenColumn = null;
     private const CANAL_HIPER_CAIXA = 'HIPER_CAIXA';
     private const CANAL_HIPER_LOJA = 'HIPER_LOJA';
 
@@ -504,6 +505,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                     $itemRow = [
                         'store_pdv_id' => $storePdvId,
                         'store_id' => $storeId,
+                        'canal' => $canal,
                         'id_operacao' => $idOperacao,
                         'line_id' => $lineId,
                         'line_no' => $lineNo,
@@ -571,6 +573,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                     $pagamentoRow = [
                         'store_pdv_id' => $storePdvId,
                         'store_id' => $storeId,
+                        'canal' => $canal,
                         'id_operacao' => $idOperacao,
                         'line_id' => $lineId,
                         'line_no' => $lineNo,
@@ -601,6 +604,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
         );
 
         $itemUpdateColumnsByLineId = [
+            'canal',
             'line_id',
             'store_id',
             'id_operacao',
@@ -618,6 +622,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             'updated_at',
         ];
         $itemUpdateColumnsFallback = [
+            'canal',
             'store_id',
             'line_id',
             'line_no',
@@ -640,22 +645,23 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
         $this->upsertRows(
             'pdv_venda_itens',
             $itemRowsByLineId,
-            ['store_pdv_id', 'line_id'],
+            ['store_pdv_id', 'canal', 'line_id'],
             $itemUpdateColumnsByLineId
         );
 
         $this->upsertRows(
             'pdv_venda_itens',
             $itemRowsFallback,
-            ['store_pdv_id', 'id_operacao', 'row_hash'],
+            ['store_pdv_id', 'canal', 'id_operacao', 'row_hash'],
             $itemUpdateColumnsFallback
         );
 
         $this->upsertRows(
             'pdv_venda_pagamentos',
             $pagamentoRowsByLineId,
-            ['store_pdv_id', 'line_id'],
+            ['store_pdv_id', 'canal', 'line_id'],
             [
+                'canal',
                 'line_id',
                 'store_id',
                 'id_operacao',
@@ -673,8 +679,9 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
         $this->upsertRows(
             'pdv_venda_pagamentos',
             $pagamentoRowsFallback,
-            ['store_pdv_id', 'id_operacao', 'row_hash'],
+            ['store_pdv_id', 'canal', 'id_operacao', 'row_hash'],
             [
+                'canal',
                 'store_id',
                 'line_id',
                 'line_no',
@@ -774,6 +781,10 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                 'updated_at',
             ]
         );
+
+        if ($this->supportsPdvVendasLastSeenColumn()) {
+            $this->touchLastSeenInSnapshot($rows, $now);
+        }
 
         return count($rows);
     }
@@ -1556,6 +1567,51 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
         }
 
         return $this->hasPdvMeiosPagamentoTable = Schema::hasTable('pdv_meios_pagamento');
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $snapshotRows
+     */
+    private function touchLastSeenInSnapshot(array $snapshotRows, \DateTimeInterface $seenAt): void
+    {
+        /** @var array<string, array{store_pdv_id:int,canal:string,id_operacao:int}> $keys */
+        $keys = [];
+        foreach ($snapshotRows as $row) {
+            $storePdvId = (int) ($row['store_pdv_id'] ?? 0);
+            $idOperacao = (int) ($row['id_operacao'] ?? 0);
+            $canal = strtoupper(trim((string) ($row['canal'] ?? 'HIPER_CAIXA')));
+            if ($storePdvId <= 0 || $idOperacao <= 0 || $canal === '') {
+                continue;
+            }
+
+            $composite = $storePdvId . '|' . $canal . '|' . $idOperacao;
+            $keys[$composite] = [
+                'store_pdv_id' => $storePdvId,
+                'canal' => $canal,
+                'id_operacao' => $idOperacao,
+            ];
+        }
+
+        foreach ($keys as $key) {
+            DB::table('pdv_vendas')
+                ->where('store_pdv_id', $key['store_pdv_id'])
+                ->where('canal', $key['canal'])
+                ->where('id_operacao', $key['id_operacao'])
+                ->update(['last_seen_in_snapshot_at' => $seenAt]);
+        }
+    }
+
+    private function supportsPdvVendasLastSeenColumn(): bool
+    {
+        if ($this->hasPdvVendasLastSeenColumn !== null) {
+            return $this->hasPdvVendasLastSeenColumn;
+        }
+
+        if (!Schema::hasTable('pdv_vendas')) {
+            return $this->hasPdvVendasLastSeenColumn = false;
+        }
+
+        return $this->hasPdvVendasLastSeenColumn = Schema::hasColumn('pdv_vendas', 'last_seen_in_snapshot_at');
     }
 
     /**

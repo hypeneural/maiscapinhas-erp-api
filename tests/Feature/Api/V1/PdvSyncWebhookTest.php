@@ -825,6 +825,31 @@ test('unknown event_type falls back to sales and sets risk flag', function () {
     expect(is_array($riskFlags) ? $riskFlags : [])->toContain('event_type_unknown');
 });
 
+test('sets gestao_db_failure risk flag when integrity warning reports gestao database failure', function () {
+    $payload = pdvPayloadV3([
+        'integrity' => [
+            'sync_id' => 'sync-gestao-db-failure-001',
+            'warnings' => [
+                'GESTAO_DB_FAILURE: [Errno 10061] Connection refused',
+            ],
+        ],
+    ]);
+
+    $response = signedPdvRequest($payload, null, null, [
+        'HTTP_X_PDV_SCHEMA_VERSION' => '3.0',
+    ])->assertStatus(201)
+        ->assertJsonPath('data.status', 'created');
+
+    expect($response->json('data.risk_flags'))->toContain('gestao_db_failure');
+
+    $riskFlags = PdvSync::query()
+        ->where('sync_id', 'sync-gestao-db-failure-001')
+        ->value('risk_flags');
+    $riskFlags = is_array($riskFlags) ? $riskFlags : [];
+
+    expect($riskFlags)->toContain('gestao_db_failure');
+});
+
 test('rejects bearer token when auth mode is bearer and token is invalid', function () {
     config()->set('pdv.auth_mode', 'bearer');
 

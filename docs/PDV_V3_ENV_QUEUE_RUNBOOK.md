@@ -61,6 +61,25 @@ Cron unico (a cada minuto):
 
 O scheduler executa `pdv:queue-consume` a cada minuto, com stop-when-empty.
 
+Opcional (monitoramento de possivel cancelamento via snapshot):
+
+```env
+PDV_STALE_VENDAS_CHECK_ENABLED=true
+PDV_STALE_VENDAS_THRESHOLD_HOURS=72
+PDV_STALE_VENDAS_RECENT_WINDOW_DAYS=7
+PDV_STALE_VENDAS_LIMIT=200
+```
+
+Com essa flag ativa, o scheduler executa `pdv:stale-vendas-check --json` de hora em hora.
+
+Opcional (monitorar instabilidade do canal Loja):
+
+```env
+PDV_MONITOR_MAX_GESTAO_DB_FAILURES_30M=3
+```
+
+Quando `risk_flag=gestao_db_failure` ultrapassa o threshold em 30 minutos, `pdv:ops-monitor` gera issue `gestao_db_failure_high`.
+
 ### 3.2 Alternativa sem scheduler
 
 Cron direto com lock:
@@ -131,4 +150,10 @@ Se os syncs ficarem em `queued`, validar em sequencia:
 php artisan schedule:list
 php artisan schedule:run -v
 php artisan pdv:queue-consume --max-time=50 --sleep=1 --memory=256 --json
+```
+
+Para avaliar possiveis vendas nao vistas em snapshot recente:
+
+```bash
+php artisan pdv:stale-vendas-check --json
 ```

@@ -49,6 +49,7 @@ class PdvOpsMonitorCommand extends Command
             'queued_syncs' => max(0, (int) config('pdv.monitor_max_queued_syncs', 5)),
             'failed_jobs' => max(0, (int) config('pdv.monitor_max_failed_jobs', 0)),
             'stale_stores' => max(0, (int) config('pdv.monitor_max_stale_stores', 0)),
+            'gestao_db_failures_30m' => max(0, (int) config('pdv.monitor_max_gestao_db_failures_30m', 3)),
         ];
         $now = CarbonImmutable::now();
         $staleStores = $this->getStaleStores($silentStoreThresholdMinutes, $now);
@@ -63,6 +64,7 @@ class PdvOpsMonitorCommand extends Command
             'active_mapped_stores' => $staleStores['active_mapped_stores'],
             'stale_stores_count' => $staleStores['stale_count'],
             'stale_stores' => $staleStores['stores'],
+            'gestao_db_failures_30m' => $this->getGestaoDbFailuresLast30Minutes(),
         ];
 
         $issues = $this->buildIssues($metrics, $thresholds);
@@ -196,6 +198,16 @@ class PdvOpsMonitorCommand extends Command
             ];
         }
 
+        $gestaoDbFailures = $metrics['gestao_db_failures_30m'] ?? null;
+        if ($gestaoDbFailures !== null && (int) $gestaoDbFailures > $thresholds['gestao_db_failures_30m']) {
+            $issues[] = [
+                'name' => 'gestao_db_failure_high',
+                'value' => (int) $gestaoDbFailures,
+                'threshold' => $thresholds['gestao_db_failures_30m'],
+                'severity' => 'warning',
+            ];
+        }
+
         return $issues;
     }
 
@@ -243,6 +255,26 @@ class PdvOpsMonitorCommand extends Command
         } catch (Throwable $e) {
             Log::warning('pdv.monitor.failed_jobs_unavailable', [
                 'table' => $table,
+                'message' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
+    }
+
+    private function getGestaoDbFailuresLast30Minutes(): ?int
+    {
+        if (!Schema::hasTable('pdv_syncs') || !Schema::hasColumn('pdv_syncs', 'risk_flags')) {
+            return null;
+        }
+
+        try {
+            return (int) PdvSync::query()
+                ->where('received_at', '>=', now()->subMinutes(30))
+                ->whereJsonContains('risk_flags', 'gestao_db_failure')
+                ->count();
+        } catch (Throwable $e) {
+            Log::warning('pdv.monitor.gestao_db_failures_unavailable', [
                 'message' => $e->getMessage(),
             ]);
 
@@ -425,6 +457,7 @@ class PdvOpsMonitorCommand extends Command
         $silentStoreThreshold = (int) data_get($payload, 'metrics.silent_store_threshold_minutes', 120);
         $staleStoresAvailable = (bool) data_get($payload, 'metrics.stale_stores_available', false);
         $staleStoresCount = (int) data_get($payload, 'metrics.stale_stores_count', 0);
+        $gestaoDbFailures = data_get($payload, 'metrics.gestao_db_failures_30m');
         $staleStores = data_get($payload, 'metrics.stale_stores', []);
         $staleStores = is_array($staleStores) ? $staleStores : [];
         $timestamp = (string) data_get($payload, 'timestamp', now()->toIso8601String());
@@ -437,6 +470,7 @@ class PdvOpsMonitorCommand extends Command
             "queued_syncs={$queuedSyncs}",
             "failed_jobs=" . ($failedJobs === null ? 'n/a' : (string) $failedJobs),
             "stale_stores=" . ($staleStoresAvailable ? (string) $staleStoresCount : 'n/a'),
+            "gestao_db_failures_30m=" . ($gestaoDbFailures === null ? 'n/a' : (string) $gestaoDbFailures),
             "silent_store_threshold_minutes={$silentStoreThreshold}",
         ];
 
