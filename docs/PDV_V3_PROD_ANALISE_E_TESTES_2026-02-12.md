@@ -213,3 +213,48 @@ Validacao local apos hardening:
 No momento do reteste externo, a API publica retornou `503 Service Unavailable` (maintenance mode), inclusive em `/api/v1/health`.
 
 Enquanto esse estado persistir, nao e possivel concluir o veredito final de ingestao v3 ponta a ponta no endpoint externo.
+
+## 11) Reteste completo adicional (2026-02-12 02:47 UTC)
+
+### 11.1 Health
+
+- `GET /api/v1/health` voltou `200 OK`.
+
+### 11.2 Probes de schema
+
+- Probe `schema_version=3.0` (`sync_id=probe-schema3-416801ea9b6e`):
+  - Resultado: `422 validation`
+  - Erro: `schema_version invalid`.
+- Probe `schema_version=2.0` (`sync_id=probe-schema2-8f039e4fb2cd`):
+  - Resultado: `201 created`
+  - Persistido em `pdv_syncs.id=23`, `status=queued`.
+
+Conclusao: endpoint publicado continua aceitando v2 e rejeitando v3.
+
+### 11.3 Replay 6 JSON reais (schema 3)
+
+- `1.json` a `6.json`: `6/6` retornaram `422`.
+- Erro em todos: `schema_version invalid`.
+- Nenhum dos `sync_id` dos 6 arquivos foi inserido em `pdv_syncs`.
+
+### 11.4 Fila (consumo)
+
+Monitoramento de `sync_id=probe-schema2-8f039e4fb2cd` por ~2 minutos:
+- status permaneceu `queued` em todos os polls;
+- `processing_started_at=null`;
+- `processed_at=null`.
+
+Snapshot de status da fila apos reteste:
+- `total=23`
+- `queued=5`
+- `processing=0`
+- `processed=18`
+- `failed=0`
+
+Conclusao: fila ainda nao esta consumindo no ambiente publicado.
+
+### 11.5 Veredito deste reteste
+
+- `schema 3`: **reprovado** no endpoint publicado.
+- fila/worker via cron: **reprovado** (sem consumo observado).
+- estado geral: **nao 100%**.
