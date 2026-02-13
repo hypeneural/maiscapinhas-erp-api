@@ -33,20 +33,23 @@ Dar visibilidade operacional para a nova logica de identidade (`cnpj/login`) e a
 - [x] Scribe:
 - [x] documentar `store.cnpj` e `*.login` no endpoint de webhook.
 - [ ] incluir exemplos reais v3.1.
-- [ ] Criar roteiro E2E:
-- [ ] caso alias errado + cnpj correto.
-- [ ] caso id_usuario divergente + login correto.
-- [ ] caso login ausente e fallback por id.
+- [x] Criar roteiro E2E:
+- [x] caso alias errado + cnpj correto.
+- [x] caso id_usuario divergente + login correto.
+- [x] caso login ausente e fallback por id.
 
 ## Criterios de aceite
 - [x] Dashboard/admin mostra taxa de binding por chave forte.
 - [x] Docs refletem o contrato v3.1 sem ambiguidade.
-- [ ] Checklist E2E executado e anexado em doc de validacao.
+- [x] Checklist E2E executado e anexado em doc de validacao.
 
 ## Verificacao manual
 - [ ] Rodar monitor e confirmar novas metricas no JSON.
 - [ ] Validar `/docs` com exemplos v3.1 publicados.
-- [ ] Executar 3 cenarios E2E e anexar evidencias (request/response + SQL).
+- [x] Executar 3 cenarios E2E e anexar evidencias (request/response + SQL).
+
+Evidencias anexadas:
+- `docs/VALIDACAO_E2E_PDV_PRODUCAO_POS_NORMALIZACAO_2026-02-13.md`
 
 ## Execucao realizada
 - `app/Console/Commands/PdvOpsMonitorCommand.php`:

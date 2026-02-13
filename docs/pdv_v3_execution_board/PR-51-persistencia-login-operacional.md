@@ -1,6 +1,6 @@
 # PR-51 - Persistencia de Login nas Tabelas Operacionais PDV
 
-Status: `in_progress`  
+Status: `done`  
 Prioridade: `P1`  
 Tipo: `backend-data`  
 Dependencia: `PR-50`
@@ -42,9 +42,9 @@ Persistir `login` recebido no webhook v3.1 para rastreabilidade, auditoria e rec
 - [ ] Relatorios/queries conseguem filtrar por login sem join adicional.
 
 ## Verificacao manual
-- [ ] Enviar payload com `operador.login` e verificar coluna em `pdv_turnos`.
-- [ ] Enviar payload com `itens[].vendedor.login` e verificar `pdv_venda_itens`.
-- [ ] Verificar `snapshot_vendas` preenchendo `pdv_vendas_resumo.vendedor_login`.
+- [x] Enviar payload com `operador.login` e verificar coluna em `pdv_turnos`.
+- [x] Enviar payload com `itens[].vendedor.login` e verificar `pdv_venda_itens`.
+- [x] Verificar `snapshot_vendas` preenchendo `pdv_vendas_resumo.vendedor_login`.
 
 ## Execucao realizada
 - Migration `database/migrations/2026_02_13_000360_add_login_columns_to_pdv_operational_tables.php`:

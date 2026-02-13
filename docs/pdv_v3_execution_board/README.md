@@ -31,10 +31,13 @@ PRs concluidos/anteriores permanecem documentados nos arquivos:
 4. [PR-52 - P1: Observabilidade e documentacao do binding v3.1](./PR-52-observabilidade-e-docs-v31.md)
 
 ## Estado rapido (Fase 3)
-- [~] PR-49 (em execucao: codigo e testes atualizados, pendente validacao manual em producao)
-- [~] PR-50 (em execucao: resolver CNPJ/login implementado, pendente validacao manual/E2E)
-- [~] PR-51 (em execucao: persistencia de login implementada e coberta por testes unitarios; pendente validacao manual/E2E)
-- [~] PR-52 (em execucao: metricas/contadores de identidade e docs v3.1 atualizados; pendente checklist E2E e exemplos finais)
+- [x] PR-49 (concluida: ingress suporta `3.0` enriquecido com `cnpj/login` + `3.1`; mismatch header/body validado)
+- [x] PR-50 (concluida: resolucao `CNPJ first` + `Login first` validada em producao)
+- [x] PR-51 (concluida: persistencia de `login` em tabelas operacionais validada em producao)
+- [~] PR-52 (parcial: metricas/docs OK; pendente publicar exemplos no Scribe + endpoint opcional de saude de ambiguidades)
+
+Evidencia E2E em producao:
+- `docs/VALIDACAO_E2E_PDV_PRODUCAO_POS_NORMALIZACAO_2026-02-13.md`
 
 ## Novidades do agente v3.1 (2026-02-13)
 - `store.cnpj` no payload como identificador universal da loja.

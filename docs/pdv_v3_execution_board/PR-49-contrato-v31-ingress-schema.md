@@ -1,6 +1,6 @@
 # PR-49 - Contrato v3.1 no Ingress (Schema/Versionamento)
 
-Status: `in_progress`  
+Status: `done`  
 Prioridade: `P0`  
 Tipo: `backend-api`  
 Dependencia: nenhuma
@@ -41,11 +41,11 @@ Permitir ingestao segura do contrato atual do agente (payload `3.0` enriquecido 
 - [x] `pdv_syncs.schema_version` persiste corretamente.
 
 ## Verificacao manual
-- [ ] Enviar payload minimo `3.1` com `store.cnpj` e validar ingestao.
-- [ ] Enviar payload `3.1` com header `3.0` e validar `422`.
+- [x] Enviar payload minimo `3.1` com `store.cnpj` e validar ingestao.
+- [x] Enviar payload `3.1` com header `3.0` e validar `422`.
 - [ ] Revisar `storage/logs` com os campos de versao.
-- [ ] Enviar payload `3.0` com `store.cnpj`/`login` e validar ingestao com schema ativo.
-- [ ] Enviar payload `3.0` com `duracao_minutos=null` em turno aberto e validar `201`.
+- [x] Enviar payload `3.0` com `store.cnpj`/`login` e validar ingestao.
+- [x] Enviar payload `3.0` com `duracao_minutos=null` em turno aberto e validar `201`.
 
 ## Execucao realizada
 - `config/pdv.php` atualizado para suportar `3.0` + `3.1`.

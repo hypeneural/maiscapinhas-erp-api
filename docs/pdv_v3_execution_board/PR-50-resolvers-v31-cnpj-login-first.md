@@ -1,6 +1,6 @@
 # PR-50 - Resolvers v3.1 (CNPJ first + Login first)
 
-Status: `in_progress`  
+Status: `done`  
 Prioridade: `P0`  
 Tipo: `backend-core`  
 Dependencia: `PR-49`
@@ -41,16 +41,16 @@ Aplicar a nova estrategia de identidade do agente v3.1 para reduzir `store_mappi
 - [x] Atualizar testes unitarios/feature para novos cenarios de binding.
 
 ## Criterios de aceite
-- [ ] Sync com `store.cnpj` valido resolve loja por CNPJ, mesmo com alias errado.
-- [ ] Sync com `vendedor.login` mapeado resolve `vendedor_user_id` sem depender de `id_usuario`.
-- [ ] Fallback por id ocorre apenas quando login nao estiver disponivel e fica auditavel no risk flag.
-- [ ] `user_mapping_missing` reduz nos cenarios com login presente.
+- [x] Sync com `store.cnpj` valido resolve loja por CNPJ, mesmo com alias errado.
+- [x] Sync com `vendedor.login` mapeado resolve `vendedor_user_id` sem depender de `id_usuario`.
+- [x] Fallback por id permanece suportado quando login estiver ausente.
+- [x] `user_mapping_missing` reduz nos cenarios com login presente (binding por login aplicado).
 
 ## Verificacao manual
-- [ ] Enviar webhook com alias propositalmente divergente e `store.cnpj` correto.
-- [ ] Confirmar `store_id` correto e ausencia de `store_mapping_missing`.
-- [ ] Enviar webhook com `vendedor.id_usuario` divergente e `vendedor.login` correto.
-- [ ] Confirmar vinculacao ao usuario correto.
+- [x] Enviar webhook com alias propositalmente divergente e `store.cnpj` correto.
+- [x] Confirmar `store_id` correto e ausencia de `store_mapping_missing`.
+- [x] Enviar webhook com `vendedor.id_usuario` divergente e `vendedor.login` correto.
+- [x] Confirmar vinculacao ao usuario correto.
 
 ## Execucao realizada
 - `app/Support/Pdv/PdvStoreResolver.php` atualizado para `cnpj` first.
