@@ -78,8 +78,10 @@ beforeEach(function () {
         $table->string('periodo', 20)->nullable();
         $table->unsignedBigInteger('operador_pdv_id')->nullable();
         $table->string('operador_nome', 200)->nullable();
+        $table->string('operador_login', 100)->nullable();
         $table->unsignedBigInteger('responsavel_pdv_id')->nullable();
         $table->string('responsavel_nome', 200)->nullable();
+        $table->string('responsavel_login', 100)->nullable();
         $table->decimal('total_sistema', 14, 2)->default(0);
         $table->unsignedInteger('qtd_vendas_sistema')->default(0);
         $table->unsignedInteger('qtd_vendas')->default(0);
@@ -106,7 +108,7 @@ function buildPdvPayloadWithTurnosForV3Test(array $turnos, string $schemaVersion
         'schema_version' => $schemaVersion,
         'event_type' => 'turno_closure',
         'agent' => [
-            'version' => $schemaVersion === '3.0' ? '3.0.0' : '2.0.0',
+            'version' => str_starts_with($schemaVersion, '3.') ? '3.1.0' : '2.0.0',
             'machine' => 'PDV-STORE-01',
             'sent_at' => '2026-02-11T13:10:00-03:00',
         ],
@@ -157,7 +159,7 @@ function createPdvSyncWithTurnosForV3Test(array $turnos, string $schemaVersion, 
         'store_alias' => 'loja-10',
         'window_from' => '2026-02-11 16:00:00',
         'window_to' => '2026-02-11 16:10:00',
-        'agent_version' => $schemaVersion === '3.0' ? '3.0.0' : '2.0.0',
+        'agent_version' => str_starts_with($schemaVersion, '3.') ? '3.1.0' : '2.0.0',
         'agent_machine' => 'PDV-STORE-01',
         'ops_count' => 0,
         'warnings' => [],
@@ -423,4 +425,57 @@ test('keeps compatibility with v2 payload without turno v3 fields', function () 
     expect((int) $row->qtd_vendas)->toBe(0);
     expect((float) $row->total_vendas)->toBe(0.0);
     expect((int) $row->qtd_vendedores)->toBe(0);
+});
+
+test('persists operador_login and responsavel_login when provided in v3.1 payload', function () {
+    $sync = createPdvSyncWithTurnosForV3Test([
+        [
+            'id_turno' => 'turno-v31-login-001',
+            'sequencial' => 9,
+            'fechado' => true,
+            'data_hora_inicio' => '2026-02-12T08:00:00-03:00',
+            'data_hora_termino' => '2026-02-12T12:00:00-03:00',
+            'duracao_minutos' => 240,
+            'periodo' => 'MATUTINO',
+            'operador' => [
+                'id_usuario' => 12,
+                'nome' => 'Carlos',
+                'login' => 'carlos.operador',
+            ],
+            'responsavel' => [
+                'id_usuario' => 80,
+                'nome' => 'Daren',
+                'login' => 'daren.vendas',
+            ],
+            'qtd_vendas' => 15,
+            'total_vendas' => 2500.00,
+            'qtd_vendedores' => 2,
+            'totais_sistema' => [
+                'total' => 2500.00,
+                'qtd_vendas' => 15,
+                'por_pagamento' => [],
+            ],
+            'fechamento_declarado' => [
+                'total' => 2500.00,
+                'qtd_vendas' => 15,
+                'por_pagamento' => [],
+            ],
+            'falta_caixa' => [
+                'total' => 0.00,
+                'qtd_vendas' => 0,
+                'por_pagamento' => [],
+            ],
+        ],
+    ], '3.1', 'sync-pr51-turno-login-001');
+
+    (new ProcessPdvSyncJob($sync->id))->handle();
+
+    $row = DB::table('pdv_turnos')
+        ->where('store_pdv_id', 10)
+        ->where('id_turno', 'turno-v31-login-001')
+        ->first(['operador_login', 'responsavel_login']);
+
+    expect($row)->not->toBeNull();
+    expect($row->operador_login)->toBe('carlos.operador');
+    expect($row->responsavel_login)->toBe('daren.vendas');
 });

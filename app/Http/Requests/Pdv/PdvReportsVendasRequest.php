@@ -18,6 +18,7 @@ class PdvReportsVendasRequest extends FormRequest
         return [
             'store_id' => ['nullable', 'integer', 'exists:stores,id'],
             'store_pdv_id' => ['nullable', 'integer', 'min:1'],
+            'store_alias' => ['nullable', 'string', 'max:100'],
             'from' => ['nullable', 'date'],
             'to' => ['nullable', 'date', 'after_or_equal:from'],
             'vendedor_id' => ['nullable', 'integer', 'min:1'],
@@ -37,6 +38,7 @@ class PdvReportsVendasRequest extends FormRequest
             'store_id.exists' => 'A loja informada em store_id nao foi encontrada.',
             'store_pdv_id.integer' => 'O campo store_pdv_id deve ser numerico.',
             'store_pdv_id.min' => 'O campo store_pdv_id deve ser maior que zero.',
+            'store_alias.max' => 'O campo store_alias excede o tamanho maximo permitido.',
             'from.date' => 'O campo from deve ser uma data valida.',
             'to.date' => 'O campo to deve ser uma data valida.',
             'to.after_or_equal' => 'O campo to deve ser maior ou igual ao campo from.',

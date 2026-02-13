@@ -10,6 +10,7 @@ use App\Http\Requests\Pdv\PdvReportsRankingVendedoresRequest;
 use App\Http\Requests\Pdv\PdvReportsTurnosRequest;
 use App\Http\Requests\Pdv\PdvReportsVendasRequest;
 use App\Http\Traits\ApiResponse;
+use App\Support\Pdv\PdvStoreResolver;
 use App\Support\Audit\AuditContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
@@ -48,6 +49,7 @@ class PdvReportsController extends Controller
      * @authenticated
      * @queryParam store_id integer ID da loja interna (`stores.id`). Obrigatorio se `store_pdv_id` nao for informado. Example: 1
      * @queryParam store_pdv_id integer ID da loja no PDV (`store.id_ponto_venda`). Obrigatorio se `store_id` nao for informado. Example: 13
+     * @queryParam store_alias string Alias da loja PDV para desambiguar quando `store_pdv_id` colide. Example: Loja 8 - MC Mata Atlântica
      * @queryParam date string required Data de referencia no formato `YYYY-MM-DD`. Example: 2026-02-12
      * @queryParam sequencial integer Filtrar por numero sequencial do turno. Example: 2
      * @queryParam periodo string Filtrar por periodo do turno. Valores: `MATUTINO`, `VESPERTINO`, `NOTURNO`. Example: MATUTINO
@@ -94,13 +96,14 @@ class PdvReportsController extends Controller
 
         $storeId = isset($validated['store_id']) ? (int) $validated['store_id'] : null;
         $storePdvId = isset($validated['store_pdv_id']) ? (int) $validated['store_pdv_id'] : null;
+        $storeAlias = isset($validated['store_alias']) ? trim((string) $validated['store_alias']) : null;
         if ($storeId === null && $storePdvId === null) {
             throw ValidationException::withMessages([
                 'store' => ['Informe store_id ou store_pdv_id.'],
             ]);
         }
 
-        $scope = $this->resolveStoreScope($request, $storeId, $storePdvId);
+        $scope = $this->resolveStoreScope($request, $storeId, $storePdvId, $storeAlias);
         $date = CarbonImmutable::parse((string) $validated['date'])->toDateString();
 
         $query = DB::table('pdv_turnos as t')
@@ -203,6 +206,7 @@ class PdvReportsController extends Controller
             'filters' => [
                 'store_id' => $scope['store_id'],
                 'store_pdv_id' => $scope['store_pdv_id'],
+                'store_alias' => $scope['store_alias'],
                 'date' => $date,
                 'sequencial' => isset($validated['sequencial']) ? (int) $validated['sequencial'] : null,
                 'periodo' => $validated['periodo'] ?? null,
@@ -235,6 +239,7 @@ class PdvReportsController extends Controller
      * @authenticated
      * @queryParam store_id integer ID da loja interna (`stores.id`). Example: 1
      * @queryParam store_pdv_id integer ID da loja no PDV (`store.id_ponto_venda`). Example: 13
+     * @queryParam store_alias string Alias da loja PDV para desambiguar quando `store_pdv_id` colide. Example: Loja 8 - MC Mata Atlântica
      * @queryParam from string Data inicial (`YYYY-MM-DD`). Default: hoje-30d. Example: 2026-02-01
      * @queryParam to string Data final (`YYYY-MM-DD`). Default: hoje. Example: 2026-02-12
      * @queryParam vendedor_id integer Filtrar por vendedor (`vendedor_pdv_id`). Example: 80
@@ -276,7 +281,8 @@ class PdvReportsController extends Controller
 
         $storeId = isset($validated['store_id']) ? (int) $validated['store_id'] : null;
         $storePdvId = isset($validated['store_pdv_id']) ? (int) $validated['store_pdv_id'] : null;
-        $scope = $this->resolveStoreScope($request, $storeId, $storePdvId);
+        $storeAlias = isset($validated['store_alias']) ? trim((string) $validated['store_alias']) : null;
+        $scope = $this->resolveStoreScope($request, $storeId, $storePdvId, $storeAlias);
 
         $from = isset($validated['from'])
             ? CarbonImmutable::parse((string) $validated['from'])->startOfDay()
@@ -430,11 +436,12 @@ class PdvReportsController extends Controller
                 'total_vendido' => round($totalVendido, 2),
             ],
             'filters' => [
-                'store_id' => $scope['store_id'],
-                'store_pdv_id' => $scope['store_pdv_id'],
-                'from' => $from->toIso8601String(),
-                'to' => $to->toIso8601String(),
-                'vendedor_id' => isset($validated['vendedor_id']) ? (int) $validated['vendedor_id'] : null,
+            'store_id' => $scope['store_id'],
+            'store_pdv_id' => $scope['store_pdv_id'],
+            'store_alias' => $scope['store_alias'],
+            'from' => $from->toIso8601String(),
+            'to' => $to->toIso8601String(),
+            'vendedor_id' => isset($validated['vendedor_id']) ? (int) $validated['vendedor_id'] : null,
                 'canal' => $validated['canal'] ?? null,
                 'id_turno' => $validated['id_turno'] ?? null,
                 'id_finalizador' => isset($validated['id_finalizador']) ? (int) $validated['id_finalizador'] : null,
@@ -461,6 +468,7 @@ class PdvReportsController extends Controller
      * @queryParam to string Data final custom (`YYYY-MM-DD`). Example: 2026-02-12
      * @queryParam store_id integer Filtrar por loja interna. Example: 1
      * @queryParam store_pdv_id integer Filtrar por loja PDV. Example: 13
+     * @queryParam store_alias string Alias da loja PDV para desambiguar quando `store_pdv_id` colide. Example: Loja 8 - MC Mata Atlântica
      * @queryParam canal string Filtrar por canal (`HIPER_CAIXA` ou `HIPER_LOJA`). Example: HIPER_CAIXA
      * @queryParam limit integer Limite de linhas do ranking (1-200). Default: 50. Example: 20
      *
@@ -486,7 +494,8 @@ class PdvReportsController extends Controller
 
         $storeId = isset($validated['store_id']) ? (int) $validated['store_id'] : null;
         $storePdvId = isset($validated['store_pdv_id']) ? (int) $validated['store_pdv_id'] : null;
-        $scope = $this->resolveStoreScope($request, $storeId, $storePdvId);
+        $storeAlias = isset($validated['store_alias']) ? trim((string) $validated['store_alias']) : null;
+        $scope = $this->resolveStoreScope($request, $storeId, $storePdvId, $storeAlias);
 
         [$from, $to, $mode] = $this->resolveRankingPeriod($validated);
         $limit = (int) ($validated['limit'] ?? 50);
@@ -539,6 +548,7 @@ class PdvReportsController extends Controller
             'filters' => [
                 'store_id' => $scope['store_id'],
                 'store_pdv_id' => $scope['store_pdv_id'],
+                'store_alias' => $scope['store_alias'],
                 'canal' => $validated['canal'] ?? null,
                 'limit' => $limit,
             ],
@@ -562,6 +572,7 @@ class PdvReportsController extends Controller
      * @queryParam to string required Data final (`YYYY-MM-DD`). Example: 2026-02-12
      * @queryParam store_id integer Filtrar por loja interna. Example: 1
      * @queryParam store_pdv_id integer Filtrar por loja PDV. Example: 13
+     * @queryParam store_alias string Alias da loja PDV para desambiguar quando `store_pdv_id` colide. Example: Loja 8 - MC Mata Atlântica
      * @queryParam vendedor_id integer Filtrar por vendedor. Example: 80
      * @queryParam canal string Filtrar por canal (`HIPER_CAIXA` ou `HIPER_LOJA`). Example: HIPER_CAIXA
      * @queryParam sort_by string Campo de ordenacao: `total_vendido`, `qtd_vendas`, `total_itens`. Default: `total_vendido`. Example: total_vendido
@@ -599,7 +610,8 @@ class PdvReportsController extends Controller
 
         $storeId = isset($validated['store_id']) ? (int) $validated['store_id'] : null;
         $storePdvId = isset($validated['store_pdv_id']) ? (int) $validated['store_pdv_id'] : null;
-        $scope = $this->resolveStoreScope($request, $storeId, $storePdvId);
+        $storeAlias = isset($validated['store_alias']) ? trim((string) $validated['store_alias']) : null;
+        $scope = $this->resolveStoreScope($request, $storeId, $storePdvId, $storeAlias);
 
         $from = CarbonImmutable::parse((string) $validated['from'])->startOfDay();
         $to = CarbonImmutable::parse((string) $validated['to'])->endOfDay();
@@ -614,11 +626,7 @@ class PdvReportsController extends Controller
                     ->on('v.id_operacao', '=', 'vi.id_operacao');
             })
             ->leftJoin('pdv_usuarios as pu', 'pu.id_usuario_hiper', '=', 'vi.vendedor_pdv_id')
-            ->leftJoin('pdv_store_mappings as psm', function ($join): void {
-                $join->on('psm.pdv_store_id', '=', 'v.store_pdv_id')
-                    ->where('psm.active', true);
-            })
-            ->leftJoin('stores as s', 's.id', '=', 'psm.store_id')
+            ->leftJoin('stores as s', 's.id', '=', 'v.store_id')
             ->whereNotNull('vi.vendedor_pdv_id')
             ->whereBetween('v.data_hora', [$from->toDateTimeString(), $to->toDateTimeString()])
             ->selectRaw('v.store_id as store_id')
@@ -681,6 +689,7 @@ class PdvReportsController extends Controller
             'filters' => [
                 'store_id' => $scope['store_id'],
                 'store_pdv_id' => $scope['store_pdv_id'],
+                'store_alias' => $scope['store_alias'],
                 'from' => $from->toIso8601String(),
                 'to' => $to->toIso8601String(),
                 'vendedor_id' => isset($validated['vendedor_id']) ? (int) $validated['vendedor_id'] : null,
@@ -693,9 +702,9 @@ class PdvReportsController extends Controller
     }
 
     /**
-     * @return array{store_id:int|null,store_pdv_id:int|null,allowed_store_ids:array<int, int>|null}
+     * @return array{store_id:int|null,store_pdv_id:int|null,store_alias:string|null,allowed_store_ids:array<int, int>|null}
      */
-    private function resolveStoreScope(Request $request, ?int $storeId, ?int $storePdvId): array
+    private function resolveStoreScope(Request $request, ?int $storeId, ?int $storePdvId, ?string $storeAlias = null): array
     {
         $user = $request->user();
         if (!$user) {
@@ -721,24 +730,68 @@ class PdvReportsController extends Controller
             abort(403, 'Voce nao tem acesso a esta loja.');
         }
 
+        $storeAlias = $storeAlias !== null && trim($storeAlias) !== '' ? trim($storeAlias) : null;
+
         if ($storePdvId !== null) {
-            $mappedStoreId = DB::table('pdv_store_mappings')
-                ->where('pdv_store_id', $storePdvId)
-                ->where('active', true)
-                ->value('store_id');
-            $mappedStoreId = $mappedStoreId !== null ? (int) $mappedStoreId : null;
+            $resolver = app(PdvStoreResolver::class);
+            $mappings = $resolver->activeMappingsByPdvId($storePdvId);
 
-            if ($storeId !== null && $mappedStoreId !== null && $storeId !== $mappedStoreId) {
-                throw ValidationException::withMessages([
-                    'store' => ['store_id e store_pdv_id nao pertencem a mesma loja.'],
-                ]);
+            if ($storeAlias !== null) {
+                $aliasFiltered = $mappings->filter(static function (object $mapping) use ($storeAlias): bool {
+                    $mappingAlias = trim((string) ($mapping->alias ?? ''));
+                    return $mappingAlias !== '' && mb_strtolower($mappingAlias) === mb_strtolower($storeAlias);
+                })->values();
+
+                if ($aliasFiltered->count() === 0) {
+                    throw ValidationException::withMessages([
+                        'store_alias' => ['Nao existe mapping ativo para este store_pdv_id + store_alias.'],
+                    ]);
+                }
+                if ($aliasFiltered->count() > 1) {
+                    throw ValidationException::withMessages([
+                        'store_alias' => ['store_pdv_id + store_alias retornou mais de uma loja ativa.'],
+                    ]);
+                }
+
+                $resolvedStoreId = (int) ($aliasFiltered->first()->store_id ?? 0);
+                if ($resolvedStoreId <= 0) {
+                    throw ValidationException::withMessages([
+                        'store' => ['Mapping encontrado, mas sem store_id valido.'],
+                    ]);
+                }
+
+                if ($storeId !== null && $storeId !== $resolvedStoreId) {
+                    throw ValidationException::withMessages([
+                        'store' => ['store_id e store_pdv_id + store_alias nao pertencem a mesma loja.'],
+                    ]);
+                }
+
+                $storeId = $resolvedStoreId;
+            } elseif ($storeId === null) {
+                if ($mappings->count() > 1) {
+                    throw ValidationException::withMessages([
+                        'store_pdv_id' => [
+                            'store_pdv_id ambiguo. Informe store_id ou store_alias para desambiguar.',
+                        ],
+                    ]);
+                }
+
+                if ($mappings->count() === 1) {
+                    $resolvedStoreId = (int) ($mappings->first()->store_id ?? 0);
+                    $storeId = $resolvedStoreId > 0 ? $resolvedStoreId : null;
+                }
+            } else {
+                $belongsToStore = $mappings->contains(static function (object $mapping) use ($storeId): bool {
+                    return (int) ($mapping->store_id ?? 0) === $storeId;
+                });
+                if (!$belongsToStore) {
+                    throw ValidationException::withMessages([
+                        'store' => ['store_id e store_pdv_id nao pertencem a mesma loja.'],
+                    ]);
+                }
             }
 
-            if ($storeId === null && $mappedStoreId !== null) {
-                $storeId = $mappedStoreId;
-            }
-
-            if (!$user->isSuperAdmin() && ($mappedStoreId === null || !$user->hasAccessToStore($mappedStoreId))) {
+            if (!$user->isSuperAdmin() && ($storeId === null || !$user->hasAccessToStore($storeId))) {
                 abort(403, 'Voce nao tem acesso a esta loja PDV.');
             }
         }
@@ -746,6 +799,7 @@ class PdvReportsController extends Controller
         return [
             'store_id' => $storeId,
             'store_pdv_id' => $storePdvId,
+            'store_alias' => $storeAlias,
             'allowed_store_ids' => $allowedStoreIds,
         ];
     }

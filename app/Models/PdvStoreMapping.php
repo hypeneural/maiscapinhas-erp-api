@@ -16,12 +16,15 @@ class PdvStoreMapping extends Model
         'pdv_store_id',
         'store_id',
         'alias',
+        'cnpj',
         'active',
     ];
 
     protected function casts(): array
     {
         return [
+            'pdv_store_id' => 'integer',
+            'store_id' => 'integer',
             'active' => 'boolean',
         ];
     }
@@ -31,4 +34,3 @@ class PdvStoreMapping extends Model
         return $this->belongsTo(Store::class);
     }
 }
-

@@ -8,16 +8,16 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Pdv\PdvSyncIngestRequest;
 use App\Http\Traits\ApiResponse;
 use App\Jobs\ProcessPdvSyncJob;
-use App\Models\PdvStoreMapping;
 use App\Models\PdvSync;
 use App\Models\PdvSyncPayload;
 use App\Support\Audit\AuditContext;
 use App\Support\Pdv\PdvDateTime;
 use App\Support\Pdv\PdvJsonSchemaValidator;
+use App\Support\Pdv\PdvStoreResolver;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * @group PDV - Sync
@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\Log;
  * Endpoint de ingestao do webhook PDV Sync Agent v3.
  *
  * Contrato:
- * - `schema_version` suportado: `3.0`
+ * - `schema_version` suportado: `3.0` e `3.1`
  * - idempotencia por `integrity.sync_id`
  * - payload validado por regras Laravel + JSON Schema
  * - enfileiramento assincorno para processamento (`ProcessPdvSyncJob`)
@@ -46,26 +46,32 @@ class PdvSyncController extends Controller
      *
      * @unauthenticated
      *
-     * @header X-PDV-Schema-Version string Versao do schema enviada no header. Esperado: `3.0`. Example: 3.0
+     * @header X-PDV-Schema-Version string Versao do schema enviada no header. Esperado: `3.0` ou `3.1`. Example: 3.1
      * @header X-PDV-Timestamp integer Timestamp Unix para assinatura HMAC (obrigatorio em modo HMAC). Example: 1765212000
      * @header X-PDV-Signature string Assinatura HMAC SHA-256 no formato hex (ou `sha256=...`). Example: 9b7a3f...
      * @header Authorization string Token bearer legado/alternativo (`Bearer {token}`), quando habilitado por config. Example: Bearer abc123
      * @header X-Request-Id string ID de correlacao opcional. Example: req-pdv-001
      *
-     * @bodyParam schema_version string required Versao do schema. Valor aceito: `3.0`. Example: 3.0
+     * @bodyParam schema_version string required Versao do schema. Valores aceitos: `3.0` ou `3.1`. Example: 3.1
      * @bodyParam event_type string Tipo do evento (`sales`, `turno_closure`, `mixed`). Example: mixed
      * @bodyParam store object required Dados da loja origem.
      * @bodyParam store.id_ponto_venda integer required ID da loja no PDV. Example: 13
      * @bodyParam store.nome string Nome da loja no PDV. Example: Mais Capinhas Porto Belo
      * @bodyParam store.alias string Alias da loja no agente. Example: porto-belo-13
+     * @bodyParam store.cnpj string CNPJ da loja (quando disponivel no agente). Example: 61063019000333
      * @bodyParam window object required Janela de sincronizacao.
      * @bodyParam window.from string required Inicio da janela (ISO-8601). Example: 2026-02-12T09:50:00-03:00
      * @bodyParam window.to string required Fim da janela (ISO-8601). Example: 2026-02-12T10:00:00-03:00
      * @bodyParam window.minutes integer Duracao da janela em minutos. Example: 10
      * @bodyParam vendas array Lista de vendas da janela.
      * @bodyParam turnos array Lista de turnos relacionados.
+     * @bodyParam turnos[].operador.login string Login do operador (contrato atual, enviado em payloads 3.0/3.1). Example: operador.v3
+     * @bodyParam turnos[].responsavel.login string Login do responsavel/vendedor principal (contrato atual, enviado em payloads 3.0/3.1). Example: vendedor.lider
      * @bodyParam snapshot_turnos array Snapshot dos ultimos turnos fechados.
+     * @bodyParam snapshot_turnos[].operador.login string Login do operador no snapshot (contrato atual, enviado em payloads 3.0/3.1). Example: operador.v3
+     * @bodyParam snapshot_turnos[].responsavel.login string Login do responsavel no snapshot (contrato atual, enviado em payloads 3.0/3.1). Example: vendedor.lider
      * @bodyParam snapshot_vendas array Snapshot das ultimas vendas.
+     * @bodyParam snapshot_vendas[].vendedor.login string Login do vendedor no snapshot (contrato atual, enviado em payloads 3.0/3.1). Example: vendedor.lider
      * @bodyParam ops object Metadados operacionais da janela.
      * @bodyParam ops.count integer Quantidade de operacoes de caixa (`HIPER_CAIXA`). Example: 5
      * @bodyParam ops.ids integer[] IDs de operacao do canal caixa. Example: [12345,12346]
@@ -74,6 +80,8 @@ class PdvSyncController extends Controller
      * @bodyParam integrity object required Bloco de integridade.
      * @bodyParam integrity.sync_id string required Identificador deterministico do sync. Example: a1b2c3d4e5f6
      * @bodyParam integrity.warnings string[] Warnings operacionais emitidos pelo agente.
+     * @bodyParam vendas[].itens[].vendedor.login string Login do vendedor por item (contrato atual, enviado em payloads 3.0/3.1). Example: maria.silva
+     * @bodyParam resumo.by_vendor[].login string Login do vendedor no resumo agregado (contrato atual, enviado em payloads 3.0/3.1). Example: maria.silva
      *
      * @response 201 {
      *   "data": {
@@ -158,8 +166,8 @@ class PdvSyncController extends Controller
         }
 
         $headerSchemaVersion = trim((string) $request->header('X-PDV-Schema-Version', ''));
-        $supportedSchemaVersions = config('pdv.supported_schema_versions', ['3.0']);
-        $supportedSchemaVersions = is_array($supportedSchemaVersions) ? $supportedSchemaVersions : ['3.0'];
+        $supportedSchemaVersions = config('pdv.supported_schema_versions', ['3.0', '3.1']);
+        $supportedSchemaVersions = is_array($supportedSchemaVersions) ? $supportedSchemaVersions : ['3.0', '3.1'];
 
         if ($headerSchemaVersion !== '' && !in_array($headerSchemaVersion, $supportedSchemaVersions, true)) {
             return $this->pdvValidationError(
@@ -250,18 +258,21 @@ class PdvSyncController extends Controller
             );
         }
 
-        $storeMapping = PdvStoreMapping::query()
-            ->where('pdv_store_id', $storePdvId)
-            ->where('active', true)
-            ->first();
-
-        $storeId = $storeMapping?->store_id;
         $storeAlias = $this->normalizeAlias(data_get($payload, 'store.alias'));
-        $mappedAlias = $this->normalizeAlias($storeMapping?->alias);
-        $aliasMismatch = $storeMapping !== null
-            && $storeAlias !== null
-            && $mappedAlias !== null
-            && $storeAlias !== $mappedAlias;
+        $storeName = $this->normalizeAlias(data_get($payload, 'store.nome'));
+        $storeCnpj = $this->normalizeCnpj(data_get($payload, 'store.cnpj'));
+        $storeResolution = app(PdvStoreResolver::class)->resolve(
+            $storePdvId,
+            $storeAlias,
+            $storeName,
+            $storeCnpj
+        );
+        $storeId = $storeResolution['store_id'];
+        $mappedAlias = $this->normalizeAlias($storeResolution['mapped_alias'] ?? null);
+        $resolutionRiskFlags = is_array($storeResolution['risk_flags'] ?? null)
+            ? $storeResolution['risk_flags']
+            : [];
+        $aliasMismatch = in_array('store_alias_mismatch', $resolutionRiskFlags, true);
         $blockOnAliasMismatch = (bool) config('pdv.block_on_alias_mismatch', false);
         $shouldBlock = $aliasMismatch && $blockOnAliasMismatch;
 
@@ -275,12 +286,7 @@ class PdvSyncController extends Controller
         if ($headerTimestamp === null && $authMode === 'hmac') {
             $riskFlags[] = 'timestamp_missing';
         }
-        if ($storeId === null) {
-            $riskFlags[] = 'store_mapping_missing';
-        }
-        if ($aliasMismatch) {
-            $riskFlags[] = 'store_alias_mismatch';
-        }
+        $riskFlags = array_merge($riskFlags, $resolutionRiskFlags);
         if ($shouldBlock) {
             $riskFlags[] = 'store_alias_mismatch_blocked';
         }
@@ -450,6 +456,8 @@ class PdvSyncController extends Controller
             'store_alias' => $storeAlias,
             'mapped_alias' => $mappedAlias,
             'alias_mismatch' => $aliasMismatch,
+            'store_resolution_status' => $storeResolution['status'] ?? null,
+            'store_resolution_matched_by' => $storeResolution['matched_by'] ?? null,
             'unknown_event_type' => $unknownEventType,
             'auth_mode' => $authMode,
         ]);
@@ -485,6 +493,20 @@ class PdvSyncController extends Controller
         }
 
         return strtolower($value);
+    }
+
+    private function normalizeCnpj(mixed $cnpj): ?string
+    {
+        if ($cnpj === null) {
+            return null;
+        }
+
+        $digits = preg_replace('/\D+/', '', (string) $cnpj);
+        if (!is_string($digits) || $digits === '') {
+            return null;
+        }
+
+        return $digits;
     }
 
     /**

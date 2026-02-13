@@ -1,13 +1,15 @@
 # PDV v3 Execution Board
 
 Data base: 2026-02-11  
-Atualizado em: 2026-02-12  
+Atualizado em: 2026-02-13  
 Fontes principais:
 - `docs/TASK_PR_ROADMAP_WEBHOOK_PDV_V3_DETALHADO_2026-02-11.md`
 - `docs/REVISAO_CRITICA_PR_TASKS_PDV_SYNC_V3_2026-02-12.md`
 - `Guia para o Time Backend (PHP/Laravel) - Agent v3.0 Melhorias (2026-02-12)`
 - `docs/ANALISE_ATUALIZADA_BACKEND_POS_GUIA_AGENTE_V3_2026-02-12.md`
 - `docs/DECISOES_BACKEND_POS_RESPOSTAS_TIME_PYTHON_PDV_V3_2026-02-12.md`
+- `Guia de Integracao do Webhook v3.1 (Backend) - time agente`
+- `docs/ANALISE_IMPACTO_WEBHOOK_V3_1_NORMALIZACAO_2026-02-13.md`
 
 ## Objetivo
 Organizar execucao em PRs independentes, com contexto, dependencias e checklist tecnico para evitar perda de informacao.
@@ -22,31 +24,28 @@ Antes de PR funcional v3, garantir:
 PRs concluidos/anteriores permanecem documentados nos arquivos:
 - `PR-31` ate `PR-40` nesta mesma pasta.
 
-## Backlog atual (Fase 2 - prioridade de execucao)
-1. [PR-48 - P0: Documentacao Scribe dos endpoints PDV v3](./PR-48-documentacao-scribe-pdv-v3.md)
-2. [PR-42 - P1: Filtros de negocio em turnos e vendas](./PR-42-filtros-negocio-relatorios-pdv.md)
-3. [PR-43 - P1: Ranking vendedor x loja por periodo](./PR-43-ranking-vendedor-loja-periodo.md)
-4. [PR-44 - P1: Classificacao falta/sobra no fechamento](./PR-44-classificacao-falta-sobra-caixa.md)
-5. [PR-47 - P1: Observabilidade de warnings do agente (GESTAO_DB_FAILURE)](./PR-47-observabilidade-warnings-gestao.md)
-6. [PR-45 - P2: Tracking de cancelamento via snapshot](./PR-45-tracking-snapshot-cancelamento.md)
-7. [PR-46 - Externo: Alinhamento com time do agente JSON](./PR-46-alinhamento-agente-externo.md)
+## Backlog atual (Fase 3 - Webhook v3.1)
+1. [PR-49 - P0: Contrato v3.1 no ingress (schema/versionamento)](./PR-49-contrato-v31-ingress-schema.md)
+2. [PR-50 - P0: Resolvers v3.1 (CNPJ first + Login first)](./PR-50-resolvers-v31-cnpj-login-first.md)
+3. [PR-51 - P1: Persistencia de login nas tabelas operacionais](./PR-51-persistencia-login-operacional.md)
+4. [PR-52 - P1: Observabilidade e documentacao do binding v3.1](./PR-52-observabilidade-e-docs-v31.md)
 
-## Estado rapido
-- [x] PR-48 (done tecnico PDV docs; pendencia global do Scribe em rotas de upload fora do escopo PDV)
-- [x] PR-41 (done validado, smoke funcional concluido)
-- [x] PR-42 (done tecnico, aguardando feature tests em DB de teste)
-- [x] PR-43 (done tecnico, aguardando feature tests em DB de teste)
-- [x] PR-44 (done tecnico, aguardando feature tests em DB de teste)
-- [x] PR-47 (done tecnico + KPI documentado + warnings `vendedor_null`/`meio_pagamento_null` mapeados; feature depende DB de teste)
-- [x] PR-45 (done tecnico, ativacao por flag)
-- [x] PR-46 (done externo, evidencia sanitizada anexada)
+## Estado rapido (Fase 3)
+- [~] PR-49 (em execucao: codigo e testes atualizados, pendente validacao manual em producao)
+- [~] PR-50 (em execucao: resolver CNPJ/login implementado, pendente validacao manual/E2E)
+- [~] PR-51 (em execucao: persistencia de login implementada e coberta por testes unitarios; pendente validacao manual/E2E)
+- [~] PR-52 (em execucao: metricas/contadores de identidade e docs v3.1 atualizados; pendente checklist E2E e exemplos finais)
 
-## Novidades do agente v3.0 (2026-02-12)
-- Header `X-PDV-Schema-Version` corrigido para `3.0`.
-- `turnos[]` agora envia `duracao_minutos`, `periodo`, `qtd_vendas`, `total_vendas`, `qtd_vendedores` no detalhe.
-- Correcao de troco em `HIPER_LOJA` para pagamentos multi-finalizador.
-- Novo warning operacional: `integrity.warnings[]` com prefixo `GESTAO_DB_FAILURE`.
-- Contrato de campo pagamento continua `pagamentos[].meio` (backend converte para `meio_pagamento`).
+## Novidades do agente v3.1 (2026-02-13)
+- `store.cnpj` no payload como identificador universal da loja.
+- `login` em:
+- `turnos[].operador.login`
+- `turnos[].responsavel.login`
+- `vendas[].itens[].vendedor.login`
+- `resumo.by_vendor[].login`
+- Recomendacao oficial do time agente:
+- binding de loja por `cnpj` antes de alias/id.
+- binding de usuario por `login` antes de `id_usuario`.
 
 ## Definicoes tecnicas congeladas
 - Chave canonica de venda: `(store_pdv_id, canal, id_operacao)`.
@@ -54,8 +53,8 @@ PRs concluidos/anteriores permanecem documentados nos arquivos:
 - `line_id` tambem pode colidir entre canais e exige discriminador por `canal` nas filhas.
 - `canal` permitido no v3: `HIPER_CAIXA` e `HIPER_LOJA`.
 - `snapshot_turnos[]` e `snapshot_vendas[]` sao fonte de verdade atual para reconciliacao.
-- `store.id_ponto_venda` e chave global; `store.alias` pode mudar.
-- `schema_version` no backend esta v3-only.
+- `store.id_ponto_venda` pode colidir entre lojas no contexto operacional; `store.alias` pode mudar; `cnpj` e a chave forte.
+- `schema_version` deve ser alinhado para v3.1 no ingress.
 - Campo `pagamentos[].meio` nao deve ser renomeado no agente.
 
 ## Regra de execucao

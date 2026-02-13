@@ -235,8 +235,23 @@ class PdvSyncAdminController extends Controller
             'store_mapping_missing' => (int) PdvSync::query()
                 ->whereJsonContains('risk_flags', 'store_mapping_missing')
                 ->count(),
+            'store_mapping_ambiguous' => (int) PdvSync::query()
+                ->whereJsonContains('risk_flags', 'store_mapping_ambiguous')
+                ->count(),
+            'store_mapping_by_id_fallback' => (int) PdvSync::query()
+                ->whereJsonContains('risk_flags', 'store_mapping_by_id_fallback')
+                ->count(),
             'user_mapping_missing' => (int) PdvSync::query()
                 ->whereJsonContains('risk_flags', 'user_mapping_missing')
+                ->count(),
+            'user_mapping_by_id_fallback' => (int) PdvSync::query()
+                ->whereJsonContains('risk_flags', 'user_mapping_by_id_fallback')
+                ->count(),
+            'user_login_missing' => (int) PdvSync::query()
+                ->whereJsonContains('risk_flags', 'user_login_missing')
+                ->count(),
+            'user_login_mismatch' => (int) PdvSync::query()
+                ->whereJsonContains('risk_flags', 'user_login_mismatch')
                 ->count(),
             'auth_bearer_fallback' => (int) PdvSync::query()
                 ->whereJsonContains('risk_flags', 'auth_bearer_fallback')
@@ -292,6 +307,56 @@ class PdvSyncAdminController extends Controller
         $failureRate24h = $total24h > 0
             ? round(($failed24h / $total24h) * 100, 2)
             : 0.0;
+
+        $storeMissing24h = (int) PdvSync::query()
+            ->where('received_at', '>=', $last24hStart)
+            ->whereJsonContains('risk_flags', 'store_mapping_missing')
+            ->count();
+        $storeAmbiguous24h = (int) PdvSync::query()
+            ->where('received_at', '>=', $last24hStart)
+            ->whereJsonContains('risk_flags', 'store_mapping_ambiguous')
+            ->count();
+        $storeFallback24h = (int) PdvSync::query()
+            ->where('received_at', '>=', $last24hStart)
+            ->whereJsonContains('risk_flags', 'store_mapping_by_id_fallback')
+            ->count();
+        $userMissing24h = (int) PdvSync::query()
+            ->where('received_at', '>=', $last24hStart)
+            ->whereJsonContains('risk_flags', 'user_mapping_missing')
+            ->count();
+        $userLoginMissing24h = (int) PdvSync::query()
+            ->where('received_at', '>=', $last24hStart)
+            ->whereJsonContains('risk_flags', 'user_login_missing')
+            ->count();
+        $userFallback24h = (int) PdvSync::query()
+            ->where('received_at', '>=', $last24hStart)
+            ->whereJsonContains('risk_flags', 'user_mapping_by_id_fallback')
+            ->count();
+        $userLoginMismatch24h = (int) PdvSync::query()
+            ->where('received_at', '>=', $last24hStart)
+            ->whereJsonContains('risk_flags', 'user_login_mismatch')
+            ->count();
+
+        $storeStrong24h = max(0, $total24h - $storeMissing24h - $storeAmbiguous24h - $storeFallback24h);
+        $userStrong24h = max(0, $total24h - $userMissing24h - $userLoginMissing24h - $userFallback24h);
+
+        $identityResolution = [
+            'window_minutes' => 1440,
+            'total_syncs' => $total24h,
+            'store_mapping_missing_count' => $storeMissing24h,
+            'store_mapping_ambiguous_count' => $storeAmbiguous24h,
+            'store_mapping_by_id_fallback_count' => $storeFallback24h,
+            'store_resolution_cnpj_rate_percent' => $total24h > 0
+                ? round(($storeStrong24h / $total24h) * 100, 2)
+                : null,
+            'user_mapping_missing_count' => $userMissing24h,
+            'user_login_missing_count' => $userLoginMissing24h,
+            'user_mapping_by_id_fallback_count' => $userFallback24h,
+            'user_login_mismatch_count' => $userLoginMismatch24h,
+            'user_resolution_login_rate_percent' => $total24h > 0
+                ? round(($userStrong24h / $total24h) * 100, 2)
+                : null,
+        ];
 
         $statusCounts24h = PdvSync::query()
             ->where('received_at', '>=', $last24hStart)
@@ -399,12 +464,17 @@ class PdvSyncAdminController extends Controller
         $storeHealth = collect();
         if (Schema::hasTable('pdv_store_mappings') && Schema::hasTable('stores')) {
             $latestByStore = DB::table('pdv_syncs')
-                ->select('store_pdv_id', DB::raw('MAX(received_at) as last_received_at'))
-                ->groupBy('store_pdv_id');
+                ->select([
+                    'store_pdv_id',
+                    'store_alias',
+                    DB::raw('MAX(received_at) as last_received_at'),
+                ])
+                ->groupBy('store_pdv_id', 'store_alias');
 
             $storeHealth = DB::table('pdv_store_mappings as m')
                 ->leftJoinSub($latestByStore, 'ls', function ($join) {
-                    $join->on('ls.store_pdv_id', '=', 'm.pdv_store_id');
+                    $join->on('ls.store_pdv_id', '=', 'm.pdv_store_id')
+                        ->whereRaw('LOWER(COALESCE(ls.store_alias, \'\')) = LOWER(COALESCE(m.alias, \'\'))');
                 })
                 ->leftJoin('stores as s', 's.id', '=', 'm.store_id')
                 ->where('m.active', true)
@@ -412,6 +482,7 @@ class PdvSyncAdminController extends Controller
                     'm.pdv_store_id',
                     'm.store_id',
                     'm.alias',
+                    'ls.store_alias as sync_store_alias',
                     's.name as store_name',
                     'ls.last_received_at',
                 ])
@@ -426,6 +497,7 @@ class PdvSyncAdminController extends Controller
                         'store_pdv_id' => (int) $row->pdv_store_id,
                         'store_id' => $row->store_id !== null ? (int) $row->store_id : null,
                         'alias' => $row->alias,
+                        'sync_store_alias' => $row->sync_store_alias,
                         'store_name' => $row->store_name,
                         'last_received_at' => $lastReceived?->toIso8601String(),
                         'minutes_since_last_sync' => $lastReceived ? $lastReceived->diffInMinutes($now) : null,
@@ -469,6 +541,7 @@ class PdvSyncAdminController extends Controller
             'backlog_by_status' => $statusCounts,
             'status_breakdown' => $statusBreakdown,
             'risk_flags' => $riskFlagCounts,
+            'identity_resolution' => $identityResolution,
             'by_event_type' => $eventTypeBreakdown,
             'by_schema_version' => $schemaVersionBreakdown,
             'by_canal' => [

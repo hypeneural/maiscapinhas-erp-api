@@ -6,6 +6,8 @@ namespace App\Jobs;
 
 use App\Models\PdvSync;
 use App\Support\Pdv\PdvDateTime;
+use App\Support\Pdv\PdvStoreResolver;
+use App\Support\Pdv\PdvUserResolver;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -37,9 +39,14 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
 
     private ?bool $hasTurnoMappedUserColumn = null;
     private ?bool $hasItemMappedUserColumn = null;
+    private ?bool $hasTurnoOperadorLoginColumn = null;
+    private ?bool $hasTurnoResponsavelLoginColumn = null;
+    private ?bool $hasItemVendedorLoginColumn = null;
+    private ?bool $hasResumoVendedorLoginColumn = null;
     private ?bool $hasUserMappingsTable = null;
     private ?bool $hasPdvLojasTable = null;
     private ?bool $hasPdvUsuariosTable = null;
+    private ?bool $hasPdvUsuariosLoginColumn = null;
     private ?bool $hasPdvMeiosPagamentoTable = null;
     private ?bool $hasPdvVendasLastSeenColumn = null;
     private const CANAL_HIPER_CAIXA = 'HIPER_CAIXA';
@@ -102,7 +109,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                 $payload = $this->decodePayload($sync);
                 $context = $this->resolveStoreContext($sync, $payload);
                 $this->processMasterData($context['store_pdv_id'], $payload);
-                $userMappings = $this->resolveUserMappings($context['store_pdv_id']);
+                $userMappings = $this->resolveUserMappings();
                 $turnosCount = is_array(data_get($payload, 'turnos')) ? count((array) data_get($payload, 'turnos')) : 0;
                 $vendasCount = is_array(data_get($payload, 'vendas')) ? count((array) data_get($payload, 'vendas')) : 0;
 
@@ -228,14 +235,30 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             ];
         }
 
-        $storeId = DB::table('pdv_store_mappings')
-            ->where('pdv_store_id', $storePdvId)
-            ->where('active', true)
-            ->value('store_id');
+        $resolution = app(PdvStoreResolver::class)->resolve(
+            $storePdvId,
+            $this->asNormalizedLowerText(data_get($payload, 'store.alias')),
+            $this->asNormalizedLowerText(data_get($payload, 'store.nome')),
+            $this->normalizeCnpj(data_get($payload, 'store.cnpj'))
+        );
+        $storeId = $resolution['store_id'] !== null ? (int) $resolution['store_id'] : null;
 
-        $storeId = $storeId !== null ? (int) $storeId : null;
+        $resolutionRiskFlags = is_array($resolution['risk_flags'] ?? null)
+            ? array_values(array_unique($resolution['risk_flags']))
+            : [];
+        if ($resolutionRiskFlags !== []) {
+            $this->appendRiskFlags($sync, $resolutionRiskFlags);
+        }
+
         if ($storeId === null) {
-            $this->appendRiskFlags($sync, ['store_mapping_missing']);
+            Log::warning('pdv.sync.store_resolution_missing', [
+                'pdv_sync_id' => $sync->id,
+                'sync_id' => $sync->sync_id,
+                'store_pdv_id' => $storePdvId,
+                'status' => $resolution['status'] ?? null,
+                'matched_by' => $resolution['matched_by'] ?? null,
+                'candidate_store_ids' => $resolution['candidate_store_ids'] ?? [],
+            ]);
 
             return [
                 'store_pdv_id' => $storePdvId,
@@ -253,7 +276,10 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
     }
 
     /**
-     * @param array<int, int> $userMappings
+     * @param array{
+     *   by_id:array<int, array{user_id:int|null,is_store_operator:bool,pdv_user_name:?string,pdv_user_login:?string}>,
+     *   by_login:array<string, array{user_id:int|null,is_store_operator:bool,pdv_user_name:?string,pdv_user_login:?string}>
+     * } $userMappings
      * @param array<string, mixed> $payload
      */
     private function processTurnos(PdvSync $sync, int $storePdvId, ?int $storeId, array $userMappings, array $payload): void
@@ -265,6 +291,8 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
 
         $now = now();
         $hasOperadorUserId = $this->supportsTurnoMappedUserId();
+        $hasOperadorLogin = $this->supportsTurnoOperadorLoginColumn();
+        $hasResponsavelLogin = $this->supportsTurnoResponsavelLoginColumn();
         $turnoRows = [];
         $pagamentoRows = [];
 
@@ -284,8 +312,10 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             }
 
             $operadorPdvId = $this->asInt(data_get($turno, 'operador.id_usuario'));
+            $operadorLogin = $this->asString(data_get($turno, 'operador.login'));
+            $responsavelLogin = $this->asString(data_get($turno, 'responsavel.login'));
             $operadorUserId = $hasOperadorUserId
-                ? $this->resolveMappedUserId($storePdvId, $operadorPdvId, $userMappings)
+                ? $this->resolveMappedUserId($storePdvId, $operadorPdvId, $operadorLogin, $userMappings)
                 : null;
 
             $turnoRows[] = [
@@ -317,6 +347,12 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
 
             if ($hasOperadorUserId) {
                 $turnoRows[array_key_last($turnoRows)]['operador_user_id'] = $operadorUserId;
+            }
+            if ($hasOperadorLogin) {
+                $turnoRows[array_key_last($turnoRows)]['operador_login'] = $operadorLogin;
+            }
+            if ($hasResponsavelLogin) {
+                $turnoRows[array_key_last($turnoRows)]['responsavel_login'] = $responsavelLogin;
             }
 
             $pagamentoRows = array_merge(
@@ -377,6 +413,12 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
         if ($hasOperadorUserId) {
             $turnoUpdateColumns[] = 'operador_user_id';
         }
+        if ($hasOperadorLogin) {
+            $turnoUpdateColumns[] = 'operador_login';
+        }
+        if ($hasResponsavelLogin) {
+            $turnoUpdateColumns[] = 'responsavel_login';
+        }
 
         $this->upsertRows(
             'pdv_turnos',
@@ -401,7 +443,10 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
     }
 
     /**
-     * @param array<int, int> $userMappings
+     * @param array{
+     *   by_id:array<int, array{user_id:int|null,is_store_operator:bool,pdv_user_name:?string,pdv_user_login:?string}>,
+     *   by_login:array<string, array{user_id:int|null,is_store_operator:bool,pdv_user_name:?string,pdv_user_login:?string}>
+     * } $userMappings
      * @param array<string, mixed> $payload
      */
     private function processVendas(PdvSync $sync, int $storePdvId, ?int $storeId, array $userMappings, array $payload): void
@@ -413,6 +458,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
 
         $now = now();
         $hasVendedorUserId = $this->supportsItemMappedUserId();
+        $hasVendedorLogin = $this->supportsItemVendedorLoginColumn();
         $vendaRows = [];
         $itemRowsByLineId = [];
         $itemRowsFallback = [];
@@ -472,8 +518,9 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                     $totalItem = $this->asDecimal(data_get($item, 'total'), 2);
                     $desconto = $this->asDecimal(data_get($item, 'desconto'), 2);
                     $vendedorPdvId = $this->asInt(data_get($item, 'vendedor.id_usuario'));
+                    $vendedorLogin = $this->asString(data_get($item, 'vendedor.login'));
                     $vendedorUserId = $hasVendedorUserId
-                        ? $this->resolveMappedUserId($storePdvId, $vendedorPdvId, $userMappings)
+                        ? $this->resolveMappedUserId($storePdvId, $vendedorPdvId, $vendedorLogin, $userMappings)
                         : null;
                     $vendedorNome = $this->asString(data_get($item, 'vendedor.nome'));
                     $lineId = $this->asInt(data_get($item, 'line_id'));
@@ -525,6 +572,9 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
 
                     if ($hasVendedorUserId) {
                         $itemRow['vendedor_user_id'] = $vendedorUserId;
+                    }
+                    if ($hasVendedorLogin) {
+                        $itemRow['vendedor_login'] = $vendedorLogin;
                     }
 
                     if ($lineId !== null) {
@@ -641,6 +691,10 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             $itemUpdateColumnsByLineId[] = 'vendedor_user_id';
             $itemUpdateColumnsFallback[] = 'vendedor_user_id';
         }
+        if ($hasVendedorLogin) {
+            $itemUpdateColumnsByLineId[] = 'vendedor_login';
+            $itemUpdateColumnsFallback[] = 'vendedor_login';
+        }
 
         $this->upsertRows(
             'pdv_venda_itens',
@@ -710,6 +764,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
         }
 
         $now = now();
+        $hasResumoVendedorLogin = $this->supportsResumoVendedorLoginColumn();
         $rows = [];
         foreach ($snapshotVendas as $index => $snapshotVenda) {
             if (!is_array($snapshotVenda)) {
@@ -760,26 +815,34 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
+            if ($hasResumoVendedorLogin) {
+                $rows[array_key_last($rows)]['vendedor_login'] = $this->asString(data_get($snapshotVenda, 'vendedor.login'));
+            }
+        }
+
+        $updateColumns = [
+            'store_id',
+            'data_hora_inicio',
+            'data_hora_termino',
+            'duracao_segundos',
+            'id_turno',
+            'turno_seq',
+            'vendedor_pdv_id',
+            'vendedor_nome',
+            'qtd_itens',
+            'total_itens',
+            'last_sync_id',
+            'updated_at',
+        ];
+        if ($hasResumoVendedorLogin) {
+            $updateColumns[] = 'vendedor_login';
         }
 
         $this->upsertRows(
             'pdv_vendas_resumo',
             $rows,
             ['store_pdv_id', 'canal', 'id_operacao'],
-            [
-                'store_id',
-                'data_hora_inicio',
-                'data_hora_termino',
-                'duracao_segundos',
-                'id_turno',
-                'turno_seq',
-                'vendedor_pdv_id',
-                'vendedor_nome',
-                'qtd_itens',
-                'total_itens',
-                'last_sync_id',
-                'updated_at',
-            ]
+            $updateColumns
         );
 
         if ($this->supportsPdvVendasLastSeenColumn()) {
@@ -790,7 +853,10 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
     }
 
     /**
-     * @param array<int, int> $userMappings
+     * @param array{
+     *   by_id:array<int, array{user_id:int|null,is_store_operator:bool,pdv_user_name:?string,pdv_user_login:?string}>,
+     *   by_login:array<string, array{user_id:int|null,is_store_operator:bool,pdv_user_name:?string,pdv_user_login:?string}>
+     * } $userMappings
      * @param array<string, mixed> $payload
      */
     private function processSnapshotTurnos(
@@ -807,6 +873,8 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
 
         $now = now();
         $hasOperadorUserId = $this->supportsTurnoMappedUserId();
+        $hasOperadorLogin = $this->supportsTurnoOperadorLoginColumn();
+        $hasResponsavelLogin = $this->supportsTurnoResponsavelLoginColumn();
         $rows = [];
 
         foreach ($snapshotTurnos as $index => $snapshotTurno) {
@@ -834,8 +902,10 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             }
 
             $operadorPdvId = $this->asInt(data_get($snapshotTurno, 'operador.id_usuario'));
+            $operadorLogin = $this->asString(data_get($snapshotTurno, 'operador.login'));
+            $responsavelLogin = $this->asString(data_get($snapshotTurno, 'responsavel.login'));
             $operadorUserId = $hasOperadorUserId
-                ? $this->resolveMappedUserId($storePdvId, $operadorPdvId, $userMappings)
+                ? $this->resolveMappedUserId($storePdvId, $operadorPdvId, $operadorLogin, $userMappings)
                 : null;
 
             $rows[] = [
@@ -866,6 +936,12 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             if ($hasOperadorUserId) {
                 $rows[array_key_last($rows)]['operador_user_id'] = $operadorUserId;
             }
+            if ($hasOperadorLogin) {
+                $rows[array_key_last($rows)]['operador_login'] = $operadorLogin;
+            }
+            if ($hasResponsavelLogin) {
+                $rows[array_key_last($rows)]['responsavel_login'] = $responsavelLogin;
+            }
         }
 
         $updateColumns = [
@@ -891,6 +967,12 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
         ];
         if ($hasOperadorUserId) {
             $updateColumns[] = 'operador_user_id';
+        }
+        if ($hasOperadorLogin) {
+            $updateColumns[] = 'operador_login';
+        }
+        if ($hasResponsavelLogin) {
+            $updateColumns[] = 'responsavel_login';
         }
 
         $this->upsertRows(
@@ -1124,9 +1206,16 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
         }
 
         if ($this->supportsPdvUsuariosTable()) {
-            /** @var array<int, array{nome:?string,papel:string}> $observedUsers */
+            $hasPdvUsuariosLogin = $this->supportsPdvUsuariosLoginColumn();
+            /** @var array<int, array{nome:?string,papel:string,login:?string}> $observedUsers */
             $observedUsers = [];
-            $observeUser = static function (&$observedUsers, ?int $userId, ?string $userName, string $papel): void {
+            $observeUser = static function (
+                &$observedUsers,
+                ?int $userId,
+                ?string $userName,
+                ?string $userLogin,
+                string $papel
+            ): void {
                 if ($userId === null || $userId <= 0) {
                     return;
                 }
@@ -1136,6 +1225,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                     $observedUsers[$userId] = [
                         'nome' => $userName,
                         'papel' => $papel,
+                        'login' => $userLogin,
                     ];
 
                     return;
@@ -1143,6 +1233,9 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
 
                 if ($observedUsers[$userId]['nome'] === null && $userName !== null) {
                     $observedUsers[$userId]['nome'] = $userName;
+                }
+                if ($observedUsers[$userId]['login'] === null && $userLogin !== null) {
+                    $observedUsers[$userId]['login'] = $userLogin;
                 }
 
                 if ($papel === 'OPERADOR') {
@@ -1161,12 +1254,14 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                         $observedUsers,
                         $this->asInt(data_get($turno, 'operador.id_usuario')),
                         $this->asString(data_get($turno, 'operador.nome')),
+                        $this->asString(data_get($turno, 'operador.login')),
                         'OPERADOR'
                     );
                     $observeUser(
                         $observedUsers,
                         $this->asInt(data_get($turno, 'responsavel.id_usuario')),
                         $this->asString(data_get($turno, 'responsavel.nome')),
+                        $this->asString(data_get($turno, 'responsavel.login')),
                         'VENDEDOR'
                     );
                 }
@@ -1183,12 +1278,14 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                         $observedUsers,
                         $this->asInt(data_get($turno, 'operador.id_usuario')),
                         $this->asString(data_get($turno, 'operador.nome')),
+                        $this->asString(data_get($turno, 'operador.login')),
                         'OPERADOR'
                     );
                     $observeUser(
                         $observedUsers,
                         $this->asInt(data_get($turno, 'responsavel.id_usuario')),
                         $this->asString(data_get($turno, 'responsavel.nome')),
+                        $this->asString(data_get($turno, 'responsavel.login')),
                         'VENDEDOR'
                     );
                 }
@@ -1215,6 +1312,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                             $observedUsers,
                             $this->asInt(data_get($item, 'vendedor.id_usuario')),
                             $this->asString(data_get($item, 'vendedor.nome')),
+                            $this->asString(data_get($item, 'vendedor.login')),
                             'VENDEDOR'
                         );
                     }
@@ -1232,15 +1330,62 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                         $observedUsers,
                         $this->asInt(data_get($venda, 'vendedor.id_usuario')),
                         $this->asString(data_get($venda, 'vendedor.nome')),
+                        $this->asString(data_get($venda, 'vendedor.login')),
                         'VENDEDOR'
                     );
                 }
             }
 
+            $resumoByVendor = data_get($payload, 'resumo.by_vendor', []);
+            if (is_array($resumoByVendor)) {
+                foreach ($resumoByVendor as $summary) {
+                    if (!is_array($summary)) {
+                        continue;
+                    }
+
+                    $observeUser(
+                        $observedUsers,
+                        $this->asInt(data_get($summary, 'id_usuario')),
+                        $this->asString(data_get($summary, 'nome')),
+                        $this->asString(data_get($summary, 'login')),
+                        'VENDEDOR'
+                    );
+                }
+            }
+
+            // Backfill de login para usuarios observados com base no mapping global, quando payload nao trouxer login.
+            if ($observedUsers !== [] && $this->supportsUserMappingsTable() && Schema::hasColumn('pdv_user_mappings', 'pdv_user_login')) {
+                $mappedLogins = DB::table('pdv_user_mappings')
+                    ->whereIn('pdv_user_id', array_keys($observedUsers))
+                    ->where('active', true)
+                    ->pluck('pdv_user_login', 'pdv_user_id');
+
+                foreach ($mappedLogins as $pdvUserId => $pdvLogin) {
+                    $userId = (int) $pdvUserId;
+                    if ($userId <= 0 || !isset($observedUsers[$userId])) {
+                        continue;
+                    }
+
+                    if ($observedUsers[$userId]['login'] !== null) {
+                        continue;
+                    }
+
+                    $normalizedLogin = $this->asString($pdvLogin);
+                    if ($normalizedLogin !== null) {
+                        $observedUsers[$userId]['login'] = $normalizedLogin;
+                    }
+                }
+            }
+
             foreach ($observedUsers as $userId => $userData) {
+                $existingUserColumns = ['id', 'papel'];
+                if ($hasPdvUsuariosLogin) {
+                    $existingUserColumns[] = 'login_hiper';
+                }
+
                 $existingUser = DB::table('pdv_usuarios')
                     ->where('id_usuario_hiper', $userId)
-                    ->first(['id', 'papel']);
+                    ->first($existingUserColumns);
 
                 if ($existingUser) {
                     $updates = [
@@ -1255,21 +1400,29 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                     if ($existingPapel !== 'OPERADOR' && $userData['papel'] === 'OPERADOR') {
                         $updates['papel'] = 'OPERADOR';
                     }
+                    if ($hasPdvUsuariosLogin && $userData['login'] !== null) {
+                        $updates['login_hiper'] = $userData['login'];
+                    }
 
                     DB::table('pdv_usuarios')
                         ->where('id_usuario_hiper', $userId)
                         ->update($updates);
                 } else {
-                    DB::table('pdv_usuarios')->insert([
+                    $insert = [
                         'id_usuario_hiper' => $userId,
                         'nome_padronizado' => $userData['nome'] ?? ('Usuario ' . $userId),
                         'nome_hiper' => $userData['nome'],
-                        'papel' => $userData['papel'],
+                        'papel' => $userData['papel'] === 'OPERADOR' ? 'OPERADOR' : 'VENDEDOR',
                         'ativo' => true,
                         'fonte' => 'HIPER',
                         'created_at' => $now,
                         'updated_at' => $now,
-                    ]);
+                    ];
+                    if ($hasPdvUsuariosLogin) {
+                        $insert['login_hiper'] = $userData['login'];
+                    }
+
+                    DB::table('pdv_usuarios')->insert($insert);
                 }
             }
         }
@@ -1452,36 +1605,45 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
     }
 
     /**
-     * @return array<int, int> [pdv_user_id => user_id]
+     * @return array{
+     *   by_id:array<int, array{user_id:int|null,is_store_operator:bool,pdv_user_name:?string,pdv_user_login:?string}>,
+     *   by_login:array<string, array{user_id:int|null,is_store_operator:bool,pdv_user_name:?string,pdv_user_login:?string}>
+     * }
      */
-    private function resolveUserMappings(int $storePdvId): array
+    private function resolveUserMappings(): array
     {
         if (!$this->supportsUserMappingsTable()) {
-            return [];
+            return [
+                'by_id' => [],
+                'by_login' => [],
+            ];
         }
 
-        return DB::table('pdv_user_mappings')
-            ->where('store_pdv_id', $storePdvId)
-            ->where('active', true)
-            ->pluck('user_id', 'pdv_user_id')
-            ->mapWithKeys(static fn (mixed $userId, mixed $pdvUserId): array => [
-                (int) $pdvUserId => (int) $userId,
-            ])
-            ->all();
+        return app(PdvUserResolver::class)->loadActiveMappings();
     }
 
     /**
-     * @param array<int, int> $userMappings
+     * @param array{
+     *   by_id:array<int, array{user_id:int|null,is_store_operator:bool,pdv_user_name:?string,pdv_user_login:?string}>,
+     *   by_login:array<string, array{user_id:int|null,is_store_operator:bool,pdv_user_name:?string,pdv_user_login:?string}>
+     * } $userMappings
      */
-    private function resolveMappedUserId(int $storePdvId, ?int $pdvUserId, array $userMappings): ?int
+    private function resolveMappedUserId(int $storePdvId, ?int $pdvUserId, ?string $pdvUserLogin, array $userMappings): ?int
     {
-        if ($pdvUserId === null || $pdvUserId <= 0) {
-            return null;
+        $resolution = app(PdvUserResolver::class)->resolve($pdvUserId, $pdvUserLogin, $userMappings);
+        $resolutionFlags = is_array($resolution['flags'] ?? null)
+            ? array_values(array_unique($resolution['flags']))
+            : [];
+        foreach ($resolutionFlags as $flag) {
+            $this->markRuntimeRiskFlag($flag);
         }
 
-        $mapped = $userMappings[$pdvUserId] ?? null;
-        if ($mapped !== null && $mapped > 0) {
-            return $mapped;
+        if ($resolution['status'] === 'resolved' && $resolution['user_id'] !== null) {
+            return (int) $resolution['user_id'];
+        }
+
+        if ($resolution['status'] === 'operator') {
+            return null;
         }
 
         $this->markRuntimeRiskFlag('user_mapping_missing');
@@ -1490,6 +1652,8 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             'pdv_sync_id' => $this->pdvSyncId,
             'store_pdv_id' => $storePdvId,
             'pdv_user_id' => $pdvUserId,
+            'pdv_user_login' => $pdvUserLogin,
+            'resolution_flags' => $resolutionFlags,
         ]);
 
         return null;
@@ -1524,6 +1688,24 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
         return $this->hasTurnoMappedUserColumn = Schema::hasColumn('pdv_turnos', 'operador_user_id');
     }
 
+    private function supportsTurnoOperadorLoginColumn(): bool
+    {
+        if ($this->hasTurnoOperadorLoginColumn !== null) {
+            return $this->hasTurnoOperadorLoginColumn;
+        }
+
+        return $this->hasTurnoOperadorLoginColumn = Schema::hasColumn('pdv_turnos', 'operador_login');
+    }
+
+    private function supportsTurnoResponsavelLoginColumn(): bool
+    {
+        if ($this->hasTurnoResponsavelLoginColumn !== null) {
+            return $this->hasTurnoResponsavelLoginColumn;
+        }
+
+        return $this->hasTurnoResponsavelLoginColumn = Schema::hasColumn('pdv_turnos', 'responsavel_login');
+    }
+
     private function supportsItemMappedUserId(): bool
     {
         if ($this->hasItemMappedUserColumn !== null) {
@@ -1531,6 +1713,24 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
         }
 
         return $this->hasItemMappedUserColumn = Schema::hasColumn('pdv_venda_itens', 'vendedor_user_id');
+    }
+
+    private function supportsItemVendedorLoginColumn(): bool
+    {
+        if ($this->hasItemVendedorLoginColumn !== null) {
+            return $this->hasItemVendedorLoginColumn;
+        }
+
+        return $this->hasItemVendedorLoginColumn = Schema::hasColumn('pdv_venda_itens', 'vendedor_login');
+    }
+
+    private function supportsResumoVendedorLoginColumn(): bool
+    {
+        if ($this->hasResumoVendedorLoginColumn !== null) {
+            return $this->hasResumoVendedorLoginColumn;
+        }
+
+        return $this->hasResumoVendedorLoginColumn = Schema::hasColumn('pdv_vendas_resumo', 'vendedor_login');
     }
 
     private function supportsUserMappingsTable(): bool
@@ -1558,6 +1758,16 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
         }
 
         return $this->hasPdvUsuariosTable = Schema::hasTable('pdv_usuarios');
+    }
+
+    private function supportsPdvUsuariosLoginColumn(): bool
+    {
+        if ($this->hasPdvUsuariosLoginColumn !== null) {
+            return $this->hasPdvUsuariosLoginColumn;
+        }
+
+        return $this->hasPdvUsuariosLoginColumn = Schema::hasTable('pdv_usuarios')
+            && Schema::hasColumn('pdv_usuarios', 'login_hiper');
     }
 
     private function supportsPdvMeiosPagamentoTable(): bool
@@ -1632,6 +1842,37 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             return 'pdv:store:' . $sync->store_id;
         }
 
-        return 'pdv:store:pdv:' . $sync->store_pdv_id;
+        $alias = trim((string) ($sync->store_alias ?? ''));
+        if ($alias !== '') {
+            return 'pdv:store:pdv:' . $sync->store_pdv_id . ':' . sha1(strtolower($alias));
+        }
+
+        return 'pdv:store:pdv:' . $sync->store_pdv_id . ':no-alias';
+    }
+
+    private function asNormalizedLowerText(mixed $value): ?string
+    {
+        $normalized = $this->asString($value);
+        if ($normalized === null) {
+            return null;
+        }
+
+        $normalized = mb_strtolower(trim($normalized));
+
+        return $normalized !== '' ? $normalized : null;
+    }
+
+    private function normalizeCnpj(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $digits = preg_replace('/\D+/', '', (string) $value);
+        if (!is_string($digits) || $digits === '') {
+            return null;
+        }
+
+        return $digits;
     }
 }

@@ -178,6 +178,50 @@ test('pdv reports turnos enforces store authorization', function () {
         ->assertStatus(403);
 });
 
+test('pdv reports turnos returns 422 when store_pdv_id is ambiguous without store_alias or store_id', function () {
+    $user = User::factory()->create(['is_super_admin' => false]);
+    $storeA = Store::factory()->create();
+    $storeB = Store::factory()->create();
+
+    linkUserToStore($user, $storeA, 'admin');
+    linkUserToStore($user, $storeB, 'admin');
+    mapPdvStore(9, $storeA, 'Loja 8 - MC Mata Atlântica');
+    mapPdvStore(9, $storeB, 'Loja 10 - MC P4');
+
+    actingAs($user)
+        ->getJson('/api/v1/pdv/reports/turnos?store_pdv_id=9&date=' . now()->toDateString())
+        ->assertStatus(422)
+        ->assertJsonPath('errors.store_pdv_id.0', 'store_pdv_id ambiguo. Informe store_id ou store_alias para desambiguar.');
+});
+
+test('pdv reports turnos resolves ambiguous store_pdv_id with store_alias', function () {
+    $user = User::factory()->create(['is_super_admin' => false]);
+    $storeA = Store::factory()->create();
+    $storeB = Store::factory()->create();
+
+    linkUserToStore($user, $storeA, 'admin');
+    linkUserToStore($user, $storeB, 'admin');
+    mapPdvStore(9, $storeA, 'Loja 8 - MC Mata Atlântica');
+    mapPdvStore(9, $storeB, 'Loja 10 - MC P4');
+
+    seedPdvTurno([
+        'store_pdv_id' => 9,
+        'store_id' => $storeB->id,
+        'id_turno' => 'turno-ambiguous-alias-001',
+    ]);
+
+    actingAs($user)
+        ->getJson('/api/v1/pdv/reports/turnos?' . http_build_query([
+            'store_pdv_id' => 9,
+            'store_alias' => 'Loja 10 - MC P4',
+            'date' => now()->toDateString(),
+        ]))
+        ->assertStatus(200)
+        ->assertJsonPath('data.summary.qtd_turnos', 1)
+        ->assertJsonPath('data.filters.store_alias', 'Loja 10 - MC P4')
+        ->assertJsonPath('data.turnos.0.store_id', $storeB->id);
+});
+
 test('pdv reports turnos returns empty dataset when store has no turnos for selected date', function () {
     $user = User::factory()->create(['is_super_admin' => false]);
     $store = Store::factory()->create();

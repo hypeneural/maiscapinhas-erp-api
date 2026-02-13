@@ -18,6 +18,7 @@ class PdvReportsTurnosRequest extends FormRequest
         return [
             'store_id' => ['nullable', 'integer', 'exists:stores,id'],
             'store_pdv_id' => ['nullable', 'integer', 'min:1'],
+            'store_alias' => ['nullable', 'string', 'max:100'],
             'date' => ['required', 'date'],
             'sequencial' => ['nullable', 'integer', 'min:1'],
             'periodo' => ['nullable', 'string', 'in:MATUTINO,VESPERTINO,NOTURNO'],
@@ -34,6 +35,7 @@ class PdvReportsTurnosRequest extends FormRequest
             'store_id.exists' => 'A loja informada em store_id nao foi encontrada.',
             'store_pdv_id.integer' => 'O campo store_pdv_id deve ser numerico.',
             'store_pdv_id.min' => 'O campo store_pdv_id deve ser maior que zero.',
+            'store_alias.max' => 'O campo store_alias excede o tamanho maximo permitido.',
             'date.required' => 'O campo date e obrigatorio.',
             'date.date' => 'O campo date deve estar no formato de data valido (YYYY-MM-DD).',
             'sequencial.integer' => 'O campo sequencial deve ser numerico.',

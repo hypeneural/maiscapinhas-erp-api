@@ -22,6 +22,7 @@ class PdvReportsRankingVendedoresRequest extends FormRequest
             'to' => ['nullable', 'date', 'after_or_equal:from'],
             'store_id' => ['nullable', 'integer', 'exists:stores,id'],
             'store_pdv_id' => ['nullable', 'integer', 'min:1'],
+            'store_alias' => ['nullable', 'string', 'max:100'],
             'canal' => ['nullable', 'string', 'in:HIPER_CAIXA,HIPER_LOJA'],
             'limit' => ['nullable', 'integer', 'min:1', 'max:200'],
         ];

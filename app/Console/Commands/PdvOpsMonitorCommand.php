@@ -53,6 +53,7 @@ class PdvOpsMonitorCommand extends Command
         ];
         $now = CarbonImmutable::now();
         $staleStores = $this->getStaleStores($silentStoreThresholdMinutes, $now);
+        $identityMetrics = $this->getIdentityResolutionMetrics($now);
 
         $metrics = [
             'queue_backlog' => $this->getQueueBacklog($queueName),
@@ -65,6 +66,9 @@ class PdvOpsMonitorCommand extends Command
             'stale_stores_count' => $staleStores['stale_count'],
             'stale_stores' => $staleStores['stores'],
             'gestao_db_failures_30m' => $this->getGestaoDbFailuresLast30Minutes(),
+            'identity_resolution' => $identityMetrics,
+            'store_resolution_cnpj_rate' => $identityMetrics['store_resolution_cnpj_rate_percent'] ?? null,
+            'user_resolution_login_rate' => $identityMetrics['user_resolution_login_rate_percent'] ?? null,
         ];
 
         $issues = $this->buildIssues($metrics, $thresholds);
@@ -284,6 +288,89 @@ class PdvOpsMonitorCommand extends Command
 
     /**
      * @return array{
+     *   available:bool,
+     *   window_minutes:int,
+     *   total_syncs:int,
+     *   store_mapping_missing_count:int,
+     *   store_mapping_ambiguous_count:int,
+     *   store_mapping_by_id_fallback_count:int,
+     *   store_resolution_cnpj_rate_percent:float|null,
+     *   user_mapping_missing_count:int,
+     *   user_login_missing_count:int,
+     *   user_mapping_by_id_fallback_count:int,
+     *   user_login_mismatch_count:int,
+     *   user_resolution_login_rate_percent:float|null
+     * }
+     */
+    private function getIdentityResolutionMetrics(CarbonImmutable $now): array
+    {
+        if (!Schema::hasTable('pdv_syncs') || !Schema::hasColumn('pdv_syncs', 'risk_flags')) {
+            return [
+                'available' => false,
+                'window_minutes' => 1440,
+                'total_syncs' => 0,
+                'store_mapping_missing_count' => 0,
+                'store_mapping_ambiguous_count' => 0,
+                'store_mapping_by_id_fallback_count' => 0,
+                'store_resolution_cnpj_rate_percent' => null,
+                'user_mapping_missing_count' => 0,
+                'user_login_missing_count' => 0,
+                'user_mapping_by_id_fallback_count' => 0,
+                'user_login_mismatch_count' => 0,
+                'user_resolution_login_rate_percent' => null,
+            ];
+        }
+
+        $windowMinutes = 1440;
+        $windowStart = $now->subMinutes($windowMinutes);
+        $baseQuery = PdvSync::query()->where('received_at', '>=', $windowStart);
+
+        $total = (int) (clone $baseQuery)->count();
+
+        $storeMissing = (int) (clone $baseQuery)
+            ->whereJsonContains('risk_flags', 'store_mapping_missing')
+            ->count();
+        $storeAmbiguous = (int) (clone $baseQuery)
+            ->whereJsonContains('risk_flags', 'store_mapping_ambiguous')
+            ->count();
+        $storeIdFallback = (int) (clone $baseQuery)
+            ->whereJsonContains('risk_flags', 'store_mapping_by_id_fallback')
+            ->count();
+
+        $userMissing = (int) (clone $baseQuery)
+            ->whereJsonContains('risk_flags', 'user_mapping_missing')
+            ->count();
+        $userLoginMissing = (int) (clone $baseQuery)
+            ->whereJsonContains('risk_flags', 'user_login_missing')
+            ->count();
+        $userIdFallback = (int) (clone $baseQuery)
+            ->whereJsonContains('risk_flags', 'user_mapping_by_id_fallback')
+            ->count();
+        $userLoginMismatch = (int) (clone $baseQuery)
+            ->whereJsonContains('risk_flags', 'user_login_mismatch')
+            ->count();
+
+        $storeStrongCount = max(0, $total - $storeMissing - $storeAmbiguous - $storeIdFallback);
+        $userStrongCount = max(0, $total - $userMissing - $userLoginMissing - $userIdFallback);
+
+        return [
+            'available' => true,
+            'window_minutes' => $windowMinutes,
+            'total_syncs' => $total,
+            'store_mapping_missing_count' => $storeMissing,
+            'store_mapping_ambiguous_count' => $storeAmbiguous,
+            'store_mapping_by_id_fallback_count' => $storeIdFallback,
+            'store_resolution_cnpj_rate_percent' => $total > 0 ? round(($storeStrongCount / $total) * 100, 2) : null,
+            'user_mapping_missing_count' => $userMissing,
+            'user_login_missing_count' => $userLoginMissing,
+            'user_mapping_by_id_fallback_count' => $userIdFallback,
+            'user_login_mismatch_count' => $userLoginMismatch,
+            'user_resolution_login_rate_percent' => $total > 0 ? round(($userStrongCount / $total) * 100, 2) : null,
+        ];
+    }
+
+    /**
+     * @return array{
      *     available:bool,
      *     active_mapped_stores:int,
      *     stale_count:int,
@@ -310,18 +397,24 @@ class PdvOpsMonitorCommand extends Command
 
         $threshold = $now->subMinutes($thresholdMinutes);
         $latestByStore = DB::table('pdv_syncs')
-            ->select('store_pdv_id', DB::raw('MAX(received_at) as last_received_at'))
-            ->groupBy('store_pdv_id');
+            ->select([
+                'store_pdv_id',
+                'store_alias',
+                DB::raw('MAX(received_at) as last_received_at'),
+            ])
+            ->groupBy('store_pdv_id', 'store_alias');
 
         $staleStoreQuery = DB::table('pdv_store_mappings as m')
             ->leftJoinSub($latestByStore, 'ls', function ($join): void {
-                $join->on('ls.store_pdv_id', '=', 'm.pdv_store_id');
+                $join->on('ls.store_pdv_id', '=', 'm.pdv_store_id')
+                    ->whereRaw('LOWER(COALESCE(ls.store_alias, \'\')) = LOWER(COALESCE(m.alias, \'\'))');
             })
             ->where('m.active', true)
             ->select([
                 'm.pdv_store_id',
                 'm.store_id',
                 'm.alias',
+                'ls.store_alias as sync_store_alias',
                 'ls.last_received_at',
             ]);
 
@@ -348,6 +441,7 @@ class PdvOpsMonitorCommand extends Command
                     'store_pdv_id' => (int) $row->pdv_store_id,
                     'store_id' => $row->store_id !== null ? (int) $row->store_id : null,
                     'alias' => $row->alias,
+                    'sync_store_alias' => $row->sync_store_alias,
                     'store_name' => $row->store_name,
                     'last_received_at' => $lastReceived?->toIso8601String(),
                     'minutes_since_last_sync' => $lastReceived !== null
@@ -377,7 +471,7 @@ class PdvOpsMonitorCommand extends Command
         $currentFingerprint = sha1((string) json_encode([
             'issues' => $payload['issues'],
             'queue_name' => data_get($payload, 'metrics.queue_name'),
-            'stale_store_ids' => $this->extractStaleStoreIds(data_get($payload, 'metrics.stale_stores', [])),
+            'stale_store_keys' => $this->extractStaleStoreKeys(data_get($payload, 'metrics.stale_stores', [])),
         ]));
 
         $state = Cache::get($stateKey);
@@ -518,15 +612,23 @@ class PdvOpsMonitorCommand extends Command
      * @param mixed $staleStores
      * @return array<int, int>
      */
-    private function extractStaleStoreIds(mixed $staleStores): array
+    private function extractStaleStoreKeys(mixed $staleStores): array
     {
         if (!is_array($staleStores)) {
             return [];
         }
 
         return collect($staleStores)
-            ->map(static fn (mixed $row): int => (int) data_get($row, 'store_pdv_id', 0))
-            ->filter(static fn (int $storePdvId): bool => $storePdvId > 0)
+            ->map(static function (mixed $row): string {
+                $storePdvId = (int) data_get($row, 'store_pdv_id', 0);
+                $alias = trim((string) data_get($row, 'alias', ''));
+                if ($storePdvId <= 0) {
+                    return '';
+                }
+
+                return $storePdvId . '|' . mb_strtolower($alias);
+            })
+            ->filter(static fn (string $key): bool => $key !== '')
             ->unique()
             ->sort()
             ->values()

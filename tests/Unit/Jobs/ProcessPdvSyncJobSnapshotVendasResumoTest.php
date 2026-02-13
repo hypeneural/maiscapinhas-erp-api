@@ -78,6 +78,7 @@ beforeEach(function () {
         $table->unsignedSmallInteger('turno_seq')->nullable();
         $table->unsignedBigInteger('vendedor_pdv_id')->nullable();
         $table->string('vendedor_nome', 200)->nullable();
+        $table->string('vendedor_login', 100)->nullable();
         $table->unsignedInteger('qtd_itens')->default(0);
         $table->decimal('total_itens', 14, 2)->default(0);
         $table->string('last_sync_id', 128)->nullable();
@@ -304,6 +305,40 @@ test('snapshot_vendas accepts null optional fields', function () {
     expect($row->turno_seq)->toBeNull();
     expect($row->vendedor_pdv_id)->toBeNull();
     expect($row->vendedor_nome)->toBeNull();
+});
+
+test('snapshot_vendas persists vendedor_login when provided in v3.1 payload', function () {
+    $sync = createSyncForSnapshotVendasTest([
+        [
+            'id_operacao' => 99001,
+            'canal' => 'HIPER_LOJA',
+            'data_hora_inicio' => '2026-02-12T09:55:00-03:00',
+            'data_hora_termino' => '2026-02-12T09:56:10-03:00',
+            'duracao_segundos' => 70,
+            'id_turno' => null,
+            'turno_seq' => null,
+            'vendedor' => [
+                'id_usuario' => 7,
+                'nome' => 'Carlos',
+                'login' => 'carlos.vendas',
+            ],
+            'qtd_itens' => 2,
+            'total_itens' => 59.80,
+        ],
+    ], 'sync-pr51-snapshot-login-001');
+
+    (new ProcessPdvSyncJob($sync->id))->handle();
+
+    $row = DB::table('pdv_vendas_resumo')
+        ->where('store_pdv_id', 10)
+        ->where('canal', 'HIPER_LOJA')
+        ->where('id_operacao', 99001)
+        ->first(['vendedor_pdv_id', 'vendedor_nome', 'vendedor_login']);
+
+    expect($row)->not->toBeNull();
+    expect((int) $row->vendedor_pdv_id)->toBe(7);
+    expect($row->vendedor_nome)->toBe('Carlos');
+    expect($row->vendedor_login)->toBe('carlos.vendas');
 });
 
 test('adds risk flag when snapshot_vendas entry is malformed', function () {

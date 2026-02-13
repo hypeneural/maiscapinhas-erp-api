@@ -10,6 +10,7 @@ Consulta fechamento de caixa por turno no modelo `pdv_turnos` + `pdv_turno_pagam
 
 Query params:
 - `store_id` (int, opcional) ou `store_pdv_id` (int, opcional). Informar pelo menos um.
+- `store_alias` (string, opcional): desambigua quando `store_pdv_id` colide entre lojas.
 - `date` (date, obrigatorio): data de referencia (`YYYY-MM-DD`).
 - `sequencial` (int, opcional).
 - `periodo` (enum, opcional): `MATUTINO`, `VESPERTINO`, `NOTURNO`.
@@ -79,6 +80,7 @@ Consulta vendas com filtros v3 e paginacao.
 Query params:
 - `store_id` (int, opcional).
 - `store_pdv_id` (int, opcional).
+- `store_alias` (string, opcional): desambigua quando `store_pdv_id` colide entre lojas.
 - `from` (date, opcional, default = hoje-30d).
 - `to` (date, opcional, default = hoje).
 - `vendedor_id` (int, opcional): `vendedor_pdv_id`.
@@ -151,6 +153,7 @@ Query params:
 - `from` e `to` (date, opcional): quando informados, sobrescrevem `mode`.
 - `store_id` (int, opcional).
 - `store_pdv_id` (int, opcional).
+- `store_alias` (string, opcional): desambigua quando `store_pdv_id` colide entre lojas.
 - `canal` (enum, opcional): `HIPER_CAIXA` ou `HIPER_LOJA`.
 - `limit` (int, opcional, default `50`, max `200`).
 
@@ -201,6 +204,7 @@ Query params:
 - `to` (date, obrigatorio).
 - `store_id` (int, opcional).
 - `store_pdv_id` (int, opcional).
+- `store_alias` (string, opcional): desambigua quando `store_pdv_id` colide entre lojas.
 - `vendedor_id` (int, opcional).
 - `canal` (enum, opcional): `HIPER_CAIXA` ou `HIPER_LOJA`.
 - `sort_by` (enum, opcional): `total_vendido`, `qtd_vendas`, `total_itens`.
@@ -256,3 +260,13 @@ Regras para KPI e agregacoes:
 
 Consulta administrativa para triagem:
 - `GET /api/v1/admin/pdv/syncs?risk_flag=gestao_db_failure`
+
+## 7) Observacoes v3.1 (identidade)
+
+- O webhook v3.1 adiciona `store.cnpj` e `*.login` (operador/responsavel/vendedor).
+- O backend passa a persistir logins operacionais em:
+  - `pdv_turnos.operador_login`
+  - `pdv_turnos.responsavel_login`
+  - `pdv_venda_itens.vendedor_login`
+  - `pdv_vendas_resumo.vendedor_login`
+- Isso melhora auditoria e rastreabilidade de vendedor em cenarios de mudanca de `id_usuario` no ERP local.

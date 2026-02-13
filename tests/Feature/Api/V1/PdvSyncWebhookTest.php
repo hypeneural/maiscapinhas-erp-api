@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Jobs\ProcessPdvSyncJob;
 use App\Models\PdvSync;
+use App\Models\Store;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 
 use function Pest\Laravel\assertDatabaseCount;
@@ -18,10 +20,11 @@ beforeEach(function () {
     config()->set('pdv.timestamp_tolerance_seconds', 600);
     config()->set('pdv.naive_datetime_timezone', 'America/Sao_Paulo');
     config()->set('pdv.queue_name', 'pdv');
-    config()->set('pdv.supported_schema_versions', ['2.0', '3.0']);
+    config()->set('pdv.supported_schema_versions', ['2.0', '3.0', '3.1']);
     config()->set('pdv.json_schema_files', [
         '2.0' => base_path('docs/schema_v2.0.json'),
         '3.0' => base_path('docs/schema_v3.0.json'),
+        '3.1' => base_path('docs/schema_v3.1.json'),
     ]);
     Queue::fake();
 });
@@ -208,6 +211,54 @@ function pdvPayloadV3(array $overrides = []): array
     return array_replace_recursive($base, $overrides);
 }
 
+function pdvPayloadV31(array $overrides = []): array
+{
+    $base = pdvPayloadV3([
+        'schema_version' => '3.1',
+        'agent' => [
+            'version' => '3.1.0',
+        ],
+        'store' => [
+            'cnpj' => '29094289000137',
+        ],
+        'turnos' => [[
+            'operador' => [
+                'login' => 'operador.v3',
+            ],
+            'responsavel' => [
+                'login' => 'vendedor.lider',
+            ],
+        ]],
+        'vendas' => [[
+            'itens' => [[
+                'vendedor' => [
+                    'login' => 'vendedor.lider',
+                ],
+            ]],
+        ]],
+        'resumo' => [
+            'by_vendor' => [[
+                'login' => 'vendedor.lider',
+            ]],
+        ],
+        'snapshot_turnos' => [[
+            'operador' => [
+                'login' => 'operador.v3',
+            ],
+            'responsavel' => [
+                'login' => 'vendedor.lider',
+            ],
+        ]],
+        'snapshot_vendas' => [[
+            'vendedor' => [
+                'login' => 'vendedor.lider',
+            ],
+        ]],
+    ]);
+
+    return array_replace_recursive($base, $overrides);
+}
+
 function pdvFixtureV3(string $fileName, array $overrides = []): array
 {
     $path = base_path('tests/Fixtures/pdv/v3/' . $fileName);
@@ -352,6 +403,54 @@ test('returns 200 duplicate for same sync id', function () {
     assertDatabaseCount('pdv_sync_payloads', 1);
 });
 
+test('flags store_mapping_ambiguous when store_pdv_id has multiple active mappings and payload lacks disambiguation', function () {
+    $storeA = Store::factory()->create();
+    $storeB = Store::factory()->create();
+
+    DB::table('pdv_store_mappings')->insert([
+        [
+            'pdv_store_id' => 9,
+            'store_id' => $storeA->id,
+            'alias' => 'Loja 8 - MC Mata Atlântica',
+            'active' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ],
+        [
+            'pdv_store_id' => 9,
+            'store_id' => $storeB->id,
+            'alias' => 'Loja 10 - MC P4',
+            'active' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ],
+    ]);
+
+    $payload = pdvPayloadV3([
+        'store' => [
+            'id_ponto_venda' => 9,
+            'nome' => 'Loja Ambigua',
+            'alias' => '',
+        ],
+        'integrity' => [
+            'sync_id' => 'sync-store-ambiguous-001',
+            'warnings' => [],
+        ],
+    ]);
+
+    $response = signedPdvRequest($payload, null, null, [
+        'HTTP_X_PDV_SCHEMA_VERSION' => '3.0',
+    ])->assertStatus(201);
+
+    expect($response->json('data.risk_flags'))->toContain('store_mapping_ambiguous');
+
+    assertDatabaseHas('pdv_syncs', [
+        'sync_id' => 'sync-store-ambiguous-001',
+        'store_pdv_id' => 9,
+        'store_id' => null,
+    ]);
+});
+
 test('rejects when schema header does not match payload schema_version', function () {
     $payload = pdvPayload([
         'schema_version' => '2.0',
@@ -395,6 +494,39 @@ test('accepts valid v3 webhook and queues processing', function () {
         'ops_loja_count' => 1,
         'snapshot_turnos_count' => 1,
         'snapshot_vendas_count' => 1,
+    ]);
+});
+
+test('accepts valid v3.1 webhook and queues processing', function () {
+    $payload = pdvPayloadV31([
+        'integrity' => [
+            'sync_id' => 'sync-v31-20260213-001',
+            'warnings' => [],
+        ],
+    ]);
+
+    $response = signedPdvRequest($payload, null, null, [
+        'HTTP_X_PDV_SCHEMA_VERSION' => '3.1',
+        'HTTP_X_REQUEST_ID' => 'req-pdv-v31-001',
+    ]);
+
+    $response->assertStatus(201)
+        ->assertJsonPath('data.status', 'created')
+        ->assertJsonPath('data.processing_status', 'queued')
+        ->assertJsonPath('data.schema_version', '3.1')
+        ->assertJsonPath('data.event_type', 'mixed')
+        ->assertJsonPath('data.request_id', 'req-pdv-v31-001')
+        ->assertJsonPath('data.sync_id', 'sync-v31-20260213-001');
+
+    assertDatabaseHas('pdv_syncs', [
+        'sync_id' => 'sync-v31-20260213-001',
+        'schema_version' => '3.1',
+        'event_type' => 'mixed',
+        'request_id' => 'req-pdv-v31-001',
+        'status' => 'queued',
+        'store_pdv_id' => 10,
+        'ops_count' => 1,
+        'ops_loja_count' => 1,
     ]);
 });
 
@@ -473,6 +605,98 @@ test('accepts v3 payload with json schema validation enabled', function () {
 
     assertDatabaseHas('pdv_syncs', [
         'sync_id' => 'sync-v3-schema-001',
+        'schema_version' => '3.0',
+    ]);
+});
+
+test('accepts v3 payload when duracao_minutos is null for open turnos', function () {
+    $payload = pdvPayloadV3([
+        'integrity' => [
+            'sync_id' => 'sync-v3-open-turno-null-duration-001',
+            'warnings' => [],
+        ],
+        'turnos' => [[
+            'id_turno' => 'turno-v3-open-null-duration-001',
+            'fechado' => false,
+            'data_hora_inicio' => now()->subHours(2)->toIso8601String(),
+            'data_hora_termino' => null,
+            'duracao_minutos' => null,
+        ]],
+        'snapshot_turnos' => [[
+            'id_turno' => 'turno-v3-open-null-duration-001',
+            'fechado' => false,
+            'data_hora_inicio' => now()->subHours(2)->toIso8601String(),
+            'data_hora_termino' => null,
+            'duracao_minutos' => null,
+        ]],
+    ]);
+
+    signedPdvRequest($payload, null, null, [
+        'HTTP_X_PDV_SCHEMA_VERSION' => '3.0',
+    ])->assertStatus(201)
+        ->assertJsonPath('data.schema_version', '3.0')
+        ->assertJsonPath('data.sync_id', 'sync-v3-open-turno-null-duration-001');
+
+    assertDatabaseHas('pdv_syncs', [
+        'sync_id' => 'sync-v3-open-turno-null-duration-001',
+        'schema_version' => '3.0',
+    ]);
+});
+
+test('accepts schema_version 3.0 payload with cnpj and login when json schema validation is enabled', function () {
+    config()->set('pdv.json_schema_validation_enabled', true);
+
+    $payload = pdvPayloadV3([
+        'integrity' => [
+            'sync_id' => 'sync-v3-schema-cnpj-login-001',
+            'warnings' => [],
+        ],
+        'store' => [
+            'cnpj' => '29094289000137',
+        ],
+        'turnos' => [[
+            'operador' => [
+                'login' => 'operador.v3',
+            ],
+            'responsavel' => [
+                'login' => 'vendedor.lider',
+            ],
+        ]],
+        'vendas' => [[
+            'itens' => [[
+                'vendedor' => [
+                    'login' => 'vendedor.lider',
+                ],
+            ]],
+        ]],
+        'resumo' => [
+            'by_vendor' => [[
+                'login' => 'vendedor.lider',
+            ]],
+        ],
+        'snapshot_turnos' => [[
+            'operador' => [
+                'login' => 'operador.v3',
+            ],
+            'responsavel' => [
+                'login' => 'vendedor.lider',
+            ],
+        ]],
+        'snapshot_vendas' => [[
+            'vendedor' => [
+                'login' => 'vendedor.lider',
+            ],
+        ]],
+    ]);
+
+    signedPdvRequest($payload, null, null, [
+        'HTTP_X_PDV_SCHEMA_VERSION' => '3.0',
+    ])->assertStatus(201)
+        ->assertJsonPath('data.schema_version', '3.0')
+        ->assertJsonPath('data.sync_id', 'sync-v3-schema-cnpj-login-001');
+
+    assertDatabaseHas('pdv_syncs', [
+        'sync_id' => 'sync-v3-schema-cnpj-login-001',
         'schema_version' => '3.0',
     ]);
 });

@@ -49,6 +49,7 @@ beforeEach(function () {
     Schema::create('pdv_syncs', function (Blueprint $table) {
         $table->id();
         $table->unsignedBigInteger('store_pdv_id');
+        $table->string('store_alias', 100)->nullable();
         $table->string('status', 20)->default('queued');
         $table->json('risk_flags')->nullable();
         $table->dateTime('received_at')->nullable();
@@ -58,9 +59,10 @@ beforeEach(function () {
 
     Schema::create('pdv_store_mappings', function (Blueprint $table) {
         $table->id();
-        $table->unsignedBigInteger('pdv_store_id')->unique();
+        $table->unsignedBigInteger('pdv_store_id');
         $table->unsignedBigInteger('store_id')->nullable();
         $table->string('alias', 100)->nullable();
+        $table->string('cnpj', 18)->nullable();
         $table->boolean('active')->default(true);
         $table->dateTime('created_at')->nullable();
         $table->dateTime('updated_at')->nullable();
@@ -136,12 +138,19 @@ function seedMappedStore(int $pdvStoreId, string $alias, string $storeName): int
     return $storeId;
 }
 
-function seedSync(int $pdvStoreId, string $status, \Carbon\CarbonInterface $receivedAt): void
+function seedSync(
+    int $pdvStoreId,
+    string $status,
+    \Carbon\CarbonInterface $receivedAt,
+    ?string $storeAlias = null,
+    array $riskFlags = []
+): void
 {
     DB::table('pdv_syncs')->insert([
         'store_pdv_id' => $pdvStoreId,
+        'store_alias' => $storeAlias,
         'status' => $status,
-        'risk_flags' => json_encode([], JSON_UNESCAPED_UNICODE),
+        'risk_flags' => json_encode($riskFlags, JSON_UNESCAPED_UNICODE),
         'received_at' => $receivedAt->toDateTimeString(),
         'created_at' => now(),
         'updated_at' => now(),
@@ -152,8 +161,8 @@ test('monitor reports stale store metric and raises stale_stores_high issue', fu
     seedMappedStore(10, 'loja-10', 'Loja 10');
     seedMappedStore(11, 'loja-11', 'Loja 11');
 
-    seedSync(10, 'processed', now()->subMinutes(5));
-    seedSync(11, 'processed', now()->subHours(3));
+    seedSync(10, 'processed', now()->subMinutes(5), 'loja-10');
+    seedSync(11, 'processed', now()->subHours(3), 'loja-11');
 
     $result = runOpsMonitor();
 
@@ -169,7 +178,7 @@ test('monitor reports stale store metric and raises stale_stores_high issue', fu
 
 test('alert payload includes stale store details in webhook notification', function () {
     seedMappedStore(11, 'loja-11', 'Loja 11');
-    seedSync(11, 'processed', now()->subHours(4));
+    seedSync(11, 'processed', now()->subHours(4), 'loja-11');
 
     config()->set('pdv.monitor_alert_webhook_url', 'https://hooks.test/pdv-monitor');
     Http::fake([
@@ -196,7 +205,7 @@ test('alert payload includes stale store details in webhook notification', funct
 
 test('monitor stays healthy when thresholds are respected', function () {
     seedMappedStore(10, 'loja-10', 'Loja 10');
-    seedSync(10, 'processed', now()->subMinutes(10));
+    seedSync(10, 'processed', now()->subMinutes(10), 'loja-10');
 
     $result = runOpsMonitor();
 
@@ -206,12 +215,26 @@ test('monitor stays healthy when thresholds are respected', function () {
     expect($result['issues'])->toBeArray()->toHaveCount(0);
 });
 
+test('monitor stale detection is alias-aware when pdv_store_id collides', function () {
+    seedMappedStore(9, 'Loja 8 - MC Mata Atlântica', 'Mata Atlantica');
+    seedMappedStore(9, 'Loja 10 - MC P4', 'P4');
+
+    seedSync(9, 'processed', now()->subMinutes(5), 'Loja 8 - MC Mata Atlântica');
+    seedSync(9, 'processed', now()->subHours(4), 'Loja 10 - MC P4');
+
+    $result = runOpsMonitor();
+
+    expect($result['status'])->toBe('alert');
+    expect(data_get($result, 'metrics.stale_stores_count'))->toBe(1);
+    expect(data_get($result, 'metrics.stale_stores.0.alias'))->toBe('Loja 10 - MC P4');
+});
+
 test('monitor raises gestao_db_failure_high when risk flag spikes in last 30 minutes', function () {
     config()->set('pdv.monitor_max_stale_stores', 10);
     config()->set('pdv.monitor_max_gestao_db_failures_30m', 0);
 
     seedMappedStore(10, 'loja-10', 'Loja 10');
-    seedSync(10, 'processed', now()->subMinutes(5));
+    seedSync(10, 'processed', now()->subMinutes(5), 'loja-10');
 
     DB::table('pdv_syncs')->insert([
         'store_pdv_id' => 10,
@@ -229,4 +252,35 @@ test('monitor raises gestao_db_failure_high when risk flag spikes in last 30 min
     expect(data_get($result, 'metrics.gestao_db_failures_30m'))->toBe(1);
     $issueNames = collect($result['issues'] ?? [])->pluck('name')->all();
     expect($issueNames)->toContain('gestao_db_failure_high');
+});
+
+test('monitor publishes identity resolution rates and fallback counters', function () {
+    config()->set('pdv.monitor_max_stale_stores', 10);
+
+    seedMappedStore(10, 'loja-10', 'Loja 10');
+    seedSync(10, 'processed', now()->subMinutes(5), 'loja-10', []);
+    seedSync(10, 'processed', now()->subMinutes(4), 'loja-10', [
+        'store_mapping_by_id_fallback',
+        'user_mapping_by_id_fallback',
+    ]);
+    seedSync(10, 'processed', now()->subMinutes(3), 'loja-10', [
+        'store_mapping_missing',
+        'user_mapping_missing',
+        'user_login_missing',
+        'user_login_mismatch',
+    ]);
+
+    $result = runOpsMonitor();
+
+    expect($result['_exit_code'])->toBe(0);
+    expect(data_get($result, 'metrics.identity_resolution.available'))->toBeTrue();
+    expect(data_get($result, 'metrics.identity_resolution.total_syncs'))->toBe(3);
+    expect(data_get($result, 'metrics.identity_resolution.store_mapping_missing_count'))->toBe(1);
+    expect(data_get($result, 'metrics.identity_resolution.store_mapping_by_id_fallback_count'))->toBe(1);
+    expect(data_get($result, 'metrics.identity_resolution.user_mapping_missing_count'))->toBe(1);
+    expect(data_get($result, 'metrics.identity_resolution.user_mapping_by_id_fallback_count'))->toBe(1);
+    expect(data_get($result, 'metrics.identity_resolution.user_login_missing_count'))->toBe(1);
+    expect(data_get($result, 'metrics.identity_resolution.user_login_mismatch_count'))->toBe(1);
+    expect((float) data_get($result, 'metrics.store_resolution_cnpj_rate'))->toBe(33.33);
+    expect((float) data_get($result, 'metrics.user_resolution_login_rate'))->toBe(0.0);
 });

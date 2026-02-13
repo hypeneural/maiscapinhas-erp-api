@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://maiscapinhas.local/schemas/pdv-sync/v3.0/schema_v3.0.json",
-  "title": "PDV Sync Agent Payload v3.0",
+  "$id": "https://maiscapinhas.local/schemas/pdv-sync/v3.1/schema_v3.1.json",
+  "title": "PDV Sync Agent Payload v3.1",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -13,7 +13,7 @@
   "properties": {
     "schema_version": {
       "type": "string",
-      "const": "3.0"
+        "const": "3.1"
     },
     "event_type": {
       "type": "string",

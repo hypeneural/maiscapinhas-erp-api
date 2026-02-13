@@ -19,9 +19,9 @@ class PdvSyncIngestRequest extends FormRequest
 
     public function rules(): array
     {
-        $supportedSchemaVersions = config('pdv.supported_schema_versions', ['3.0']);
+        $supportedSchemaVersions = config('pdv.supported_schema_versions', ['3.0', '3.1']);
         if (!is_array($supportedSchemaVersions) || $supportedSchemaVersions === []) {
-            $supportedSchemaVersions = ['3.0'];
+            $supportedSchemaVersions = ['3.0', '3.1'];
         }
 
         return [
@@ -37,6 +37,7 @@ class PdvSyncIngestRequest extends FormRequest
             'store.id_ponto_venda' => ['required', 'integer', 'min:1'],
             'store.nome' => ['sometimes', 'string', 'max:255'],
             'store.alias' => ['sometimes', 'string', 'max:100'],
+            'store.cnpj' => ['sometimes', 'nullable', 'string', 'max:18'],
 
             'window' => ['required', 'array'],
             'window.from' => ['required', 'date'],
@@ -49,11 +50,13 @@ class PdvSyncIngestRequest extends FormRequest
             'turnos.*.fechado' => ['sometimes', 'boolean'],
             'turnos.*.data_hora_inicio' => ['sometimes', 'date'],
             'turnos.*.data_hora_termino' => ['nullable', 'date'],
-            'turnos.*.duracao_minutos' => ['sometimes', 'integer', 'min:0'],
+            'turnos.*.duracao_minutos' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'turnos.*.periodo' => ['sometimes', 'string', 'max:20'],
             'turnos.*.responsavel' => ['sometimes', 'nullable', 'array'],
             'turnos.*.responsavel.id_usuario' => ['nullable', 'integer', 'min:1'],
             'turnos.*.responsavel.nome' => ['nullable', 'string', 'max:200'],
+            'turnos.*.operador.login' => ['nullable', 'string', 'max:100'],
+            'turnos.*.responsavel.login' => ['nullable', 'string', 'max:100'],
             'turnos.*.qtd_vendas' => ['sometimes', 'integer', 'min:0'],
             'turnos.*.total_vendas' => ['sometimes', 'numeric'],
             'turnos.*.qtd_vendedores' => ['sometimes', 'integer', 'min:0'],
@@ -67,6 +70,7 @@ class PdvSyncIngestRequest extends FormRequest
             'vendas.*.itens' => ['sometimes', 'array'],
             'vendas.*.itens.*.line_id' => ['sometimes', 'integer', 'min:1'],
             'vendas.*.itens.*.line_no' => ['sometimes', 'integer', 'min:1'],
+            'vendas.*.itens.*.vendedor.login' => ['nullable', 'string', 'max:100'],
             'vendas.*.pagamentos' => ['sometimes', 'array'],
             'vendas.*.pagamentos.*.line_id' => ['sometimes', 'integer', 'min:1'],
             'vendas.*.pagamentos.*.line_no' => ['sometimes', 'integer', 'min:1'],
@@ -77,11 +81,13 @@ class PdvSyncIngestRequest extends FormRequest
             'snapshot_turnos.*.fechado' => ['sometimes', 'boolean'],
             'snapshot_turnos.*.data_hora_inicio' => ['sometimes', 'date'],
             'snapshot_turnos.*.data_hora_termino' => ['nullable', 'date'],
-            'snapshot_turnos.*.duracao_minutos' => ['sometimes', 'integer', 'min:0'],
+            'snapshot_turnos.*.duracao_minutos' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'snapshot_turnos.*.periodo' => ['sometimes', 'string', 'max:20'],
             'snapshot_turnos.*.responsavel' => ['sometimes', 'nullable', 'array'],
             'snapshot_turnos.*.responsavel.id_usuario' => ['nullable', 'integer', 'min:1'],
             'snapshot_turnos.*.responsavel.nome' => ['nullable', 'string', 'max:200'],
+            'snapshot_turnos.*.operador.login' => ['nullable', 'string', 'max:100'],
+            'snapshot_turnos.*.responsavel.login' => ['nullable', 'string', 'max:100'],
             'snapshot_turnos.*.qtd_vendas' => ['sometimes', 'integer', 'min:0'],
             'snapshot_turnos.*.total_vendas' => ['sometimes', 'numeric'],
             'snapshot_turnos.*.qtd_vendedores' => ['sometimes', 'integer', 'min:0'],
@@ -98,6 +104,10 @@ class PdvSyncIngestRequest extends FormRequest
             'snapshot_vendas.*.vendedor' => ['sometimes', 'nullable', 'array'],
             'snapshot_vendas.*.vendedor.id_usuario' => ['nullable', 'integer', 'min:1'],
             'snapshot_vendas.*.vendedor.nome' => ['nullable', 'string', 'max:200'],
+            'snapshot_vendas.*.vendedor.login' => ['nullable', 'string', 'max:100'],
+
+            'resumo.by_vendor' => ['sometimes', 'array'],
+            'resumo.by_vendor.*.login' => ['nullable', 'string', 'max:100'],
 
             'ops' => ['sometimes', 'array'],
             'ops.count' => ['sometimes', 'integer', 'min:0'],
