@@ -28,6 +28,8 @@ class PdvReportsVendasRequest extends FormRequest
             'meio_pagamento' => ['nullable', 'string', 'max:120'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
             'sort' => ['nullable', 'string', 'in:asc,desc'],
+            'min_total' => ['nullable', 'numeric', 'min:0'],
+            'max_total' => ['nullable', 'numeric', 'min:0', 'gte:min_total'],
         ];
     }
 
@@ -53,6 +55,11 @@ class PdvReportsVendasRequest extends FormRequest
             'per_page.min' => 'O campo per_page deve ser maior que zero.',
             'per_page.max' => 'O campo per_page nao pode ser maior que 100.',
             'sort.in' => 'O campo sort deve ser asc ou desc.',
+            'min_total.numeric' => 'O campo min_total deve ser numerico.',
+            'min_total.min' => 'O campo min_total deve ser maior ou igual a zero.',
+            'max_total.numeric' => 'O campo max_total deve ser numerico.',
+            'max_total.min' => 'O campo max_total deve ser maior ou igual a zero.',
+            'max_total.gte' => 'O campo max_total deve ser maior ou igual ao campo min_total.',
         ];
     }
 

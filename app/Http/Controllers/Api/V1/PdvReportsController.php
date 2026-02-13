@@ -323,6 +323,7 @@ class PdvReportsController extends Controller
                 DB::raw('COUNT(*) as itens_count'),
                 DB::raw('COALESCE(SUM(vi.qtd), 0) as itens_qtd_total'),
                 DB::raw('COALESCE(SUM(vi.total), 0) as itens_valor_total'),
+                DB::raw('MIN(vi.vendedor_pdv_id) as vendedor_pdv_id'),
             ])
             ->groupBy('vi.store_pdv_id', 'vi.canal', 'vi.id_operacao');
 
@@ -343,6 +344,11 @@ class PdvReportsController extends Controller
                     ->on('it.canal', '=', 'v.canal')
                     ->on('it.id_operacao', '=', 'v.id_operacao');
             })
+            ->leftJoin('pdv_user_mappings as pum', function ($join): void {
+                $join->on('pum.store_pdv_id', '=', 'v.store_pdv_id')
+                    ->on('pum.pdv_user_id', '=', 'it.vendedor_pdv_id');
+            })
+            ->leftJoin('users as u', 'pum.user_id', '=', 'u.id')
             ->leftJoinSub($paymentAgg, 'pg', function ($join): void {
                 $join->on('pg.store_pdv_id', '=', 'v.store_pdv_id')
                     ->on('pg.canal', '=', 'v.canal')
@@ -358,6 +364,7 @@ class PdvReportsController extends Controller
                 'v.id_turno',
                 'v.data_hora',
                 'v.total',
+                'u.name as seller_name',
                 DB::raw('COALESCE(it.itens_count, 0) as itens_count'),
                 DB::raw('COALESCE(it.itens_qtd_total, 0) as itens_qtd_total'),
                 DB::raw('COALESCE(it.itens_valor_total, 0) as itens_valor_total'),
@@ -373,6 +380,12 @@ class PdvReportsController extends Controller
         }
         if (!empty($validated['id_turno'])) {
             $query->where('v.id_turno', (string) $validated['id_turno']);
+        }
+        if (isset($validated['min_total'])) {
+            $query->where('v.total', '>=', (float) $validated['min_total']);
+        }
+        if (isset($validated['max_total'])) {
+            $query->where('v.total', '<=', (float) $validated['max_total']);
         }
         if (isset($validated['vendedor_id'])) {
             $vendedorId = (int) $validated['vendedor_id'];
@@ -432,6 +445,7 @@ class PdvReportsController extends Controller
                 'store_id' => $row->store_id !== null ? (int) $row->store_id : null,
                 'store_name' => $row->store_name,
                 'store_pdv_id' => (int) $row->store_pdv_id,
+                'seller_name' => $row->seller_name ?? null,
                 'id_operacao' => (int) $row->id_operacao,
                 'canal' => (string) ($row->canal ?? 'HIPER_CAIXA'),
                 'id_turno' => $row->id_turno,
