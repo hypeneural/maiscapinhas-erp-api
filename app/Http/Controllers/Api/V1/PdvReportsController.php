@@ -1227,8 +1227,6 @@ class PdvReportsController extends Controller
             ->where('active', true)
             ->first();
 
-        \Illuminate\Support\Facades\Log::info("DEBUG Vendedores: store_id={$storeId}, mapping=" . ($mapping ? 'FOUND' : 'NULL') . ", pdv_store_id=" . ($mapping?->pdv_store_id ?? 'N/A'));
-
         if (!$mapping) {
             return $this->success([]);
         }
