@@ -337,6 +337,7 @@ class PdvReportsController extends Controller
             ->groupBy('vp.store_pdv_id', 'vp.canal', 'vp.id_operacao');
 
         $query = DB::table('pdv_vendas as v')
+            ->leftJoin('stores as s', 'v.store_id', '=', 's.id')
             ->leftJoinSub($itemAgg, 'it', function ($join): void {
                 $join->on('it.store_pdv_id', '=', 'v.store_pdv_id')
                     ->on('it.canal', '=', 'v.canal')
@@ -350,6 +351,7 @@ class PdvReportsController extends Controller
             ->select([
                 'v.id',
                 'v.store_id',
+                's.name as store_name',
                 'v.store_pdv_id',
                 'v.id_operacao',
                 'v.canal',
@@ -428,6 +430,7 @@ class PdvReportsController extends Controller
         $rows = collect($paginator->items())
             ->map(fn($row): array => [
                 'store_id' => $row->store_id !== null ? (int) $row->store_id : null,
+                'store_name' => $row->store_name,
                 'store_pdv_id' => (int) $row->store_pdv_id,
                 'id_operacao' => (int) $row->id_operacao,
                 'canal' => (string) ($row->canal ?? 'HIPER_CAIXA'),

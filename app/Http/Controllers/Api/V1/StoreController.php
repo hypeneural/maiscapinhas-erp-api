@@ -44,14 +44,18 @@ class StoreController extends Controller
     {
         $user = $request->user();
 
-        $stores = Store::whereIn('id', $user->storeUsers()->pluck('store_id'))
-            ->where('active', true)
-            ->get()
+        $query = Store::where('active', true);
+
+        if (!$user->isSuperAdmin()) {
+            $query->whereIn('id', $user->storeUsers()->pluck('store_id'));
+        }
+
+        $stores = $query->get()
             ->map(fn(Store $store) => [
                 'id' => $store->id,
                 'name' => $store->name,
                 'city' => $store->city,
-                'role' => $user->roleInStore($store->id),
+                'role' => $user->isSuperAdmin() ? 'admin' : $user->roleInStore($store->id),
             ]);
 
         return $this->success($stores);
