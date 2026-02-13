@@ -20,11 +20,12 @@ return [
     'allow_bearer_fallback' => (bool) env('PDV_ALLOW_BEARER_FALLBACK', false),
     'bearer_token' => env('PDV_BEARER_TOKEN'),
     'allow_none_mode_in_production' => (bool) env('PDV_ALLOW_NONE_MODE_IN_PRODUCTION', false),
-    'supported_schema_versions' => ['3.0', '3.1'],
+    'supported_schema_versions' => ['3.0', '3.1', '4.0'],
     'json_schema_validation_enabled' => (bool) env('PDV_JSON_SCHEMA_VALIDATION_ENABLED', false),
     'json_schema_files' => [
         '3.0' => base_path('docs/schema_v3.0.json'),
         '3.1' => base_path('docs/schema_v3.1.json'),
+        '4.0' => base_path('docs/schema_v4.0.json'),
     ],
     'log_channel' => env('PDV_LOG_CHANNEL', 'pdv'),
     'log_payload_on_validation_error' => (bool) env('PDV_LOG_PAYLOAD_ON_VALIDATION_ERROR', true),
@@ -56,9 +57,9 @@ return [
     'queue_stale_threshold_minutes' => (int) env('PDV_QUEUE_STALE_THRESHOLD_MINUTES', 20),
     'job_tries' => max(1, (int) env('PDV_JOB_TRIES', 5)),
     'job_backoff_seconds' => array_values(array_filter(array_map(
-        static fn (string $value): int => (int) trim($value),
+        static fn(string $value): int => (int) trim($value),
         explode(',', (string) env('PDV_JOB_BACKOFF_SECONDS', '10,30,60,120'))
-    ), static fn (int $value): bool => $value >= 0)),
+    ), static fn(int $value): bool => $value >= 0)),
     'cron_queue_consumer_enabled' => (bool) env('PDV_CRON_QUEUE_CONSUMER_ENABLED', false),
     'cron_queue_consumer_max_time' => max(5, (int) env('PDV_CRON_QUEUE_CONSUMER_MAX_TIME', 50)),
     'cron_queue_consumer_sleep' => max(0, (int) env('PDV_CRON_QUEUE_CONSUMER_SLEEP', 1)),
@@ -102,7 +103,7 @@ return [
     'monitor_alert_webhook_url' => env('PDV_MONITOR_ALERT_WEBHOOK_URL'),
     'monitor_alert_slack_webhook_url' => env('PDV_MONITOR_ALERT_SLACK_WEBHOOK_URL'),
     'monitor_alert_emails' => array_values(array_filter(array_map(
-        static fn (string $value): string => trim($value),
+        static fn(string $value): string => trim($value),
         explode(',', (string) env('PDV_MONITOR_ALERT_EMAILS', ''))
     ))),
     'monitor_state_cache_key' => env('PDV_MONITOR_STATE_CACHE_KEY', 'pdv:ops-monitor:state'),

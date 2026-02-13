@@ -38,6 +38,7 @@ class PdvSyncIngestRequest extends FormRequest
             'store.nome' => ['sometimes', 'string', 'max:255'],
             'store.alias' => ['sometimes', 'string', 'max:100'],
             'store.cnpj' => ['sometimes', 'nullable', 'string', 'max:18'],
+            'store.id_filial' => ['sometimes', 'nullable', 'integer', 'min:1'],
 
             'window' => ['required', 'array'],
             'window.from' => ['required', 'date'],
@@ -45,6 +46,7 @@ class PdvSyncIngestRequest extends FormRequest
             'window.minutes' => ['sometimes', 'integer', 'min:1', 'max:1440'],
 
             'turnos' => ['sometimes', 'array'],
+            'turnos.*.canal' => ['sometimes', 'string', Rule::in(['HIPER_CAIXA', 'HIPER_LOJA'])],
             'turnos.*.id_turno' => ['sometimes', 'string', 'max:64'],
             'turnos.*.sequencial' => ['sometimes', 'integer', 'min:1'],
             'turnos.*.fechado' => ['sometimes', 'boolean'],
@@ -76,6 +78,7 @@ class PdvSyncIngestRequest extends FormRequest
             'vendas.*.pagamentos.*.line_no' => ['sometimes', 'integer', 'min:1'],
             'resumo' => ['sometimes', 'array'],
             'snapshot_turnos' => ['sometimes', 'array'],
+            'snapshot_turnos.*.canal' => ['sometimes', 'string', Rule::in(['HIPER_CAIXA', 'HIPER_LOJA'])],
             'snapshot_turnos.*.id_turno' => ['sometimes', 'string', 'max:64'],
             'snapshot_turnos.*.sequencial' => ['sometimes', 'integer', 'min:1'],
             'snapshot_turnos.*.fechado' => ['sometimes', 'boolean'],

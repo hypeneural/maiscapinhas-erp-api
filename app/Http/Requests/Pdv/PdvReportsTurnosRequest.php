@@ -25,6 +25,8 @@ class PdvReportsTurnosRequest extends FormRequest
             'fechado' => ['nullable', 'boolean'],
             'operador_id' => ['nullable', 'integer', 'min:1'],
             'responsavel_id' => ['nullable', 'integer', 'min:1'],
+            'canal' => ['nullable', 'string', 'in:HIPER_CAIXA,HIPER_LOJA'],
+            'vendedor_id' => ['nullable', 'integer', 'min:1'],
         ];
     }
 
@@ -46,6 +48,9 @@ class PdvReportsTurnosRequest extends FormRequest
             'operador_id.min' => 'O campo operador_id deve ser maior que zero.',
             'responsavel_id.integer' => 'O campo responsavel_id deve ser numerico.',
             'responsavel_id.min' => 'O campo responsavel_id deve ser maior que zero.',
+            'canal.in' => 'O campo canal deve ser HIPER_CAIXA ou HIPER_LOJA.',
+            'vendedor_id.integer' => 'O campo vendedor_id deve ser numerico.',
+            'vendedor_id.min' => 'O campo vendedor_id deve ser maior que zero.',
         ];
     }
 

@@ -54,6 +54,13 @@ Sugestoes de proximo backlog (Fase 4.1):
 Dependencia externa (Agent):
 - v3.x: incluir `login_vendedor` no canal `HIPER_LOJA` (queries_gestao) para reduzir fallback por `id_usuario`.
 
+## Novo backlog (Fase 5 - Agent v4.0)
+Contexto: o agente (v4) comeca a enviar campos novos (sem quebrar o ingress), mas hoje o backend ainda nao persiste/expoe tudo.
+
+1. [ ] [PR-55 - P0: Persistir `canal` em `pdv_turnos` + `pdv_turno_pagamentos` (job + reports)](./PR-55-agent-v4-turnos-canal.md)
+2. [ ] [PR-56 - P1: Persistir `store.id_filial` em `pdv_syncs` (rastreabilidade Loja/Gestao)](./PR-56-agent-v4-store-id-filial.md)
+3. [ ] [PR-57 - P1: Turnos API: filtro `canal`, filtro `vendedor_id` e endpoint `turnos/{id_turno}/vendedores`](./PR-57-agent-v4-turnos-vendedores-endpoints.md)
+
 ## Novidades do agente v3.1 (2026-02-13)
 - `store.cnpj` no payload como identificador universal da loja.
 - `login` em:

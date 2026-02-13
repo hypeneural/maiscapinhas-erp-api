@@ -37,6 +37,7 @@ class PdvSync extends Model
         'risk_flags',
         'payload_sha256',
         'payload_bytes',
+        'store_id_filial',
         'attempts',
         'last_error',
         'received_at',

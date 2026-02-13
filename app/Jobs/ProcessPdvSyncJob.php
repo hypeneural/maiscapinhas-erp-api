@@ -60,9 +60,9 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
         $backoff = config('pdv.job_backoff_seconds', [10, 30, 60, 120]);
         if (is_array($backoff)) {
             $normalized = array_values(array_filter(array_map(
-                static fn (mixed $value): int => (int) $value,
+                static fn(mixed $value): int => (int) $value,
                 $backoff
-            ), static fn (int $value): bool => $value >= 0));
+            ), static fn(int $value): bool => $value >= 0));
 
             if ($normalized !== []) {
                 $this->backoff = $normalized;
@@ -227,8 +227,17 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             throw new RuntimeException('Missing store.id_ponto_venda for PDV sync.');
         }
 
+        // Persistir id_filial para rastreabilidade v4
+        $storeIdFilial = $this->asInt(data_get($payload, 'store.id_filial'));
+        if ($storeIdFilial !== null && $sync->store_id_filial === null) {
+            $sync->store_id_filial = $storeIdFilial;
+        }
+
         $storeId = $sync->store_id;
         if ($storeId !== null) {
+            if ($sync->isDirty('store_id_filial')) {
+                $sync->save();
+            }
             return [
                 'store_pdv_id' => $storePdvId,
                 'store_id' => (int) $storeId,
@@ -311,6 +320,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                 continue;
             }
 
+            $canal = $this->resolveTurnoCanal($sync, $storePdvId, data_get($turno, 'canal'));
             $operadorPdvId = $this->asInt(data_get($turno, 'operador.id_usuario'));
             $operadorLogin = $this->asString(data_get($turno, 'operador.login'));
             $responsavelLogin = $this->asString(data_get($turno, 'responsavel.login'));
@@ -321,6 +331,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             $turnoRows[] = [
                 'store_pdv_id' => $storePdvId,
                 'store_id' => $storeId,
+                'canal' => $canal,
                 'id_turno' => $idTurno,
                 'sequencial' => $this->asInt(data_get($turno, 'sequencial')),
                 'fechado' => (bool) data_get($turno, 'fechado', false),
@@ -360,6 +371,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                 $this->buildTurnoPagamentoRows(
                     $storePdvId,
                     $storeId,
+                    $canal,
                     $idTurno,
                     'sistema',
                     data_get($turno, 'totais_sistema.por_pagamento', []),
@@ -369,6 +381,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                 $this->buildTurnoPagamentoRows(
                     $storePdvId,
                     $storeId,
+                    $canal,
                     $idTurno,
                     'declarado',
                     data_get($turno, 'fechamento_declarado.por_pagamento', []),
@@ -378,6 +391,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                 $this->buildTurnoPagamentoRows(
                     $storePdvId,
                     $storeId,
+                    $canal,
                     $idTurno,
                     'falta',
                     data_get($turno, 'falta_caixa.por_pagamento', []),
@@ -423,14 +437,14 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
         $this->upsertRows(
             'pdv_turnos',
             $turnoRows,
-            ['store_pdv_id', 'id_turno'],
+            ['store_pdv_id', 'canal', 'id_turno'],
             $turnoUpdateColumns
         );
 
         $this->upsertRows(
             'pdv_turno_pagamentos',
             $pagamentoRows,
-            ['store_pdv_id', 'id_turno', 'tipo', 'id_finalizador'],
+            ['store_pdv_id', 'canal', 'id_turno', 'tipo', 'id_finalizador'],
             [
                 'store_id',
                 'meio_pagamento',
@@ -901,6 +915,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                 continue;
             }
 
+            $canal = $this->resolveTurnoCanal($sync, $storePdvId, data_get($snapshotTurno, 'canal'));
             $operadorPdvId = $this->asInt(data_get($snapshotTurno, 'operador.id_usuario'));
             $operadorLogin = $this->asString(data_get($snapshotTurno, 'operador.login'));
             $responsavelLogin = $this->asString(data_get($snapshotTurno, 'responsavel.login'));
@@ -911,6 +926,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             $rows[] = [
                 'store_pdv_id' => $storePdvId,
                 'store_id' => $storeId,
+                'canal' => $canal,
                 'id_turno' => $idTurno,
                 'sequencial' => $this->asInt(data_get($snapshotTurno, 'sequencial')),
                 'fechado' => (bool) data_get($snapshotTurno, 'fechado', false),
@@ -978,7 +994,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
         $this->upsertRows(
             'pdv_turnos',
             $rows,
-            ['store_pdv_id', 'id_turno'],
+            ['store_pdv_id', 'canal', 'id_turno'],
             $updateColumns
         );
 
@@ -992,6 +1008,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
     private function buildTurnoPagamentoRows(
         int $storePdvId,
         ?int $storeId,
+        string $canal,
         string $idTurno,
         string $tipo,
         mixed $values,
@@ -1011,6 +1028,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             $rows[] = [
                 'store_pdv_id' => $storePdvId,
                 'store_id' => $storeId,
+                'canal' => $canal,
                 'id_turno' => $idTurno,
                 'tipo' => $tipo,
                 'id_finalizador' => max(0, (int) data_get($item, 'id_finalizador', 0)),
@@ -1209,13 +1227,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             $hasPdvUsuariosLogin = $this->supportsPdvUsuariosLoginColumn();
             /** @var array<int, array{nome:?string,papel:string,login:?string}> $observedUsers */
             $observedUsers = [];
-            $observeUser = static function (
-                &$observedUsers,
-                ?int $userId,
-                ?string $userName,
-                ?string $userLogin,
-                string $papel
-            ): void {
+            $observeUser = static function (&$observedUsers, ?int $userId, ?string $userName, ?string $userLogin, string $papel): void {
                 if ($userId === null || $userId <= 0) {
                     return;
                 }
@@ -1526,8 +1538,10 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                         $updates['nome_hiper'] = $paymentName;
                     }
 
-                    if (($existingPaymentMethod->categoria === null || trim((string) $existingPaymentMethod->categoria) === '')
-                        && $categoria !== null) {
+                    if (
+                        ($existingPaymentMethod->categoria === null || trim((string) $existingPaymentMethod->categoria) === '')
+                        && $categoria !== null
+                    ) {
                         $updates['categoria'] = $categoria;
                     }
 
@@ -1598,6 +1612,30 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             'sync_id' => $sync->sync_id,
             'store_pdv_id' => $storePdvId,
             'id_operacao' => $idOperacao,
+            'canal' => $rawValue,
+        ]);
+
+        return self::CANAL_HIPER_CAIXA;
+    }
+
+    private function resolveTurnoCanal(PdvSync $sync, int $storePdvId, mixed $value): string
+    {
+        $rawValue = $this->asString($value);
+        if ($rawValue === null) {
+            return self::CANAL_HIPER_CAIXA;
+        }
+
+        $normalized = Str::upper(str_replace('-', '_', $rawValue));
+        if (in_array($normalized, [self::CANAL_HIPER_CAIXA, self::CANAL_HIPER_LOJA], true)) {
+            return $normalized;
+        }
+
+        $this->markRuntimeRiskFlag('turno_canal_invalid');
+
+        Log::warning('pdv.sync.turno_canal_invalid', [
+            'pdv_sync_id' => $sync->id,
+            'sync_id' => $sync->sync_id,
+            'store_pdv_id' => $storePdvId,
             'canal' => $rawValue,
         ]);
 

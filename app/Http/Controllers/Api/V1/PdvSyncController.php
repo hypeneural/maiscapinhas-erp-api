@@ -25,7 +25,7 @@ use Illuminate\Support\Str;
  * Endpoint de ingestao do webhook PDV Sync Agent v3.
  *
  * Contrato:
- * - `schema_version` suportado: `3.0` e `3.1`
+ * - `schema_version` suportado: `3.0`, `3.1` e `4.0`
  * - idempotencia por `integrity.sync_id`
  * - payload validado por regras Laravel + JSON Schema
  * - enfileiramento assincorno para processamento (`ProcessPdvSyncJob`)
@@ -322,9 +322,9 @@ class PdvSyncController extends Controller
         $opsLojaCount = (int) data_get($payload, 'ops.loja_count', 0);
         $opsLojaIdsRaw = data_get($payload, 'ops.loja_ids', []);
         $opsLojaIds = is_array($opsLojaIdsRaw) ? array_values(array_filter(array_map(
-            static fn (mixed $value): int => (int) $value,
+            static fn(mixed $value): int => (int) $value,
             $opsLojaIdsRaw
-        ), static fn (int $value): bool => $value > 0)) : [];
+        ), static fn(int $value): bool => $value > 0)) : [];
         $snapshotTurnosRaw = data_get($payload, 'snapshot_turnos', []);
         $snapshotTurnosCount = is_array($snapshotTurnosRaw) ? count($snapshotTurnosRaw) : 0;
         $snapshotVendasRaw = data_get($payload, 'snapshot_vendas', []);
@@ -333,34 +333,7 @@ class PdvSyncController extends Controller
         $inserted = 0;
         $sync = null;
 
-        DB::transaction(function () use (
-            &$inserted,
-            &$sync,
-            $syncId,
-            $storePdvId,
-            $storeId,
-            $storeAlias,
-            $schemaVersion,
-            $eventType,
-            $requestId,
-            $windowFrom,
-            $windowTo,
-            $agentVersion,
-            $agentMachine,
-            $opsCount,
-            $opsLojaCount,
-            $opsLojaIds,
-            $snapshotTurnosCount,
-            $snapshotVendasCount,
-            $warnings,
-            $timestampSkewSeconds,
-            $timestampOutOfWindow,
-            $riskFlags,
-            $shouldBlock,
-            $payloadSha256,
-            $payloadBytes,
-            $rawPayload
-        ) {
+        DB::transaction(function () use (&$inserted, &$sync, $syncId, $storePdvId, $storeId, $storeAlias, $schemaVersion, $eventType, $requestId, $windowFrom, $windowTo, $agentVersion, $agentMachine, $opsCount, $opsLojaCount, $opsLojaIds, $snapshotTurnosCount, $snapshotVendasCount, $warnings, $timestampSkewSeconds, $timestampOutOfWindow, $riskFlags, $shouldBlock, $payloadSha256, $payloadBytes, $rawPayload) {
             $status = $shouldBlock ? PdvSync::STATUS_BLOCKED : PdvSync::STATUS_QUEUED;
             $queuedAt = $shouldBlock ? null : now();
 

@@ -128,6 +128,7 @@ class PdvReportsController extends Controller
                 't.qtd_vendas',
                 't.total_vendas',
                 't.qtd_vendedores',
+                't.canal',
             ])
             ->whereDate('t.data_hora_inicio', $date);
 
@@ -147,6 +148,19 @@ class PdvReportsController extends Controller
         }
         if (isset($validated['responsavel_id'])) {
             $query->where('t.responsavel_pdv_id', (int) $validated['responsavel_id']);
+        }
+        if (!empty($validated['canal'])) {
+            $query->where('t.canal', (string) $validated['canal']);
+        }
+        if (isset($validated['vendedor_id'])) {
+            // Filtrar turnos que possuem vendas de um vendedor específico
+            $query->whereExists(function ($sub) use ($validated) {
+                $sub->select(DB::raw(1))
+                    ->from('pdv_vendas as v')
+                    ->whereColumn('v.store_pdv_id', 't.store_pdv_id')
+                    ->whereColumn('v.id_turno', 't.id_turno')
+                    ->where('v.vendedor_pdv_id', (int) $validated['vendedor_id']);
+            });
         }
 
         $turnos = $query
@@ -174,6 +188,7 @@ class PdvReportsController extends Controller
                 'store_id' => $turno->store_id !== null ? (int) $turno->store_id : null,
                 'store_pdv_id' => (int) $turno->store_pdv_id,
                 'id_turno' => (string) $turno->id_turno,
+                'canal' => $turno->canal ?? 'HIPER_CAIXA',
                 'sequencial' => $turno->sequencial !== null ? (int) $turno->sequencial : null,
                 'status' => (bool) $turno->fechado ? 'FECHADO' : 'ABERTO',
                 'fechado' => (bool) $turno->fechado,
@@ -214,6 +229,8 @@ class PdvReportsController extends Controller
                 'fechado' => array_key_exists('fechado', $validated) ? (bool) $validated['fechado'] : null,
                 'operador_id' => isset($validated['operador_id']) ? (int) $validated['operador_id'] : null,
                 'responsavel_id' => isset($validated['responsavel_id']) ? (int) $validated['responsavel_id'] : null,
+                'canal' => $validated['canal'] ?? null,
+                'vendedor_id' => isset($validated['vendedor_id']) ? (int) $validated['vendedor_id'] : null,
             ],
             'summary' => [
                 'qtd_turnos' => $rows->count(),
@@ -225,7 +242,7 @@ class PdvReportsController extends Controller
                 'total_declarado' => round((float) $rows->sum('totais.total_declarado'), 2),
                 'total_falta' => round((float) $rows->sum('totais.total_falta'), 2),
                 'total_falta_absoluto' => round((float) $rows->sum(
-                    static fn (array $row): float => abs((float) data_get($row, 'totais.total_falta', 0))
+                    static fn(array $row): float => abs((float) data_get($row, 'totais.total_falta', 0))
                 ), 2),
             ],
             'turnos' => $rows->all(),
@@ -409,7 +426,7 @@ class PdvReportsController extends Controller
             ->paginate($perPage);
 
         $rows = collect($paginator->items())
-            ->map(fn ($row): array => [
+            ->map(fn($row): array => [
                 'store_id' => $row->store_id !== null ? (int) $row->store_id : null,
                 'store_pdv_id' => (int) $row->store_pdv_id,
                 'id_operacao' => (int) $row->id_operacao,
@@ -437,12 +454,12 @@ class PdvReportsController extends Controller
                 'total_vendido' => round($totalVendido, 2),
             ],
             'filters' => [
-            'store_id' => $scope['store_id'],
-            'store_pdv_id' => $scope['store_pdv_id'],
-            'store_alias' => $scope['store_alias'],
-            'from' => $from->toIso8601String(),
-            'to' => $to->toIso8601String(),
-            'vendedor_id' => isset($validated['vendedor_id']) ? (int) $validated['vendedor_id'] : null,
+                'store_id' => $scope['store_id'],
+                'store_pdv_id' => $scope['store_pdv_id'],
+                'store_alias' => $scope['store_alias'],
+                'from' => $from->toIso8601String(),
+                'to' => $to->toIso8601String(),
+                'vendedor_id' => isset($validated['vendedor_id']) ? (int) $validated['vendedor_id'] : null,
                 'canal' => $validated['canal'] ?? null,
                 'id_turno' => $validated['id_turno'] ?? null,
                 'id_finalizador' => isset($validated['id_finalizador']) ? (int) $validated['id_finalizador'] : null,
@@ -619,7 +636,7 @@ class PdvReportsController extends Controller
         $pagamentosValorTotal = round((float) ($pagamentosRows->sum('valor') ?? 0), 2);
         $pagamentosTrocoTotal = round((float) ($pagamentosRows->sum('troco') ?? 0), 2);
 
-        $itens = $itensRows->map(static fn (object $row): array => [
+        $itens = $itensRows->map(static fn(object $row): array => [
             'line_id' => $row->line_id !== null ? (int) $row->line_id : null,
             'line_no' => (int) $row->line_no,
             'id_produto' => $row->id_produto !== null ? (int) $row->id_produto : null,
@@ -635,7 +652,7 @@ class PdvReportsController extends Controller
             'vendedor_user_id' => $row->vendedor_user_id !== null ? (int) $row->vendedor_user_id : null,
         ])->values()->all();
 
-        $pagamentos = $pagamentosRows->map(static fn (object $row): array => [
+        $pagamentos = $pagamentosRows->map(static fn(object $row): array => [
             'line_id' => $row->line_id !== null ? (int) $row->line_id : null,
             'line_no' => (int) $row->line_no,
             'id_finalizador' => (int) $row->id_finalizador,
@@ -943,8 +960,8 @@ class PdvReportsController extends Controller
         if (!$user->isSuperAdmin()) {
             $allowedStoreIds = $user->storeUsers()
                 ->pluck('store_id')
-                ->map(static fn (mixed $value): int => (int) $value)
-                ->filter(static fn (int $value): bool => $value > 0)
+                ->map(static fn(mixed $value): int => (int) $value)
+                ->filter(static fn(int $value): bool => $value > 0)
                 ->unique()
                 ->values()
                 ->all();
@@ -1046,9 +1063,11 @@ class PdvReportsController extends Controller
             $query->where($prefix . 'store_pdv_id', $scope['store_pdv_id']);
         }
 
-        if ($scope['store_id'] === null
+        if (
+            $scope['store_id'] === null
             && $scope['store_pdv_id'] === null
-            && is_array($scope['allowed_store_ids'])) {
+            && is_array($scope['allowed_store_ids'])
+        ) {
             $query->whereIn($prefix . 'store_id', $scope['allowed_store_ids']);
         }
     }
@@ -1096,7 +1115,7 @@ class PdvReportsController extends Controller
         }
 
         $turnoIds = $turnos->pluck('id_turno')
-            ->filter(static fn (mixed $value): bool => is_string($value) && trim($value) !== '')
+            ->filter(static fn(mixed $value): bool => is_string($value) && trim($value) !== '')
             ->unique()
             ->values()
             ->all();
@@ -1105,8 +1124,8 @@ class PdvReportsController extends Controller
         }
 
         $storePdvIds = $turnos->pluck('store_pdv_id')
-            ->map(static fn (mixed $value): int => (int) $value)
-            ->filter(static fn (int $value): bool => $value > 0)
+            ->map(static fn(mixed $value): int => (int) $value)
+            ->filter(static fn(int $value): bool => $value > 0)
             ->unique()
             ->values()
             ->all();
@@ -1130,7 +1149,7 @@ class PdvReportsController extends Controller
             ]);
 
         return $rows
-            ->groupBy(fn ($row): string => $this->turnoCompositeKey((int) $row->store_pdv_id, (string) $row->id_turno))
+            ->groupBy(fn($row): string => $this->turnoCompositeKey((int) $row->store_pdv_id, (string) $row->id_turno))
             ->map(function (Collection $items): array {
                 $grouped = [
                     'sistema' => [],
