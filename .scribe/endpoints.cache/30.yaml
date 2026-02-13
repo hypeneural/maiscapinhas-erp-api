@@ -160,7 +160,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -535,7 +535,7 @@ endpoints:
         name: 'opening_hours.weekly[].*.start'
         description: 'Must be a valid date in the format <code>H:i</code>.'
         required: true
-        example: '14:00'
+        example: '14:36'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -546,7 +546,7 @@ endpoints:
         name: 'opening_hours.weekly[].*.end'
         description: 'Must be a valid date in the format <code>H:i</code>.'
         required: true
-        example: '14:00'
+        example: '14:36'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -633,7 +633,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -744,7 +744,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -1140,7 +1140,7 @@ endpoints:
         name: 'opening_hours.weekly[].*.start'
         description: 'Must be a valid date in the format <code>H:i</code>.'
         required: true
-        example: '14:00'
+        example: '14:36'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1151,7 +1151,7 @@ endpoints:
         name: 'opening_hours.weekly[].*.end'
         description: 'Must be a valid date in the format <code>H:i</code>.'
         required: true
-        example: '14:00'
+        example: '14:36'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1237,7 +1237,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -1340,7 +1340,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -1444,7 +1444,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null

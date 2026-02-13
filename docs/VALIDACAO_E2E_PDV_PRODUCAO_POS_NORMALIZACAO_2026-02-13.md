@@ -119,6 +119,29 @@ Payload controlado enviado diretamente para o endpoint (sem n8n), para validar:
 - `pdv_venda_itens`: `line_id=9990000101`, `vendedor_pdv_id=46`, `vendedor_login=biancabrasil`, `vendedor_user_id=19`
 - `pdv_venda_pagamentos`: `line_id=9990000201`, `id_finalizador=1`, `meio_pagamento=Dinheiro`, `valor=10.00`, `troco=0.00`
 
+### 3.2.3 Ingestao + Fila (E2E) - Execucao Codex (2026-02-13 14:14 UTC)
+
+Novo payload controlado enviado para garantir que, **apos o ultimo deploy**, o fluxo segue 100%:
+- ingestao (controller) aceita JSON + valida schema/versao
+- job e enfileirado e processado pelo worker
+- store binding por `store.cnpj`
+- user binding por `vendedor.login`
+
+**Response**
+- `201 created`
+- `pdv_sync_id=210`
+- `risk_flags=[]`
+
+**Fila**
+- `pdv_syncs.id=210`:
+  - `received_at`: `2026-02-13 14:14:43` UTC
+  - `processed_at`: `2026-02-13 14:15:02` UTC
+
+**Persistencia**
+- `pdv_vendas`: `store_id=8`, `store_pdv_id=9`, `canal=HIPER_CAIXA`, `id_operacao=99900002`, `total=10.00`
+- `pdv_venda_itens`: `line_id=99000021`, `vendedor_pdv_id=46`, `vendedor_login=biancabrasil`, `vendedor_user_id=19`
+- `pdv_venda_pagamentos`: `line_id=98000021`, `id_finalizador=1`, `meio_pagamento=Dinheiro`, `valor=10.00`, `troco=0.00`, `parcelas=1`
+
 ### 3.3 Turno aberto com `duracao_minutos=null` (caso que dava 422 no n8n)
 
 Foi enviado payload com turno aberto (`data_hora_termino=null`) e `duracao_minutos=null`:
@@ -224,7 +247,7 @@ Endpoints validados (200):
   - `canal=HIPER_CAIXA`
   - `id_turno=4EAC6F06-...`
 - `GET /api/v1/pdv/reports/vendas/detalhe`
-  - `store_id=8&canal=HIPER_CAIXA&id_operacao=99900001`
+  - `store_id=8&canal=HIPER_CAIXA&id_operacao=99900002`
   - retornou itens + pagamentos + summary (extrato detalhado)
 - `GET /api/v1/pdv/reports/ranking-vendedores`
   - retornou Bianca Brasil como #1 (periodo 2026-02-13)
@@ -246,7 +269,10 @@ Interpretacao:
 - Nao indicam falha atual do pipeline.
 
 Acao sugerida:
-- (Opcao A) Reprocessar via servidor (PHP com redis habilitado): `queue:retry` / `pdv:queue-consume`
+- (Opcao A - recomendada) Reprocessar no servidor (ambiente com redis/worker ativo):
+  - `php artisan pdv:retry-failed --dry-run`
+  - `php artisan pdv:retry-failed --limit=20 --older-than-minutes=15`
+  - depois, opcionalmente limpar as entradas equivalentes de `failed_jobs` (para o monitor nao ficar em ALERT).
 - (Opcao B) Manter como historico e ignorar em metricas (filtrar por `received_at` >= fix).
 
 ### 6.2 `422` no n8n para `duracao_minutos`

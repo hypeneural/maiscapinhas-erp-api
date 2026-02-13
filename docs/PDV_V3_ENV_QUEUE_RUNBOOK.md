@@ -185,3 +185,43 @@ WHERE received_at >= NOW() - INTERVAL 24 HOUR
   AND JSON_CONTAINS(risk_flags, '\"store_mapping_by_id_fallback\"')
 ORDER BY received_at DESC;
 ```
+
+## 9) Backfill/Rebind historico (store_id / vendedor_user_id / operador_user_id)
+
+Objetivo: corrigir dados antigos que ficaram sem `store_id`/`vendedor_user_id` **antes** do bootstrap de mappings ou antes do agente enviar `cnpj/login`.
+
+Comando:
+
+```bash
+php artisan pdv:backfill-bindings --dry-run
+php artisan pdv:backfill-bindings --since=2026-02-01 --limit=500
+```
+
+Executar por blocos (recomendado):
+
+```bash
+php artisan pdv:backfill-bindings --only=stores --since=2026-02-01 --limit=500
+php artisan pdv:backfill-bindings --only=vendedores --since=2026-02-01 --limit=2000
+php artisan pdv:backfill-bindings --only=operadores --since=2026-02-01 --limit=500
+```
+
+Queries de verificacao (antes/depois):
+
+```sql
+-- Syncs sem store_id (invisiveis em reports por store_id)
+SELECT COUNT(*) AS syncs_sem_store
+FROM pdv_syncs
+WHERE store_id IS NULL;
+
+-- Vendas sem store_id
+SELECT COUNT(*) AS vendas_sem_store
+FROM pdv_vendas
+WHERE store_id IS NULL;
+
+-- Itens com vendedor_login mas sem vendedor_user_id (mapping nao aplicado)
+SELECT COUNT(*) AS itens_sem_vendedor_user
+FROM pdv_venda_itens
+WHERE vendedor_login IS NOT NULL
+  AND vendedor_login != ''
+  AND vendedor_user_id IS NULL;
+```

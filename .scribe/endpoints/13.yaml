@@ -43,22 +43,12 @@ endpoints:
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: '{"data":[{"id":2,"store_id":null,"effective_from":"2025-12-09T00:00:00.000000Z","config_json":[{"min_sales":400,"bonus":15},{"min_sales":700,"bonus":25},{"min_sales":1000,"bonus":40}],"version":1,"created_at":"2026-01-10T01:08:27.000000Z","updated_at":"2026-01-10T01:08:27.000000Z","store":null},{"id":1,"store_id":null,"effective_from":"2025-07-09T00:00:00.000000Z","config_json":[{"min_sales":500,"bonus":10},{"min_sales":800,"bonus":20},{"min_sales":1200,"bonus":35}],"version":1,"created_at":"2026-01-10T01:08:27.000000Z","updated_at":"2026-01-10T01:08:27.000000Z","store":null}],"meta":{"request_id":"9353980f-929e-4b24-b398-2d24e963b7e7","timestamp":"2026-02-13T14:00:14+00:00","pagination":{"total":2,"per_page":25,"current_page":1,"last_page":1,"from":1,"to":2}}}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-request-id: 9353980f-929e-4b24-b398-2d24e963b7e7
-          vary: Origin
-        description: null
+    responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -110,7 +100,7 @@ endpoints:
         name: effective_from
         description: 'Must be a valid date.'
         required: true
-        example: '2026-02-13T14:00:15'
+        example: '2026-02-13T14:36:31'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -152,7 +142,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      effective_from: '2026-02-13T14:00:15'
+      effective_from: '2026-02-13T14:36:31'
       config_json:
         -
           min_sales: 27
@@ -163,7 +153,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -213,22 +203,12 @@ endpoints:
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: '{"data":{"id":1,"store_id":null,"effective_from":"2025-07-09T00:00:00.000000Z","config_json":[{"min_sales":500,"bonus":10},{"min_sales":800,"bonus":20},{"min_sales":1200,"bonus":35}],"version":1,"created_at":"2026-01-10T01:08:27.000000Z","updated_at":"2026-01-10T01:08:27.000000Z","store":null},"meta":{"request_id":"a665fb95-c838-4c1f-9297-3681ffdd466b","timestamp":"2026-02-13T14:00:15+00:00"}}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-request-id: a665fb95-c838-4c1f-9297-3681ffdd466b
-          vary: Origin
-        description: null
+    responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -293,7 +273,7 @@ endpoints:
         name: effective_from
         description: 'Must be a valid date.'
         required: true
-        example: '2026-02-13T14:00:15'
+        example: '2026-02-13T14:36:31'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -335,7 +315,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      effective_from: '2026-02-13T14:00:15'
+      effective_from: '2026-02-13T14:36:31'
       config_json:
         -
           min_sales: 27
@@ -346,7 +326,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -401,7 +381,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null

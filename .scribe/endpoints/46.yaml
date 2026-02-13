@@ -51,22 +51,12 @@ endpoints:
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: '{"nodes":[{"id":"role-super_admin","type":"role","data":{"label":"Super Administrador","icon":"Shield","level":100,"is_system":true,"permissions_count":10,"users_count":0},"position":{"x":0,"y":0}},{"id":"role-admin","type":"role","data":{"label":"Administrador","icon":"Shield","level":90,"is_system":true,"permissions_count":108,"users_count":0},"position":{"x":0,"y":0}},{"id":"role-fabrica","type":"role","data":{"label":"F\u00e1brica","icon":"Shield","level":80,"is_system":true,"permissions_count":10,"users_count":1},"position":{"x":0,"y":0}},{"id":"role-gerente","type":"role","data":{"label":"Gerente","icon":"Shield","level":70,"is_system":true,"permissions_count":61,"users_count":0},"position":{"x":0,"y":0}},{"id":"role-conferente","type":"role","data":{"label":"Conferente","icon":"Shield","level":60,"is_system":true,"permissions_count":42,"users_count":0},"position":{"x":0,"y":0}},{"id":"role-estoquista","type":"role","data":{"label":"Estoquista","icon":"Shield","level":50,"is_system":true,"permissions_count":11,"users_count":0},"position":{"x":0,"y":0}},{"id":"role-vendedor","type":"role","data":{"label":"Vendedor","icon":"Shield","level":40,"is_system":true,"permissions_count":36,"users_count":0},"position":{"x":0,"y":0}},{"id":"module-pedidos-simples","type":"module","data":{"label":"Pedidos Simples","icon":"FileCheck","is_active":true,"status_count":6,"permission_count":11},"position":{"x":0,"y":0}},{"id":"module-capas-personalizadas","type":"module","data":{"label":"Capas Personalizadas","icon":"Palette","is_active":true,"status_count":10,"permission_count":16},"position":{"x":0,"y":0}},{"id":"module-fabrica","type":"module","data":{"label":"F\u00e1brica","icon":"Factory","is_active":true,"status_count":6,"permission_count":7},"position":{"x":0,"y":0}},{"id":"module-comunicados","type":"module","data":{"label":"Comunicados","icon":"FileText","is_active":true,"status_count":3,"permission_count":4},"position":{"x":0,"y":0}},{"id":"module-catalogo-aparelhos","type":"module","data":{"label":"Cat\u00e1logo de Aparelhos","icon":"Smartphone","is_active":true,"status_count":0,"permission_count":4},"position":{"x":0,"y":0}},{"id":"module-whatsapp-instances","type":"module","data":{"label":"WhatsApp Instances","icon":"MessageCircle","is_active":true,"status_count":0,"permission_count":8},"position":{"x":0,"y":0}},{"id":"module-conferencia-caixa","type":"module","data":{"label":"Confer\u00eancia de Caixa","icon":"Calculator","is_active":true,"status_count":4,"permission_count":5},"position":{"x":0,"y":0}},{"id":"module-comemoracoes","type":"module","data":{"label":"Comemora\u00e7\u00f5es","icon":"Cake","is_active":true,"status_count":0,"permission_count":1},"position":{"x":0,"y":0}},{"id":"module-wheel","type":"module","data":{"label":"Roleta nas TVs","icon":"Target","is_active":true,"status_count":4,"permission_count":10},"position":{"x":0,"y":0}},{"id":"store-1","type":"store","data":{"label":"Kompr\u00e3o Centro","icon":"Store","city":"Tijucas","users_count":1},"position":{"x":0,"y":0}},{"id":"store-2","type":"store","data":{"label":"Kompr\u00e3o Morretes","icon":"Store","city":"Itapema","users_count":1},"position":{"x":0,"y":0}},{"id":"store-3","type":"store","data":{"label":"PB Outlet","icon":"Store","city":"Porto Belo","users_count":2},"position":{"x":0,"y":0}},{"id":"store-4","type":"store","data":{"label":"iTuntz","icon":"Store","city":"Porto Belo","users_count":1},"position":{"x":0,"y":0}},{"id":"store-5","type":"store","data":{"label":"Kompr\u00e3o BR-101","icon":"Store","city":"Tijucas","users_count":1},"position":{"x":0,"y":0}},{"id":"store-6","type":"store","data":{"label":"Kompr\u00e3o - Gov Celso Ramos","icon":"Store","city":"Governador Celso Ramos","users_count":1},"position":{"x":0,"y":0}},{"id":"store-7","type":"store","data":{"label":"Kompr\u00e3o - Bombinhas","icon":"Store","city":"Bombinhas","users_count":1},"position":{"x":0,"y":0}},{"id":"store-8","type":"store","data":{"label":"Super Koch - Mata Atl\u00e2ntica","icon":"Store","city":"Tijucas","users_count":1},"position":{"x":0,"y":0}},{"id":"store-9","type":"store","data":{"label":"Kompr\u00e3o - Tabuleiro","icon":"Store","city":"Itapema","users_count":1},"position":{"x":0,"y":0}},{"id":"store-10","type":"store","data":{"label":"Super Koch - P4","icon":"Store","city":"Tijucas","users_count":2},"position":{"x":0,"y":0}},{"id":"store-11","type":"store","data":{"label":"Super Koch - Caled\u00f4nia","icon":"Store","city":"Cambori\u00fa","users_count":1},"position":{"x":0,"y":0}},{"id":"store-12","type":"store","data":{"label":"Kompr\u00e3o Porto Belo","icon":"Store","city":"Porto Belo","users_count":1},"position":{"x":0,"y":0}},{"id":"store-13","type":"store","data":{"label":"Estoque","icon":"Store","city":"Tijucas","users_count":1},"position":{"x":0,"y":0}},{"id":"store-14","type":"store","data":{"label":"Financeiro","icon":"Store","city":"Tijucas","users_count":1},"position":{"x":0,"y":0}}],"edges":[{"id":"e1","source":"role-super-admin","target":"role-admin","type":"hierarchy"},{"id":"e2","source":"role-admin","target":"role-fabrica","type":"hierarchy"},{"id":"e3","source":"role-admin","target":"role-gerente","type":"hierarchy"},{"id":"e4","source":"role-gerente","target":"role-conferente","type":"hierarchy"},{"id":"e5","source":"role-gerente","target":"role-vendedor","type":"hierarchy"},{"id":"e6","source":"role-admin","target":"module-pedidos-simples","type":"has_access"},{"id":"e7","source":"role-gerente","target":"module-pedidos-simples","type":"has_access"},{"id":"e8","source":"role-conferente","target":"module-pedidos-simples","type":"has_access"},{"id":"e9","source":"role-estoquista","target":"module-pedidos-simples","type":"has_access"},{"id":"e10","source":"role-vendedor","target":"module-pedidos-simples","type":"has_access"},{"id":"e11","source":"role-admin","target":"module-capas-personalizadas","type":"has_access"},{"id":"e12","source":"role-fabrica","target":"module-capas-personalizadas","type":"has_access"},{"id":"e13","source":"role-gerente","target":"module-capas-personalizadas","type":"has_access"},{"id":"e14","source":"role-conferente","target":"module-capas-personalizadas","type":"has_access"},{"id":"e15","source":"role-estoquista","target":"module-capas-personalizadas","type":"has_access"},{"id":"e16","source":"role-vendedor","target":"module-capas-personalizadas","type":"has_access"},{"id":"e17","source":"role-admin","target":"module-conferencia-caixa","type":"has_access"},{"id":"e18","source":"role-gerente","target":"module-conferencia-caixa","type":"has_access"},{"id":"e19","source":"role-conferente","target":"module-conferencia-caixa","type":"has_access"},{"id":"e20","source":"role-vendedor","target":"module-conferencia-caixa","type":"has_access"},{"id":"e21","source":"role-super_admin","target":"module-wheel","type":"has_access"}],"summary":{"total_nodes":30,"total_edges":21,"by_type":{"role":7,"module":9,"store":14},"depth":16},"metadata":{"generated_at":"2026-02-13T14:01:23+00:00","filters":{"depth":16,"include_users":false}}}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-request-id: 03d49189-1cf9-4e83-97af-06d0f9a3b7be
-          vary: Origin
-        description: null
+    responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -132,22 +122,12 @@ endpoints:
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 404
-        content: '{"message":"Role n\u00e3o encontrada."}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-request-id: 6e0e6ff1-fd02-4053-bbeb-69d273ab6ae1
-          vary: Origin
-        description: null
+    responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -201,22 +181,12 @@ endpoints:
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: '{"nodes":[{"id":"user-1","type":"user","data":{"label":"Admin Sistema s","icon":"User","email":"admin@maiscapinhas.com.br","is_super_admin":false,"roles":[],"stores_count":0},"position":{"x":0,"y":0}}],"edges":[],"root":"user-1","summary":{"total_nodes":1,"total_edges":0,"by_type":{"user":1},"roles":0,"stores":0,"overrides":0,"effective_permissions":0},"effective_permissions":[]}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-request-id: bf98d28a-8d04-47b4-9c3f-f0ba8509545c
-          vary: Origin
-        description: null
+    responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -270,22 +240,12 @@ endpoints:
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: '{"nodes":[{"id":"store-1","type":"store","data":{"label":"Kompr\u00e3o Centro","icon":"Store","city":"Tijucas","users_count":1,"modules_count":6},"position":{"x":0,"y":0}},{"id":"module-capas-personalizadas","type":"module","data":{"label":"Capas Personalizadas","icon":"Palette"},"position":{"x":0,"y":0}},{"id":"module-catalogo-aparelhos","type":"module","data":{"label":"Cat\u00e1logo de Aparelhos","icon":"Smartphone"},"position":{"x":0,"y":0}},{"id":"module-conferencia-caixa","type":"module","data":{"label":"Confer\u00eancia de Caixa","icon":"Calculator"},"position":{"x":0,"y":0}},{"id":"module-fabrica","type":"module","data":{"label":"F\u00e1brica","icon":"Factory"},"position":{"x":0,"y":0}},{"id":"module-pedidos-simples","type":"module","data":{"label":"Pedidos Simples","icon":"FileCheck"},"position":{"x":0,"y":0}},{"id":"module-wheel","type":"module","data":{"label":"Roleta nas TVs","icon":"Target"},"position":{"x":0,"y":0}}],"edges":[{"id":"e1","source":"store-1","target":"module-capas-personalizadas","type":"has_module"},{"id":"e2","source":"store-1","target":"module-catalogo-aparelhos","type":"has_module"},{"id":"e3","source":"store-1","target":"module-conferencia-caixa","type":"has_module"},{"id":"e4","source":"store-1","target":"module-fabrica","type":"has_module"},{"id":"e5","source":"store-1","target":"module-pedidos-simples","type":"has_module"},{"id":"e6","source":"store-1","target":"module-wheel","type":"has_module"}],"root":"store-1","summary":{"total_nodes":7,"total_edges":6,"by_type":{"store":1,"module":6},"users":1,"modules":6}}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-request-id: 2136c0a6-97f6-46a3-bc4d-76046dc90b08
-          vary: Origin
-        description: null
+    responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -314,35 +274,25 @@ endpoints:
         name: module
         description: 'The module.'
         required: true
-        example: capas-personalizadas
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      module: capas-personalizadas
+      module: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: '{"nodes":[{"id":"module-capas-personalizadas","type":"module","data":{"label":"Capas Personalizadas","icon":"Palette","is_active":true,"version":"1.0.0"},"position":{"x":0,"y":0}},{"id":"perm-capas.view","type":"permission","data":{"label":"Ver capas (pr\u00f3prias)","icon":"Key","type":"ability"},"position":{"x":0,"y":0}},{"id":"perm-capas.view-all","type":"permission","data":{"label":"Ver todas as capas da loja","icon":"Key","type":"ability"},"position":{"x":0,"y":0}},{"id":"perm-capas.view-global","type":"permission","data":{"label":"Ver capas de todas as lojas","icon":"Key","type":"ability"},"position":{"x":0,"y":0}},{"id":"perm-capas.create","type":"permission","data":{"label":"Criar capa","icon":"Key","type":"ability"},"position":{"x":0,"y":0}},{"id":"perm-capas.update","type":"permission","data":{"label":"Editar capa","icon":"Key","type":"ability"},"position":{"x":0,"y":0}},{"id":"perm-capas.cancel-before-cart","type":"permission","data":{"label":"Cancelar (antes do carrinho)","icon":"Key","type":"ability"},"position":{"x":0,"y":0}},{"id":"perm-capas.cancel-after-cart","type":"permission","data":{"label":"Cancelar (ap\u00f3s carrinho)","icon":"Key","type":"ability"},"position":{"x":0,"y":0}},{"id":"perm-capas.status.to-carrinho","type":"permission","data":{"label":"Adicionar ao carrinho","icon":"Key","type":"ability"},"position":{"x":0,"y":0}},{"id":"perm-capas.status.to-enviado","type":"permission","data":{"label":"Enviar \u00e0 f\u00e1brica","icon":"Key","type":"ability"},"position":{"x":0,"y":0}},{"id":"perm-capas.status.to-producao","type":"permission","data":{"label":"Aceitar na f\u00e1brica","icon":"Key","type":"ability"},"position":{"x":0,"y":0}},{"id":"perm-capas.status.to-despachado","type":"permission","data":{"label":"Despachar","icon":"Key","type":"ability"},"position":{"x":0,"y":0}},{"id":"perm-capas.status.to-disponivel","type":"permission","data":{"label":"Confirmar recebimento","icon":"Key","type":"ability"},"position":{"x":0,"y":0}},{"id":"perm-capas.status.to-aguardando","type":"permission","data":{"label":"Avisar cliente","icon":"Key","type":"ability"},"position":{"x":0,"y":0}},{"id":"perm-capas.status.to-concluida","type":"permission","data":{"label":"Finalizar venda","icon":"Key","type":"ability"},"position":{"x":0,"y":0}},{"id":"perm-capas.send-whatsapp","type":"permission","data":{"label":"Enviar notifica\u00e7\u00e3o WhatsApp","icon":"Key","type":"ability"},"position":{"x":0,"y":0}},{"id":"perm-capas.view-kanban","type":"permission","data":{"label":"Ver modo Kanban","icon":"Key","type":"ability"},"position":{"x":0,"y":0}},{"id":"screen-screen.capas","type":"screen","data":{"label":"Menu Capas","icon":"Monitor"},"position":{"x":0,"y":0}},{"id":"screen-screen.capas.list","type":"screen","data":{"label":"Lista de Capas","icon":"Monitor"},"position":{"x":0,"y":0}},{"id":"screen-screen.capas.create","type":"screen","data":{"label":"Nova Capa","icon":"Monitor"},"position":{"x":0,"y":0}},{"id":"screen-screen.capas.detail","type":"screen","data":{"label":"Detalhe da Capa","icon":"Monitor"},"position":{"x":0,"y":0}},{"id":"screen-screen.capas.edit","type":"screen","data":{"label":"Editar Capa","icon":"Monitor"},"position":{"x":0,"y":0}},{"id":"screen-screen.capas.production","type":"screen","data":{"label":"Enviar Produ\u00e7\u00e3o","icon":"Monitor"},"position":{"x":0,"y":0}},{"id":"screen-screen.capas.kanban","type":"screen","data":{"label":"Kanban","icon":"Monitor"},"position":{"x":0,"y":0}},{"id":"role-fabrica","type":"role","data":{"label":"F\u00e1brica","icon":"Shield","permissions_in_module":1,"total_permissions":16},"position":{"x":0,"y":0}},{"id":"role-admin","type":"role","data":{"label":"Administrador","icon":"Shield","permissions_in_module":4,"total_permissions":16},"position":{"x":0,"y":0}},{"id":"role-gerente","type":"role","data":{"label":"Gerente","icon":"Shield","permissions_in_module":4,"total_permissions":16},"position":{"x":0,"y":0}},{"id":"role-conferente","type":"role","data":{"label":"Conferente","icon":"Shield","permissions_in_module":4,"total_permissions":16},"position":{"x":0,"y":0}},{"id":"role-estoquista","type":"role","data":{"label":"Estoquista","icon":"Shield","permissions_in_module":1,"total_permissions":16},"position":{"x":0,"y":0}},{"id":"role-vendedor","type":"role","data":{"label":"Vendedor","icon":"Shield","permissions_in_module":3,"total_permissions":16},"position":{"x":0,"y":0}}],"edges":[{"id":"e1","source":"module-capas-personalizadas","target":"perm-capas.view","type":"contains"},{"id":"e2","source":"module-capas-personalizadas","target":"perm-capas.view-all","type":"contains"},{"id":"e3","source":"module-capas-personalizadas","target":"perm-capas.view-global","type":"contains"},{"id":"e4","source":"module-capas-personalizadas","target":"perm-capas.create","type":"contains"},{"id":"e5","source":"module-capas-personalizadas","target":"perm-capas.update","type":"contains"},{"id":"e6","source":"module-capas-personalizadas","target":"perm-capas.cancel-before-cart","type":"contains"},{"id":"e7","source":"module-capas-personalizadas","target":"perm-capas.cancel-after-cart","type":"contains"},{"id":"e8","source":"module-capas-personalizadas","target":"perm-capas.status.to-carrinho","type":"contains"},{"id":"e9","source":"module-capas-personalizadas","target":"perm-capas.status.to-enviado","type":"contains"},{"id":"e10","source":"module-capas-personalizadas","target":"perm-capas.status.to-producao","type":"contains"},{"id":"e11","source":"module-capas-personalizadas","target":"perm-capas.status.to-despachado","type":"contains"},{"id":"e12","source":"module-capas-personalizadas","target":"perm-capas.status.to-disponivel","type":"contains"},{"id":"e13","source":"module-capas-personalizadas","target":"perm-capas.status.to-aguardando","type":"contains"},{"id":"e14","source":"module-capas-personalizadas","target":"perm-capas.status.to-concluida","type":"contains"},{"id":"e15","source":"module-capas-personalizadas","target":"perm-capas.send-whatsapp","type":"contains"},{"id":"e16","source":"module-capas-personalizadas","target":"perm-capas.view-kanban","type":"contains"},{"id":"e17","source":"module-capas-personalizadas","target":"screen-screen.capas","type":"contains"},{"id":"e18","source":"module-capas-personalizadas","target":"screen-screen.capas.list","type":"contains"},{"id":"e19","source":"module-capas-personalizadas","target":"screen-screen.capas.create","type":"contains"},{"id":"e20","source":"module-capas-personalizadas","target":"screen-screen.capas.detail","type":"contains"},{"id":"e21","source":"module-capas-personalizadas","target":"screen-screen.capas.edit","type":"contains"},{"id":"e22","source":"module-capas-personalizadas","target":"screen-screen.capas.production","type":"contains"},{"id":"e23","source":"module-capas-personalizadas","target":"screen-screen.capas.kanban","type":"contains"},{"id":"e24","source":"role-fabrica","target":"module-capas-personalizadas","type":"has_access","label":"1\/16"},{"id":"e25","source":"role-admin","target":"module-capas-personalizadas","type":"has_access","label":"4\/16"},{"id":"e26","source":"role-gerente","target":"module-capas-personalizadas","type":"has_access","label":"4\/16"},{"id":"e27","source":"role-conferente","target":"module-capas-personalizadas","type":"has_access","label":"4\/16"},{"id":"e28","source":"role-estoquista","target":"module-capas-personalizadas","type":"has_access","label":"1\/16"},{"id":"e29","source":"role-vendedor","target":"module-capas-personalizadas","type":"has_access","label":"3\/16"}],"root":"module-capas-personalizadas","summary":{"total_nodes":30,"total_edges":29,"by_type":{"module":1,"permission":16,"screen":7,"role":6},"permissions":16,"screens":7}}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-request-id: 3d896e99-eb1a-4f87-a351-56d140f9e02f
-          vary: Origin
-        description: null
+    responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null

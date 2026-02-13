@@ -217,7 +217,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -330,7 +330,7 @@ endpoints:
         name: status
         description: ''
         required: false
-        example: '5'
+        example: '3'
         type: integer
         enumValues:
           - '1'
@@ -370,7 +370,7 @@ endpoints:
       customer_device_id: 1
       selected_product: 'Capa Personalizada'
       obs: g
-      status: '5'
+      status: '3'
       observation: 'Cliente pediu urgência'
       value: 49.9
     fileParameters: []
@@ -401,7 +401,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -494,7 +494,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -649,7 +649,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -728,7 +728,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -871,7 +871,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -977,7 +977,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null

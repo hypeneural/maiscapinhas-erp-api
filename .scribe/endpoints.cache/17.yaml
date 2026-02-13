@@ -49,7 +49,7 @@ endpoints:
         name: date
         description: 'Must be a valid date.'
         required: true
-        example: '2026-02-13T14:00:17'
+        example: '2026-02-13T14:36:31'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -57,24 +57,14 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      date: '2026-02-13T14:00:17'
+      date: '2026-02-13T14:36:31'
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 422
-        content: '{"message":"The selected store id is invalid.","errors":{"store_id":["The selected store id is invalid."]}}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-request-id: f7e91f08-d87c-466b-ac31-914f45129887
-          vary: Origin
-        description: null
+    responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -121,7 +111,7 @@ endpoints:
         name: date
         description: 'Must be a valid date.'
         required: true
-        example: '2026-02-13T14:00:17'
+        example: '2026-02-13T14:36:31'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -132,7 +122,7 @@ endpoints:
         name: shift_code
         description: ''
         required: true
-        example: '1'
+        example: T
         type: string
         enumValues:
           - '1'
@@ -190,8 +180,8 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      date: '2026-02-13T14:00:17'
-      shift_code: '1'
+      date: '2026-02-13T14:36:31'
+      shift_code: T
       in_count: 39
       out_count: 84
       staff_in: 12
@@ -202,7 +192,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null

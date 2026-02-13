@@ -250,7 +250,14 @@ return [
         'responses' => configureStrategy(
             Defaults::RESPONSES_STRATEGIES,
             Strategies\Responses\ResponseCalls::withSettings(
-                only: ['GET *'],
+                // Avoid leaking production data in generated examples.
+                // Keep response calls restricted to PDV endpoints (safe operational data) and public health/version.
+                only: [
+                    'GET api/v1/health',
+                    'GET api/v1/version',
+                    'GET api/v1/pdv/reports/*',
+                    'GET api/v1/admin/pdv/*',
+                ],
                 config: [
                     'app.debug' => false,
                 ]

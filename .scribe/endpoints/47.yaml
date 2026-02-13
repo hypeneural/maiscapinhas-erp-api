@@ -31,22 +31,12 @@ endpoints:
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: '{"success":true,"data":[{"id":3,"screen_key":"screen_ijSQu8Bb","name":"TV Kompr\u00e3o Centro","status":"active","status_label":"Ativa","status_color":"green","store":{"id":1,"name":"Kompr\u00e3o Centro","city":"Tijucas"},"store_id":1,"device_info":"{\"volume\":80,\"brightness\":100,\"location\":\"Entrada principal\"}","is_online":false,"last_seen_at":null,"last_seen_ago":null,"active_campaign":{"id":4,"campaign_key":"camp_verao2026","name":"Campanha Ver\u00e3o 2026","status":"active"},"created_at":"2026-01-19T17:25:42.000000Z","updated_at":"2026-01-19T17:25:42.000000Z"},{"id":6,"screen_key":"screen_ebdkLZ43","name":"TV Kompr\u00e3o Centro","status":"active","status_label":"Ativa","status_color":"green","store":{"id":1,"name":"Kompr\u00e3o Centro","city":"Tijucas"},"store_id":1,"device_info":"{\"volume\":80,\"brightness\":100,\"location\":\"Entrada principal\"}","is_online":false,"last_seen_at":null,"last_seen_ago":null,"active_campaign":null,"created_at":"2026-01-19T17:27:01.000000Z","updated_at":"2026-01-19T17:27:01.000000Z"},{"id":4,"screen_key":"screen_0b7AzX4q","name":"TV Kompr\u00e3o Morretes","status":"active","status_label":"Ativa","status_color":"green","store":{"id":2,"name":"Kompr\u00e3o Morretes","city":"Itapema"},"store_id":2,"device_info":"{\"volume\":80,\"brightness\":100,\"location\":\"Entrada principal\"}","is_online":false,"last_seen_at":null,"last_seen_ago":null,"active_campaign":{"id":4,"campaign_key":"camp_verao2026","name":"Campanha Ver\u00e3o 2026","status":"active"},"created_at":"2026-01-19T17:25:42.000000Z","updated_at":"2026-01-19T17:25:42.000000Z"},{"id":7,"screen_key":"screen_pcHHVMtM","name":"TV Kompr\u00e3o Morretes","status":"active","status_label":"Ativa","status_color":"green","store":{"id":2,"name":"Kompr\u00e3o Morretes","city":"Itapema"},"store_id":2,"device_info":"{\"volume\":80,\"brightness\":100,\"location\":\"Entrada principal\"}","is_online":false,"last_seen_at":null,"last_seen_ago":null,"active_campaign":null,"created_at":"2026-01-19T17:27:01.000000Z","updated_at":"2026-01-19T17:27:01.000000Z"},{"id":5,"screen_key":"screen_gsUbeVQi","name":"TV PB Outlet","status":"active","status_label":"Ativa","status_color":"green","store":{"id":3,"name":"PB Outlet","city":"Porto Belo"},"store_id":3,"device_info":"{\"volume\":80,\"brightness\":100,\"location\":\"Entrada principal\"}","is_online":false,"last_seen_at":null,"last_seen_ago":null,"active_campaign":{"id":4,"campaign_key":"camp_verao2026","name":"Campanha Ver\u00e3o 2026","status":"active"},"created_at":"2026-01-19T17:25:42.000000Z","updated_at":"2026-01-19T17:25:42.000000Z"},{"id":8,"screen_key":"screen_MzeGqcRf","name":"TV PB Outlet","status":"active","status_label":"Ativa","status_color":"green","store":{"id":3,"name":"PB Outlet","city":"Porto Belo"},"store_id":3,"device_info":"{\"volume\":80,\"brightness\":100,\"location\":\"Entrada principal\"}","is_online":false,"last_seen_at":null,"last_seen_ago":null,"active_campaign":null,"created_at":"2026-01-19T17:27:01.000000Z","updated_at":"2026-01-19T17:27:01.000000Z"}],"meta":{"total":6,"per_page":15,"current_page":1}}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-request-id: 332dfcbe-752c-405b-8a0e-20294e763065
-          vary: Origin
-        description: null
+    responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -145,7 +135,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -189,25 +179,12 @@ endpoints:
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 404
-        content: |-
-          {
-              "message": "No query results for model [App\\Models\\WheelScreen]."
-          }
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-request-id: 3dd54494-cb9a-44f2-ae7e-81a904401b22
-          vary: Origin
-        description: null
+    responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -277,7 +254,7 @@ endpoints:
         name: status
         description: ''
         required: false
-        example: inactive
+        example: maintenance
         type: string
         enumValues:
           - active
@@ -299,14 +276,14 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       name: b
-      status: inactive
+      status: maintenance
     fileParameters: []
     responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -355,7 +332,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -406,7 +383,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -466,7 +443,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -510,25 +487,12 @@ endpoints:
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 404
-        content: |-
-          {
-              "message": "No query results for model [App\\Models\\WheelScreen]."
-          }
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-request-id: d148889b-a3de-47c9-b4d5-5211e30fde37
-          vary: Origin
-        description: null
+    responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -572,25 +536,12 @@ endpoints:
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 404
-        content: |-
-          {
-              "message": "No query results for model [App\\Models\\WheelScreen]."
-          }
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-request-id: 1e68900e-f51e-4880-ba99-b06643e42c35
-          vary: Origin
-        description: null
+    responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -679,7 +630,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -740,7 +691,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null

@@ -49,7 +49,7 @@ endpoints:
         name: from
         description: 'Must be a valid date.'
         required: false
-        example: '2026-02-13T14:00:16'
+        example: '2026-02-13T14:36:31'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -60,7 +60,7 @@ endpoints:
         name: to
         description: 'Must be a valid date.'
         required: false
-        example: '2026-02-13T14:00:16'
+        example: '2026-02-13T14:36:31'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -79,26 +79,16 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      from: '2026-02-13T14:00:16'
-      to: '2026-02-13T14:00:16'
+      from: '2026-02-13T14:36:31'
+      to: '2026-02-13T14:36:31'
       per_page: 22
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 422
-        content: '{"message":"The selected store id is invalid.","errors":{"store_id":["The selected store id is invalid."]}}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-request-id: b6e03120-3bf3-4b93-a054-7361a041e32c
-          vary: Origin
-        description: null
+    responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -198,7 +188,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -285,7 +275,7 @@ endpoints:
         name: from
         description: 'Must be a valid date.'
         required: false
-        example: '2026-02-13T14:00:17'
+        example: '2026-02-13T14:36:31'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -296,15 +286,15 @@ endpoints:
         name: to
         description: 'Must be a valid date.'
         required: false
-        example: '2026-02-13T14:00:17'
+        example: '2026-02-13T14:36:31'
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      from: '2026-02-13T14:00:17'
-      to: '2026-02-13T14:00:17'
+      from: '2026-02-13T14:36:31'
+      to: '2026-02-13T14:36:31'
     fileParameters: []
     responses:
       -
@@ -327,7 +317,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -396,22 +386,12 @@ endpoints:
       month: 6425-59
       per_page: 19
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 422
-        content: '{"message":"The selected store id is invalid.","errors":{"store_id":["The selected store id is invalid."]}}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-request-id: bbc8c030-83da-4df8-b199-a39dd8da45c4
-          vary: Origin
-        description: null
+    responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -492,22 +472,12 @@ endpoints:
     cleanBodyParameters:
       month: 6425-59
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 403
-        content: '{"message":"Voc\u00ea n\u00e3o tem permiss\u00e3o para ver esses dados."}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-request-id: 520ac261-b443-48ba-957c-8d1487349f2b
-          vary: Origin
-        description: null
+    responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -611,7 +581,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null

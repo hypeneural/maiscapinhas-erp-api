@@ -49,6 +49,7 @@ beforeEach(function () {
     Schema::create('pdv_syncs', function (Blueprint $table) {
         $table->id();
         $table->unsignedBigInteger('store_pdv_id');
+        $table->unsignedBigInteger('store_id')->nullable();
         $table->string('store_alias', 100)->nullable();
         $table->string('status', 20)->default('queued');
         $table->json('risk_flags')->nullable();
@@ -143,11 +144,13 @@ function seedSync(
     string $status,
     \Carbon\CarbonInterface $receivedAt,
     ?string $storeAlias = null,
+    ?int $storeId = null,
     array $riskFlags = []
 ): void
 {
     DB::table('pdv_syncs')->insert([
         'store_pdv_id' => $pdvStoreId,
+        'store_id' => $storeId,
         'store_alias' => $storeAlias,
         'status' => $status,
         'risk_flags' => json_encode($riskFlags, JSON_UNESCAPED_UNICODE),
@@ -158,11 +161,11 @@ function seedSync(
 }
 
 test('monitor reports stale store metric and raises stale_stores_high issue', function () {
-    seedMappedStore(10, 'loja-10', 'Loja 10');
-    seedMappedStore(11, 'loja-11', 'Loja 11');
+    $storeId10 = seedMappedStore(10, 'loja-10', 'Loja 10');
+    $storeId11 = seedMappedStore(11, 'loja-11', 'Loja 11');
 
-    seedSync(10, 'processed', now()->subMinutes(5), 'loja-10');
-    seedSync(11, 'processed', now()->subHours(3), 'loja-11');
+    seedSync(10, 'processed', now()->subMinutes(5), 'loja-10', $storeId10);
+    seedSync(11, 'processed', now()->subHours(3), 'loja-11', $storeId11);
 
     $result = runOpsMonitor();
 
@@ -177,8 +180,8 @@ test('monitor reports stale store metric and raises stale_stores_high issue', fu
 });
 
 test('alert payload includes stale store details in webhook notification', function () {
-    seedMappedStore(11, 'loja-11', 'Loja 11');
-    seedSync(11, 'processed', now()->subHours(4), 'loja-11');
+    $storeId11 = seedMappedStore(11, 'loja-11', 'Loja 11');
+    seedSync(11, 'processed', now()->subHours(4), 'loja-11', $storeId11);
 
     config()->set('pdv.monitor_alert_webhook_url', 'https://hooks.test/pdv-monitor');
     Http::fake([
@@ -204,8 +207,8 @@ test('alert payload includes stale store details in webhook notification', funct
 });
 
 test('monitor stays healthy when thresholds are respected', function () {
-    seedMappedStore(10, 'loja-10', 'Loja 10');
-    seedSync(10, 'processed', now()->subMinutes(10), 'loja-10');
+    $storeId10 = seedMappedStore(10, 'loja-10', 'Loja 10');
+    seedSync(10, 'processed', now()->subMinutes(10), 'loja-10', $storeId10);
 
     $result = runOpsMonitor();
 
@@ -216,11 +219,11 @@ test('monitor stays healthy when thresholds are respected', function () {
 });
 
 test('monitor stale detection is alias-aware when pdv_store_id collides', function () {
-    seedMappedStore(9, 'Loja 8 - MC Mata Atlântica', 'Mata Atlantica');
-    seedMappedStore(9, 'Loja 10 - MC P4', 'P4');
+    $mataStoreId = seedMappedStore(9, 'Loja 8 - MC Mata Atlântica', 'Mata Atlantica');
+    $p4StoreId = seedMappedStore(9, 'Loja 10 - MC P4', 'P4');
 
-    seedSync(9, 'processed', now()->subMinutes(5), 'Loja 8 - MC Mata Atlântica');
-    seedSync(9, 'processed', now()->subHours(4), 'Loja 10 - MC P4');
+    seedSync(9, 'processed', now()->subMinutes(5), 'Loja 8 - MC Mata Atlântica', $mataStoreId);
+    seedSync(9, 'processed', now()->subHours(4), 'Loja 10 - MC P4', $p4StoreId);
 
     $result = runOpsMonitor();
 
@@ -233,11 +236,12 @@ test('monitor raises gestao_db_failure_high when risk flag spikes in last 30 min
     config()->set('pdv.monitor_max_stale_stores', 10);
     config()->set('pdv.monitor_max_gestao_db_failures_30m', 0);
 
-    seedMappedStore(10, 'loja-10', 'Loja 10');
-    seedSync(10, 'processed', now()->subMinutes(5), 'loja-10');
+    $storeId10 = seedMappedStore(10, 'loja-10', 'Loja 10');
+    seedSync(10, 'processed', now()->subMinutes(5), 'loja-10', $storeId10);
 
     DB::table('pdv_syncs')->insert([
         'store_pdv_id' => 10,
+        'store_id' => $storeId10,
         'status' => 'processed',
         'risk_flags' => json_encode(['gestao_db_failure'], JSON_UNESCAPED_UNICODE),
         'received_at' => now()->subMinutes(3)->toDateTimeString(),
@@ -257,13 +261,13 @@ test('monitor raises gestao_db_failure_high when risk flag spikes in last 30 min
 test('monitor publishes identity resolution rates and fallback counters', function () {
     config()->set('pdv.monitor_max_stale_stores', 10);
 
-    seedMappedStore(10, 'loja-10', 'Loja 10');
-    seedSync(10, 'processed', now()->subMinutes(5), 'loja-10', []);
-    seedSync(10, 'processed', now()->subMinutes(4), 'loja-10', [
+    $storeId10 = seedMappedStore(10, 'loja-10', 'Loja 10');
+    seedSync(10, 'processed', now()->subMinutes(5), 'loja-10', $storeId10, []);
+    seedSync(10, 'processed', now()->subMinutes(4), 'loja-10', $storeId10, [
         'store_mapping_by_id_fallback',
         'user_mapping_by_id_fallback',
     ]);
-    seedSync(10, 'processed', now()->subMinutes(3), 'loja-10', [
+    seedSync(10, 'processed', now()->subMinutes(3), 'loja-10', $storeId10, [
         'store_mapping_missing',
         'user_mapping_missing',
         'user_login_missing',

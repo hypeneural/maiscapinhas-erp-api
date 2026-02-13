@@ -31,22 +31,12 @@ endpoints:
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: '{"success":true,"data":[{"id":4,"campaign_key":"camp_verao2026","name":"Campanha Ver\u00e3o 2026","status":"active","status_label":"Ativa","status_color":"green","status_icon":"Play","can_activate":false,"can_pause":true,"can_end":true,"starts_at":"2026-01-19T17:34:03.000000Z","ends_at":"2026-03-19T17:34:03.000000Z","is_within_period":true,"terms_version":"1.0","settings":{"qr_ttl_seconds":120,"spin_duration_ms":8000,"min_rotations":5,"max_rotations":8,"max_queue_size":10,"per_phone_limit":"1_per_day"},"screens_count":3,"active_segments_count":8,"created_at":"2026-01-19T17:34:03.000000Z","updated_at":"2026-01-19T17:34:03.000000Z"},{"id":3,"campaign_key":"camp_2026_01_GYMG","name":"teste (C\u00f3pia)","status":"ended","status_label":"Encerrada","status_color":"red","status_icon":"Square","can_activate":false,"can_pause":false,"can_end":false,"starts_at":null,"ends_at":null,"is_within_period":true,"terms_version":null,"settings":{"qr_ttl_seconds":120,"spin_duration_ms":8000,"min_rotations":5,"max_rotations":8,"max_queue_size":10,"per_phone_limit":"1_per_campaign"},"screens_count":0,"active_segments_count":3,"created_at":"2026-01-19T06:35:38.000000Z","updated_at":"2026-01-19T17:13:13.000000Z"},{"id":1,"campaign_key":"camp_2026_01_zYYJ","name":"teste","status":"ended","status_label":"Encerrada","status_color":"red","status_icon":"Square","can_activate":false,"can_pause":false,"can_end":false,"starts_at":null,"ends_at":null,"is_within_period":true,"terms_version":null,"settings":{"qr_ttl_seconds":120,"spin_duration_ms":8000,"min_rotations":5,"max_rotations":8,"max_queue_size":10,"per_phone_limit":"1_per_campaign"},"screens_count":0,"active_segments_count":3,"created_at":"2026-01-19T05:59:31.000000Z","updated_at":"2026-01-19T06:41:20.000000Z"}],"meta":{"total":3,"per_page":15,"current_page":1}}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-request-id: 154c1dbd-6ab4-41b7-bfed-71441b01d797
-          vary: Origin
-        description: null
+    responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -115,256 +105,7 @@ endpoints:
         name: starts_at
         description: 'Must be a valid date.'
         required: false
-        example: '2026-02-13T14:01:28'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      ends_at:
-        custom: []
-        name: ends_at
-        description: 'Must be a valid date. Must be a date after <code>starts_at</code>.'
-        required: false
-        example: '2052-03-08'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      terms_version:
-        custom: []
-        name: terms_version
-        description: 'Must not be greater than 20 characters.'
-        required: false
-        example: ngzmiyvdljnikhwa
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      settings:
-        custom: []
-        name: settings
-        description: ''
-        required: false
-        example: null
-        type: object
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      settings.qr_ttl_seconds:
-        custom: []
-        name: settings.qr_ttl_seconds
-        description: 'Must be at least 30. Must not be greater than 600.'
-        required: false
-        example: 24
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      settings.spin_duration_ms:
-        custom: []
-        name: settings.spin_duration_ms
-        description: 'Must be at least 3000. Must not be greater than 15000.'
-        required: false
-        example: 18
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      settings.min_rotations:
-        custom: []
-        name: settings.min_rotations
-        description: 'Must be at least 3. Must not be greater than 10.'
-        required: false
-        example: 3
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      settings.max_rotations:
-        custom: []
-        name: settings.max_rotations
-        description: 'Must be at least 5. Must not be greater than 15.'
-        required: false
-        example: 4
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      settings.max_queue_size:
-        custom: []
-        name: settings.max_queue_size
-        description: 'Must be at least 1. Must not be greater than 50.'
-        required: false
-        example: 8
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      settings.per_phone_limit:
-        custom: []
-        name: settings.per_phone_limit
-        description: ''
-        required: false
-        example: 1_per_day
-        type: string
-        enumValues:
-          - 1_per_campaign
-          - 1_per_day
-          - unlimited
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-    cleanBodyParameters:
-      campaign_key: b
-      name: 'n'
-      status: draft
-      starts_at: '2026-02-13T14:01:28'
-      ends_at: '2052-03-08'
-      terms_version: ngzmiyvdljnikhwa
-      settings:
-        qr_ttl_seconds: 24
-        spin_duration_ms: 18
-        min_rotations: 3
-        max_rotations: 4
-        max_queue_size: 8
-        per_phone_limit: 1_per_day
-    fileParameters: []
-    responses: []
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}'
-    metadata:
-      custom: []
-      groupName: 'Wheel - Campaigns'
-      groupDescription: |-
-
-        API para gerenciamento de Campanhas do módulo Roleta.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Exibir campanha.'
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      campaign_key:
-        custom: []
-        name: campaign_key
-        description: ''
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      campaign_key: architecto
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 404
-        content: |-
-          {
-              "message": "No query results for model [App\\Models\\WheelCampaign]."
-          }
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-request-id: 555af3e6-d721-4e7d-966e-a0aebcf05ea8
-          vary: Origin
-        description: null
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - PUT
-      - PATCH
-    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}'
-    metadata:
-      custom: []
-      groupName: 'Wheel - Campaigns'
-      groupDescription: |-
-
-        API para gerenciamento de Campanhas do módulo Roleta.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Atualizar campanha.'
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      campaign_key:
-        custom: []
-        name: campaign_key
-        description: ''
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      campaign_key: architecto
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      name:
-        custom: []
-        name: name
-        description: 'Must not be greater than 150 characters.'
-        required: false
-        example: b
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      starts_at:
-        custom: []
-        name: starts_at
-        description: 'Must be a valid date.'
-        required: false
-        example: '2026-02-13T14:01:28'
+        example: '2026-02-13T14:36:39'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -473,8 +214,10 @@ endpoints:
         nullable: true
         deprecated: false
     cleanBodyParameters:
-      name: b
-      starts_at: '2026-02-13T14:01:28'
+      campaign_key: b
+      name: 'n'
+      status: draft
+      starts_at: '2026-02-13T14:36:39'
       ends_at: '2052-03-08'
       terms_version: ngzmiyvdljnikhwa
       settings:
@@ -490,7 +233,241 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}'
+    metadata:
+      custom: []
+      groupName: 'Wheel - Campaigns'
+      groupDescription: |-
+
+        API para gerenciamento de Campanhas do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Exibir campanha.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      campaign_key:
+        custom: []
+        name: campaign_key
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      campaign_key: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+      - PATCH
+    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}'
+    metadata:
+      custom: []
+      groupName: 'Wheel - Campaigns'
+      groupDescription: |-
+
+        API para gerenciamento de Campanhas do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Atualizar campanha.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      campaign_key:
+        custom: []
+        name: campaign_key
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      campaign_key: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      name:
+        custom: []
+        name: name
+        description: 'Must not be greater than 150 characters.'
+        required: false
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      starts_at:
+        custom: []
+        name: starts_at
+        description: 'Must be a valid date.'
+        required: false
+        example: '2026-02-13T14:36:39'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      ends_at:
+        custom: []
+        name: ends_at
+        description: 'Must be a valid date. Must be a date after <code>starts_at</code>.'
+        required: false
+        example: '2052-03-08'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      terms_version:
+        custom: []
+        name: terms_version
+        description: 'Must not be greater than 20 characters.'
+        required: false
+        example: ngzmiyvdljnikhwa
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      settings:
+        custom: []
+        name: settings
+        description: ''
+        required: false
+        example: null
+        type: object
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      settings.qr_ttl_seconds:
+        custom: []
+        name: settings.qr_ttl_seconds
+        description: 'Must be at least 30. Must not be greater than 600.'
+        required: false
+        example: 24
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      settings.spin_duration_ms:
+        custom: []
+        name: settings.spin_duration_ms
+        description: 'Must be at least 3000. Must not be greater than 15000.'
+        required: false
+        example: 18
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      settings.min_rotations:
+        custom: []
+        name: settings.min_rotations
+        description: 'Must be at least 3. Must not be greater than 10.'
+        required: false
+        example: 3
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      settings.max_rotations:
+        custom: []
+        name: settings.max_rotations
+        description: 'Must be at least 5. Must not be greater than 15.'
+        required: false
+        example: 4
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      settings.max_queue_size:
+        custom: []
+        name: settings.max_queue_size
+        description: 'Must be at least 1. Must not be greater than 50.'
+        required: false
+        example: 8
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      settings.per_phone_limit:
+        custom: []
+        name: settings.per_phone_limit
+        description: ''
+        required: false
+        example: 1_per_day
+        type: string
+        enumValues:
+          - 1_per_campaign
+          - 1_per_day
+          - unlimited
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      name: b
+      starts_at: '2026-02-13T14:36:39'
+      ends_at: '2052-03-08'
+      terms_version: ngzmiyvdljnikhwa
+      settings:
+        qr_ttl_seconds: 24
+        spin_duration_ms: 18
+        min_rotations: 3
+        max_rotations: 4
+        max_queue_size: 8
+        per_phone_limit: 1_per_day
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -539,7 +516,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -588,7 +565,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -637,7 +614,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -686,7 +663,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -747,7 +724,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -791,25 +768,12 @@ endpoints:
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 404
-        content: |-
-          {
-              "message": "No query results for model [App\\Models\\WheelCampaign]."
-          }
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-request-id: 8bfa0577-f8c5-4774-9fa3-4aa78a1572b1
-          vary: Origin
-        description: null
+    responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null

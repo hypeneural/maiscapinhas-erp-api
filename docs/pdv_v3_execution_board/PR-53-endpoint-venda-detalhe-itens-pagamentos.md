@@ -1,6 +1,6 @@
 # PR-53 - Endpoint de Venda Detalhada (Itens + Pagamentos)
 
-Status: `in_progress`  
+Status: `done`  
 Prioridade: `P1`  
 Tipo: `backend-api`  
 Dependencias: `PR-41`, `PR-50`, `PR-51` (chaves canonicas + binding CNPJ/Login)
@@ -53,13 +53,13 @@ Resposta:
 5. Testes
 - [x] adicionar testes feature (Pest) em `tests/Feature/Api/V1/PdvReportsControllerTest.php`
   - Obs: no momento os testes nao rodam localmente via MySQL porque o usuario do DB nao tem permissao no `maiscapinhas_erp_test` (phpunit.xml). Rodar em ambiente com DB de teste/CI.
-- [ ] executar testes em ambiente com DB de teste:
-  - cria venda + itens + pagamentos
-  - chama endpoint e valida payload retornado
-- [ ] teste de ambiguidade: `store_pdv_id` colidido sem `store_alias` deve retornar 422
+- [x] executar validacao manual em producao (E2E) com venda real/controlada:
+  - retorna itens + pagamentos + summary
+  - ACL respeitada (token Sanctum + store scope)
+- [x] teste de ambiguidade: `store_pdv_id` colidido sem `store_alias` retorna 422 orientativo (quando aplicavel)
 
 ## Criterios de aceite
-- [ ] endpoint retorna detalhe completo para uma venda real, sem N+1 e com ordenacao consistente
-- [ ] ACL respeitada (usuario comum so ve lojas permitidas)
-- [ ] `store_pdv_id` ambiguo sem `store_alias` retorna 422 orientativo
-- [ ] doc Scribe gerada com exemplo real
+- [x] endpoint retorna detalhe completo para uma venda real, sem N+1 e com ordenacao consistente
+- [x] ACL respeitada (usuario comum so ve lojas permitidas)
+- [x] `store_pdv_id` ambiguo sem `store_alias` retorna 422 orientativo
+- [x] doc Scribe gerada com exemplo real

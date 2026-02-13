@@ -27,22 +27,12 @@ endpoints:
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: '{"data":[{"id":"pedidos-simples","slug":"pedidos-simples","name":"Pedidos Simples","description":"Gerenciamento de pedidos de encomenda de produtos.","version":"1.0.0","icon":"FileCheck","dependencies":["customers","payment-methods"],"is_installed":true,"is_active":true,"is_core":true,"status":"active","stores_count":9,"status_count":6,"permission_count":16,"automation_count":3},{"id":"capas-personalizadas","slug":"capas-personalizadas","name":"Capas Personalizadas","description":"Capas com foto do cliente, integrado ao fluxo de produ\u00e7\u00e3o e f\u00e1brica.","version":"1.0.0","icon":"Palette","dependencies":["customers","payment-methods","producao"],"is_installed":true,"is_active":true,"is_core":true,"status":"active","stores_count":8,"status_count":10,"permission_count":23,"automation_count":2},{"id":"fabrica","slug":"fabrica","name":"F\u00e1brica","description":"Portal da f\u00e1brica para gest\u00e3o de pedidos de produ\u00e7\u00e3o de capas personalizadas.","version":"1.0.0","icon":"Factory","dependencies":["capas-personalizadas"],"is_installed":true,"is_active":true,"is_core":true,"status":"active","stores_count":3,"status_count":6,"permission_count":10,"automation_count":0},{"id":"comunicados","slug":"comunicados","name":"Comunicados","description":"Gerenciamento de comunicados.","version":"1.0.0","icon":"FileText","dependencies":[],"is_installed":true,"is_active":true,"is_core":true,"status":"active","stores_count":2,"status_count":3,"permission_count":7,"automation_count":0},{"id":"catalogo-aparelhos","slug":"catalogo-aparelhos","name":"Cat\u00e1logo de Aparelhos","description":"Gerenciamento de marcas e modelos de telefone. Dados de refer\u00eancia usados pelos m\u00f3dulos de pedidos e capas personalizadas.","version":"1.0.0","icon":"Smartphone","dependencies":[],"is_installed":true,"is_active":true,"is_core":true,"status":"active","stores_count":3,"status_count":0,"permission_count":7,"automation_count":0},{"id":"whatsapp-instances","slug":"whatsapp-instances","name":"WhatsApp Instances","description":"Gerenciamento de inst\u00e2ncias WhatsApp via Evolution API. Permite criar, conectar e gerenciar inst\u00e2ncias para envio de mensagens e notifica\u00e7\u00f5es.","version":"1.0.0","icon":"MessageCircle","dependencies":[],"is_installed":true,"is_active":true,"is_core":true,"status":"active","stores_count":2,"status_count":0,"permission_count":11,"automation_count":0},{"id":"conferencia-caixa","slug":"conferencia-caixa","name":"Confer\u00eancia de Caixa","description":"Gerenciamento de turnos de caixa, fechamentos e confer\u00eancia. Workflow de aprova\u00e7\u00e3o para controle financeiro.","version":"1.0.0","icon":"Calculator","dependencies":[],"is_installed":true,"is_active":true,"is_core":true,"status":"active","stores_count":6,"status_count":4,"permission_count":9,"automation_count":0},{"id":"comemoracoes","slug":"comemoracoes","name":"Comemora\u00e7\u00f5es","description":"Exibe aniversariantes de nascimento e de empresa do m\u00eas, com countdown e destaques.","version":"1.0.0","icon":"Cake","dependencies":[],"is_installed":true,"is_active":true,"is_core":true,"status":"active","stores_count":1,"status_count":0,"permission_count":3,"automation_count":0},{"id":"wheel","slug":"wheel","name":"Roleta nas TVs","description":"Gerenciamento do sistema de roleta interativa exibida nas TVs das vitrines. Permite configurar campanhas, pr\u00eamios, segmentos e monitorar a sa\u00fade das TVs.","version":"1.0.0","icon":"Target","dependencies":[],"is_installed":true,"is_active":true,"is_core":true,"status":"active","stores_count":4,"status_count":4,"permission_count":18,"automation_count":0}],"total":9}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-request-id: bcbe352f-85d4-4b4b-93df-e9e9205a53bd
-          vary: Origin
-        description: null
+    responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -71,35 +61,25 @@ endpoints:
         name: id
         description: 'The ID of the module.'
         required: true
-        example: capas-personalizadas
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: capas-personalizadas
+      id: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: '{"data":{"id":"capas-personalizadas","name":"Capas Personalizadas","description":"Capas com foto do cliente, integrado ao fluxo de produ\u00e7\u00e3o e f\u00e1brica.","version":"1.0.0","icon":"Palette","dependencies":["customers","payment-methods","producao"],"is_installed":true,"is_active":true,"statuses":{"1":{"name":"solicitada","label":"Encomenda Solicitada","color":"blue","icon":"clipboard-list","final":false},"2":{"name":"indisponivel","label":"Produto Indispon\u00edvel","color":"red","icon":"alert-circle","final":false},"3":{"name":"disponivel","label":"Dispon\u00edvel na Loja","color":"yellow","icon":"store","final":false},"4":{"name":"concluida","label":"Venda Realizada","color":"green","icon":"check-circle","final":true},"5":{"name":"cancelada","label":"Cancelada","color":"gray","icon":"x-circle","final":true},"6":{"name":"enviado_producao","label":"Encomendado \u00e0 F\u00e1brica","color":"orange","icon":"send","final":false},"7":{"name":"no_carrinho","label":"No Carrinho de Produ\u00e7\u00e3o","color":"slate","icon":"shopping-cart","final":false},"8":{"name":"aguardando","label":"Aguardando Cliente","color":"purple","icon":"user-clock","final":false},"9":{"name":"em_producao","label":"Em Produ\u00e7\u00e3o","color":"teal","icon":"factory","final":false},"10":{"name":"despachado","label":"Despachado","color":"indigo","icon":"truck","final":false}},"transitions":{"1":[2,5,7],"2":[1,5],"7":[6,5],"6":[9,5],"9":[10,5],"10":[3],"3":[8,5],"8":[4,5]},"transition_matrix":{"1":{"2":["admin","gerente","super-admin"],"5":["vendedor","admin","gerente","super-admin"],"7":["admin","gerente","estoquista","super-admin"]},"2":{"1":["admin","gerente","super-admin"],"5":["admin","gerente","super-admin"]},"7":{"6":["admin","gerente","estoquista","super-admin"],"5":["admin","gerente","super-admin"]},"6":{"9":["fabrica"],"5":["fabrica","admin","super-admin"]},"9":{"10":["fabrica"],"5":["fabrica","admin","super-admin"]},"10":{"3":["admin","gerente","estoquista","super-admin"]},"3":{"8":["vendedor","admin","gerente","super-admin"],"5":["vendedor","admin","gerente","super-admin"]},"8":{"4":["vendedor","admin","gerente","super-admin"],"5":["vendedor","admin","gerente","super-admin"]}},"permissions":[{"name":"capas.view","display_name":"Ver capas (pr\u00f3prias)","type":"ability"},{"name":"capas.view-all","display_name":"Ver todas as capas da loja","type":"ability"},{"name":"capas.view-global","display_name":"Ver capas de todas as lojas","type":"ability"},{"name":"capas.create","display_name":"Criar capa","type":"ability"},{"name":"capas.update","display_name":"Editar capa","type":"ability"},{"name":"capas.cancel-before-cart","display_name":"Cancelar (antes do carrinho)","type":"ability"},{"name":"capas.cancel-after-cart","display_name":"Cancelar (ap\u00f3s carrinho)","type":"ability"},{"name":"capas.status.to-carrinho","display_name":"Adicionar ao carrinho","type":"ability"},{"name":"capas.status.to-enviado","display_name":"Enviar \u00e0 f\u00e1brica","type":"ability"},{"name":"capas.status.to-producao","display_name":"Aceitar na f\u00e1brica","type":"ability"},{"name":"capas.status.to-despachado","display_name":"Despachar","type":"ability"},{"name":"capas.status.to-disponivel","display_name":"Confirmar recebimento","type":"ability"},{"name":"capas.status.to-aguardando","display_name":"Avisar cliente","type":"ability"},{"name":"capas.status.to-concluida","display_name":"Finalizar venda","type":"ability"},{"name":"capas.send-whatsapp","display_name":"Enviar notifica\u00e7\u00e3o WhatsApp","type":"ability"},{"name":"capas.view-kanban","display_name":"Ver modo Kanban","type":"ability"}],"screens":[{"name":"screen.capas","display_name":"Menu Capas","path":"\/capas"},{"name":"screen.capas.list","display_name":"Lista de Capas","path":"\/capas"},{"name":"screen.capas.create","display_name":"Nova Capa","path":"\/capas\/new"},{"name":"screen.capas.detail","display_name":"Detalhe da Capa","path":"\/capas\/:id"},{"name":"screen.capas.edit","display_name":"Editar Capa","path":"\/capas\/:id\/edit"},{"name":"screen.capas.production","display_name":"Enviar Produ\u00e7\u00e3o","path":"\/capas\/producao"},{"name":"screen.capas.kanban","display_name":"Kanban","path":"\/capas\/kanban"}],"texts":{"menu_label":"Capas Personalizadas","menu_tooltip":"Capas com foto do cliente","page_title":"Capas Personalizadas","page_description":"Gerencie capas com imagens personalizadas.","create_button":"Nova Capa","empty_state":"Nenhuma capa encontrada.","loading_title":"Carregando capas...","loading_description":"Aguarde enquanto buscamos as capas.","error_title":"Erro ao carregar capas","error_description":"N\u00e3o foi poss\u00edvel carregar a lista de capas.","retry_button":"Tentar novamente"},"actions":{"create":{"label":"Nova Capa","icon":"Plus","tooltip":"Criar uma nova capa personalizada","shortcut":"N","shortcut_modifier":null,"permission":"capas.create"},"add_to_cart":{"label":"Adicionar ao Carrinho","icon":"ShoppingCart","tooltip":"Adicionar esta capa ao carrinho de produ\u00e7\u00e3o","confirm":true,"confirm_title":"Adicionar ao Carrinho?","confirm_message":"A capa ser\u00e1 enviada para produ\u00e7\u00e3o.","confirm_button":"Sim, Adicionar","cancel_button":"Cancelar","confirm_variant":"default","permission":"capas.status.to-carrinho","available_in_status":[1]},"avisar_cliente":{"label":"Avisar Cliente","icon":"Bell","tooltip":"Enviar WhatsApp informando que a capa est\u00e1 pronta","shortcut":"A","shortcut_modifier":null,"confirm":true,"confirm_title":"Avisar Cliente?","confirm_message":"O cliente receber\u00e1 uma notifica\u00e7\u00e3o WhatsApp.","confirm_button":"Sim, Enviar","cancel_button":"Cancelar","confirm_variant":"default","permission":"capas.status.to-aguardando","available_in_status":[3]},"confirmar_recebimento":{"label":"Confirmar Recebimento","icon":"PackageCheck","tooltip":"Confirmar que a capa chegou da f\u00e1brica","confirm":true,"confirm_title":"Confirmar Recebimento?","confirm_message":"A capa ficar\u00e1 dispon\u00edvel para retirada.","confirm_button":"Confirmar","cancel_button":"Voltar","confirm_variant":"default","permission":"capas.status.to-disponivel","available_in_status":[10]},"finalizar_venda":{"label":"Finalizar Venda","icon":"CheckCircle","tooltip":"Registrar pagamento e finalizar","confirm":true,"confirm_title":"Finalizar Venda","confirm_message":"Confirma o registro do pagamento?","confirm_button":"Confirmar Venda","cancel_button":"Voltar","confirm_variant":"default","permission":"capas.status.to-concluida","available_in_status":[8],"requires_fields":["payment_status","payment_1_amount","payment_1_date","payment_1_method_id"]},"cancelar":{"label":"Cancelar","icon":"X","tooltip":"Cancelar esta capa","confirm":true,"confirm_title":"Cancelar Capa","confirm_message":"Tem certeza que deseja cancelar?","confirm_button":"Sim, Cancelar","cancel_button":"N\u00e3o, Voltar","confirm_variant":"destructive","permission":"capas.cancel-before-cart","available_in_status":[1],"requires_fields":["cancelation_reason"]},"view_kanban":{"label":"Modo Kanban","icon":"LayoutGrid","tooltip":"Visualizar em modo Kanban","permission":"capas.view-kanban"}},"permission_groups":{"visualizacao":{"label":"Visualiza\u00e7\u00e3o","icon":"Eye","permissions":["capas.view","capas.view-all","capas.view-global","capas.view-kanban"]},"gerenciamento":{"label":"Gerenciamento","icon":"Edit","permissions":["capas.create","capas.update","capas.cancel-before-cart","capas.cancel-after-cart"]},"producao":{"label":"Produ\u00e7\u00e3o","icon":"Factory","description":"Fluxo de produ\u00e7\u00e3o e f\u00e1brica","permissions":["capas.status.to-carrinho","capas.status.to-enviado","capas.status.to-producao","capas.status.to-despachado","capas.status.to-disponivel"]},"venda":{"label":"Venda","icon":"DollarSign","permissions":["capas.status.to-aguardando","capas.status.to-concluida","capas.send-whatsapp"]}},"conditional_fields":{"cancelada":{"cancelation_reason":{"type":"select","required":true,"options":{"seller_request":"Por solicita\u00e7\u00e3o do vendedor","customer_request":"Por solicita\u00e7\u00e3o do cliente","image_defect":"Imagem com defeito","unavailable":"Indisponibilidade do produto","fabrica_reject":"Recusado pela f\u00e1brica","other":"Outro motivo"}},"cancelation_notes":{"type":"textarea","required":false}},"concluida":{"payment_status":{"type":"select","required":true,"options":{"total":"Pagamento Total","partial":"Pagamento Parcial","pending":"Pagamento Pendente"}},"payment_1_amount":{"type":"money","required":true},"payment_1_date":{"type":"date","required":true},"payment_1_method_id":{"type":"select","required":true,"source":"payment_methods"},"payment_2_amount":{"type":"money","required":false},"payment_2_date":{"type":"date","required":false},"payment_2_method_id":{"type":"select","required":false,"source":"payment_methods"}}},"automations":[{"name":"auto_cancel_disponivel","display_name":"Cancelar ap\u00f3s 20 dias dispon\u00edvel","trigger":"status_unchanged_days","config":{"status":3,"days":20,"action":"change_status","new_status":5,"set_fields":{"cancelation_reason":"seller_inertia"}}},{"name":"auto_cancel_aguardando","display_name":"Cancelar ap\u00f3s 20 dias aguardando","trigger":"status_unchanged_days","config":{"status":8,"days":20,"action":"change_status","new_status":5,"set_fields":{"cancelation_reason":"customer_no_show"}}}]}}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-request-id: 38e5fbc7-d580-4ade-98ae-06f13254478a
-          vary: Origin
-        description: null
+    responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -128,35 +108,25 @@ endpoints:
         name: module
         description: 'The module.'
         required: true
-        example: capas-personalizadas
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      module: capas-personalizadas
+      module: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: '{"data":{"id":"capas-personalizadas","name":"Capas Personalizadas","description":"Capas com foto do cliente, integrado ao fluxo de produ\u00e7\u00e3o e f\u00e1brica.","version":"1.0.0","icon":"Palette","is_core":true,"dependencies":["customers","payment-methods","producao"],"statuses":{"1":{"name":"solicitada","label":"Encomenda Solicitada","color":"blue","icon":"clipboard-list","final":false},"2":{"name":"indisponivel","label":"Produto Indispon\u00edvel","color":"red","icon":"alert-circle","final":false},"3":{"name":"disponivel","label":"Dispon\u00edvel na Loja","color":"yellow","icon":"store","final":false},"4":{"name":"concluida","label":"Venda Realizada","color":"green","icon":"check-circle","final":true},"5":{"name":"cancelada","label":"Cancelada","color":"gray","icon":"x-circle","final":true},"6":{"name":"enviado_producao","label":"Encomendado \u00e0 F\u00e1brica","color":"orange","icon":"send","final":false},"7":{"name":"no_carrinho","label":"No Carrinho de Produ\u00e7\u00e3o","color":"slate","icon":"shopping-cart","final":false},"8":{"name":"aguardando","label":"Aguardando Cliente","color":"purple","icon":"user-clock","final":false},"9":{"name":"em_producao","label":"Em Produ\u00e7\u00e3o","color":"teal","icon":"factory","final":false},"10":{"name":"despachado","label":"Despachado","color":"indigo","icon":"truck","final":false}},"transitions":{"1":[2,5,7],"2":[1,5],"7":[6,5],"6":[9,5],"9":[10,5],"10":[3],"3":[8,5],"8":[4,5]},"transition_role_matrix":{"1":{"2":["admin","gerente","super-admin"],"5":["vendedor","admin","gerente","super-admin"],"7":["admin","gerente","estoquista","super-admin"]},"2":{"1":["admin","gerente","super-admin"],"5":["admin","gerente","super-admin"]},"7":{"6":["admin","gerente","estoquista","super-admin"],"5":["admin","gerente","super-admin"]},"6":{"9":["fabrica"],"5":["fabrica","admin","super-admin"]},"9":{"10":["fabrica"],"5":["fabrica","admin","super-admin"]},"10":{"3":["admin","gerente","estoquista","super-admin"]},"3":{"8":["vendedor","admin","gerente","super-admin"],"5":["vendedor","admin","gerente","super-admin"]},"8":{"4":["vendedor","admin","gerente","super-admin"],"5":["vendedor","admin","gerente","super-admin"]}},"permissions":[{"name":"capas.view","display_name":"Ver capas (pr\u00f3prias)","type":"ability"},{"name":"capas.view-all","display_name":"Ver todas as capas da loja","type":"ability"},{"name":"capas.view-global","display_name":"Ver capas de todas as lojas","type":"ability"},{"name":"capas.create","display_name":"Criar capa","type":"ability"},{"name":"capas.update","display_name":"Editar capa","type":"ability"},{"name":"capas.cancel-before-cart","display_name":"Cancelar (antes do carrinho)","type":"ability"},{"name":"capas.cancel-after-cart","display_name":"Cancelar (ap\u00f3s carrinho)","type":"ability"},{"name":"capas.status.to-carrinho","display_name":"Adicionar ao carrinho","type":"ability"},{"name":"capas.status.to-enviado","display_name":"Enviar \u00e0 f\u00e1brica","type":"ability"},{"name":"capas.status.to-producao","display_name":"Aceitar na f\u00e1brica","type":"ability"},{"name":"capas.status.to-despachado","display_name":"Despachar","type":"ability"},{"name":"capas.status.to-disponivel","display_name":"Confirmar recebimento","type":"ability"},{"name":"capas.status.to-aguardando","display_name":"Avisar cliente","type":"ability"},{"name":"capas.status.to-concluida","display_name":"Finalizar venda","type":"ability"},{"name":"capas.send-whatsapp","display_name":"Enviar notifica\u00e7\u00e3o WhatsApp","type":"ability"},{"name":"capas.view-kanban","display_name":"Ver modo Kanban","type":"ability"}],"screens":[{"name":"screen.capas","display_name":"Menu Capas","path":"\/capas"},{"name":"screen.capas.list","display_name":"Lista de Capas","path":"\/capas"},{"name":"screen.capas.create","display_name":"Nova Capa","path":"\/capas\/new"},{"name":"screen.capas.detail","display_name":"Detalhe da Capa","path":"\/capas\/:id"},{"name":"screen.capas.edit","display_name":"Editar Capa","path":"\/capas\/:id\/edit"},{"name":"screen.capas.production","display_name":"Enviar Produ\u00e7\u00e3o","path":"\/capas\/producao"},{"name":"screen.capas.kanban","display_name":"Kanban","path":"\/capas\/kanban"}],"texts":{"menu_label":"Capas Personalizadas","menu_tooltip":"Capas com foto do cliente","page_title":"Capas Personalizadas","page_description":"Gerencie capas com imagens personalizadas.","create_button":"Nova Capa","empty_state":"Nenhuma capa encontrada.","loading_title":"Carregando capas...","loading_description":"Aguarde enquanto buscamos as capas.","error_title":"Erro ao carregar capas","error_description":"N\u00e3o foi poss\u00edvel carregar a lista de capas.","retry_button":"Tentar novamente"},"actions":{"create":{"label":"Nova Capa","icon":"Plus","tooltip":"Criar uma nova capa personalizada","shortcut":"N","shortcut_modifier":null,"permission":"capas.create"},"add_to_cart":{"label":"Adicionar ao Carrinho","icon":"ShoppingCart","tooltip":"Adicionar esta capa ao carrinho de produ\u00e7\u00e3o","confirm":true,"confirm_title":"Adicionar ao Carrinho?","confirm_message":"A capa ser\u00e1 enviada para produ\u00e7\u00e3o.","confirm_button":"Sim, Adicionar","cancel_button":"Cancelar","confirm_variant":"default","permission":"capas.status.to-carrinho","available_in_status":[1]},"avisar_cliente":{"label":"Avisar Cliente","icon":"Bell","tooltip":"Enviar WhatsApp informando que a capa est\u00e1 pronta","shortcut":"A","shortcut_modifier":null,"confirm":true,"confirm_title":"Avisar Cliente?","confirm_message":"O cliente receber\u00e1 uma notifica\u00e7\u00e3o WhatsApp.","confirm_button":"Sim, Enviar","cancel_button":"Cancelar","confirm_variant":"default","permission":"capas.status.to-aguardando","available_in_status":[3]},"confirmar_recebimento":{"label":"Confirmar Recebimento","icon":"PackageCheck","tooltip":"Confirmar que a capa chegou da f\u00e1brica","confirm":true,"confirm_title":"Confirmar Recebimento?","confirm_message":"A capa ficar\u00e1 dispon\u00edvel para retirada.","confirm_button":"Confirmar","cancel_button":"Voltar","confirm_variant":"default","permission":"capas.status.to-disponivel","available_in_status":[10]},"finalizar_venda":{"label":"Finalizar Venda","icon":"CheckCircle","tooltip":"Registrar pagamento e finalizar","confirm":true,"confirm_title":"Finalizar Venda","confirm_message":"Confirma o registro do pagamento?","confirm_button":"Confirmar Venda","cancel_button":"Voltar","confirm_variant":"default","permission":"capas.status.to-concluida","available_in_status":[8],"requires_fields":["payment_status","payment_1_amount","payment_1_date","payment_1_method_id"]},"cancelar":{"label":"Cancelar","icon":"X","tooltip":"Cancelar esta capa","confirm":true,"confirm_title":"Cancelar Capa","confirm_message":"Tem certeza que deseja cancelar?","confirm_button":"Sim, Cancelar","cancel_button":"N\u00e3o, Voltar","confirm_variant":"destructive","permission":"capas.cancel-before-cart","available_in_status":[1],"requires_fields":["cancelation_reason"]},"view_kanban":{"label":"Modo Kanban","icon":"LayoutGrid","tooltip":"Visualizar em modo Kanban","permission":"capas.view-kanban"}},"permission_groups":{"visualizacao":{"label":"Visualiza\u00e7\u00e3o","icon":"Eye","permissions":["capas.view","capas.view-all","capas.view-global","capas.view-kanban"]},"gerenciamento":{"label":"Gerenciamento","icon":"Edit","permissions":["capas.create","capas.update","capas.cancel-before-cart","capas.cancel-after-cart"]},"producao":{"label":"Produ\u00e7\u00e3o","icon":"Factory","description":"Fluxo de produ\u00e7\u00e3o e f\u00e1brica","permissions":["capas.status.to-carrinho","capas.status.to-enviado","capas.status.to-producao","capas.status.to-despachado","capas.status.to-disponivel"]},"venda":{"label":"Venda","icon":"DollarSign","permissions":["capas.status.to-aguardando","capas.status.to-concluida","capas.send-whatsapp"]}},"documentation":{"overview":"M\u00f3dulo para capas com foto do cliente. Integra com fluxo de produ\u00e7\u00e3o da f\u00e1brica.","workflow":{"title":"Fluxo Completo","steps":["1. Vendedor cria a capa e faz upload da foto","2. Admin\/Estoquista adiciona ao carrinho de produ\u00e7\u00e3o","3. Carrinho \u00e9 enviado para a f\u00e1brica","4. F\u00e1brica aceita, produz e despacha","5. Admin confirma recebimento na loja","6. Vendedor avisa cliente e finaliza venda"]},"roles":{"vendedor":"Cria capas, avisa cliente, finaliza venda","estoquista":"Gerencia carrinho de produ\u00e7\u00e3o","fabrica":"Aceita, produz e despacha","admin":"Acesso completo"},"faq":{"Posso cancelar ap\u00f3s adicionar ao carrinho?":"N\u00e3o, ap\u00f3s o carrinho apenas Admin pode cancelar.","Como funciona o pagamento parcial?":"Selecione \"Pagamento Parcial\" e preencha os dois pagamentos."}},"filters":{"status":{"type":"multi-select","label":"Status","options":"from_statuses"},"seller":{"type":"select","label":"Vendedor","options":"from_users"},"store":{"type":"select","label":"Loja","options":"from_user_stores"},"date_range":{"type":"date-range","label":"Per\u00edodo","presets":["today","week","month","custom"]},"production_status":{"type":"select","label":"Produ\u00e7\u00e3o","options":{"pending":"Aguardando envio","sent":"Enviado \u00e0 f\u00e1brica","producing":"Em produ\u00e7\u00e3o","shipped":"Despachado"}}},"table_columns":{"default":[{"key":"id","label":"#","sortable":true,"width":80},{"key":"customer_name","label":"Cliente","sortable":true},{"key":"phone_model","label":"Modelo","sortable":true},{"key":"status","label":"Status","type":"badge"},{"key":"seller_name","label":"Vendedor","sortable":true},{"key":"created_at","label":"Data","type":"date","format":"dd\/MM\/yyyy"}],"compact":[{"key":"id","label":"#"},{"key":"customer_name","label":"Cliente"},{"key":"status","label":"Status","type":"badge"}],"production":[{"key":"id","label":"#"},{"key":"image_thumbnail","label":"Imagem","type":"image"},{"key":"phone_model","label":"Modelo"},{"key":"store_name","label":"Loja"},{"key":"status","label":"Status","type":"badge"}]},"bulk_actions":{"add_to_cart":{"label":"Adicionar ao Carrinho","icon":"ShoppingCart","permission":"capas.status.to-carrinho","requires_selection":true,"min_selection":1,"max_selection":100},"export":{"label":"Exportar Selecionados","icon":"Download","permission":"capas.export","requires_selection":true,"formats":["xlsx","pdf","csv"]}},"row_actions":{"primary":{"action":"view","label":"Ver Detalhes","icon":"Eye"},"secondary":[{"action":"edit","label":"Editar","icon":"Edit","permission":"capas.update"},{"action":"duplicate","label":"Duplicar","icon":"Copy","permission":"capas.create"},{"action":"cancel","label":"Cancelar","icon":"X","permission":"capas.cancel-before-cart","variant":"destructive"}]},"notifications":{"created":{"title":"Capa criada!","description":"Capa #{id} foi criada com sucesso.","variant":"success"},"added_to_cart":{"title":"Adicionado ao carrinho","description":"Capa #{id} foi adicionada ao carrinho de produ\u00e7\u00e3o.","variant":"success"},"sent_to_factory":{"title":"Enviado \u00e0 f\u00e1brica","description":"Lote com {count} capas foi enviado.","variant":"info"},"received":{"title":"Recebimento confirmado","description":"Capa #{id} chegou na loja.","variant":"success"},"notified":{"title":"Cliente notificado","description":"O cliente foi avisado via WhatsApp.","variant":"success"},"completed":{"title":"Venda conclu\u00edda!","description":"Capa #{id} foi finalizada.","variant":"success"},"cancelled":{"title":"Capa cancelada","description":"Capa #{id} foi cancelada.","variant":"warning"},"error":{"title":"Erro","description":"N\u00e3o foi poss\u00edvel completar a a\u00e7\u00e3o.","variant":"destructive"}},"stats_cards":{"enabled":true,"permission":"capas.view-stats","cards":[{"id":"total","label":"Total","icon":"Image","color":"blue"},{"id":"in_cart","label":"No Carrinho","icon":"ShoppingCart","color":"slate"},{"id":"in_production","label":"Em Produ\u00e7\u00e3o","icon":"Factory","color":"orange"},{"id":"available","label":"Dispon\u00edveis","icon":"Store","color":"green"},{"id":"completed","label":"Conclu\u00eddas","icon":"CheckCircle","color":"emerald"}]},"conditional_fields":{"cancelada":{"cancelation_reason":{"type":"select","required":true,"options":{"seller_request":"Por solicita\u00e7\u00e3o do vendedor","customer_request":"Por solicita\u00e7\u00e3o do cliente","image_defect":"Imagem com defeito","unavailable":"Indisponibilidade do produto","fabrica_reject":"Recusado pela f\u00e1brica","other":"Outro motivo"}},"cancelation_notes":{"type":"textarea","required":false}},"concluida":{"payment_status":{"type":"select","required":true,"options":{"total":"Pagamento Total","partial":"Pagamento Parcial","pending":"Pagamento Pendente"}},"payment_1_amount":{"type":"money","required":true},"payment_1_date":{"type":"date","required":true},"payment_1_method_id":{"type":"select","required":true,"source":"payment_methods"},"payment_2_amount":{"type":"money","required":false},"payment_2_date":{"type":"date","required":false},"payment_2_method_id":{"type":"select","required":false,"source":"payment_methods"}}},"automations":[{"name":"auto_cancel_disponivel","display_name":"Cancelar ap\u00f3s 20 dias dispon\u00edvel","trigger":"status_unchanged_days","config":{"status":3,"days":20,"action":"change_status","new_status":5,"set_fields":{"cancelation_reason":"seller_inertia"}}},{"name":"auto_cancel_aguardando","display_name":"Cancelar ap\u00f3s 20 dias aguardando","trigger":"status_unchanged_days","config":{"status":8,"days":20,"action":"change_status","new_status":5,"set_fields":{"cancelation_reason":"customer_no_show"}}}],"is_installed":true,"is_active":true}}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-request-id: e856720b-1550-4650-89d4-6fcd1cf589c4
-          vary: Origin
-        description: null
+    responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -185,14 +155,14 @@ endpoints:
         name: module
         description: 'The module.'
         required: true
-        example: capas-personalizadas
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      module: capas-personalizadas
+      module: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -203,7 +173,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -232,14 +202,14 @@ endpoints:
         name: module
         description: 'The module.'
         required: true
-        example: capas-personalizadas
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      module: capas-personalizadas
+      module: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -250,7 +220,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -279,14 +249,14 @@ endpoints:
         name: module
         description: 'The module.'
         required: true
-        example: capas-personalizadas
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      module: capas-personalizadas
+      module: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -297,7 +267,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -326,35 +296,25 @@ endpoints:
         name: module
         description: 'The module.'
         required: true
-        example: capas-personalizadas
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      module: capas-personalizadas
+      module: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: '{"module_id":"capas-personalizadas","statuses":{"1":{"name":"solicitada","label":"Encomenda Solicitada","color":"blue","icon":"clipboard-list","final":false},"2":{"name":"indisponivel","label":"Produto Indispon\u00edvel","color":"red","icon":"alert-circle","final":false},"3":{"name":"disponivel","label":"Dispon\u00edvel na Loja","color":"yellow","icon":"store","final":false},"4":{"name":"concluida","label":"Venda Realizada","color":"green","icon":"check-circle","final":true},"5":{"name":"cancelada","label":"Cancelada","color":"gray","icon":"x-circle","final":true},"6":{"name":"enviado_producao","label":"Encomendado \u00e0 F\u00e1brica","color":"orange","icon":"send","final":false},"7":{"name":"no_carrinho","label":"No Carrinho de Produ\u00e7\u00e3o","color":"slate","icon":"shopping-cart","final":false},"8":{"name":"aguardando","label":"Aguardando Cliente","color":"purple","icon":"user-clock","final":false},"9":{"name":"em_producao","label":"Em Produ\u00e7\u00e3o","color":"teal","icon":"factory","final":false},"10":{"name":"despachado","label":"Despachado","color":"indigo","icon":"truck","final":false}},"transitions":{"1":[2,5,7],"2":[1,5],"7":[6,5],"6":[9,5],"9":[10,5],"10":[3],"3":[8,5],"8":[4,5]},"role_matrix":{"1":{"2":["admin","gerente","super-admin"],"5":["vendedor","admin","gerente","super-admin"],"7":["admin","gerente","estoquista","super-admin"]},"2":{"1":["admin","gerente","super-admin"],"5":["admin","gerente","super-admin"]},"7":{"6":["admin","gerente","estoquista","super-admin"],"5":["admin","gerente","super-admin"]},"6":{"9":["fabrica"],"5":["fabrica","admin","super-admin"]},"9":{"10":["fabrica"],"5":["fabrica","admin","super-admin"]},"10":{"3":["admin","gerente","estoquista","super-admin"]},"3":{"8":["vendedor","admin","gerente","super-admin"],"5":["vendedor","admin","gerente","super-admin"]},"8":{"4":["vendedor","admin","gerente","super-admin"],"5":["vendedor","admin","gerente","super-admin"]}}}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-request-id: b859ab2c-8348-4774-a186-88b5fdb8025d
-          vary: Origin
-        description: null
+    responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -383,14 +343,14 @@ endpoints:
         name: module_id
         description: 'The ID of the module.'
         required: true
-        example: capas-personalizadas
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      module_id: capas-personalizadas
+      module_id: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
@@ -412,7 +372,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -441,35 +401,25 @@ endpoints:
         name: module_id
         description: 'The ID of the module.'
         required: true
-        example: capas-personalizadas
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      module_id: capas-personalizadas
+      module_id: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: '{"module_id":"capas-personalizadas","module_name":"Capas Personalizadas","stores":[{"store_id":1,"store_name":"Kompr\u00e3o Centro","city":"Tijucas","is_active":1,"activated_at":"2026-01-16 20:26:22","config":[]},{"store_id":2,"store_name":"Kompr\u00e3o Morretes","city":"Itapema","is_active":1,"activated_at":"2026-01-16 20:26:22","config":[]},{"store_id":3,"store_name":"PB Outlet","city":"Porto Belo","is_active":1,"activated_at":"2026-01-16 20:26:24","config":[]},{"store_id":4,"store_name":"iTuntz","city":"Porto Belo","is_active":1,"activated_at":"2026-01-16 20:26:24","config":[]},{"store_id":5,"store_name":"Kompr\u00e3o BR-101","city":"Tijucas","is_active":1,"activated_at":"2026-01-16 20:26:25","config":[]},{"store_id":6,"store_name":"Kompr\u00e3o - Gov Celso Ramos","city":"Governador Celso Ramos","is_active":1,"activated_at":"2026-01-16 20:26:25","config":[]},{"store_id":7,"store_name":"Kompr\u00e3o - Bombinhas","city":"Bombinhas","is_active":1,"activated_at":"2026-01-16 20:26:26","config":[]},{"store_id":8,"store_name":"Super Koch - Mata Atl\u00e2ntica","city":"Tijucas","is_active":1,"activated_at":"2026-01-16 20:26:26","config":[]},{"store_id":9,"store_name":"Kompr\u00e3o - Tabuleiro","city":"Itapema","is_active":false,"activated_at":null,"config":[]},{"store_id":10,"store_name":"Super Koch - P4","city":"Tijucas","is_active":false,"activated_at":null,"config":[]},{"store_id":11,"store_name":"Super Koch - Caled\u00f4nia","city":"Cambori\u00fa","is_active":false,"activated_at":null,"config":[]},{"store_id":12,"store_name":"Kompr\u00e3o Porto Belo","city":"Porto Belo","is_active":false,"activated_at":null,"config":[]},{"store_id":13,"store_name":"Estoque","city":"Tijucas","is_active":false,"activated_at":null,"config":[]},{"store_id":14,"store_name":"Financeiro","city":"Tijucas","is_active":false,"activated_at":null,"config":[]}],"total":14,"active_count":8}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-request-id: 4b39aefd-0069-4805-8da4-f4d0c96ac03c
-          vary: Origin
-        description: null
+    responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -498,7 +448,7 @@ endpoints:
         name: module
         description: 'The module.'
         required: true
-        example: capas-personalizadas
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -516,7 +466,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      module: capas-personalizadas
+      module: architecto
       store: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -528,7 +478,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -557,7 +507,7 @@ endpoints:
         name: module
         description: 'The module.'
         required: true
-        example: capas-personalizadas
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -575,7 +525,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      module: capas-personalizadas
+      module: architecto
       store: 1
     queryParameters: []
     cleanQueryParameters: []
@@ -587,7 +537,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -618,7 +568,7 @@ endpoints:
         name: module_id
         description: 'The ID of the module.'
         required: true
-        example: capas-personalizadas
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -636,7 +586,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      module_id: capas-personalizadas
+      module_id: architecto
       module: pedidos-simples
     queryParameters: []
     cleanQueryParameters: []
@@ -670,7 +620,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -699,14 +649,14 @@ endpoints:
         name: module_id
         description: 'The ID of the module.'
         required: true
-        example: capas-personalizadas
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      module_id: capas-personalizadas
+      module_id: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
@@ -861,7 +811,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -890,7 +840,7 @@ endpoints:
         name: module_id
         description: 'The ID of the module.'
         required: true
-        example: capas-personalizadas
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -908,7 +858,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      module_id: capas-personalizadas
+      module_id: architecto
       id: architecto
     queryParameters: []
     cleanQueryParameters: []
@@ -962,7 +912,7 @@ endpoints:
         name: shortcut_modifier
         description: ''
         required: false
-        example: shift
+        example: alt
         type: string
         enumValues:
           - ctrl
@@ -1057,7 +1007,7 @@ endpoints:
       icon: 'n'
       tooltip: g
       shortcut: zmiyvd
-      shortcut_modifier: shift
+      shortcut_modifier: alt
       confirm: false
       confirm_title: l
       confirm_message: j
@@ -1071,7 +1021,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -1100,14 +1050,14 @@ endpoints:
         name: module
         description: 'The module.'
         required: true
-        example: capas-personalizadas
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      module: capas-personalizadas
+      module: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
@@ -1171,7 +1121,7 @@ endpoints:
         name: shortcut_modifier
         description: ''
         required: false
-        example: shift
+        example: alt
         type: string
         enumValues:
           - ctrl
@@ -1186,7 +1136,7 @@ endpoints:
         name: confirm
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -1241,7 +1191,7 @@ endpoints:
         name: confirm_variant
         description: ''
         required: false
-        example: warning
+        example: destructive
         type: string
         enumValues:
           - default
@@ -1306,13 +1256,13 @@ endpoints:
       icon: g
       tooltip: z
       shortcut: miyvdl
-      shortcut_modifier: shift
-      confirm: false
+      shortcut_modifier: alt
+      confirm: true
       confirm_title: j
       confirm_message: 'n'
       confirm_button: i
       cancel_button: k
-      confirm_variant: warning
+      confirm_variant: destructive
       permission: h
       available_in_status:
         - 16
@@ -1324,7 +1274,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -1353,7 +1303,7 @@ endpoints:
         name: module
         description: 'The module.'
         required: true
-        example: capas-personalizadas
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1371,7 +1321,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      module: capas-personalizadas
+      module: architecto
       action: architecto
     queryParameters: []
     cleanQueryParameters: []
@@ -1383,7 +1333,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -1412,35 +1362,25 @@ endpoints:
         name: module
         description: 'The module.'
         required: true
-        example: capas-personalizadas
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      module: capas-personalizadas
+      module: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: '{"module_id":"capas-personalizadas","entries":[],"total":0}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-request-id: 18c464b5-7d21-4909-8b41-bfcb020beea1
-          vary: Origin
-        description: null
+    responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -1486,7 +1426,7 @@ endpoints:
         name: module_id
         description: 'The ID of the module.'
         required: true
-        example: capas-personalizadas
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1504,7 +1444,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      module_id: capas-personalizadas
+      module_id: architecto
       module: pedidos-simples
     queryParameters: []
     cleanQueryParameters: []
@@ -1621,7 +1561,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -1656,7 +1596,7 @@ endpoints:
         name: module_id
         description: 'The ID of the module.'
         required: true
-        example: capas-personalizadas
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1674,7 +1614,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      module_id: capas-personalizadas
+      module_id: architecto
       module: pedidos-simples
     queryParameters: []
     cleanQueryParameters: []
@@ -1787,7 +1727,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -1860,7 +1800,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -1897,7 +1837,7 @@ endpoints:
         name: module_id
         description: 'The ID of the module.'
         required: true
-        example: capas-personalizadas
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1926,7 +1866,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      module_id: capas-personalizadas
+      module_id: architecto
       store: 1
       module: pedidos-simples
     queryParameters: []
@@ -1967,7 +1907,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -2002,7 +1942,7 @@ endpoints:
         name: module_id
         description: 'The ID of the module.'
         required: true
-        example: capas-personalizadas
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -2031,7 +1971,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      module_id: capas-personalizadas
+      module_id: architecto
       store: 1
       module: pedidos-simples
     queryParameters: []
@@ -2087,7 +2027,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -2174,7 +2114,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -2216,7 +2156,7 @@ endpoints:
         name: module_id
         description: 'The ID of the module.'
         required: true
-        example: capas-personalizadas
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -2256,7 +2196,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      module_id: capas-personalizadas
+      module_id: architecto
       id: architecto
       module: pedidos-simples
       status: '3'
@@ -2399,7 +2339,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -2428,14 +2368,14 @@ endpoints:
         name: module
         description: 'The module.'
         required: true
-        example: capas-personalizadas
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      module: capas-personalizadas
+      module: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
@@ -2499,7 +2439,7 @@ endpoints:
         name: status.color
         description: ''
         required: true
-        example: purple
+        example: orange
         type: string
         enumValues:
           - blue
@@ -2530,7 +2470,7 @@ endpoints:
         name: status.badge_variant
         description: ''
         required: false
-        example: warning
+        example: success
         type: string
         enumValues:
           - default
@@ -2616,9 +2556,9 @@ endpoints:
         name: b
         label: 'n'
         description: 'Animi quos velit et fugiat.'
-        color: purple
+        color: orange
         icon: d
-        badge_variant: warning
+        badge_variant: success
         can_edit: false
         final: false
         tooltip: l
@@ -2633,7 +2573,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -2662,7 +2602,7 @@ endpoints:
         name: module
         description: 'The module.'
         required: true
-        example: capas-personalizadas
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -2680,7 +2620,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      module: capas-personalizadas
+      module: architecto
       status: architecto
     queryParameters: []
     cleanQueryParameters: []
@@ -2692,7 +2632,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null
@@ -2721,14 +2661,14 @@ endpoints:
         name: module
         description: 'The module.'
         required: true
-        example: capas-personalizadas
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      module: capas-personalizadas
+      module: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
@@ -2737,7 +2677,7 @@ endpoints:
         name: action
         description: ''
         required: true
-        example: delete_status
+        example: update_status
         type: string
         enumValues:
           - delete_status
@@ -2770,7 +2710,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      action: delete_status
+      action: update_status
       status_key: architecto
     fileParameters: []
     responses: []
@@ -2778,7 +2718,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
     controller: null
     method: null
     route: null

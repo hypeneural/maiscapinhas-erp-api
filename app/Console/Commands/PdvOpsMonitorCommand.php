@@ -396,25 +396,25 @@ class PdvOpsMonitorCommand extends Command
         }
 
         $threshold = $now->subMinutes($thresholdMinutes);
+        // Use store_id for stale detection; alias can drift (or collide) and should not be a hard key here.
+        // This keeps the monitor stable after v3.1 (cnpj/login-first binding).
         $latestByStore = DB::table('pdv_syncs')
+            ->whereNotNull('store_id')
             ->select([
-                'store_pdv_id',
-                'store_alias',
+                'store_id',
                 DB::raw('MAX(received_at) as last_received_at'),
             ])
-            ->groupBy('store_pdv_id', 'store_alias');
+            ->groupBy('store_id');
 
         $staleStoreQuery = DB::table('pdv_store_mappings as m')
             ->leftJoinSub($latestByStore, 'ls', function ($join): void {
-                $join->on('ls.store_pdv_id', '=', 'm.pdv_store_id')
-                    ->whereRaw('LOWER(COALESCE(ls.store_alias, \'\')) = LOWER(COALESCE(m.alias, \'\'))');
+                $join->on('ls.store_id', '=', 'm.store_id');
             })
             ->where('m.active', true)
             ->select([
                 'm.pdv_store_id',
                 'm.store_id',
                 'm.alias',
-                'ls.store_alias as sync_store_alias',
                 'ls.last_received_at',
             ]);
 
@@ -441,7 +441,6 @@ class PdvOpsMonitorCommand extends Command
                     'store_pdv_id' => (int) $row->pdv_store_id,
                     'store_id' => $row->store_id !== null ? (int) $row->store_id : null,
                     'alias' => $row->alias,
-                    'sync_store_alias' => $row->sync_store_alias,
                     'store_name' => $row->store_name,
                     'last_received_at' => $lastReceived?->toIso8601String(),
                     'minutes_since_last_sync' => $lastReceived !== null
@@ -454,7 +453,8 @@ class PdvOpsMonitorCommand extends Command
 
         $activeMappedStores = (int) DB::table('pdv_store_mappings')
             ->where('active', true)
-            ->count();
+            ->distinct()
+            ->count('store_id');
 
         return [
             'available' => true,

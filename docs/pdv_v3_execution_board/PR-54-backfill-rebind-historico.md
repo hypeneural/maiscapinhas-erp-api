@@ -1,6 +1,6 @@
 # PR-54 - Backfill/Rebind Historico (store_id NULL, vendedor_user_id NULL)
 
-Status: `in_progress`  
+Status: `done`  
 Prioridade: `P1`  
 Tipo: `backend-ops`  
 Dependencias: `PR-50` (resolver CNPJ/Login), `PR-51` (persistencia login)
@@ -58,10 +58,12 @@ Atualizar `pdv_turnos.operador_user_id` (quando coluna existir) por `operador_lo
 - [x] comando imprime contadores por bloco (stores/vendedores/operadores)
 
 4. Documentacao/runbook
-- [ ] adicionar no runbook: como rodar em producao e como validar depois via queries
+- [x] adicionar no runbook: como rodar em producao e como validar depois via queries
 
 ## Criterios de aceite
-- [ ] reduzir `pdv_syncs` com `store_id IS NULL` para proximo de 0 (para lojas ativas)
-- [ ] reduzir `pdv_venda_itens` com `vendedor_user_id IS NULL` quando `vendedor_login` existe
-- [ ] comando idempotente (rodar 2x nao cria inconsistencias)
-- [ ] modo dry-run mostra o que seria alterado sem escrever
+- [x] comando idempotente (rodar 2x nao cria inconsistencias)
+- [x] modo dry-run mostra o que seria alterado sem escrever
+- [ ] reduzir `pdv_syncs` com `store_id IS NULL` para proximo de 0 (para lojas ativas) (depende de execucao em prod)
+- [ ] reduzir `pdv_venda_itens` com `vendedor_user_id IS NULL` quando `vendedor_login` existe (depende de execucao em prod)
+
+Obs: a implementacao esta pronta. Falta apenas rodar em producao (janela segura) conforme runbook em `docs/PDV_V3_ENV_QUEUE_RUNBOOK.md`.
