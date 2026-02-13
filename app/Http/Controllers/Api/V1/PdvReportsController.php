@@ -1221,11 +1221,18 @@ class PdvReportsController extends Controller
 
         $storeId = (int) $request->input('store_id');
 
-        $store = \App\Models\Store::find($storeId);
-        if (!$store || !$store->pdv_store_id) {
+        // Resolver pdv_store_id via tabela de mappings
+        $mapping = DB::table('pdv_store_mappings')
+            ->where('store_id', $storeId)
+            ->where('active', true)
+            ->first();
+
+        \Illuminate\Support\Facades\Log::info("DEBUG Vendedores: store_id={$storeId}, mapping=" . ($mapping ? 'FOUND' : 'NULL') . ", pdv_store_id=" . ($mapping?->pdv_store_id ?? 'N/A'));
+
+        if (!$mapping) {
             return $this->success([]);
         }
-        $storePdvId = (int) $store->pdv_store_id;
+        $storePdvId = (int) $mapping->pdv_store_id;
 
         // 1. Buscar Mappings ativos para esta loja
         $mappings = DB::table('pdv_user_mappings')
@@ -1289,11 +1296,17 @@ class PdvReportsController extends Controller
         ]);
 
         $storeId = (int) $request->input('store_id');
-        $store = \App\Models\Store::find($storeId);
-        if (!$store || !$store->pdv_store_id) {
+
+        // Resolver pdv_store_id via tabela de mappings
+        $mapping = DB::table('pdv_store_mappings')
+            ->where('store_id', $storeId)
+            ->where('active', true)
+            ->first();
+
+        if (!$mapping) {
             return $this->success([]);
         }
-        $storePdvId = (int) $store->pdv_store_id;
+        $storePdvId = (int) $mapping->pdv_store_id;
 
         $rows = DB::table('pdv_turno_pagamentos')
             ->where('store_pdv_id', $storePdvId)
