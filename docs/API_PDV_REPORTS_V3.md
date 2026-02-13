@@ -143,6 +143,76 @@ Exemplo filtrando somente canal loja:
 
 `GET /api/v1/pdv/reports/vendas?store_pdv_id=13&from=2026-02-01&to=2026-02-12&canal=HIPER_LOJA`
 
+## 2.1) GET `/api/v1/pdv/reports/vendas/detalhe`
+
+Extrato detalhado de uma venda (linhas de itens + pagamentos) a partir de:
+- `pdv_vendas`
+- `pdv_venda_itens`
+- `pdv_venda_pagamentos`
+
+Query params:
+- `store_id` (int, opcional) ou `store_pdv_id` (int, opcional). Informar pelo menos um.
+- `store_alias` (string, opcional): desambigua quando `store_pdv_id` colide entre lojas.
+- `canal` (enum, obrigatorio): `HIPER_CAIXA` ou `HIPER_LOJA`.
+- `id_operacao` (int, obrigatorio).
+
+Resposta (resumo):
+
+```json
+{
+  "data": {
+    "filters": {
+      "store_id": 8,
+      "store_pdv_id": 9,
+      "store_alias": "mata-atlantica",
+      "canal": "HIPER_CAIXA",
+      "id_operacao": 45949
+    },
+    "venda": {
+      "store_id": 8,
+      "store_pdv_id": 9,
+      "canal": "HIPER_CAIXA",
+      "id_operacao": 45949,
+      "id_turno": "A2DB8C59-5451-492F-85F7-8540BFADEE75",
+      "data_hora": "2026-02-12T20:44:08Z",
+      "total": 22.5
+    },
+    "itens": [
+      {
+        "line_id": 47563,
+        "line_no": 1,
+        "id_produto": 3602,
+        "codigo_barras": "5361",
+        "nome_produto": "Produto X",
+        "qtd": 1,
+        "preco_unit": 22.5,
+        "total": 22.5,
+        "desconto": 7.5,
+        "vendedor_pdv_id": 46,
+        "vendedor_nome": "Bianca Brasil",
+        "vendedor_login": "biancabrasil",
+        "vendedor_user_id": 19
+      }
+    ],
+    "pagamentos": [
+      {
+        "line_id": 45745,
+        "line_no": 1,
+        "id_finalizador": 4,
+        "meio_pagamento": "Cartao de credito",
+        "valor": 22.5,
+        "troco": 0,
+        "parcelas": 1
+      }
+    ],
+    "summary": {
+      "itens": { "qtd_linhas": 1, "qtd_total": 1, "valor_total": 22.5, "desconto_total": 7.5 },
+      "pagamentos": { "qtd_linhas": 1, "valor_total": 22.5, "troco_total": 0 }
+    }
+  }
+}
+```
+
 ## 3) GET `/api/v1/pdv/reports/ranking-vendedores`
 
 Ranking por vendedor com base em `pdv_venda_itens` + `pdv_vendas`.

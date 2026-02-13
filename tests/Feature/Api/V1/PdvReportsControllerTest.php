@@ -526,6 +526,115 @@ test('pdv reports vendas applies payment filters id_finalizador and meio_pagamen
         ->assertJsonPath('filters.meio_pagamento', 'pix');
 });
 
+test('pdv reports vendas detalhe returns venda with itens and pagamentos ordered by line_no', function () {
+    $user = User::factory()->create(['is_super_admin' => false]);
+    $seller = User::factory()->create();
+    $store = Store::factory()->create();
+    linkUserToStore($user, $store, 'admin');
+    mapPdvStore(13, $store);
+
+    seedPdvVenda([
+        'store_id' => $store->id,
+        'store_pdv_id' => 13,
+        'id_operacao' => 777,
+        'canal' => 'HIPER_CAIXA',
+        'total' => 100.0,
+        'data_hora' => now()->subMinutes(2)->toDateTimeString(),
+    ]);
+
+    seedPdvVendaItem([
+        'store_id' => $store->id,
+        'store_pdv_id' => 13,
+        'id_operacao' => 777,
+        'line_id' => 777002,
+        'line_no' => 2,
+        'total' => 60.0,
+        'qtd' => 1.0,
+        'preco_unit' => 60.0,
+        'desconto' => 0.0,
+        'vendedor_user_id' => $seller->id,
+        'vendedor_login' => 'daren',
+    ]);
+    seedPdvVendaItem([
+        'store_id' => $store->id,
+        'store_pdv_id' => 13,
+        'id_operacao' => 777,
+        'line_id' => 777001,
+        'line_no' => 1,
+        'total' => 40.0,
+        'qtd' => 1.0,
+        'preco_unit' => 40.0,
+        'desconto' => 0.0,
+        'vendedor_user_id' => $seller->id,
+        'vendedor_login' => 'daren',
+    ]);
+
+    seedPdvVendaPagamento([
+        'store_id' => $store->id,
+        'store_pdv_id' => 13,
+        'id_operacao' => 777,
+        'line_id' => 888002,
+        'line_no' => 2,
+        'id_finalizador' => 4,
+        'meio_pagamento' => 'Cartao de Credito',
+        'valor' => 60.0,
+        'troco' => 0.0,
+        'parcelas' => 1,
+    ]);
+    seedPdvVendaPagamento([
+        'store_id' => $store->id,
+        'store_pdv_id' => 13,
+        'id_operacao' => 777,
+        'line_id' => 888001,
+        'line_no' => 1,
+        'id_finalizador' => 1,
+        'meio_pagamento' => 'Dinheiro',
+        'valor' => 40.0,
+        'troco' => 0.0,
+        'parcelas' => 1,
+    ]);
+
+    actingAs($user)
+        ->getJson('/api/v1/pdv/reports/vendas/detalhe?' . http_build_query([
+            'store_id' => $store->id,
+            'store_pdv_id' => 13,
+            'canal' => 'HIPER_CAIXA',
+            'id_operacao' => 777,
+        ]))
+        ->assertStatus(200)
+        ->assertJsonPath('data.venda.store_id', $store->id)
+        ->assertJsonPath('data.venda.store_pdv_id', 13)
+        ->assertJsonPath('data.venda.canal', 'HIPER_CAIXA')
+        ->assertJsonPath('data.venda.id_operacao', 777)
+        ->assertJsonPath('data.itens.0.line_no', 1)
+        ->assertJsonPath('data.itens.1.line_no', 2)
+        ->assertJsonPath('data.itens.0.vendedor_login', 'daren')
+        ->assertJsonPath('data.pagamentos.0.line_no', 1)
+        ->assertJsonPath('data.pagamentos.1.line_no', 2)
+        ->assertJsonPath('data.summary.itens.valor_total', 100.0)
+        ->assertJsonPath('data.summary.pagamentos.valor_total', 100.0);
+});
+
+test('pdv reports vendas detalhe returns 422 when store_pdv_id is ambiguous without store_alias or store_id', function () {
+    $user = User::factory()->create(['is_super_admin' => false]);
+    $storeA = Store::factory()->create();
+    $storeB = Store::factory()->create();
+
+    linkUserToStore($user, $storeA, 'admin');
+    linkUserToStore($user, $storeB, 'admin');
+    mapPdvStore(9, $storeA, 'Loja 8 - MC Mata AtlÃ¢ntica');
+    mapPdvStore(9, $storeB, 'Loja 10 - MC P4');
+
+    actingAs($user)
+        ->getJson('/api/v1/pdv/reports/vendas/detalhe?' . http_build_query([
+            'store_pdv_id' => 9,
+            'canal' => 'HIPER_CAIXA',
+            'id_operacao' => 123,
+        ]))
+        ->assertStatus(422)
+        ->assertJsonPath('errors.store_pdv_id.0', 'store_pdv_id ambiguo. Informe store_id ou store_alias para desambiguar.');
+});
+
 test('pdv reports ranking vendedores keeps aggregation consistency and canal filter', function () {
     $user = User::factory()->create(['is_super_admin' => false]);
     $store = Store::factory()->create();

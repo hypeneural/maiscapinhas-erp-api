@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Pdv\PdvReportsRankingVendedorLojaRequest;
 use App\Http\Requests\Pdv\PdvReportsRankingVendedoresRequest;
 use App\Http\Requests\Pdv\PdvReportsTurnosRequest;
+use App\Http\Requests\Pdv\PdvReportsVendaDetalheRequest;
 use App\Http\Requests\Pdv\PdvReportsVendasRequest;
 use App\Http\Traits\ApiResponse;
 use App\Support\Pdv\PdvStoreResolver;
@@ -449,6 +450,233 @@ class PdvReportsController extends Controller
                 'sort' => $sortDirection,
             ],
             'meta' => $this->meta($paginator),
+        ]);
+    }
+
+    /**
+     * Detalhe de uma venda (itens + pagamentos)
+     *
+     * Retorna o extrato detalhado (linhas de itens e pagamentos) de uma venda
+     * persistida pelo PDV Sync v3.
+     *
+     * @authenticated
+     * @queryParam store_id integer ID da loja interna (`stores.id`). Obrigatorio se `store_pdv_id` nao for informado. Example: 8
+     * @queryParam store_pdv_id integer ID da loja no PDV (`store.id_ponto_venda`). Obrigatorio se `store_id` nao for informado. Example: 9
+     * @queryParam store_alias string Alias da loja PDV para desambiguar quando `store_pdv_id` colide. Example: mata-atlantica
+     * @queryParam canal string required Canal da venda. Valores: `HIPER_CAIXA`, `HIPER_LOJA`. Example: HIPER_CAIXA
+     * @queryParam id_operacao integer required ID da operacao no PDV. Example: 45949
+     *
+     * @response 200 {
+     *   "data": {
+     *     "filters": {
+     *       "store_id": 8,
+     *       "store_pdv_id": 9,
+     *       "store_alias": "mata-atlantica",
+     *       "canal": "HIPER_CAIXA",
+     *       "id_operacao": 45949
+     *     },
+     *     "venda": {
+     *       "store_id": 8,
+     *       "store_pdv_id": 9,
+     *       "canal": "HIPER_CAIXA",
+     *       "id_operacao": 45949,
+     *       "id_turno": "A2DB8C59-5451-492F-85F7-8540BFADEE75",
+     *       "data_hora": "2026-02-12T20:44:08+00:00",
+     *       "total": 22.5
+     *     },
+     *     "itens": [
+     *       {
+     *         "line_id": 47563,
+     *         "line_no": 1,
+     *         "id_produto": 3602,
+     *         "codigo_barras": "5361",
+     *         "nome_produto": "Pelicula de Camera Iphone 14 ProMax",
+     *         "qtd": 1,
+     *         "preco_unit": 22.5,
+     *         "total": 22.5,
+     *         "desconto": 7.5,
+     *         "vendedor_pdv_id": 46,
+     *         "vendedor_nome": "Bianca Brasil",
+     *         "vendedor_login": "biancabrasil",
+     *         "vendedor_user_id": 19
+     *       }
+     *     ],
+     *     "pagamentos": [
+     *       {
+     *         "line_id": 45745,
+     *         "line_no": 1,
+     *         "id_finalizador": 4,
+     *         "meio_pagamento": "Cartao de credito",
+     *         "valor": 22.5,
+     *         "troco": 0,
+     *         "parcelas": 1
+     *       }
+     *     ],
+     *     "summary": {
+     *       "itens": {"qtd_linhas": 1, "qtd_total": 1, "valor_total": 22.5, "desconto_total": 7.5},
+     *       "pagamentos": {"qtd_linhas": 1, "valor_total": 22.5, "troco_total": 0}
+     *     }
+     *   },
+     *   "meta": {
+     *     "request_id": "req-123",
+     *     "timestamp": "2026-02-12T10:00:00+00:00"
+     *   }
+     * }
+     * @response 403 {"message":"Voce nao tem acesso a esta loja."}
+     * @response 404 {"message":"Venda nao encontrada."}
+     * @response 422 {"message":"The given data was invalid.","errors":{"store":["Informe store_id ou store_pdv_id."]}}
+     */
+    public function vendaDetalhe(PdvReportsVendaDetalheRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+
+        $storeId = isset($validated['store_id']) ? (int) $validated['store_id'] : null;
+        $storePdvId = isset($validated['store_pdv_id']) ? (int) $validated['store_pdv_id'] : null;
+        $storeAlias = isset($validated['store_alias']) ? trim((string) $validated['store_alias']) : null;
+        if ($storeId === null && $storePdvId === null) {
+            throw ValidationException::withMessages([
+                'store' => ['Informe store_id ou store_pdv_id.'],
+            ]);
+        }
+
+        $scope = $this->resolveStoreScope($request, $storeId, $storePdvId, $storeAlias);
+
+        $canal = (string) $validated['canal'];
+        $idOperacao = (int) $validated['id_operacao'];
+
+        $vendaQuery = DB::table('pdv_vendas as v')
+            ->select([
+                'v.store_id',
+                'v.store_pdv_id',
+                'v.canal',
+                'v.id_operacao',
+                'v.id_turno',
+                'v.data_hora',
+                'v.total',
+            ])
+            ->where('v.canal', $canal)
+            ->where('v.id_operacao', $idOperacao);
+
+        $this->applyStoreScopeToQuery($vendaQuery, $scope, 'v');
+
+        $venda = $vendaQuery->first();
+        if ($venda === null) {
+            return $this->notFound('Venda nao encontrada.');
+        }
+
+        $resolvedStorePdvId = (int) $venda->store_pdv_id;
+        $resolvedCanal = (string) ($venda->canal ?? 'HIPER_CAIXA');
+        $resolvedIdOperacao = (int) $venda->id_operacao;
+
+        $itensRows = DB::table('pdv_venda_itens as vi')
+            ->select([
+                'vi.id',
+                'vi.line_id',
+                'vi.line_no',
+                'vi.id_produto',
+                'vi.codigo_barras',
+                'vi.nome_produto',
+                'vi.qtd',
+                'vi.preco_unit',
+                'vi.total',
+                'vi.desconto',
+                'vi.vendedor_pdv_id',
+                'vi.vendedor_nome',
+                'vi.vendedor_login',
+                'vi.vendedor_user_id',
+            ])
+            ->where('vi.store_pdv_id', $resolvedStorePdvId)
+            ->where('vi.canal', $resolvedCanal)
+            ->where('vi.id_operacao', $resolvedIdOperacao)
+            ->orderBy('vi.line_no')
+            ->orderBy('vi.id')
+            ->get();
+
+        $pagamentosRows = DB::table('pdv_venda_pagamentos as vp')
+            ->select([
+                'vp.id',
+                'vp.line_id',
+                'vp.line_no',
+                'vp.id_finalizador',
+                'vp.meio_pagamento',
+                'vp.valor',
+                'vp.troco',
+                'vp.parcelas',
+            ])
+            ->where('vp.store_pdv_id', $resolvedStorePdvId)
+            ->where('vp.canal', $resolvedCanal)
+            ->where('vp.id_operacao', $resolvedIdOperacao)
+            ->orderBy('vp.line_no')
+            ->orderBy('vp.id')
+            ->get();
+
+        $itensCount = (int) $itensRows->count();
+        $itensQtdTotal = round((float) ($itensRows->sum('qtd') ?? 0), 3);
+        $itensValorTotal = round((float) ($itensRows->sum('total') ?? 0), 2);
+        $itensDescontoTotal = round((float) ($itensRows->sum('desconto') ?? 0), 2);
+
+        $pagamentosCount = (int) $pagamentosRows->count();
+        $pagamentosValorTotal = round((float) ($pagamentosRows->sum('valor') ?? 0), 2);
+        $pagamentosTrocoTotal = round((float) ($pagamentosRows->sum('troco') ?? 0), 2);
+
+        $itens = $itensRows->map(static fn (object $row): array => [
+            'line_id' => $row->line_id !== null ? (int) $row->line_id : null,
+            'line_no' => (int) $row->line_no,
+            'id_produto' => $row->id_produto !== null ? (int) $row->id_produto : null,
+            'codigo_barras' => $row->codigo_barras,
+            'nome_produto' => $row->nome_produto,
+            'qtd' => (float) $row->qtd,
+            'preco_unit' => (float) $row->preco_unit,
+            'total' => (float) $row->total,
+            'desconto' => (float) $row->desconto,
+            'vendedor_pdv_id' => $row->vendedor_pdv_id !== null ? (int) $row->vendedor_pdv_id : null,
+            'vendedor_nome' => $row->vendedor_nome,
+            'vendedor_login' => $row->vendedor_login,
+            'vendedor_user_id' => $row->vendedor_user_id !== null ? (int) $row->vendedor_user_id : null,
+        ])->values()->all();
+
+        $pagamentos = $pagamentosRows->map(static fn (object $row): array => [
+            'line_id' => $row->line_id !== null ? (int) $row->line_id : null,
+            'line_no' => (int) $row->line_no,
+            'id_finalizador' => (int) $row->id_finalizador,
+            'meio_pagamento' => $row->meio_pagamento,
+            'valor' => (float) $row->valor,
+            'troco' => (float) $row->troco,
+            'parcelas' => $row->parcelas !== null ? (int) $row->parcelas : null,
+        ])->values()->all();
+
+        return $this->success([
+            'filters' => [
+                'store_id' => $scope['store_id'],
+                'store_pdv_id' => $scope['store_pdv_id'],
+                'store_alias' => $scope['store_alias'],
+                'canal' => $resolvedCanal,
+                'id_operacao' => $resolvedIdOperacao,
+            ],
+            'venda' => [
+                'store_id' => $venda->store_id !== null ? (int) $venda->store_id : null,
+                'store_pdv_id' => $resolvedStorePdvId,
+                'canal' => $resolvedCanal,
+                'id_operacao' => $resolvedIdOperacao,
+                'id_turno' => $venda->id_turno,
+                'data_hora' => $this->toIso8601($venda->data_hora),
+                'total' => (float) $venda->total,
+            ],
+            'itens' => $itens,
+            'pagamentos' => $pagamentos,
+            'summary' => [
+                'itens' => [
+                    'qtd_linhas' => $itensCount,
+                    'qtd_total' => $itensQtdTotal,
+                    'valor_total' => $itensValorTotal,
+                    'desconto_total' => $itensDescontoTotal,
+                ],
+                'pagamentos' => [
+                    'qtd_linhas' => $pagamentosCount,
+                    'valor_total' => $pagamentosValorTotal,
+                    'troco_total' => $pagamentosTrocoTotal,
+                ],
+            ],
         ]);
     }
 

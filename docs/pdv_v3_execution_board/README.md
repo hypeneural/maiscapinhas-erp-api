@@ -39,6 +39,16 @@ PRs concluidos/anteriores permanecem documentados nos arquivos:
 Evidencia E2E em producao:
 - `docs/VALIDACAO_E2E_PDV_PRODUCAO_POS_NORMALIZACAO_2026-02-13.md`
 
+Analise complementar (cobertura e gaps de API):
+- `docs/ANALISE_COBERTURA_CRUZADA_AGENT_SQL_PHP_BACKEND_PDV_2026-02-13.md`
+
+## Proximo backlog (Fase 4 - Cobertura API + reparo historico)
+1. [PR-53 - P1: Endpoint de venda detalhada (itens + pagamentos)](./PR-53-endpoint-venda-detalhe-itens-pagamentos.md) - `in_progress`
+2. [PR-54 - P1: Backfill/Rebind historico (store_id NULL, vendedor_user_id NULL)](./PR-54-backfill-rebind-historico.md) - `in_progress`
+
+Dependencia externa (Agent):
+- v3.x: incluir `login_vendedor` no canal `HIPER_LOJA` (queries_gestao) para reduzir fallback por `id_usuario`.
+
 ## Novidades do agente v3.1 (2026-02-13)
 - `store.cnpj` no payload como identificador universal da loja.
 - `login` em:
