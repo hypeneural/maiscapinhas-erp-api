@@ -1207,6 +1207,120 @@ class PdvReportsController extends Controller
         return CarbonImmutable::parse((string) $dateTime)->toIso8601String();
     }
 
+    /**
+     * Lista de Vendedores para Filtro
+     *
+     * Retorna lista de vendedores que já realizaram vendas na loja.
+     * Prioriza nomes mapeados (usuários do sistema), depois nomes do PDV, e por fim ID.
+     */
+    public function vendedores(Request $request): JsonResponse
+    {
+        $request->validate([
+            'store_id' => ['required', 'integer'],
+        ]);
+
+        $storeId = (int) $request->input('store_id');
+
+        $store = \App\Models\Store::find($storeId);
+        if (!$store || !$store->pdv_store_id) {
+            return $this->success([]);
+        }
+        $storePdvId = (int) $store->pdv_store_id;
+
+        // 1. Buscar Mappings ativos para esta loja
+        $mappings = DB::table('pdv_user_mappings')
+            ->where('store_pdv_id', $storePdvId)
+            ->where('active', true)
+            ->get()
+            ->keyBy('pdv_user_id');
+
+        // 2. Buscar IDs de vendedores usados em vendas (histórico)
+        $sellerIds = DB::table('pdv_venda_itens')
+            ->where('store_pdv_id', $storePdvId)
+            ->select('vendedor_pdv_id')
+            ->distinct()
+            ->pluck('vendedor_pdv_id');
+
+        // 3. Buscar dados crus em pdv_usuarios para enriquecer nomes (fallback)
+        $pdvUsers = DB::table('pdv_usuarios')
+            ->whereIn('id_usuario_hiper', $sellerIds)
+            ->get()
+            ->keyBy('id_usuario_hiper');
+
+        $result = [];
+        foreach ($sellerIds as $id) {
+            $id = (int) $id;
+            $mapping = $mappings[$id] ?? null;
+            $pdvUser = $pdvUsers[$id] ?? null;
+
+            // Nome: Mapping > PdvUser > Fallback
+            if ($mapping && $mapping->pdv_user_name) {
+                $nome = $mapping->pdv_user_name;
+            } elseif ($pdvUser) {
+                $nome = $pdvUser->nome_hiper ?? $pdvUser->nome_padronizado;
+            } else {
+                $nome = "Vendedor #{$id}";
+            }
+
+            // Capitalizar nome para ficar bonito (Ex: JOAO DA SILVA -> Joao Da Silva)
+            $nome = \Illuminate\Support\Str::title(\Illuminate\Support\Str::lower($nome));
+
+            $result[] = [
+                'id' => (string) $id,
+                'nome' => $nome,
+                'user_id' => $mapping?->user_id,
+                'source' => $mapping ? 'mapped' : ($pdvUser ? 'pdv_registry' : 'fallback'),
+            ];
+        }
+
+        // Ordenar por nome
+        usort($result, fn($a, $b) => strcasecmp($a['nome'], $b['nome']));
+
+        return $this->success($result);
+    }
+
+    /**
+     * Lista de Meios de Pagamento para Filtro
+     */
+    public function meiosPagamento(Request $request): JsonResponse
+    {
+        $request->validate([
+            'store_id' => ['required', 'integer'],
+        ]);
+
+        $storeId = (int) $request->input('store_id');
+        $store = \App\Models\Store::find($storeId);
+        if (!$store || !$store->pdv_store_id) {
+            return $this->success([]);
+        }
+        $storePdvId = (int) $store->pdv_store_id;
+
+        $rows = DB::table('pdv_turno_pagamentos')
+            ->where('store_pdv_id', $storePdvId)
+            ->select('tipo', 'meio_pagamento', 'id_finalizador')
+            ->distinct()
+            ->get();
+
+        $result = $rows->map(function ($row) {
+            $label = $row->meio_pagamento;
+            $tipo = $row->tipo;
+
+            // Se tipo for diferente e relevante, adicionar
+            if ($tipo && $tipo !== $label && $tipo !== 'Não Definido') {
+                $label .= " ({$tipo})";
+            }
+
+            return [
+                'id' => (string) $row->id_finalizador, // Usar ID do finalizador como chave se possível
+                'nome' => $label,
+                'tipo' => $tipo,
+                'meio_pagamento' => $row->meio_pagamento,
+            ];
+        })->unique('nome')->values()->all();
+
+        return $this->success($result);
+    }
+
     private function meta(?LengthAwarePaginator $paginator = null): array
     {
         $meta = [
