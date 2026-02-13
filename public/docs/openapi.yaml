@@ -1965,7 +1965,7 @@ paths:
                     sent_at:
                       type: string
                       description: 'Must be a valid date.'
-                      example: '2026-02-13T14:36:27'
+                      example: '2026-02-13T16:31:46'
                 store:
                   type: object
                   description: 'Dados da loja origem.'
@@ -4180,7 +4180,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:31'
+                  example: '2026-02-13T16:31:48'
               required:
                 - store_id
   /api/v1/dashboard/conferente:
@@ -4298,7 +4298,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:31'
+                  example: '2026-02-13T16:31:49'
               required:
                 - store_id
   /api/v1/dashboard/admin:
@@ -4619,11 +4619,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:30'
+                  example: '2026-02-13T16:31:47'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:30'
+                  example: '2026-02-13T16:31:47'
                 per_page:
                   type: integer
                   description: 'Must be at least 1. Must not be greater than 100.'
@@ -5089,11 +5089,11 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:30'
+                  example: '2026-02-13T16:31:47'
                 status:
                   type: string
                   description: ''
-                  example: pending
+                  example: open
                   enum:
                     - open
                     - closed
@@ -6155,7 +6155,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:31'
+                  example: '2026-02-13T16:31:48'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -6210,7 +6210,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:31'
+                  example: '2026-02-13T16:31:48'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -6282,7 +6282,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:31'
+                  example: '2026-02-13T16:31:48'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -6337,7 +6337,7 @@ paths:
                 effective_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:31'
+                  example: '2026-02-13T16:31:48'
                 config_json:
                   type: array
                   description: 'Must have at least 1 items.'
@@ -6416,7 +6416,7 @@ paths:
                 active:
                   type: boolean
                   description: ''
-                  example: true
+                  example: false
               required:
                 - store_id
                 - month
@@ -6452,7 +6452,7 @@ paths:
                 active:
                   type: boolean
                   description: ''
-                  example: true
+                  example: false
     delete:
       summary: 'Delete a monthly goal.'
       operationId: deleteAMonthlyGoal
@@ -6539,11 +6539,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:31'
+                  example: '2026-02-13T16:31:48'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:31'
+                  example: '2026-02-13T16:31:48'
                 per_page:
                   type: integer
                   description: 'Must be at least 1. Must not be greater than 100.'
@@ -6776,11 +6776,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:31'
+                  example: '2026-02-13T16:31:48'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:31'
+                  example: '2026-02-13T16:31:48'
     parameters:
       -
         in: path
@@ -7043,7 +7043,7 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:31'
+                  example: '2026-02-13T16:31:48'
               required:
                 - store_id
                 - date
@@ -7069,11 +7069,11 @@ paths:
                 date:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:31'
+                  example: '2026-02-13T16:31:48'
                 shift_code:
                   type: string
                   description: ''
-                  example: T
+                  example: '1'
                   enum:
                     - '1'
                     - '2'
@@ -7662,7 +7662,7 @@ paths:
                 shortcut_modifier:
                   type: string
                   description: ''
-                  example: alt
+                  example: shift
                   enum:
                     - ctrl
                     - alt
@@ -7700,7 +7700,7 @@ paths:
                 is_active:
                   type: boolean
                   description: ''
-                  example: true
+                  example: false
     parameters:
       -
         in: path
@@ -7758,7 +7758,7 @@ paths:
                 shortcut_modifier:
                   type: string
                   description: ''
-                  example: alt
+                  example: meta
                   enum:
                     - ctrl
                     - alt
@@ -7768,7 +7768,7 @@ paths:
                 confirm:
                   type: boolean
                   description: ''
-                  example: true
+                  example: false
                 confirm_title:
                   type: string
                   description: 'Must not be greater than 100 characters.'
@@ -7788,7 +7788,7 @@ paths:
                 confirm_variant:
                   type: string
                   description: ''
-                  example: destructive
+                  example: default
                   enum:
                     - default
                     - destructive
@@ -7811,7 +7811,7 @@ paths:
                 api_method:
                   type: string
                   description: ''
-                  example: GET
+                  example: PATCH
                   enum:
                     - GET
                     - POST
@@ -8729,7 +8729,7 @@ paths:
                     color:
                       type: string
                       description: ''
-                      example: orange
+                      example: blue
                       enum:
                         - blue
                         - red
@@ -8747,7 +8747,7 @@ paths:
                     badge_variant:
                       type: string
                       description: ''
-                      example: success
+                      example: destructive
                       enum:
                         - default
                         - destructive
@@ -8847,7 +8847,7 @@ paths:
                 action:
                   type: string
                   description: ''
-                  example: update_status
+                  example: delete_status
                   enum:
                     - delete_status
                     - update_status
@@ -9245,7 +9245,7 @@ paths:
                 include_temporary:
                   type: boolean
                   description: ''
-                  example: false
+                  example: true
                 expires_at:
                   type: string
                   description: 'Must be a valid date. Must be a date after <code>now</code>.'
@@ -9632,7 +9632,7 @@ paths:
                 granted:
                   type: boolean
                   description: ''
-                  example: false
+                  example: true
               required:
                 - granted
     delete:
@@ -9696,7 +9696,7 @@ paths:
                 granted:
                   type: boolean
                   description: ''
-                  example: false
+                  example: true
                 expires_at:
                   type: string
                   description: 'Must be a valid date. Must be a date after <code>now</code>.'
@@ -9755,7 +9755,7 @@ paths:
                       granted:
                         type: boolean
                         description: ''
-                        example: false
+                        example: true
                       expires_at:
                         type: string
                         description: 'Must be a valid date. Must be a date after <code>now</code>.'
@@ -10245,11 +10245,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:34'
+                  example: '2026-02-13T16:31:51'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:34'
+                  example: '2026-02-13T16:31:51'
                 causer_id:
                   type: integer
                   description: 'The <code>id</code> of an existing record in the users table.'
@@ -10381,11 +10381,11 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:34'
+                  example: '2026-02-13T16:31:51'
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:34'
+                  example: '2026-02-13T16:31:51'
   '/api/v1/admin/audit-logs/{auditLog_id}':
     get:
       summary: 'Ver detalhes do log'
@@ -10802,16 +10802,16 @@ paths:
                             type: object
                             description: ''
                             example:
-                              start: '14:36'
+                              start: '16:31'
                             properties:
                               start:
                                 type: string
                                 description: 'Must be a valid date in the format <code>H:i</code>.'
-                                example: '14:36'
+                                example: '16:31'
                               end:
                                 type: string
                                 description: 'Must be a valid date in the format <code>H:i</code>.'
-                                example: '14:36'
+                                example: '16:31'
                             required:
                               - start
                               - end
@@ -10829,7 +10829,7 @@ paths:
                           closed:
                             type: boolean
                             description: ''
-                            example: true
+                            example: false
                           reason:
                             type: string
                             description: 'Must not be greater than 100 characters.'
@@ -11095,16 +11095,16 @@ paths:
                             type: object
                             description: ''
                             example:
-                              start: '14:36'
+                              start: '16:31'
                             properties:
                               start:
                                 type: string
                                 description: 'Must be a valid date in the format <code>H:i</code>.'
-                                example: '14:36'
+                                example: '16:31'
                               end:
                                 type: string
                                 description: 'Must be a valid date in the format <code>H:i</code>.'
-                                example: '14:36'
+                                example: '16:31'
                             required:
                               - start
                               - end
@@ -11122,7 +11122,7 @@ paths:
                           closed:
                             type: boolean
                             description: ''
-                            example: false
+                            example: true
                           reason:
                             type: string
                             description: 'Must not be greater than 100 characters.'
@@ -11539,7 +11539,7 @@ paths:
                 is_super_admin:
                   type: boolean
                   description: ''
-                  example: false
+                  example: true
                 zip_code:
                   type: string
                   description: 'Must not be greater than 8 characters.'
@@ -11768,7 +11768,7 @@ paths:
                 is_super_admin:
                   type: boolean
                   description: ''
-                  example: false
+                  example: true
                 zip_code:
                   type: string
                   description: 'Must not be greater than 8 characters.'
@@ -11927,7 +11927,7 @@ paths:
                       role:
                         type: string
                         description: ''
-                        example: gerente
+                        example: conferente
                         enum:
                           - admin
                           - gerente
@@ -11978,7 +11978,7 @@ paths:
                       role:
                         type: string
                         description: ''
-                        example: vendedor
+                        example: gerente
                         enum:
                           - admin
                           - gerente
@@ -12007,7 +12007,7 @@ paths:
                 role:
                   type: string
                   description: ''
-                  example: admin
+                  example: gerente
                   enum:
                     - admin
                     - gerente
@@ -13805,7 +13805,7 @@ paths:
                 payday:
                   type: string
                   description: 'This field is required when <code>payed</code> is <code>true</code> or <code>1</code>. Must be a valid date.'
-                  example: '2026-02-13T14:36:33'
+                  example: '2026-02-13T16:31:50'
                   nullable: true
                 received_by_id:
                   type: integer
@@ -13952,7 +13952,7 @@ paths:
                 status:
                   type: integer
                   description: ''
-                  example: '6'
+                  example: '10'
                   enum:
                     - '1'
                     - '2'
@@ -16633,7 +16633,7 @@ paths:
                 only_unacknowledged:
                   type: boolean
                   description: ''
-                  example: false
+                  example: true
                 only_unseen:
                   type: boolean
                   description: ''
@@ -16641,7 +16641,7 @@ paths:
                 severity:
                   type: string
                   description: ''
-                  example: info
+                  example: warning
                   enum:
                     - info
                     - warning
@@ -16649,14 +16649,14 @@ paths:
                 type:
                   type: string
                   description: ''
-                  example: recado
+                  example: advertencia
                   enum:
                     - recado
                     - advertencia
                 scope:
                   type: string
                   description: ''
-                  example: role
+                  example: user
                   enum:
                     - global
                     - store
@@ -16673,7 +16673,7 @@ paths:
                 date_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:28'
+                  example: '2026-02-13T16:31:46'
                 date_to:
                   type: string
                   description: 'Must be a valid date. Must be a date after or equal to <code>date_from</code>.'
@@ -16689,7 +16689,7 @@ paths:
                 sort:
                   type: string
                   description: ''
-                  example: starts_at_asc
+                  example: created_at_desc
                   enum:
                     - starts_at_desc
                     - starts_at_asc
@@ -16867,7 +16867,7 @@ paths:
                 status:
                   type: string
                   description: ''
-                  example: draft
+                  example: active
                   enum:
                     - draft
                     - scheduled
@@ -16878,7 +16878,7 @@ paths:
                 only_unacknowledged:
                   type: boolean
                   description: ''
-                  example: false
+                  example: true
                 only_unseen:
                   type: boolean
                   description: ''
@@ -16894,7 +16894,7 @@ paths:
                 type:
                   type: string
                   description: ''
-                  example: recado
+                  example: advertencia
                   enum:
                     - recado
                     - advertencia
@@ -16918,7 +16918,7 @@ paths:
                 date_from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:28'
+                  example: '2026-02-13T16:31:46'
                 date_to:
                   type: string
                   description: 'Must be a valid date. Must be a date after or equal to <code>date_from</code>.'
@@ -16934,7 +16934,7 @@ paths:
                 sort:
                   type: string
                   description: ''
-                  example: created_at_asc
+                  example: starts_at_asc
                   enum:
                     - starts_at_desc
                     - starts_at_asc
@@ -17073,7 +17073,7 @@ paths:
                 pinned_until:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:28'
+                  example: '2026-02-13T16:31:46'
                   nullable: true
                 meta_json:
                   type: object
@@ -17252,7 +17252,7 @@ paths:
                 display_mode:
                   type: string
                   description: ''
-                  example: banner
+                  example: modal
                   enum:
                     - banner
                     - modal
@@ -17285,7 +17285,7 @@ paths:
                 scope:
                   type: string
                   description: ''
-                  example: user
+                  example: global
                   enum:
                     - global
                     - store
@@ -17298,7 +17298,7 @@ paths:
                 starts_at:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:29'
+                  example: '2026-02-13T16:31:46'
                   nullable: true
                 expires_at:
                   type: string
@@ -17317,7 +17317,7 @@ paths:
                 pinned_until:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:29'
+                  example: '2026-02-13T16:31:46'
                   nullable: true
                 meta_json:
                   type: object
@@ -18919,7 +18919,7 @@ paths:
                 active:
                   type: string
                   description: ''
-                  example: all
+                  example: '1'
                   enum:
                     - '0'
                     - '1'
@@ -19075,7 +19075,7 @@ paths:
                 terms_accepted:
                   type: boolean
                   description: ''
-                  example: true
+                  example: false
                 device_fingerprint:
                   type: string
                   description: 'Must not be greater than 100 characters.'
@@ -19556,7 +19556,7 @@ paths:
                 status:
                   type: integer
                   description: ''
-                  example: '3'
+                  example: '2'
                   enum:
                     - '1'
                     - '2'
@@ -21984,12 +21984,12 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:39'
+                  example: '2026-02-13T16:31:55'
                   nullable: true
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:39'
+                  example: '2026-02-13T16:31:55'
                   nullable: true
                 campaign_key:
                   type: string
@@ -22056,7 +22056,7 @@ paths:
                 period:
                   type: string
                   description: ''
-                  example: month
+                  example: today
                   enum:
                     - today
                     - week
@@ -22065,12 +22065,12 @@ paths:
                 from:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:39'
+                  example: '2026-02-13T16:31:55'
                   nullable: true
                 to:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:39'
+                  example: '2026-02-13T16:31:55'
                   nullable: true
   /api/v1/admin/wheel/analytics/peak-hours:
     get:
@@ -22141,7 +22141,7 @@ paths:
                 period:
                   type: string
                   description: ''
-                  example: month
+                  example: week
                   enum:
                     - today
                     - week
@@ -22194,7 +22194,7 @@ paths:
                 starts_at:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:39'
+                  example: '2026-02-13T16:31:55'
                   nullable: true
                 ends_at:
                   type: string
@@ -22239,7 +22239,7 @@ paths:
                     per_phone_limit:
                       type: string
                       description: ''
-                      example: unlimited
+                      example: 1_per_day
                       enum:
                         - 1_per_campaign
                         - 1_per_day
@@ -22279,7 +22279,7 @@ paths:
                 starts_at:
                   type: string
                   description: 'Must be a valid date.'
-                  example: '2026-02-13T14:36:39'
+                  example: '2026-02-13T16:31:55'
                   nullable: true
                 ends_at:
                   type: string
@@ -22783,14 +22783,14 @@ paths:
                 cooldown_scope:
                   type: string
                   description: ''
-                  example: campaign
+                  example: screen
                   enum:
                     - screen
                     - campaign
                 pacing_enabled:
                   type: boolean
                   description: ''
-                  example: false
+                  example: true
                 pacing_buffer:
                   type: number
                   description: 'Must be at least 1. Must not be greater than 5.'
@@ -22802,7 +22802,7 @@ paths:
                 active:
                   type: boolean
                   description: ''
-                  example: false
+                  example: true
     delete:
       summary: 'Remover regra.'
       operationId: removerRegra
@@ -22887,14 +22887,14 @@ paths:
                 cooldown_scope:
                   type: string
                   description: ''
-                  example: screen
+                  example: campaign
                   enum:
                     - screen
                     - campaign
                 pacing_enabled:
                   type: boolean
                   description: ''
-                  example: true
+                  example: false
                 pacing_buffer:
                   type: number
                   description: 'Must be at least 1. Must not be greater than 5.'
@@ -22906,7 +22906,7 @@ paths:
                 active:
                   type: boolean
                   description: ''
-                  example: true
+                  example: false
               required:
                 - prize_id
     parameters:
@@ -22967,7 +22967,7 @@ paths:
                       cooldown_scope:
                         type: string
                         description: ''
-                        example: campaign
+                        example: screen
                         enum:
                           - screen
                           - campaign
@@ -23054,7 +23054,7 @@ paths:
                 type:
                   type: string
                   description: ''
-                  example: coupon
+                  example: product
                   enum:
                     - product
                     - coupon
@@ -23083,7 +23083,7 @@ paths:
                 active:
                   type: boolean
                   description: ''
-                  example: false
+                  example: true
               required:
                 - name
                 - type
@@ -23118,7 +23118,7 @@ paths:
                 type:
                   type: string
                   description: ''
-                  example: coupon
+                  example: product
                   enum:
                     - product
                     - coupon
@@ -23223,7 +23223,7 @@ paths:
                 status:
                   type: string
                   description: ''
-                  example: inactive
+                  example: maintenance
                   enum:
                     - active
                     - inactive
@@ -23272,7 +23272,7 @@ paths:
                 status:
                   type: string
                   description: ''
-                  example: maintenance
+                  example: inactive
                   enum:
                     - active
                     - inactive
@@ -23404,7 +23404,7 @@ paths:
                       status:
                         type: string
                         description: ''
-                        example: inactive
+                        example: active
                         enum:
                           - active
                           - inactive
@@ -23509,7 +23509,7 @@ paths:
                       active:
                         type: boolean
                         description: ''
-                        example: false
+                        example: true
                     required:
                       - label
                       - color
@@ -23551,7 +23551,7 @@ paths:
                 active:
                   type: boolean
                   description: ''
-                  example: true
+                  example: false
               required:
                 - label
                 - color

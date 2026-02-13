@@ -47,7 +47,7 @@ endpoints:
         name: date
         description: 'Must be a valid date.'
         required: true
-        example: '2026-02-13T14:36:31'
+        example: '2026-02-13T16:31:48'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -55,14 +55,14 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      date: '2026-02-13T14:36:31'
+      date: '2026-02-13T16:31:48'
     fileParameters: []
     responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -109,7 +109,7 @@ endpoints:
         name: date
         description: 'Must be a valid date.'
         required: true
-        example: '2026-02-13T14:36:31'
+        example: '2026-02-13T16:31:48'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -120,7 +120,7 @@ endpoints:
         name: shift_code
         description: ''
         required: true
-        example: T
+        example: '1'
         type: string
         enumValues:
           - '1'
@@ -178,8 +178,8 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       store_id: 16
-      date: '2026-02-13T14:36:31'
-      shift_code: T
+      date: '2026-02-13T16:31:48'
+      shift_code: '1'
       in_count: 39
       out_count: 84
       staff_in: 12
@@ -190,7 +190,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null

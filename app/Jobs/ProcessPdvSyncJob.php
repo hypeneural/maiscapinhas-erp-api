@@ -1646,6 +1646,11 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             return null;
         }
 
+        // Missing vendedor/operador info is not a mapping problem (eg: item sold without vendedor).
+        if ($resolution['status'] === 'empty') {
+            return null;
+        }
+
         $this->markRuntimeRiskFlag('user_mapping_missing');
 
         Log::warning('pdv.sync.user_mapping_missing', [

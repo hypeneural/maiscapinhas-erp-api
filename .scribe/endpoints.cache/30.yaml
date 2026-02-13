@@ -160,7 +160,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -535,7 +535,7 @@ endpoints:
         name: 'opening_hours.weekly[].*.start'
         description: 'Must be a valid date in the format <code>H:i</code>.'
         required: true
-        example: '14:36'
+        example: '16:31'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -546,7 +546,7 @@ endpoints:
         name: 'opening_hours.weekly[].*.end'
         description: 'Must be a valid date in the format <code>H:i</code>.'
         required: true
-        example: '14:36'
+        example: '16:31'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -568,7 +568,7 @@ endpoints:
         name: 'opening_hours.exceptions[].closed'
         description: ''
         required: false
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -608,7 +608,7 @@ endpoints:
         exceptions:
           -
             date: '2026-02-13'
-            closed: true
+            closed: false
             reason: o
       cnpj: tnnoqitpxntltcvi
       troco_padrao: 15
@@ -633,7 +633,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -744,7 +744,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -1140,7 +1140,7 @@ endpoints:
         name: 'opening_hours.weekly[].*.start'
         description: 'Must be a valid date in the format <code>H:i</code>.'
         required: true
-        example: '14:36'
+        example: '16:31'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1151,7 +1151,7 @@ endpoints:
         name: 'opening_hours.weekly[].*.end'
         description: 'Must be a valid date in the format <code>H:i</code>.'
         required: true
-        example: '14:36'
+        example: '16:31'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1173,7 +1173,7 @@ endpoints:
         name: 'opening_hours.exceptions[].closed'
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -1213,7 +1213,7 @@ endpoints:
         exceptions:
           -
             date: '2026-02-13'
-            closed: false
+            closed: true
             reason: o
       cnpj: tnnoqitpxntltcvi
       troco_padrao: 15
@@ -1237,7 +1237,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -1340,7 +1340,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -1444,7 +1444,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null

@@ -80,7 +80,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -187,7 +187,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -222,7 +222,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -257,7 +257,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -292,7 +292,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -327,7 +327,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -436,7 +436,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -511,7 +511,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -598,7 +598,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -633,7 +633,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -680,7 +680,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -798,7 +798,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -845,7 +845,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -892,7 +892,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -949,7 +949,7 @@ endpoints:
         name: include_temporary
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -967,7 +967,7 @@ endpoints:
         nullable: true
         deprecated: false
     cleanBodyParameters:
-      include_temporary: false
+      include_temporary: true
       expires_at: '2052-03-09'
     fileParameters: []
     responses: []
@@ -975,7 +975,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -1022,7 +1022,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null

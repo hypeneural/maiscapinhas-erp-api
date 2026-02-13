@@ -130,7 +130,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -261,7 +261,7 @@ endpoints:
         name: only_unacknowledged
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -283,7 +283,7 @@ endpoints:
         name: severity
         description: ''
         required: false
-        example: info
+        example: warning
         type: string
         enumValues:
           - info
@@ -297,7 +297,7 @@ endpoints:
         name: type
         description: ''
         required: false
-        example: recado
+        example: advertencia
         type: string
         enumValues:
           - recado
@@ -310,7 +310,7 @@ endpoints:
         name: scope
         description: ''
         required: false
-        example: role
+        example: user
         type: string
         enumValues:
           - global
@@ -347,7 +347,7 @@ endpoints:
         name: date_from
         description: 'Must be a valid date.'
         required: false
-        example: '2026-02-13T14:36:28'
+        example: '2026-02-13T16:31:46'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -391,7 +391,7 @@ endpoints:
         name: sort
         description: ''
         required: false
-        example: starts_at_asc
+        example: created_at_desc
         type: string
         enumValues:
           - starts_at_desc
@@ -405,18 +405,18 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       status: active
-      only_unacknowledged: false
+      only_unacknowledged: true
       only_unseen: true
-      severity: info
-      type: recado
-      scope: role
+      severity: warning
+      type: advertencia
+      scope: user
       store_id: 16
       created_by: 16
-      date_from: '2026-02-13T14:36:28'
+      date_from: '2026-02-13T16:31:46'
       date_to: '2052-03-08'
       per_page: 22
       page: 67
-      sort: starts_at_asc
+      sort: created_at_desc
     fileParameters: []
     responses:
       -
@@ -433,7 +433,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -596,7 +596,7 @@ endpoints:
         name: status
         description: ''
         required: false
-        example: draft
+        example: active
         type: string
         enumValues:
           - draft
@@ -613,7 +613,7 @@ endpoints:
         name: only_unacknowledged
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -649,7 +649,7 @@ endpoints:
         name: type
         description: ''
         required: false
-        example: recado
+        example: advertencia
         type: string
         enumValues:
           - recado
@@ -699,7 +699,7 @@ endpoints:
         name: date_from
         description: 'Must be a valid date.'
         required: false
-        example: '2026-02-13T14:36:28'
+        example: '2026-02-13T16:31:46'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -743,7 +743,7 @@ endpoints:
         name: sort
         description: ''
         required: false
-        example: created_at_asc
+        example: starts_at_asc
         type: string
         enumValues:
           - starts_at_desc
@@ -756,19 +756,19 @@ endpoints:
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      status: draft
-      only_unacknowledged: false
+      status: active
+      only_unacknowledged: true
       only_unseen: false
       severity: danger
-      type: recado
+      type: advertencia
       scope: store
       store_id: 16
       created_by: 16
-      date_from: '2026-02-13T14:36:28'
+      date_from: '2026-02-13T16:31:46'
       date_to: '2052-03-08'
       per_page: 22
       page: 67
-      sort: created_at_asc
+      sort: starts_at_asc
     fileParameters: []
     responses:
       -
@@ -791,7 +791,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -1037,7 +1037,7 @@ endpoints:
         name: pinned_until
         description: 'Must be a valid date.'
         required: false
-        example: '2026-02-13T14:36:28'
+        example: '2026-02-13T16:31:46'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1106,7 +1106,7 @@ endpoints:
       expires_at: '2026-01-20T23:59:59Z'
       repeat_every_minutes: 22
       priority: 10
-      pinned_until: '2026-02-13T14:36:28'
+      pinned_until: '2026-02-13T16:31:46'
       targets:
         - architecto
     fileParameters: []
@@ -1130,7 +1130,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -1239,7 +1239,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -1374,7 +1374,7 @@ endpoints:
         name: display_mode
         description: ''
         required: false
-        example: banner
+        example: modal
         type: string
         enumValues:
           - banner
@@ -1443,7 +1443,7 @@ endpoints:
         name: scope
         description: ''
         required: false
-        example: user
+        example: global
         type: string
         enumValues:
           - global
@@ -1469,7 +1469,7 @@ endpoints:
         name: starts_at
         description: 'Must be a valid date.'
         required: false
-        example: '2026-02-13T14:36:29'
+        example: '2026-02-13T16:31:46'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1513,7 +1513,7 @@ endpoints:
         name: pinned_until
         description: 'Must be a valid date.'
         required: false
-        example: '2026-02-13T14:36:29'
+        example: '2026-02-13T16:31:46'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1547,7 +1547,7 @@ endpoints:
         name: 'targets[].target_type'
         description: 'This field is required when <code>targets</code> is present.'
         required: false
-        example: store
+        example: user
         type: string
         enumValues:
           - store
@@ -1573,19 +1573,19 @@ endpoints:
       excerpt: 'n'
       type: advertencia
       severity: info
-      display_mode: banner
+      display_mode: modal
       icon: g
       image_url: 'http://www.okuneva.com/fugiat-sunt-nihil-accusantium-harum-mollitia.html'
       image_alt: k
       cta_label: h
       cta_url: 'http://www.dubuque.net/quo-omnis-nostrum-aut-adipisci'
-      scope: user
+      scope: global
       require_ack: false
-      starts_at: '2026-02-13T14:36:29'
+      starts_at: '2026-02-13T16:31:46'
       expires_at: '2052-03-08'
       repeat_every_minutes: 22
       priority: 84
-      pinned_until: '2026-02-13T14:36:29'
+      pinned_until: '2026-02-13T16:31:46'
       targets:
         - architecto
     fileParameters: []
@@ -1609,7 +1609,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -1701,7 +1701,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -1802,7 +1802,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -1904,7 +1904,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -2006,7 +2006,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -2111,7 +2111,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -2206,7 +2206,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -2306,7 +2306,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -2437,7 +2437,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -2533,7 +2533,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -2640,7 +2640,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null

@@ -50,7 +50,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -142,7 +142,7 @@ endpoints:
         name: cooldown_scope
         description: ''
         required: false
-        example: campaign
+        example: screen
         type: string
         enumValues:
           - screen
@@ -155,7 +155,7 @@ endpoints:
         name: pacing_enabled
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -188,7 +188,7 @@ endpoints:
         name: active
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -199,18 +199,18 @@ endpoints:
       cooldown_seconds: 39
       max_per_hour: 67
       max_per_day: 66
-      cooldown_scope: campaign
-      pacing_enabled: false
+      cooldown_scope: screen
+      pacing_enabled: true
       pacing_buffer: 2
       priority: 15
-      active: false
+      active: true
     fileParameters: []
     responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -259,7 +259,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -308,7 +308,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -357,7 +357,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -459,7 +459,7 @@ endpoints:
         name: cooldown_scope
         description: ''
         required: false
-        example: screen
+        example: campaign
         type: string
         enumValues:
           - screen
@@ -472,7 +472,7 @@ endpoints:
         name: pacing_enabled
         description: ''
         required: false
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -505,7 +505,7 @@ endpoints:
         name: active
         description: ''
         required: false
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -517,18 +517,18 @@ endpoints:
       cooldown_seconds: 84
       max_per_hour: 66
       max_per_day: 27
-      cooldown_scope: screen
-      pacing_enabled: true
+      cooldown_scope: campaign
+      pacing_enabled: false
       pacing_buffer: 5
       priority: 8
-      active: true
+      active: false
     fileParameters: []
     responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -642,7 +642,7 @@ endpoints:
         name: 'rules[].cooldown_scope'
         description: ''
         required: false
-        example: campaign
+        example: screen
         type: string
         enumValues:
           - screen
@@ -702,7 +702,7 @@ endpoints:
           cooldown_seconds: 84
           max_per_hour: 66
           max_per_day: 27
-          cooldown_scope: campaign
+          cooldown_scope: screen
           pacing_enabled: true
           pacing_buffer: 5
           priority: 8
@@ -713,7 +713,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -762,7 +762,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null

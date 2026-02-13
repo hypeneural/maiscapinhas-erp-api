@@ -41,6 +41,10 @@ Resultado desta validacao:
 - `GET /health`: **OK**
 - `POST /pdv/sync` (3.0, com `cnpj/login`): **OK** (201 + `risk_flags=[]`)
 - Fila/scheduler: **OK** (syncs processados automaticamente)
+- Operacao: **OK**
+  - `failed_jobs` PDV: **0**
+  - `pdv_syncs.status != processed`: **0**
+  - `store_mapping_missing` (ultimas 6h): **0**
 - Normalizacao: **OK**
   - `store_id` resolvido por `store.cnpj` mesmo com `store.alias` errado
   - `vendedor_user_id` resolvido por `vendedor.login` mesmo com `id_usuario` divergente
@@ -157,6 +161,35 @@ Persistencia verificada em `pdv_turnos`:
 - `fechado=false`
 - `duracao_minutos=NULL`
 
+### 3.3.1 Turno aberto com `duracao_minutos=null` (execucao Codex - 2026-02-13 16:23 UTC)
+
+Para garantir que o fix de validacao realmente esta em producao (e nao foi apenas no ambiente de teste),
+foi reenviado um payload controlado com `duracao_minutos=null` em um turno aberto.
+
+- `POST /api/v1/pdv/sync`:
+  - `schema_version=3.0`
+  - `turnos[0].data_hora_termino=null`
+  - `turnos[0].duracao_minutos=null`
+
+**Response**
+- `201 created`
+- `pdv_sync_id=233`
+- `risk_flags=[]`
+
+**Fila**
+- `pdv_syncs.id=233`:
+  - `status`: `queued` -> `processed`
+  - `processed_at`: `2026-02-13 16:24:03` UTC
+
+**Persistencia**
+- `pdv_turnos`:
+  - `store_pdv_id=9` / `store_id=8`
+  - `id_turno=E2E-TURNO-OPEN-0001`
+  - `fechado=false`
+  - `duracao_minutos=NULL`
+  - `operador_login=mataatlantica`
+  - `last_sync_id=e2e-20260213132415`
+
 ### 3.4 Snapshot de vendas com `vendedor.login` (persistencia em `pdv_vendas_resumo`)
 
 Foi enviado payload com `snapshot_vendas[]` (sem `vendas[]`), contendo vendedor com `login`:
@@ -254,6 +287,12 @@ Endpoints validados (200):
 - `GET /api/v1/pdv/reports/ranking-vendedor-loja`
   - retornou Bianca Brasil na loja Mata Atlantica (store_id=8)
 
+Endpoint validado (422 esperado):
+- `GET /api/v1/pdv/reports/vendas?store_pdv_id=9&from=...&to=...`
+  - sem `store_id` ou `store_alias`
+  - retorna `422` com mensagem:
+    - `store_pdv_id ambiguo. Informe store_id ou store_alias para desambiguar.`
+
 ---
 
 ## 6) Anomalias Encontradas (e como tratar)
@@ -268,12 +307,15 @@ Interpretacao:
 - Sao artefatos do periodo **antes** da migration de normalizacao (coluna nao existia).
 - Nao indicam falha atual do pipeline.
 
-Acao sugerida:
-- (Opcao A - recomendada) Reprocessar no servidor (ambiente com redis/worker ativo):
-  - `php artisan pdv:retry-failed --dry-run`
-  - `php artisan pdv:retry-failed --limit=20 --older-than-minutes=15`
-  - depois, opcionalmente limpar as entradas equivalentes de `failed_jobs` (para o monitor nao ficar em ALERT).
-- (Opcao B) Manter como historico e ignorar em metricas (filtrar por `received_at` >= fix).
+Acao executada (2026-02-13):
+- reprocessados `pdv_syncs.id=90..94` via `pdv:retry-failed` (com execucao sincrona controlada)
+- resultado:
+  - todos passaram para `status=processed`
+  - `store_id` foi resolvido e preenchido durante o processamento
+  - `failed_jobs` PDV foi limpo (0)
+
+Nota:
+- os `risk_flags` desses syncs antigos continuam registrando `store_mapping_missing` porque refletem o **momento do ingress** (historico). Para o estado atual, considere o comportamento nas execucoes recentes (ultimas horas).
 
 ### 6.2 `422` no n8n para `duracao_minutos`
 
@@ -339,5 +381,5 @@ O pipeline PDV esta **funcional de ponta a ponta** em producao para o contrato a
 - relatorios OK (com filtros)
 
 Pendencia recomendada:
-- tratar/reprocessar os syncs `failed` antigos (90..94) para limpar ruido operacional.
 - documentar no Scribe que `vendedor_id` nos filtros significa `vendedor_pdv_id` (id do Hiper/PDV), nao `users.id`.
+- (opcional) reduzir ruido de `user_mapping_missing` quando o item vem sem vendedor (`vendedor=null`) — hoje isso gera flag mesmo sendo caso esperado.

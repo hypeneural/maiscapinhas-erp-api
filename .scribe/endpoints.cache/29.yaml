@@ -161,7 +161,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -275,7 +275,7 @@ endpoints:
         name: is_super_admin
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -502,7 +502,7 @@ endpoints:
       email: joao.silva@maiscapinhas.com.br
       password: senha123456
       active: true
-      is_super_admin: false
+      is_super_admin: true
       zip_code: vdljnikh
       street: w
       number: aykcmyuwpwlvqwrs
@@ -554,7 +554,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -671,7 +671,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -803,7 +803,7 @@ endpoints:
         name: is_super_admin
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -970,7 +970,7 @@ endpoints:
       email: joao.novo@maiscapinhas.com.br
       password: novasenha123
       active: true
-      is_super_admin: false
+      is_super_admin: true
       zip_code: vdljnikh
       street: w
       number: aykcmyuwpwlvqwrs
@@ -1006,7 +1006,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -1114,7 +1114,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -1199,7 +1199,7 @@ endpoints:
         name: 'stores[].role'
         description: ''
         required: true
-        example: gerente
+        example: conferente
         type: string
         enumValues:
           - admin
@@ -1213,14 +1213,14 @@ endpoints:
       stores:
         -
           store_id: 16
-          role: gerente
+          role: conferente
     fileParameters: []
     responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -1305,7 +1305,7 @@ endpoints:
         name: 'stores[].role'
         description: ''
         required: true
-        example: vendedor
+        example: gerente
         type: string
         enumValues:
           - admin
@@ -1319,14 +1319,14 @@ endpoints:
       stores:
         -
           store_id: 16
-          role: vendedor
+          role: gerente
     fileParameters: []
     responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -1388,7 +1388,7 @@ endpoints:
         name: role
         description: ''
         required: true
-        example: admin
+        example: gerente
         type: string
         enumValues:
           - admin
@@ -1411,7 +1411,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      role: admin
+      role: gerente
       store_ids:
         - 16
     fileParameters: []
@@ -1420,7 +1420,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null
@@ -1498,7 +1498,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 235|KzvZKkIiB3EBM0e2awdeclPOU55Xvq2H89h48uH877502e3c'
+      - 'Bearer Bearer 241|F91vcTG2HB0rtUzKovnKCxoKszt2mvKGiRK6R4pe76927fae'
     controller: null
     method: null
     route: null

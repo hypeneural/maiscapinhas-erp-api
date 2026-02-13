@@ -10,7 +10,7 @@
     ],
     "info": {
         "name": "MaisCapinhas ERP API - Documenta\u00e7\u00e3o",
-        "_postman_id": "aa993894-3386-4b5a-96b0-48f02be7ce8a",
+        "_postman_id": "9a026913-6baa-4567-924a-bc2edacfdcb4",
         "description": "API REST para gest\u00e3o de vendas, metas, fechamento de caixa, b\u00f4nus e comiss\u00f5es do ERP MaisCapinhas.",
         "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json",
         "version": "1.0.0"
@@ -970,7 +970,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"schema_version\":\"3.1\",\"event_type\":\"mixed\",\"agent\":{\"version\":\"vdljnikhwaykcmyu\",\"machine\":\"w\",\"sent_at\":\"2026-02-13T14:36:27\"},\"store\":{\"id_ponto_venda\":13,\"nome\":\"Mais Capinhas Porto Belo\",\"alias\":\"porto-belo-13\",\"cnpj\":\"61063019000333\"},\"window\":{\"from\":\"2026-02-12T09:50:00-03:00\",\"to\":\"2026-02-12T10:00:00-03:00\",\"minutes\":10},\"turnos\":[{\"responsavel\":{\"id_usuario\":43,\"nome\":\"u\",\"login\":\"vendedor.lider\"},\"operador\":{\"login\":\"operador.v3\"}}],\"vendas\":[{\"itens\":[{\"line_id\":27,\"line_no\":35,\"vendedor\":{\"login\":\"maria.silva\"}}],\"pagamentos\":[{\"line_id\":16,\"line_no\":26}]}],\"snapshot_turnos\":[{\"responsavel\":{\"id_usuario\":43,\"nome\":\"w\",\"login\":\"vendedor.lider\"},\"operador\":{\"login\":\"operador.v3\"}}],\"snapshot_vendas\":[{\"vendedor\":{\"id_usuario\":27,\"nome\":\"i\",\"login\":\"vendedor.lider\"}}],\"ops\":{\"count\":5,\"ids\":[12345,12346],\"loja_count\":2,\"loja_ids\":[99001,99002]},\"integrity\":{\"sync_id\":\"a1b2c3d4e5f6\",\"warnings\":[\"architecto\"]},\"resumo\":{\"by_vendor\":[{\"login\":\"maria.silva\"}]}}"
+                            "raw": "{\"schema_version\":\"3.1\",\"event_type\":\"mixed\",\"agent\":{\"version\":\"vdljnikhwaykcmyu\",\"machine\":\"w\",\"sent_at\":\"2026-02-13T16:31:46\"},\"store\":{\"id_ponto_venda\":13,\"nome\":\"Mais Capinhas Porto Belo\",\"alias\":\"porto-belo-13\",\"cnpj\":\"61063019000333\"},\"window\":{\"from\":\"2026-02-12T09:50:00-03:00\",\"to\":\"2026-02-12T10:00:00-03:00\",\"minutes\":10},\"turnos\":[{\"responsavel\":{\"id_usuario\":43,\"nome\":\"u\",\"login\":\"vendedor.lider\"},\"operador\":{\"login\":\"operador.v3\"}}],\"vendas\":[{\"itens\":[{\"line_id\":27,\"line_no\":35,\"vendedor\":{\"login\":\"maria.silva\"}}],\"pagamentos\":[{\"line_id\":16,\"line_no\":26}]}],\"snapshot_turnos\":[{\"responsavel\":{\"id_usuario\":43,\"nome\":\"w\",\"login\":\"vendedor.lider\"},\"operador\":{\"login\":\"operador.v3\"}}],\"snapshot_vendas\":[{\"vendedor\":{\"id_usuario\":27,\"nome\":\"i\",\"login\":\"vendedor.lider\"}}],\"ops\":{\"count\":5,\"ids\":[12345,12346],\"loja_count\":2,\"loja_ids\":[99001,99002]},\"integrity\":{\"sync_id\":\"a1b2c3d4e5f6\",\"warnings\":[\"architecto\"]},\"resumo\":{\"by_vendor\":[{\"login\":\"maria.silva\"}]}}"
                         },
                         "description": "Recebe o payload bruto do agente PDV e cria o registro de sync.\nO processamento pesado e executado em fila.",
                         "auth": {
@@ -1732,7 +1732,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-02-13T14:36:31\"}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-02-13T16:31:48\"}"
                         },
                         "description": "Retorna m\u00e9tricas completas para o vendedor, incluindo:\n- Vendas pessoais do dia\n- **Gamifica\u00e7\u00e3o de B\u00f4nus** - quanto falta para o pr\u00f3ximo n\u00edvel\n- **Proje\u00e7\u00e3o de Comiss\u00e3o** - tier atual e potencial\n- **Pace Di\u00e1rio** - ritmo comparado \u00e0 m\u00e9dia\n\nEste dashboard \u00e9 projetado para **motivar** o vendedor mostrando\nmetas tang\u00edveis e progresso em tempo real.\n\n**Quem pode usar:** Vendedores e n\u00edveis superiores.\n\n**M\u00e9tricas retornadas:**\n| M\u00e9trica | Descri\u00e7\u00e3o |\n|---------|-----------|\n| `my_sales` | Quantidade e valor total das vendas do dia |\n| `store_sales` | Total de vendas da loja (para compara\u00e7\u00e3o) |\n| `bonus_gamification` | Gap para pr\u00f3ximo b\u00f4nus, b\u00f4nus atual |\n| `monthly_commission` | Tier atual, proje\u00e7\u00e3o, potencial |\n| `daily_pace` | Ritmo vs m\u00e9dia di\u00e1ria |\n| `my_shifts` | Turnos do dia com status |"
                     },
@@ -1780,7 +1780,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-02-13T14:36:31\"}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-02-13T16:31:49\"}"
                         },
                         "description": "Retorna m\u00e9tricas para confer\u00eancia de caixa e auditoria,\nincluindo fechamentos pendentes e ranking de vendedores.\n\n**Foco:** Integridade de caixa e aprova\u00e7\u00e3o de fechamentos.\n\n**Quem pode usar:** Conferentes, Gerentes e Admins.\n\n**M\u00e9tricas retornadas:**\n| M\u00e9trica | Descri\u00e7\u00e3o |\n|---------|-----------|\n| `pending_closings` | Fechamentos aguardando aprova\u00e7\u00e3o |\n| `pending_count` | Quantidade de pendentes |\n| `store_sales` | Total de vendas da loja no dia |\n| `shifts_today` | Resumo por status (open\/closed\/pending) |\n| `top_sellers` | Top 5 vendedores do dia |"
                     },
@@ -1894,7 +1894,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"seller_id\":16,\"from\":\"2026-02-13T14:36:30\",\"to\":\"2026-02-13T14:36:30\",\"per_page\":22}"
+                            "raw": "{\"store_id\":16,\"seller_id\":16,\"from\":\"2026-02-13T16:31:47\",\"to\":\"2026-02-13T16:31:47\",\"per_page\":22}"
                         },
                         "description": "Retorna a lista paginada de vendas das lojas \u00e0s quais o\nusu\u00e1rio tem acesso, com diversos filtros dispon\u00edveis.\n\n**Visibilidade:**\n- Vendedor: v\u00ea vendas de todas as lojas onde trabalha\n- Gerente: v\u00ea todas as vendas das lojas que gerencia\n- Admin: v\u00ea todas as vendas do sistema\n\n**Filtros dispon\u00edveis:**\n- `store_id` - Filtrar por loja espec\u00edfica\n- `seller_id` - Filtrar por vendedor\n- `from`\/`to` - Per\u00edodo de datas\n\n**Ordena\u00e7\u00e3o:** Por data de venda, mais recentes primeiro.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado (v\u00ea apenas suas lojas)."
                     },
@@ -2160,7 +2160,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-02-13T14:36:30\",\"status\":\"pending\",\"per_page\":22}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-02-13T16:31:47\",\"status\":\"open\",\"per_page\":22}"
                         },
                         "description": "Retorna os turnos de caixa das lojas \u00e0s quais o usu\u00e1rio tem acesso,\ncom filtros por loja, data e status.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado.\n\n**Filtros dispon\u00edveis:**\n- `store_id` - Filtrar por loja espec\u00edfica\n- `date` - Filtrar por data espec\u00edfica (YYYY-MM-DD)\n- `status` - Filtrar por status (open, closed, pending)\n\n**C\u00f3digos de turno:**\n- `1` ou `M` - Manh\u00e3\n- `2` ou `T` - Tarde\n- `3` ou `N` - Noite"
                     },
@@ -2724,7 +2724,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-02-13T14:36:31\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-02-13T16:31:48\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
                         },
                         "description": "POST \/api\/v1\/rules\/bonus"
                     },
@@ -2793,7 +2793,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-02-13T14:36:31\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-02-13T16:31:48\",\"config_json\":[{\"min_sales\":27,\"bonus\":39}]}"
                         },
                         "description": "PUT \/api\/v1\/rules\/bonus\/{rule}"
                     },
@@ -2885,7 +2885,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-02-13T14:36:31\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-02-13T16:31:48\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
                         },
                         "description": "POST \/api\/v1\/rules\/commission"
                     },
@@ -2954,7 +2954,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-02-13T14:36:31\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
+                            "raw": "{\"store_id\":16,\"effective_from\":\"2026-02-13T16:31:48\",\"config_json\":[{\"min_attainment\":27,\"rate\":22}]}"
                         },
                         "description": "PUT \/api\/v1\/rules\/commission\/{rule}"
                     },
@@ -3046,7 +3046,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"month\":\"6425-59\",\"goal_amount\":9,\"active\":true}"
+                            "raw": "{\"store_id\":16,\"month\":\"6425-59\",\"goal_amount\":9,\"active\":false}"
                         },
                         "description": "POST \/api\/v1\/goals\/monthly"
                     },
@@ -3115,7 +3115,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"goal_amount\":27,\"active\":true}"
+                            "raw": "{\"goal_amount\":27,\"active\":false}"
                         },
                         "description": "PUT \/api\/v1\/goals\/monthly\/{goal}"
                     },
@@ -3218,7 +3218,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"from\":\"2026-02-13T14:36:31\",\"to\":\"2026-02-13T14:36:31\",\"per_page\":22}"
+                            "raw": "{\"store_id\":16,\"from\":\"2026-02-13T16:31:48\",\"to\":\"2026-02-13T16:31:48\",\"per_page\":22}"
                         },
                         "description": "GET \/api\/v1\/finance\/bonus?store_id=&from=&to="
                     },
@@ -3321,7 +3321,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"from\":\"2026-02-13T14:36:31\",\"to\":\"2026-02-13T14:36:31\"}"
+                            "raw": "{\"from\":\"2026-02-13T16:31:48\",\"to\":\"2026-02-13T16:31:48\"}"
                         },
                         "description": "Retorna o hist\u00f3rico de b\u00f4nus de um vendedor espec\u00edfico com resumo.\n\n**Quem pode usar:** O pr\u00f3prio vendedor ou Gerentes\/Admins."
                     },
@@ -3495,7 +3495,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-02-13T14:36:31\"}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-02-13T16:31:48\"}"
                         },
                         "description": "GET \/api\/v1\/analytics\/people\/shift?store_id=&date="
                     },
@@ -3523,7 +3523,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":16,\"date\":\"2026-02-13T14:36:31\",\"shift_code\":\"T\",\"in_count\":39,\"out_count\":84,\"staff_in\":12,\"staff_out\":77}"
+                            "raw": "{\"store_id\":16,\"date\":\"2026-02-13T16:31:48\",\"shift_code\":\"1\",\"in_count\":39,\"out_count\":84,\"staff_in\":12,\"staff_out\":77}"
                         },
                         "description": "POST \/api\/v1\/analytics\/people\/shift"
                     },
@@ -4226,7 +4226,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"label\":\"b\",\"icon\":\"n\",\"tooltip\":\"g\",\"shortcut\":\"zmiyvd\",\"shortcut_modifier\":\"alt\",\"confirm\":false,\"confirm_title\":\"l\",\"confirm_message\":\"j\",\"confirm_button\":\"n\",\"cancel_button\":\"i\",\"confirm_variant\":\"warning\",\"is_active\":true}"
+                            "raw": "{\"label\":\"b\",\"icon\":\"n\",\"tooltip\":\"g\",\"shortcut\":\"zmiyvd\",\"shortcut_modifier\":\"shift\",\"confirm\":false,\"confirm_title\":\"l\",\"confirm_message\":\"j\",\"confirm_button\":\"n\",\"cancel_button\":\"i\",\"confirm_variant\":\"warning\",\"is_active\":false}"
                         },
                         "description": "Allows Super Admin to customize action labels, icons, confirmations, etc."
                     },
@@ -4262,7 +4262,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"id\":\"b\",\"label\":\"n\",\"icon\":\"g\",\"tooltip\":\"z\",\"shortcut\":\"miyvdl\",\"shortcut_modifier\":\"alt\",\"confirm\":true,\"confirm_title\":\"j\",\"confirm_message\":\"n\",\"confirm_button\":\"i\",\"cancel_button\":\"k\",\"confirm_variant\":\"destructive\",\"permission\":\"h\",\"available_in_status\":[16],\"api_endpoint\":\"n\",\"api_method\":\"GET\"}"
+                            "raw": "{\"id\":\"b\",\"label\":\"n\",\"icon\":\"g\",\"tooltip\":\"z\",\"shortcut\":\"miyvdl\",\"shortcut_modifier\":\"meta\",\"confirm\":false,\"confirm_title\":\"j\",\"confirm_message\":\"n\",\"confirm_button\":\"i\",\"cancel_button\":\"k\",\"confirm_variant\":\"default\",\"permission\":\"h\",\"available_in_status\":[16],\"api_endpoint\":\"n\",\"api_method\":\"PATCH\"}"
                         },
                         "description": "Allows Super Admin to add new actions to a module."
                     },
@@ -4761,7 +4761,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"key\":\"b\",\"status\":{\"name\":\"b\",\"label\":\"n\",\"description\":\"Animi quos velit et fugiat.\",\"color\":\"orange\",\"icon\":\"d\",\"badge_variant\":\"success\",\"can_edit\":false,\"final\":false,\"tooltip\":\"l\",\"help_text\":\"j\"},\"transitions_to\":[\"architecto\"],\"transitions_from\":[\"architecto\"]}"
+                            "raw": "{\"key\":\"b\",\"status\":{\"name\":\"b\",\"label\":\"n\",\"description\":\"Animi quos velit et fugiat.\",\"color\":\"blue\",\"icon\":\"d\",\"badge_variant\":\"destructive\",\"can_edit\":false,\"final\":false,\"tooltip\":\"l\",\"help_text\":\"j\"},\"transitions_to\":[\"architecto\"],\"transitions_from\":[\"architecto\"]}"
                         },
                         "description": "Allows Super Admin to add new statuses to a module."
                     },
@@ -4836,7 +4836,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"action\":\"update_status\",\"status_key\":\"architecto\"}"
+                            "raw": "{\"action\":\"delete_status\",\"status_key\":\"architecto\"}"
                         },
                         "description": "Helps admin understand consequences before confirming."
                     },
@@ -5306,7 +5306,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"include_temporary\":false,\"expires_at\":\"2052-03-09\"}"
+                            "raw": "{\"include_temporary\":true,\"expires_at\":\"2052-03-09\"}"
                         },
                         "description": ""
                     },
@@ -5794,7 +5794,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"granted\":false}"
+                            "raw": "{\"granted\":true}"
                         },
                         "description": ""
                     },
@@ -5908,7 +5908,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"permission_id\":\"architecto\",\"granted\":false,\"expires_at\":\"2052-03-09\",\"reason\":\"n\"}"
+                            "raw": "{\"permission_id\":\"architecto\",\"granted\":true,\"expires_at\":\"2052-03-09\",\"reason\":\"n\"}"
                         },
                         "description": ""
                     },
@@ -5944,7 +5944,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"overrides\":[{\"permission_id\":\"architecto\",\"granted\":false,\"expires_at\":\"2052-03-09\",\"reason\":\"n\"}]}"
+                            "raw": "{\"overrides\":[{\"permission_id\":\"architecto\",\"granted\":true,\"expires_at\":\"2052-03-09\",\"reason\":\"n\"}]}"
                         },
                         "description": ""
                     },
@@ -6355,7 +6355,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"from\":\"2026-02-13T14:36:34\",\"to\":\"2026-02-13T14:36:34\",\"causer_id\":16,\"event\":\"n\",\"log_name\":\"g\",\"store_id\":16,\"subject_type\":\"n\",\"subject_id\":16,\"per_page\":22}"
+                            "raw": "{\"from\":\"2026-02-13T16:31:51\",\"to\":\"2026-02-13T16:31:51\",\"causer_id\":16,\"event\":\"n\",\"log_name\":\"g\",\"store_id\":16,\"subject_type\":\"n\",\"subject_id\":16,\"per_page\":22}"
                         },
                         "description": "Retorna lista paginada de logs com suporte a diversos filtros.\n\n**Filtros dispon\u00edveis:**\n- `from`\/`to` - Per\u00edodo de datas\n- `causer_id` - ID do usu\u00e1rio que executou a a\u00e7\u00e3o\n- `event` - Nome do evento (suporta wildcard: `auth.*`)\n- `log_name` - Dom\u00ednio: auth, cash, rules, goals\n- `store_id` - Loja relacionada\n- `subject_type` - Tipo de entidade (CashClosing, BonusRule, etc)\n- `subject_id` - ID da entidade\n\n**Ordena\u00e7\u00e3o:** Por data de cria\u00e7\u00e3o, mais recentes primeiro.\n\n**Quem pode usar:** Apenas administradores."
                     },
@@ -6409,7 +6409,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"from\":\"2026-02-13T14:36:34\",\"to\":\"2026-02-13T14:36:34\"}"
+                            "raw": "{\"from\":\"2026-02-13T16:31:51\",\"to\":\"2026-02-13T16:31:51\"}"
                         },
                         "description": "Retorna estat\u00edsticas agregadas dos logs para overview.\n\n**Quem pode usar:** Apenas administradores."
                     },
@@ -6547,7 +6547,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"name\":\"Mais Capinhas Shopping Center\",\"city\":\"Florian\u00f3polis\",\"active\":true,\"codigo\":\"gzmiyvdljnikhway\",\"bio_enabled\":true,\"address\":\"k\",\"neighborhood\":\"c\",\"state\":\"my\",\"zip_code\":\"uwpwlv\",\"latitude\":-90,\"longitude\":-180,\"phone\":\"rsitcpscqldzsnrw\",\"whatsapp\":\"tujwvlxjklqppwqb\",\"instagram\":\"e\",\"opening_hours\":{\"tz\":\"America\\\/Matamoros\",\"weekly\":{\"*\":[[]]},\"exceptions\":[{\"date\":\"2026-02-13\",\"closed\":true,\"reason\":\"o\"}]},\"cnpj\":\"tnnoqitpxntltcvi\",\"troco_padrao\":15}"
+                            "raw": "{\"name\":\"Mais Capinhas Shopping Center\",\"city\":\"Florian\u00f3polis\",\"active\":true,\"codigo\":\"gzmiyvdljnikhway\",\"bio_enabled\":true,\"address\":\"k\",\"neighborhood\":\"c\",\"state\":\"my\",\"zip_code\":\"uwpwlv\",\"latitude\":-90,\"longitude\":-180,\"phone\":\"rsitcpscqldzsnrw\",\"whatsapp\":\"tujwvlxjklqppwqb\",\"instagram\":\"e\",\"opening_hours\":{\"tz\":\"America\\\/Matamoros\",\"weekly\":{\"*\":[[]]},\"exceptions\":[{\"date\":\"2026-02-13\",\"closed\":false,\"reason\":\"o\"}]},\"cnpj\":\"tnnoqitpxntltcvi\",\"troco_padrao\":15}"
                         },
                         "description": "Cadastra uma nova loja (ponto de venda) no sistema.\n\nAp\u00f3s criar a loja, voc\u00ea deve:\n1. Vincular usu\u00e1rios \u00e0 loja (via endpoint de v\u00ednculos)\n2. Configurar metas mensais (via `\/goals\/monthly`)\n3. Opcionalmente criar regras espec\u00edficas de b\u00f4nus\/comiss\u00e3o\n\n**Quem pode usar:** Apenas administradores."
                     },
@@ -6642,7 +6642,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"name\":\"Mais Capinhas Tijucas - Centro\",\"city\":\"Tijucas\",\"active\":true,\"codigo\":\"gzmiyvdljnikhway\",\"bio_enabled\":false,\"address\":\"k\",\"neighborhood\":\"c\",\"state\":\"my\",\"zip_code\":\"uwpwlv\",\"latitude\":-90,\"longitude\":-180,\"phone\":\"rsitcpscqldzsnrw\",\"whatsapp\":\"tujwvlxjklqppwqb\",\"instagram\":\"e\",\"opening_hours\":{\"tz\":\"America\\\/Matamoros\",\"weekly\":{\"*\":[[]]},\"exceptions\":[{\"date\":\"2026-02-13\",\"closed\":false,\"reason\":\"o\"}]},\"cnpj\":\"tnnoqitpxntltcvi\",\"troco_padrao\":15}"
+                            "raw": "{\"name\":\"Mais Capinhas Tijucas - Centro\",\"city\":\"Tijucas\",\"active\":true,\"codigo\":\"gzmiyvdljnikhway\",\"bio_enabled\":false,\"address\":\"k\",\"neighborhood\":\"c\",\"state\":\"my\",\"zip_code\":\"uwpwlv\",\"latitude\":-90,\"longitude\":-180,\"phone\":\"rsitcpscqldzsnrw\",\"whatsapp\":\"tujwvlxjklqppwqb\",\"instagram\":\"e\",\"opening_hours\":{\"tz\":\"America\\\/Matamoros\",\"weekly\":{\"*\":[[]]},\"exceptions\":[{\"date\":\"2026-02-13\",\"closed\":true,\"reason\":\"o\"}]},\"cnpj\":\"tnnoqitpxntltcvi\",\"troco_padrao\":15}"
                         },
                         "description": "Atualiza informa\u00e7\u00f5es de uma loja existente.\nApenas os campos informados ser\u00e3o alterados.\n\n**Quem pode usar:** Apenas administradores."
                     },
@@ -6833,7 +6833,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"name\":\"Jo\u00e3o Silva Santos\",\"email\":\"joao.silva@maiscapinhas.com.br\",\"password\":\"senha123456\",\"active\":true,\"is_super_admin\":false,\"zip_code\":\"vdljnikh\",\"street\":\"w\",\"number\":\"aykcmyuwpwlvqwrs\",\"complement\":\"i\",\"neighborhood\":\"t\",\"city\":\"c\",\"state\":\"ps\",\"birth_date\":\"2022-03-09\",\"hire_date\":\"2022-03-09\",\"whatsapp\":\"ngzmiyvdljnikhwa\",\"instagram\":\"y\",\"cpf\":\"kcmyuwpwlvqwrs\",\"pix_key\":\"i\",\"stores\":[\"architecto\"],\"roles\":[\"fabrica\"]}"
+                            "raw": "{\"name\":\"Jo\u00e3o Silva Santos\",\"email\":\"joao.silva@maiscapinhas.com.br\",\"password\":\"senha123456\",\"active\":true,\"is_super_admin\":true,\"zip_code\":\"vdljnikh\",\"street\":\"w\",\"number\":\"aykcmyuwpwlvqwrs\",\"complement\":\"i\",\"neighborhood\":\"t\",\"city\":\"c\",\"state\":\"ps\",\"birth_date\":\"2022-03-09\",\"hire_date\":\"2022-03-09\",\"whatsapp\":\"ngzmiyvdljnikhwa\",\"instagram\":\"y\",\"cpf\":\"kcmyuwpwlvqwrs\",\"pix_key\":\"i\",\"stores\":[\"architecto\"],\"roles\":[\"fabrica\"]}"
                         },
                         "description": "Cadastra um novo usu\u00e1rio no sistema, opcionalmente j\u00e1 vinculando-o\na uma ou mais lojas com roles espec\u00edficas.\n\nEste endpoint \u00e9 utilizado para:\n- Onboarding de novos funcion\u00e1rios\n- Criar usu\u00e1rios administrativos\n- Configurar equipe de vendas\n\n**Fluxo recomendado:**\n1. Criar usu\u00e1rio com dados b\u00e1sicos + senha tempor\u00e1ria\n2. Vincular \u00e0s lojas onde ir\u00e1 trabalhar\n3. Compartilhar credenciais com o novo usu\u00e1rio\n\n**Regras de Neg\u00f3cio:**\n- Email deve ser \u00fanico (valida\u00e7\u00e3o 422 se duplicado)\n- Senha deve ter m\u00ednimo 8 caracteres\n- V\u00ednculos s\u00e3o opcionais na cria\u00e7\u00e3o (podem ser adicionados depois)\n- Se informar v\u00ednculos, `store_id` deve existir e `role` deve ser v\u00e1lida\n\n**Quem pode usar:** Apenas administradores."
                     },
@@ -6940,7 +6940,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"name\":\"Jo\u00e3o da Silva Atualizado\",\"email\":\"joao.novo@maiscapinhas.com.br\",\"password\":\"novasenha123\",\"active\":true,\"is_super_admin\":false,\"zip_code\":\"vdljnikh\",\"street\":\"w\",\"number\":\"aykcmyuwpwlvqwrs\",\"complement\":\"i\",\"neighborhood\":\"t\",\"city\":\"c\",\"state\":\"ps\",\"birth_date\":\"2022-03-09\",\"hire_date\":\"2022-03-09\",\"whatsapp\":\"ngzmiyvdljnikhwa\",\"instagram\":\"y\",\"cpf\":\"kcmyuwpwlvqwrs\",\"pix_key\":\"i\",\"roles\":[\"fabrica\"]}"
+                            "raw": "{\"name\":\"Jo\u00e3o da Silva Atualizado\",\"email\":\"joao.novo@maiscapinhas.com.br\",\"password\":\"novasenha123\",\"active\":true,\"is_super_admin\":true,\"zip_code\":\"vdljnikh\",\"street\":\"w\",\"number\":\"aykcmyuwpwlvqwrs\",\"complement\":\"i\",\"neighborhood\":\"t\",\"city\":\"c\",\"state\":\"ps\",\"birth_date\":\"2022-03-09\",\"hire_date\":\"2022-03-09\",\"whatsapp\":\"ngzmiyvdljnikhwa\",\"instagram\":\"y\",\"cpf\":\"kcmyuwpwlvqwrs\",\"pix_key\":\"i\",\"roles\":[\"fabrica\"]}"
                         },
                         "description": "Atualiza dados cadastrais de um usu\u00e1rio existente.\nApenas os campos informados ser\u00e3o alterados.\n\n**Casos de uso:**\n- Corrigir nome ou email\n- Alterar senha\n- Ativar\/desativar usu\u00e1rio\n\n**Regras de Neg\u00f3cio:**\n- Email deve continuar \u00fanico (valida\u00e7\u00e3o considera o pr\u00f3prio usu\u00e1rio)\n- Para gerenciar v\u00ednculos com lojas, use os endpoints de v\u00ednculos\n\n**Quem pode usar:** Apenas administradores."
                     },
@@ -7035,7 +7035,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"stores\":[{\"store_id\":16,\"role\":\"gerente\"}]}"
+                            "raw": "{\"stores\":[{\"store_id\":16,\"role\":\"conferente\"}]}"
                         },
                         "description": "PUT \/admin\/users\/{user}\/stores"
                     },
@@ -7071,7 +7071,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"stores\":[{\"store_id\":16,\"role\":\"vendedor\"}]}"
+                            "raw": "{\"stores\":[{\"store_id\":16,\"role\":\"gerente\"}]}"
                         },
                         "description": "POST \/admin\/users\/{user}\/stores\/bulk"
                     },
@@ -7107,7 +7107,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"role\":\"admin\",\"store_ids\":[16]}"
+                            "raw": "{\"role\":\"gerente\",\"store_ids\":[16]}"
                         },
                         "description": "PATCH \/admin\/users\/{user}\/stores\/bulk"
                     },
@@ -8268,7 +8268,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":1,\"user_id\":16,\"customer_id\":1,\"customer_device_id\":1,\"selected_product\":\"Capa Premium\",\"product_reference\":\"g\",\"obs\":\"z\",\"qty\":1,\"price\":49.9,\"payed\":true,\"payday\":\"2026-02-13T14:36:33\",\"received_by_id\":16,\"status\":\"6\",\"observation\":\"Cliente quer borda preta\"}"
+                            "raw": "{\"store_id\":1,\"user_id\":16,\"customer_id\":1,\"customer_device_id\":1,\"selected_product\":\"Capa Premium\",\"product_reference\":\"g\",\"obs\":\"z\",\"qty\":1,\"price\":49.9,\"payed\":true,\"payday\":\"2026-02-13T16:31:50\",\"received_by_id\":16,\"status\":\"6\",\"observation\":\"Cliente quer borda preta\"}"
                         },
                         "description": "Cria uma nova capa personalizada para um cliente.\nA capa iniciar\u00e1 no status \"Aguardando Foto\" at\u00e9 o upload.\n\n**Quem pode usar:** Todos os usu\u00e1rios autenticados."
                     },
@@ -8369,7 +8369,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"customer_id\":16,\"customer_device_id\":16,\"selected_product\":\"Capa Ultra Premium\",\"product_reference\":\"g\",\"obs\":\"z\",\"qty\":27,\"price\":59.9,\"status\":\"6\",\"observation\":\"Cliente alterou modelo\"}"
+                            "raw": "{\"customer_id\":16,\"customer_device_id\":16,\"selected_product\":\"Capa Ultra Premium\",\"product_reference\":\"g\",\"obs\":\"z\",\"qty\":27,\"price\":59.9,\"status\":\"10\",\"observation\":\"Cliente alterou modelo\"}"
                         },
                         "description": "Atualiza dados de uma capa personalizada.\n\n**Quem pode usar:** Usu\u00e1rio com acesso \u00e0 capa."
                     },
@@ -10340,7 +10340,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"status\":\"active\",\"only_unacknowledged\":false,\"only_unseen\":true,\"severity\":\"info\",\"type\":\"recado\",\"scope\":\"role\",\"store_id\":16,\"created_by\":16,\"date_from\":\"2026-02-13T14:36:28\",\"date_to\":\"2052-03-08\",\"per_page\":22,\"page\":67,\"sort\":\"starts_at_asc\"}"
+                            "raw": "{\"status\":\"active\",\"only_unacknowledged\":true,\"only_unseen\":true,\"severity\":\"warning\",\"type\":\"advertencia\",\"scope\":\"user\",\"store_id\":16,\"created_by\":16,\"date_from\":\"2026-02-13T16:31:46\",\"date_to\":\"2052-03-08\",\"per_page\":22,\"page\":67,\"sort\":\"created_at_desc\"}"
                         },
                         "description": "Retorna o hist\u00f3rico de avisos que o usu\u00e1rio recebeu, com pagina\u00e7\u00e3o e filtros.\n\n**Quem pode usar:** Qualquer usu\u00e1rio autenticado."
                     },
@@ -10430,7 +10430,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"status\":\"draft\",\"only_unacknowledged\":false,\"only_unseen\":false,\"severity\":\"danger\",\"type\":\"recado\",\"scope\":\"store\",\"store_id\":16,\"created_by\":16,\"date_from\":\"2026-02-13T14:36:28\",\"date_to\":\"2052-03-08\",\"per_page\":22,\"page\":67,\"sort\":\"created_at_asc\"}"
+                            "raw": "{\"status\":\"active\",\"only_unacknowledged\":true,\"only_unseen\":false,\"severity\":\"danger\",\"type\":\"advertencia\",\"scope\":\"store\",\"store_id\":16,\"created_by\":16,\"date_from\":\"2026-02-13T16:31:46\",\"date_to\":\"2052-03-08\",\"per_page\":22,\"page\":67,\"sort\":\"starts_at_asc\"}"
                         },
                         "description": "Retorna lista de avisos com filtros e pagina\u00e7\u00e3o para gerenciamento.\nSuper admins veem todos os avisos; outros admins veem apenas avisos das lojas que gerenciam.\n\n**Quem pode usar:** Administradores e gerentes."
                     },
@@ -10471,7 +10471,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"title\":\"Manuten\u00e7\u00e3o Programada\",\"message\":\"O sistema ficar\u00e1 indispon\u00edvel...\",\"excerpt\":\"Sistema indispon\u00edvel das 22h \u00e0s 23h\",\"type\":\"announcement\",\"severity\":\"warning\",\"display_mode\":\"modal\",\"icon\":\"g\",\"image_url\":\"http:\\\/\\\/www.okuneva.com\\\/fugiat-sunt-nihil-accusantium-harum-mollitia.html\",\"image_alt\":\"k\",\"cta_label\":\"h\",\"cta_url\":\"http:\\\/\\\/www.dubuque.net\\\/quo-omnis-nostrum-aut-adipisci\",\"scope\":\"store\",\"require_ack\":true,\"starts_at\":\"2026-01-15T10:00:00Z\",\"expires_at\":\"2026-01-20T23:59:59Z\",\"repeat_every_minutes\":22,\"priority\":10,\"pinned_until\":\"2026-02-13T14:36:28\",\"targets\":[\"architecto\"]}"
+                            "raw": "{\"title\":\"Manuten\u00e7\u00e3o Programada\",\"message\":\"O sistema ficar\u00e1 indispon\u00edvel...\",\"excerpt\":\"Sistema indispon\u00edvel das 22h \u00e0s 23h\",\"type\":\"announcement\",\"severity\":\"warning\",\"display_mode\":\"modal\",\"icon\":\"g\",\"image_url\":\"http:\\\/\\\/www.okuneva.com\\\/fugiat-sunt-nihil-accusantium-harum-mollitia.html\",\"image_alt\":\"k\",\"cta_label\":\"h\",\"cta_url\":\"http:\\\/\\\/www.dubuque.net\\\/quo-omnis-nostrum-aut-adipisci\",\"scope\":\"store\",\"require_ack\":true,\"starts_at\":\"2026-01-15T10:00:00Z\",\"expires_at\":\"2026-01-20T23:59:59Z\",\"repeat_every_minutes\":22,\"priority\":10,\"pinned_until\":\"2026-02-13T16:31:46\",\"targets\":[\"architecto\"]}"
                         },
                         "description": "Cria um novo aviso em status `draft`. Ap\u00f3s criar, use o endpoint `\/publish` para publicar.\n\n**Quem pode usar:** Administradores e gerentes.\n\n**Regras de neg\u00f3cio:**\n- Avisos s\u00e3o criados como rascunho (draft)\n- \u00c9 necess\u00e1rio definir targets para avisos com scope `store`, `user` ou `role`\n- `require_ack` define se o usu\u00e1rio precisa confirmar leitura"
                     },
@@ -10584,7 +10584,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"title\":\"T\u00edtulo atualizado\",\"message\":\"Nova mensagem\",\"excerpt\":\"n\",\"type\":\"advertencia\",\"severity\":\"info\",\"display_mode\":\"banner\",\"icon\":\"g\",\"image_url\":\"http:\\\/\\\/www.okuneva.com\\\/fugiat-sunt-nihil-accusantium-harum-mollitia.html\",\"image_alt\":\"k\",\"cta_label\":\"h\",\"cta_url\":\"http:\\\/\\\/www.dubuque.net\\\/quo-omnis-nostrum-aut-adipisci\",\"scope\":\"user\",\"require_ack\":false,\"starts_at\":\"2026-02-13T14:36:29\",\"expires_at\":\"2052-03-08\",\"repeat_every_minutes\":22,\"priority\":84,\"pinned_until\":\"2026-02-13T14:36:29\",\"targets\":[\"architecto\"]}"
+                            "raw": "{\"title\":\"T\u00edtulo atualizado\",\"message\":\"Nova mensagem\",\"excerpt\":\"n\",\"type\":\"advertencia\",\"severity\":\"info\",\"display_mode\":\"modal\",\"icon\":\"g\",\"image_url\":\"http:\\\/\\\/www.okuneva.com\\\/fugiat-sunt-nihil-accusantium-harum-mollitia.html\",\"image_alt\":\"k\",\"cta_label\":\"h\",\"cta_url\":\"http:\\\/\\\/www.dubuque.net\\\/quo-omnis-nostrum-aut-adipisci\",\"scope\":\"global\",\"require_ack\":false,\"starts_at\":\"2026-02-13T16:31:46\",\"expires_at\":\"2052-03-08\",\"repeat_every_minutes\":22,\"priority\":84,\"pinned_until\":\"2026-02-13T16:31:46\",\"targets\":[\"architecto\"]}"
                         },
                         "description": "Atualiza os dados de um aviso existente. Apenas rascunhos podem ter seus targets atualizados.\n\n**Quem pode usar:** Administradores e gerentes (criador ou com acesso ao scope)."
                     },
@@ -11756,7 +11756,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"active\":\"all\",\"state\":\"bn\",\"city\":\"g\",\"date_from\":\"2026-02-13\",\"date_to\":\"2052-03-08\"}"
+                            "raw": "{\"active\":\"1\",\"state\":\"bn\",\"city\":\"g\",\"date_from\":\"2026-02-13\",\"date_to\":\"2052-03-08\"}"
                         },
                         "description": "Returns statistical data about users without exposing personal information.\nUseful for dashboard cards and charts."
                     },
@@ -11960,7 +11960,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"phone\":\"bngzmiyvdljnikhw\",\"name\":\"a\",\"terms_accepted\":true,\"device_fingerprint\":\"y\"}"
+                            "raw": "{\"phone\":\"bngzmiyvdljnikhw\",\"name\":\"a\",\"terms_accepted\":false,\"device_fingerprint\":\"y\"}"
                         },
                         "description": "Entrar na fila via QR Code.\nBusca\/cria Player pelo WhatsApp e cria SessionPlayer para esta sess\u00e3o."
                     },
@@ -12310,7 +12310,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"store_id\":1,\"user_id\":16,\"customer_id\":1,\"customer_device_id\":1,\"selected_product\":\"Capa Personalizada\",\"obs\":\"g\",\"status\":\"3\",\"observation\":\"Cliente pediu urg\u00eancia\",\"value\":49.9}"
+                            "raw": "{\"store_id\":1,\"user_id\":16,\"customer_id\":1,\"customer_device_id\":1,\"selected_product\":\"Capa Personalizada\",\"obs\":\"g\",\"status\":\"2\",\"observation\":\"Cliente pediu urg\u00eancia\",\"value\":49.9}"
                         },
                         "description": "Cria um novo pedido associado a um cliente.\n\n**Quem pode usar:** Todos os usu\u00e1rios autenticados."
                     },
@@ -13794,7 +13794,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"period\":\"month\",\"from\":\"2026-02-13T14:36:39\",\"to\":\"2026-02-13T14:36:39\",\"campaign_key\":\"architecto\",\"store_id\":16}"
+                            "raw": "{\"period\":\"month\",\"from\":\"2026-02-13T16:31:55\",\"to\":\"2026-02-13T16:31:55\",\"campaign_key\":\"architecto\",\"store_id\":16}"
                         },
                         "description": ""
                     },
@@ -13922,7 +13922,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"period\":\"month\",\"from\":\"2026-02-13T14:36:39\",\"to\":\"2026-02-13T14:36:39\"}"
+                            "raw": "{\"period\":\"today\",\"from\":\"2026-02-13T16:31:55\",\"to\":\"2026-02-13T16:31:55\"}"
                         },
                         "description": "M\u00e9tricas agrupadas por store incluindo spins, pr\u00eamios e taxa de convers\u00e3o."
                     },
@@ -14006,7 +14006,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"period\":\"month\",\"campaign_key\":\"architecto\"}"
+                            "raw": "{\"period\":\"week\",\"campaign_key\":\"architecto\"}"
                         },
                         "description": "Valor m\u00e9dio por jogador e custo por engajamento."
                     },
@@ -14065,7 +14065,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"campaign_key\":\"b\",\"name\":\"n\",\"status\":\"draft\",\"starts_at\":\"2026-02-13T14:36:39\",\"ends_at\":\"2052-03-08\",\"terms_version\":\"ngzmiyvdljnikhwa\",\"settings\":{\"qr_ttl_seconds\":24,\"spin_duration_ms\":18,\"min_rotations\":3,\"max_rotations\":4,\"max_queue_size\":8,\"per_phone_limit\":\"unlimited\"}}"
+                            "raw": "{\"campaign_key\":\"b\",\"name\":\"n\",\"status\":\"draft\",\"starts_at\":\"2026-02-13T16:31:55\",\"ends_at\":\"2052-03-08\",\"terms_version\":\"ngzmiyvdljnikhwa\",\"settings\":{\"qr_ttl_seconds\":24,\"spin_duration_ms\":18,\"min_rotations\":3,\"max_rotations\":4,\"max_queue_size\":8,\"per_phone_limit\":\"1_per_day\"}}"
                         },
                         "description": ""
                     },
@@ -14134,7 +14134,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"name\":\"b\",\"starts_at\":\"2026-02-13T14:36:39\",\"ends_at\":\"2052-03-08\",\"terms_version\":\"ngzmiyvdljnikhwa\",\"settings\":{\"qr_ttl_seconds\":24,\"spin_duration_ms\":18,\"min_rotations\":3,\"max_rotations\":4,\"max_queue_size\":8,\"per_phone_limit\":\"1_per_day\"}}"
+                            "raw": "{\"name\":\"b\",\"starts_at\":\"2026-02-13T16:31:55\",\"ends_at\":\"2052-03-08\",\"terms_version\":\"ngzmiyvdljnikhwa\",\"settings\":{\"qr_ttl_seconds\":24,\"spin_duration_ms\":18,\"min_rotations\":3,\"max_rotations\":4,\"max_queue_size\":8,\"per_phone_limit\":\"1_per_day\"}}"
                         },
                         "description": ""
                     },
@@ -14838,7 +14838,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"min_gap_spins\":27,\"cooldown_seconds\":39,\"max_per_hour\":67,\"max_per_day\":66,\"cooldown_scope\":\"campaign\",\"pacing_enabled\":false,\"pacing_buffer\":2,\"priority\":15,\"active\":false}"
+                            "raw": "{\"min_gap_spins\":27,\"cooldown_seconds\":39,\"max_per_hour\":67,\"max_per_day\":66,\"cooldown_scope\":\"screen\",\"pacing_enabled\":true,\"pacing_buffer\":2,\"priority\":15,\"active\":true}"
                         },
                         "description": ""
                     },
@@ -14973,7 +14973,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"prize_id\":\"architecto\",\"min_gap_spins\":39,\"cooldown_seconds\":84,\"max_per_hour\":66,\"max_per_day\":27,\"cooldown_scope\":\"screen\",\"pacing_enabled\":true,\"pacing_buffer\":5,\"priority\":8,\"active\":true}"
+                            "raw": "{\"prize_id\":\"architecto\",\"min_gap_spins\":39,\"cooldown_seconds\":84,\"max_per_hour\":66,\"max_per_day\":27,\"cooldown_scope\":\"campaign\",\"pacing_enabled\":false,\"pacing_buffer\":5,\"priority\":8,\"active\":false}"
                         },
                         "description": ""
                     },
@@ -15009,7 +15009,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"rules\":[{\"prize_id\":\"architecto\",\"min_gap_spins\":39,\"cooldown_seconds\":84,\"max_per_hour\":66,\"max_per_day\":27,\"cooldown_scope\":\"campaign\",\"pacing_enabled\":true,\"pacing_buffer\":5,\"priority\":8,\"active\":true}]}"
+                            "raw": "{\"rules\":[{\"prize_id\":\"architecto\",\"min_gap_spins\":39,\"cooldown_seconds\":84,\"max_per_hour\":66,\"max_per_day\":27,\"cooldown_scope\":\"screen\",\"pacing_enabled\":true,\"pacing_buffer\":5,\"priority\":8,\"active\":true}]}"
                         },
                         "description": ""
                     },
@@ -15101,7 +15101,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"prize_key\":\"b\",\"name\":\"n\",\"type\":\"coupon\",\"icon\":\"g\",\"description\":\"Quos velit et fugiat sunt nihil accusantium harum.\",\"redeem_instructions\":\"i\",\"code_prefix\":\"khwaykcmyuwpwlvq\",\"active\":false}"
+                            "raw": "{\"prize_key\":\"b\",\"name\":\"n\",\"type\":\"product\",\"icon\":\"g\",\"description\":\"Quos velit et fugiat sunt nihil accusantium harum.\",\"redeem_instructions\":\"i\",\"code_prefix\":\"khwaykcmyuwpwlvq\",\"active\":true}"
                         },
                         "description": ""
                     },
@@ -15170,7 +15170,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"name\":\"b\",\"type\":\"coupon\",\"icon\":\"n\",\"description\":\"Animi quos velit et fugiat.\",\"redeem_instructions\":\"d\",\"code_prefix\":\"ljnikhwaykcmyuwp\",\"active\":false}"
+                            "raw": "{\"name\":\"b\",\"type\":\"product\",\"icon\":\"n\",\"description\":\"Animi quos velit et fugiat.\",\"redeem_instructions\":\"d\",\"code_prefix\":\"ljnikhwaykcmyuwp\",\"active\":false}"
                         },
                         "description": ""
                     },
@@ -15295,7 +15295,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"screen_key\":\"b\",\"store_id\":\"architecto\",\"name\":\"n\",\"status\":\"inactive\"}"
+                            "raw": "{\"screen_key\":\"b\",\"store_id\":\"architecto\",\"name\":\"n\",\"status\":\"maintenance\"}"
                         },
                         "description": ""
                     },
@@ -15364,7 +15364,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"name\":\"b\",\"status\":\"maintenance\"}"
+                            "raw": "{\"name\":\"b\",\"status\":\"inactive\"}"
                         },
                         "description": ""
                     },
@@ -15568,7 +15568,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"campaigns\":[{\"campaign_id\":\"architecto\",\"status\":\"inactive\"}]}"
+                            "raw": "{\"campaigns\":[{\"campaign_id\":\"architecto\",\"status\":\"active\"}]}"
                         },
                         "description": ""
                     },
@@ -15682,7 +15682,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"segments\":[{\"id\":16,\"segment_key\":\"n\",\"label\":\"g\",\"color\":\"zmiyvdljnikhwayk\",\"prize_id\":\"architecto\",\"probability_weight\":22,\"active\":false}]}"
+                            "raw": "{\"segments\":[{\"id\":16,\"segment_key\":\"n\",\"label\":\"g\",\"color\":\"zmiyvdljnikhwayk\",\"prize_id\":\"architecto\",\"probability_weight\":22,\"active\":true}]}"
                         },
                         "description": "\u00datil para reordena\u00e7\u00e3o via drag-and-drop."
                     },
@@ -15718,7 +15718,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"label\":\"b\",\"color\":\"ngzmiyvdljnikhwa\",\"prize_id\":\"architecto\",\"probability_weight\":22,\"active\":true}"
+                            "raw": "{\"label\":\"b\",\"color\":\"ngzmiyvdljnikhwa\",\"prize_id\":\"architecto\",\"probability_weight\":22,\"active\":false}"
                         },
                         "description": ""
                     },

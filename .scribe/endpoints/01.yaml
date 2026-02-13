@@ -115,7 +115,7 @@ endpoints:
         name: agent.sent_at
         description: 'Must be a valid date.'
         required: false
-        example: '2026-02-13T14:36:27'
+        example: '2026-02-13T16:31:46'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -421,7 +421,7 @@ endpoints:
         name: 'turnos[].data_hora_inicio'
         description: 'Must be a valid date.'
         required: false
-        example: '2026-02-13T14:36:27'
+        example: '2026-02-13T16:31:46'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -432,7 +432,7 @@ endpoints:
         name: 'turnos[].data_hora_termino'
         description: 'Must be a valid date.'
         required: false
-        example: '2026-02-13T14:36:27'
+        example: '2026-02-13T16:31:46'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -575,7 +575,7 @@ endpoints:
         name: 'vendas[].canal'
         description: ''
         required: false
-        example: HIPER_CAIXA
+        example: HIPER_LOJA
         type: string
         enumValues:
           - HIPER_CAIXA
@@ -588,7 +588,7 @@ endpoints:
         name: 'vendas[].data_hora'
         description: 'Must be a valid date.'
         required: false
-        example: '2026-02-13T14:36:27'
+        example: '2026-02-13T16:31:46'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -731,7 +731,7 @@ endpoints:
         name: 'snapshot_turnos[].fechado'
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -742,7 +742,7 @@ endpoints:
         name: 'snapshot_turnos[].data_hora_inicio'
         description: 'Must be a valid date.'
         required: false
-        example: '2026-02-13T14:36:27'
+        example: '2026-02-13T16:31:46'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -753,7 +753,7 @@ endpoints:
         name: 'snapshot_turnos[].data_hora_termino'
         description: 'Must be a valid date.'
         required: false
-        example: '2026-02-13T14:36:27'
+        example: '2026-02-13T16:31:46'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -909,7 +909,7 @@ endpoints:
         name: 'snapshot_vendas[].data_hora_inicio'
         description: 'Must be a valid date.'
         required: false
-        example: '2026-02-13T14:36:27'
+        example: '2026-02-13T16:31:46'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -920,7 +920,7 @@ endpoints:
         name: 'snapshot_vendas[].data_hora_termino'
         description: 'Must be a valid date.'
         required: false
-        example: '2026-02-13T14:36:27'
+        example: '2026-02-13T16:31:46'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1042,7 +1042,7 @@ endpoints:
       agent:
         version: vdljnikhwaykcmyu
         machine: w
-        sent_at: '2026-02-13T14:36:27'
+        sent_at: '2026-02-13T16:31:46'
       store:
         id_ponto_venda: 13
         nome: 'Mais Capinhas Porto Belo'
