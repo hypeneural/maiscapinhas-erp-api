@@ -365,6 +365,9 @@ class PdvReportsController extends Controller
                 'v.data_hora',
                 'v.total',
                 'u.name as seller_name',
+                'u.whatsapp as seller_whatsapp',
+                'u.avatar_url as seller_avatar_url',
+                'u.hire_date as seller_hire_date',
                 DB::raw('COALESCE(it.itens_count, 0) as itens_count'),
                 DB::raw('COALESCE(it.itens_qtd_total, 0) as itens_qtd_total'),
                 DB::raw('COALESCE(it.itens_valor_total, 0) as itens_valor_total'),
@@ -446,6 +449,9 @@ class PdvReportsController extends Controller
                 'store_name' => $row->store_name,
                 'store_pdv_id' => (int) $row->store_pdv_id,
                 'seller_name' => $row->seller_name ?? null,
+                'seller_whatsapp' => $row->seller_whatsapp ?? null,
+                'seller_avatar_url' => $row->seller_avatar_url ?? null,
+                'seller_hire_date' => $row->seller_hire_date ?? null,
                 'id_operacao' => (int) $row->id_operacao,
                 'canal' => (string) ($row->canal ?? 'HIPER_CAIXA'),
                 'id_turno' => $row->id_turno,
@@ -624,6 +630,16 @@ class PdvReportsController extends Controller
             ->where('vi.id_operacao', $resolvedIdOperacao)
             ->orderBy('vi.line_no')
             ->orderBy('vi.id')
+            ->leftJoin('pdv_user_mappings as pum', function ($join): void {
+                $join->on('pum.store_pdv_id', '=', 'vi.store_pdv_id')
+                    ->on('pum.pdv_user_id', '=', 'vi.vendedor_pdv_id');
+            })
+            ->leftJoin('users as u', 'pum.user_id', '=', 'u.id')
+            ->addSelect([
+                'u.whatsapp as vendedor_whatsapp',
+                'u.avatar_url as vendedor_avatar_url',
+                'u.hire_date as vendedor_hire_date',
+            ])
             ->get();
 
         $pagamentosRows = DB::table('pdv_venda_pagamentos as vp')
@@ -667,6 +683,9 @@ class PdvReportsController extends Controller
             'vendedor_nome' => $row->vendedor_nome,
             'vendedor_login' => $row->vendedor_login,
             'vendedor_user_id' => $row->vendedor_user_id !== null ? (int) $row->vendedor_user_id : null,
+            'vendedor_whatsapp' => $row->vendedor_whatsapp ?? null,
+            'vendedor_avatar_url' => $row->vendedor_avatar_url ?? null,
+            'vendedor_hire_date' => $row->vendedor_hire_date ?? null,
         ])->values()->all();
 
         $pagamentos = $pagamentosRows->map(static fn(object $row): array => [
