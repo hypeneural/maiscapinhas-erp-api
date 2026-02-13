@@ -113,39 +113,42 @@ class SyncPdvUserMappings extends Command
                 continue;
             }
 
-            // Criar/Atualizar Mapping para cada loja onde o usuário atua
-            foreach ($userStores[$pdvId] as $storePdvId) {
-                $mapping = PdvUserMapping::firstOrNew([
-                    'store_pdv_id' => $storePdvId,
-                    'pdv_user_id' => $pdvId,
-                ]);
+            // Mapear usuário (store_pdv_id é requerido, pegamos o primeiro que encontrarmos)
+            // Como pdv_user_mappings tem constraint unique por pdv_user_id no banco, só podemos ter uma entrada.
+            $storePdvId = $userStores[$pdvId][0] ?? $pdvUser->store_pdv_id ?? 0;
 
-                // Só atualiza se for novo ou se a confiança for maior/igual (para não sobrescrever ajustes manuais 100% com automação 80%)
-                // Mas aqui confidence da automação é alta.
-                // Se o mapping já existe e é 'manual', não tocamos, a menos que --force.
-                if ($mapping->exists && $mapping->source === 'manual' && !$this->option('force')) {
-                    continue;
-                }
+            if (!$storePdvId) {
+                continue; // Não podemos criar sem store_pdv_id
+            }
 
-                $originalUserId = $mapping->user_id;
+            $mapping = PdvUserMapping::firstOrNew([
+                'pdv_user_id' => $pdvId,
+            ]);
 
-                $mapping->user_id = $matchedUser->id;
-                $mapping->pdv_user_name = $pdvNome;
-                $mapping->pdv_user_login = $pdvLogin;
-                $mapping->active = true;
-                $mapping->source = $matchReason;
-                $mapping->confidence = $confidence;
-                $mapping->updated_at = now();
+            // Se o mapping já existe e é 'manual', não tocamos, a menos que --force.
+            if ($mapping->exists && $mapping->source === 'manual' && !$this->option('force')) {
+                continue;
+            }
 
-                if ($mapping->isDirty()) {
-                    $mapping->save();
-                    if (!$mapping->exists) { // Era novo
-                        $stats['created']++;
-                        $this->info("Mapping criado: [Loja {$storePdvId}] {$pdvNome} -> {$matchedUser->name}");
-                    } else {
-                        $stats['updated']++;
-                        $this->info("Mapping atualizado: [Loja {$storePdvId}] {$pdvNome} -> {$matchedUser->name}");
-                    }
+            $originalUserId = $mapping->user_id;
+
+            $mapping->user_id = $matchedUser->id;
+            $mapping->store_pdv_id = $storePdvId; // Atualiza para uma loja válida conhecida
+            $mapping->pdv_user_name = $pdvNome;
+            $mapping->pdv_user_login = $pdvLogin;
+            $mapping->active = true;
+            $mapping->source = $matchReason;
+            $mapping->confidence = $confidence;
+            $mapping->updated_at = now();
+
+            if ($mapping->isDirty()) {
+                $mapping->save();
+                if (!$mapping->exists) { // Era novo
+                    $stats['created']++;
+                    $this->info("Mapping criado: {$pdvNome} -> {$matchedUser->name} [Loja {$storePdvId}]");
+                } else {
+                    $stats['updated']++;
+                    $this->info("Mapping atualizado: {$pdvNome} -> {$matchedUser->name}");
                 }
             }
         }
