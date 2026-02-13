@@ -34,7 +34,7 @@ PRs concluidos/anteriores permanecem documentados nos arquivos:
 - [x] PR-49 (concluida: ingress suporta `3.0` enriquecido com `cnpj/login` + `3.1`; mismatch header/body validado)
 - [x] PR-50 (concluida: resolucao `CNPJ first` + `Login first` validada em producao)
 - [x] PR-51 (concluida: persistencia de `login` em tabelas operacionais validada em producao)
-- [~] PR-52 (parcial: metricas/docs OK; pendente publicar exemplos no Scribe + endpoint opcional de saude de ambiguidades)
+- [x] PR-52 (concluida: exemplos gerados no Scribe via `scribe:generate`; artefatos em `public/docs/` prontos para deploy)
 
 Evidencia E2E em producao:
 - `docs/VALIDACAO_E2E_PDV_PRODUCAO_POS_NORMALIZACAO_2026-02-13.md`
@@ -43,8 +43,13 @@ Analise complementar (cobertura e gaps de API):
 - `docs/ANALISE_COBERTURA_CRUZADA_AGENT_SQL_PHP_BACKEND_PDV_2026-02-13.md`
 
 ## Proximo backlog (Fase 4 - Cobertura API + reparo historico)
-1. [PR-53 - P1: Endpoint de venda detalhada (itens + pagamentos)](./PR-53-endpoint-venda-detalhe-itens-pagamentos.md) - `in_progress`
-2. [PR-54 - P1: Backfill/Rebind historico (store_id NULL, vendedor_user_id NULL)](./PR-54-backfill-rebind-historico.md) - `in_progress`
+1. [x] [PR-53 - P1: Endpoint de venda detalhada (itens + pagamentos)](./PR-53-endpoint-venda-detalhe-itens-pagamentos.md) - concluida (endpoint em producao)
+2. [x] [PR-54 - P1: Backfill/Rebind historico (store_id NULL, vendedor_user_id NULL)](./PR-54-backfill-rebind-historico.md) - concluida (comando + doc; executar em prod se necessario)
+
+Sugestoes de proximo backlog (Fase 4.1):
+1. [ ] P1: Documentar explicitamente no Scribe que `vendedor_id` nos filtros = `vendedor_pdv_id` (id do Hiper/PDV), nao `users.id`.
+2. [ ] P1: (Opcional) Adicionar filtro `vendedor_user_id` (users.id) nos endpoints de vendas/ranking, para uso do negocio.
+3. [ ] P1: Hardening prod: garantir `APP_DEBUG=false` (evitar stack trace em respostas 4xx/5xx).
 
 Dependencia externa (Agent):
 - v3.x: incluir `login_vendedor` no canal `HIPER_LOJA` (queries_gestao) para reduzir fallback por `id_usuario`.

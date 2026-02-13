@@ -1,18 +1,18 @@
-name: 'Admin - Store Permission Overrides'
+name: 'Admin - User Permission Overrides'
 description: ''
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/admin/stores/{store_id}/permission-overrides'
+    uri: 'api/v1/admin/users/{user_id}/permission-overrides'
     metadata:
       custom: []
-      groupName: 'Admin - Store Permission Overrides'
+      groupName: 'Admin - User Permission Overrides'
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'List all overrides for a store.'
+      title: 'List all overrides for a user.'
       description: ''
       authenticated: true
       deprecated: false
@@ -21,10 +21,10 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      store_id:
+      user_id:
         custom: []
-        name: store_id
-        description: 'The ID of the store.'
+        name: user_id
+        description: 'The ID of the user.'
         required: true
         example: 1
         type: integer
@@ -33,7 +33,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      store_id: 1
+      user_id: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -42,18 +42,19 @@ endpoints:
     responses:
       -
         custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
+        status: 200
+        content: '{"data":[],"user":{"id":1,"name":"Admin Sistema s"}}'
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
+          x-request-id: e8f86808-c43c-493c-9d9b-038a517c604d
           vary: Origin
         description: null
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null
@@ -61,14 +62,14 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: 'api/v1/admin/stores/{store_id}/permission-overrides'
+    uri: 'api/v1/admin/users/{user_id}/permission-overrides'
     metadata:
       custom: []
-      groupName: 'Admin - Store Permission Overrides'
+      groupName: 'Admin - User Permission Overrides'
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Grant or deny a permission for all users in a store.'
+      title: 'Grant or deny a permission to a user.'
       description: ''
       authenticated: true
       deprecated: false
@@ -77,10 +78,10 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      store_id:
+      user_id:
         custom: []
-        name: store_id
-        description: 'The ID of the store.'
+        name: user_id
+        description: 'The ID of the user.'
         required: true
         example: 1
         type: integer
@@ -89,7 +90,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      store_id: 1
+      user_id: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
@@ -104,27 +105,62 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
+      store_id:
+        custom: []
+        name: store_id
+        description: 'The <code>id</code> of an existing record in the stores table.'
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
       granted:
         custom: []
         name: granted
         description: ''
         required: true
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
+      expires_at:
+        custom: []
+        name: expires_at
+        description: 'Must be a valid date. Must be a date after <code>now</code>.'
+        required: false
+        example: '2052-03-09'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      reason:
+        custom: []
+        name: reason
+        description: 'Must not be greater than 500 characters.'
+        required: false
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
     cleanBodyParameters:
       permission_id: architecto
-      granted: true
+      granted: false
+      expires_at: '2052-03-09'
+      reason: 'n'
     fileParameters: []
     responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null
@@ -132,14 +168,14 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: 'api/v1/admin/stores/{store_id}/permission-overrides/bulk'
+    uri: 'api/v1/admin/users/{user_id}/permission-overrides/bulk'
     metadata:
       custom: []
-      groupName: 'Admin - Store Permission Overrides'
+      groupName: 'Admin - User Permission Overrides'
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Bulk grant/deny permissions for a store.'
+      title: 'Bulk grant/deny permissions.'
       description: ''
       authenticated: true
       deprecated: false
@@ -148,10 +184,10 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      store_id:
+      user_id:
         custom: []
-        name: store_id
-        description: 'The ID of the store.'
+        name: user_id
+        description: 'The ID of the user.'
         required: true
         example: 1
         type: integer
@@ -160,7 +196,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      store_id: 1
+      user_id: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
@@ -187,29 +223,64 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
+      'overrides[].store_id':
+        custom: []
+        name: 'overrides[].store_id'
+        description: 'The <code>id</code> of an existing record in the stores table.'
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
       'overrides[].granted':
         custom: []
         name: 'overrides[].granted'
         description: ''
         required: true
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
+      'overrides[].expires_at':
+        custom: []
+        name: 'overrides[].expires_at'
+        description: 'Must be a valid date. Must be a date after <code>now</code>.'
+        required: false
+        example: '2052-03-09'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      'overrides[].reason':
+        custom: []
+        name: 'overrides[].reason'
+        description: 'Must not be greater than 500 characters.'
+        required: false
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
     cleanBodyParameters:
       overrides:
         -
           permission_id: architecto
-          granted: true
+          granted: false
+          expires_at: '2052-03-09'
+          reason: 'n'
     fileParameters: []
     responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null
@@ -217,14 +288,14 @@ endpoints:
     custom: []
     httpMethods:
       - DELETE
-    uri: 'api/v1/admin/stores/{store_id}/permission-overrides/clear'
+    uri: 'api/v1/admin/users/{user_id}/permission-overrides/clear'
     metadata:
       custom: []
-      groupName: 'Admin - Store Permission Overrides'
+      groupName: 'Admin - User Permission Overrides'
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Remove all overrides for a store.'
+      title: 'Remove all overrides for a user (optionally filtered by store).'
       description: ''
       authenticated: true
       deprecated: false
@@ -233,10 +304,10 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      store_id:
+      user_id:
         custom: []
-        name: store_id
-        description: 'The ID of the store.'
+        name: user_id
+        description: 'The ID of the user.'
         required: true
         example: 1
         type: integer
@@ -245,7 +316,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      store_id: 1
+      user_id: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -256,7 +327,66 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/admin/users/{user_id}/permission-overrides/effective'
+    metadata:
+      custom: []
+      groupName: 'Admin - User Permission Overrides'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get effective permissions for a user with source information.'
+      description: |-
+        This endpoint shows the final resolved state of all permissions
+        for a user, including where each permission comes from (role, store override, user override).
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      user_id:
+        custom: []
+        name: user_id
+        description: 'The ID of the user.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      user_id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"user":{"id":1,"name":"Admin Sistema s"},"store_id":null,"data":[{"permission":{"id":183,"name":"wheel.admin","display_name":"Acesso ao M\u00f3dulo Roleta","type":"ability","module":null},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":191,"name":"wheel.analytics.view","display_name":"Ver Analytics","type":"ability","module":null},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":187,"name":"wheel.campaigns.manage","display_name":"Gerenciar Campanhas","type":"ability","module":null},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":186,"name":"wheel.campaigns.view","display_name":"Ver Campanhas","type":"ability","module":null},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":190,"name":"wheel.inventory.manage","display_name":"Gerenciar Estoque","type":"ability","module":null},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":192,"name":"wheel.logs.view","display_name":"Ver Logs","type":"ability","module":null},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":189,"name":"wheel.prizes.manage","display_name":"Gerenciar Pr\u00eamios","type":"ability","module":null},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":188,"name":"wheel.prizes.view","display_name":"Ver Pr\u00eamios","type":"ability","module":null},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":185,"name":"wheel.screens.manage","display_name":"Gerenciar TVs","type":"ability","module":null},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":184,"name":"wheel.screens.view","display_name":"Ver TVs","type":"ability","module":null},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":90,"name":"admin.audit.view","display_name":"Ver logs de auditoria","type":"ability","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":168,"name":"admin.audit.export","display_name":"Exportar logs de auditoria","type":"ability","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":91,"name":"admin.catalog.manage","display_name":"Gerenciar cat\u00e1logo de telefones","type":"ability","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":92,"name":"admin.whatsapp.manage","display_name":"Gerenciar inst\u00e2ncias WhatsApp","type":"ability","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":93,"name":"admin.roles.manage","display_name":"Gerenciar roles","type":"ability","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":94,"name":"admin.permissions.manage","display_name":"Gerenciar permiss\u00f5es","type":"ability","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":169,"name":"admin.users.impersonate","display_name":"Logar como outro usu\u00e1rio","type":"ability","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":170,"name":"admin.system.maintenance","display_name":"Ativar modo manuten\u00e7\u00e3o","type":"ability","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":95,"name":"screen.admin","display_name":"Menu Administra\u00e7\u00e3o","type":"screen","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":96,"name":"screen.admin.logs","display_name":"Tela Logs","type":"screen","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":97,"name":"screen.admin.catalogo","display_name":"Tela Cat\u00e1logo Telefones","type":"screen","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":98,"name":"screen.admin.whatsapp","display_name":"Tela WhatsApp","type":"screen","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":99,"name":"screen.admin.roles","display_name":"Tela Roles","type":"screen","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":100,"name":"screen.admin.permissions","display_name":"Tela Permiss\u00f5es","type":"screen","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":130,"name":"analytics.view","display_name":"Ver analytics","type":"ability","module":"analytics"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":131,"name":"analytics.shift","display_name":"Ver analytics de turno","type":"ability","module":"analytics"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":84,"name":"announcements.view","display_name":"Ver comunicados","type":"ability","module":"announcements"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":85,"name":"announcements.create","display_name":"Criar comunicado","type":"ability","module":"announcements"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":86,"name":"announcements.update","display_name":"Editar comunicado","type":"ability","module":"announcements"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":87,"name":"announcements.delete","display_name":"Excluir comunicado","type":"ability","module":"announcements"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":88,"name":"screen.comunicados","display_name":"Tela Comunicados","type":"screen","module":"announcements"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":89,"name":"screen.config.comunicados","display_name":"Tela Gerenciar Comunicados","type":"screen","module":"announcements"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":37,"name":"caixa.view","display_name":"Ver fechamentos","type":"ability","module":"caixa"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":157,"name":"caixa.view-all","display_name":"Ver fechamentos de todos","type":"ability","module":"caixa"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":38,"name":"caixa.shift.open","display_name":"Abrir turno","type":"ability","module":"caixa"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":39,"name":"caixa.closing.create","display_name":"Fazer fechamento","type":"ability","module":"caixa"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":40,"name":"caixa.closing.approve","display_name":"Aprovar fechamento","type":"ability","module":"caixa"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":41,"name":"caixa.closing.reject","display_name":"Rejeitar fechamento","type":"ability","module":"caixa"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":158,"name":"caixa.reopen","display_name":"Reabrir fechamento rejeitado","type":"ability","module":"caixa"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":159,"name":"caixa.export","display_name":"Exportar relat\u00f3rio de caixa","type":"ability","module":"caixa"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":42,"name":"screen.caixa","display_name":"Menu Caixa","type":"screen","module":"caixa"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":43,"name":"screen.caixa.shift","display_name":"Tela Meu Turno","type":"screen","module":"caixa"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":44,"name":"screen.caixa.closing","display_name":"Tela Fechamento","type":"screen","module":"caixa"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":45,"name":"screen.caixa.approve","display_name":"Tela Aprovar Fechamentos","type":"screen","module":"caixa"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":160,"name":"screen.caixa.history","display_name":"Tela Hist\u00f3rico de Fechamentos","type":"screen","module":"caixa"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":24,"name":"capas.view","display_name":"Ver capas (pr\u00f3prias)","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":25,"name":"capas.view-all","display_name":"Ver todas as capas da loja","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":148,"name":"capas.view-global","display_name":"Ver capas de todas as lojas","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":26,"name":"capas.create","display_name":"Criar capa","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":27,"name":"capas.update","display_name":"Editar capa","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":28,"name":"capas.delete","display_name":"Excluir capa","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":149,"name":"capas.cancel","display_name":"Cancelar capa","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":150,"name":"capas.approve","display_name":"Aprovar capa","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":151,"name":"capas.reject","display_name":"Rejeitar capa","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":29,"name":"capas.status.update","display_name":"Alterar status da capa","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":30,"name":"capas.payment.update","display_name":"Registrar pagamento","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":31,"name":"capas.send-production","display_name":"Enviar para produ\u00e7\u00e3o","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":32,"name":"capas.bulk-status","display_name":"Alterar status em lote","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":152,"name":"capas.print","display_name":"Imprimir capa","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":153,"name":"capas.download-image","display_name":"Baixar imagem da capa","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":154,"name":"capas.send-whatsapp","display_name":"Enviar notifica\u00e7\u00e3o WhatsApp","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":33,"name":"screen.capas","display_name":"Menu Capas","type":"screen","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":34,"name":"screen.capas.list","display_name":"Tela Lista de Capas","type":"screen","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":35,"name":"screen.capas.create","display_name":"Tela Nova Capa","type":"screen","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":155,"name":"screen.capas.detail","display_name":"Tela Detalhe da Capa","type":"screen","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":156,"name":"screen.capas.edit","display_name":"Tela Editar Capa","type":"screen","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":36,"name":"screen.capas.production","display_name":"Tela Enviar Produ\u00e7\u00e3o","type":"screen","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":101,"name":"config.metas","display_name":"Configurar metas mensais","type":"ability","module":"config"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":102,"name":"config.bonus","display_name":"Configurar tabela de b\u00f4nus","type":"ability","module":"config"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":103,"name":"config.comissoes","display_name":"Configurar regras de comiss\u00e3o","type":"ability","module":"config"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":104,"name":"screen.config","display_name":"Menu Configura\u00e7\u00f5es","type":"screen","module":"config"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":105,"name":"screen.config.metas","display_name":"Tela Metas","type":"screen","module":"config"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":106,"name":"screen.config.bonus","display_name":"Tela B\u00f4nus","type":"screen","module":"config"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":107,"name":"screen.config.comissoes","display_name":"Tela Comiss\u00f5es","type":"screen","module":"config"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":175,"name":"screen.config.brands","display_name":"Tela Marcas de Aparelhos","type":"screen","module":"config"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":176,"name":"screen.config.models","display_name":"Tela Modelos de Aparelhos","type":"screen","module":"config"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":3,"name":"customers.view","display_name":"Ver clientes (pr\u00f3prios)","type":"ability","module":"customers"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":132,"name":"customers.view-all","display_name":"Ver todos os clientes da loja","type":"ability","module":"customers"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":133,"name":"customers.view-global","display_name":"Ver clientes de todas as lojas","type":"ability","module":"customers"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":4,"name":"customers.create","display_name":"Criar cliente","type":"ability","module":"customers"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":5,"name":"customers.update","display_name":"Editar cliente","type":"ability","module":"customers"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":6,"name":"customers.delete","display_name":"Excluir cliente","type":"ability","module":"customers"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":134,"name":"customers.merge","display_name":"Mesclar clientes duplicados","type":"ability","module":"customers"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":7,"name":"screen.clientes","display_name":"Menu Clientes","type":"screen","module":"customers"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":135,"name":"screen.clientes.list","display_name":"Tela Lista de Clientes","type":"screen","module":"customers"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":136,"name":"screen.clientes.create","display_name":"Tela Novo Cliente","type":"screen","module":"customers"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":137,"name":"screen.clientes.detail","display_name":"Tela Detalhe do Cliente","type":"screen","module":"customers"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":138,"name":"screen.clientes.edit","display_name":"Tela Editar Cliente","type":"screen","module":"customers"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":1,"name":"dashboard.view","display_name":"Ver dashboard","type":"ability","module":"dashboard"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":2,"name":"screen.dashboard","display_name":"Tela Dashboard","type":"screen","module":"dashboard"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":68,"name":"fabrica.view","display_name":"Acessar portal da f\u00e1brica","type":"ability","module":"fabrica"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":69,"name":"fabrica.orders.accept","display_name":"Aceitar pedido","type":"ability","module":"fabrica"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":70,"name":"fabrica.orders.dispatch","display_name":"Despachar pedido","type":"ability","module":"fabrica"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":71,"name":"screen.fabrica","display_name":"Menu F\u00e1brica","type":"screen","module":"fabrica"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":166,"name":"screen.fabrica.dashboard","display_name":"Dashboard da F\u00e1brica","type":"screen","module":"fabrica"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":72,"name":"screen.fabrica.pedidos","display_name":"Tela Pedidos F\u00e1brica","type":"screen","module":"fabrica"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":167,"name":"screen.fabrica.dispatch","display_name":"Tela Despacho","type":"screen","module":"fabrica"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":54,"name":"faturamento.extrato","display_name":"Ver extrato de vendas","type":"ability","module":"faturamento"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":55,"name":"faturamento.bonus","display_name":"Ver b\u00f4nus","type":"ability","module":"faturamento"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":56,"name":"faturamento.comissoes","display_name":"Ver comiss\u00f5es","type":"ability","module":"faturamento"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":57,"name":"screen.faturamento","display_name":"Menu Faturamento","type":"screen","module":"faturamento"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":58,"name":"screen.faturamento.extrato","display_name":"Tela Extrato","type":"screen","module":"faturamento"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":59,"name":"screen.faturamento.bonus","display_name":"Tela B\u00f4nus","type":"screen","module":"faturamento"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":60,"name":"screen.faturamento.comissoes","display_name":"Tela Comiss\u00f5es","type":"screen","module":"faturamento"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":112,"name":"feature.whatsapp-notifications","display_name":"Enviar notifica\u00e7\u00f5es WhatsApp","type":"feature","module":"features"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":113,"name":"feature.bulk-operations","display_name":"Opera\u00e7\u00f5es em lote","type":"feature","module":"features"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":114,"name":"feature.export-excel","display_name":"Exportar para Excel","type":"feature","module":"features"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":177,"name":"feature.dark-mode","display_name":"Tema escuro","type":"feature","module":"features"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":178,"name":"feature.beta-features","display_name":"Acesso a features beta","type":"feature","module":"features"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":179,"name":"feature.advanced-search","display_name":"Busca avan\u00e7ada","type":"feature","module":"features"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":180,"name":"feature.keyboard-shortcuts","display_name":"Atalhos de teclado","type":"feature","module":"features"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":181,"name":"feature.offline-mode","display_name":"Modo offline (PWA)","type":"feature","module":"features"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":182,"name":"feature.notifications-push","display_name":"Notifica\u00e7\u00f5es push","type":"feature","module":"features"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":108,"name":"screen.gestao","display_name":"Menu Gest\u00e3o","type":"screen","module":"gestao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":109,"name":"screen.gestao.ranking","display_name":"Tela Ranking","type":"screen","module":"gestao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":110,"name":"screen.gestao.lojas","display_name":"Tela Performance Lojas","type":"screen","module":"gestao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":111,"name":"screen.gestao.kpis","display_name":"Tela KPIs","type":"screen","module":"gestao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":121,"name":"goals.view","display_name":"Ver metas","type":"ability","module":"goals"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":122,"name":"goals.create","display_name":"Criar meta","type":"ability","module":"goals"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":123,"name":"goals.update","display_name":"Editar meta","type":"ability","module":"goals"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":124,"name":"goals.delete","display_name":"Excluir meta","type":"ability","module":"goals"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":125,"name":"goals.splits","display_name":"Definir splits de meta","type":"ability","module":"goals"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":8,"name":"payment-methods.view","display_name":"Ver formas de pagamento","type":"ability","module":"payment-methods"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":9,"name":"payment-methods.create","display_name":"Criar forma de pagamento","type":"ability","module":"payment-methods"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":10,"name":"payment-methods.update","display_name":"Editar forma de pagamento","type":"ability","module":"payment-methods"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":11,"name":"payment-methods.delete","display_name":"Excluir forma de pagamento","type":"ability","module":"payment-methods"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":139,"name":"payment-methods.toggle-status","display_name":"Ativar\/desativar forma de pagamento","type":"ability","module":"payment-methods"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":12,"name":"screen.config.payment-methods","display_name":"Tela Formas de Pagamento","type":"screen","module":"payment-methods"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":13,"name":"pedidos.view","display_name":"Ver pedidos (pr\u00f3prios)","type":"ability","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":14,"name":"pedidos.view-all","display_name":"Ver todos os pedidos da loja","type":"ability","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":140,"name":"pedidos.view-global","display_name":"Ver pedidos de todas as lojas","type":"ability","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":15,"name":"pedidos.create","display_name":"Criar pedido","type":"ability","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":16,"name":"pedidos.update","display_name":"Editar pedido","type":"ability","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":17,"name":"pedidos.delete","display_name":"Excluir pedido","type":"ability","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":141,"name":"pedidos.cancel","display_name":"Cancelar pedido","type":"ability","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":18,"name":"pedidos.status.update","display_name":"Alterar status do pedido","type":"ability","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":142,"name":"pedidos.status.revert","display_name":"Reverter status do pedido","type":"ability","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":19,"name":"pedidos.bulk-status","display_name":"Alterar status em lote","type":"ability","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":143,"name":"pedidos.print","display_name":"Imprimir comprovante","type":"ability","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":144,"name":"pedidos.send-whatsapp","display_name":"Enviar notifica\u00e7\u00e3o WhatsApp","type":"ability","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":145,"name":"pedidos.duplicate","display_name":"Duplicar pedido","type":"ability","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":20,"name":"screen.pedidos","display_name":"Menu Pedidos","type":"screen","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":21,"name":"screen.pedidos.list","display_name":"Tela Lista de Pedidos","type":"screen","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":22,"name":"screen.pedidos.create","display_name":"Tela Novo Pedido","type":"screen","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":146,"name":"screen.pedidos.detail","display_name":"Tela Detalhe do Pedido","type":"screen","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":147,"name":"screen.pedidos.edit","display_name":"Tela Editar Pedido","type":"screen","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":23,"name":"screen.pedidos.bulk","display_name":"Tela Opera\u00e7\u00f5es em Lote","type":"screen","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":66,"name":"screen.producao.carrinho","display_name":"Tela Carrinho","type":"screen","module":"producao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":67,"name":"screen.producao.pedidos","display_name":"Tela Pedidos Produ\u00e7\u00e3o","type":"screen","module":"producao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":61,"name":"producao.view","display_name":"Ver produ\u00e7\u00e3o","type":"ability","module":"producao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":62,"name":"producao.cart.add","display_name":"Adicionar ao carrinho","type":"ability","module":"producao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":162,"name":"producao.cart.remove","display_name":"Remover do carrinho","type":"ability","module":"producao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":63,"name":"producao.cart.close","display_name":"Fechar carrinho","type":"ability","module":"producao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":64,"name":"producao.orders.receive","display_name":"Receber pedido de produ\u00e7\u00e3o","type":"ability","module":"producao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":163,"name":"producao.orders.cancel","display_name":"Cancelar pedido de produ\u00e7\u00e3o","type":"ability","module":"producao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":65,"name":"screen.producao","display_name":"Menu Produ\u00e7\u00e3o","type":"screen","module":"producao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":164,"name":"screen.producao.cart","display_name":"Tela Carrinho","type":"screen","module":"producao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":165,"name":"screen.producao.orders","display_name":"Tela Pedidos Produ\u00e7\u00e3o","type":"screen","module":"producao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":46,"name":"reports.view","display_name":"Ver relat\u00f3rios","type":"ability","module":"reports"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":47,"name":"reports.sales","display_name":"Relat\u00f3rio de vendas","type":"ability","module":"reports"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":48,"name":"reports.ranking","display_name":"Relat\u00f3rio de ranking","type":"ability","module":"reports"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":49,"name":"reports.performance","display_name":"Relat\u00f3rio de performance","type":"ability","module":"reports"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":50,"name":"reports.export","display_name":"Exportar relat\u00f3rios","type":"ability","module":"reports"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":51,"name":"screen.reports","display_name":"Menu Relat\u00f3rios","type":"screen","module":"reports"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":52,"name":"screen.reports.sales","display_name":"Tela Vendas","type":"screen","module":"reports"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":53,"name":"screen.reports.ranking","display_name":"Tela Ranking","type":"screen","module":"reports"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":126,"name":"rules.bonus.view","display_name":"Ver regras de b\u00f4nus","type":"ability","module":"rules"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":127,"name":"rules.bonus.manage","display_name":"Gerenciar regras de b\u00f4nus","type":"ability","module":"rules"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":128,"name":"rules.commission.view","display_name":"Ver regras de comiss\u00e3o","type":"ability","module":"rules"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":129,"name":"rules.commission.manage","display_name":"Gerenciar regras de comiss\u00e3o","type":"ability","module":"rules"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":115,"name":"sales.view","display_name":"Ver vendas (pr\u00f3prias)","type":"ability","module":"sales"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":116,"name":"sales.view-all","display_name":"Ver todas as vendas da loja","type":"ability","module":"sales"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":161,"name":"sales.view-global","display_name":"Ver vendas de todas as lojas","type":"ability","module":"sales"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":117,"name":"sales.create","display_name":"Registrar venda","type":"ability","module":"sales"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":118,"name":"sales.update","display_name":"Editar venda","type":"ability","module":"sales"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":119,"name":"sales.delete","display_name":"Excluir venda","type":"ability","module":"sales"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":120,"name":"screen.sales","display_name":"Tela Vendas","type":"screen","module":"sales"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":79,"name":"stores.view","display_name":"Ver lojas","type":"ability","module":"stores"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":80,"name":"stores.create","display_name":"Criar loja","type":"ability","module":"stores"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":81,"name":"stores.update","display_name":"Editar loja","type":"ability","module":"stores"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":82,"name":"stores.delete","display_name":"Excluir loja","type":"ability","module":"stores"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":83,"name":"screen.admin.stores","display_name":"Tela Lojas","type":"screen","module":"stores"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":171,"name":"screen.super-admin","display_name":"Menu Super Admin","type":"screen","module":"super-admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":172,"name":"screen.super-admin.whatsapp-instances","display_name":"Tela Inst\u00e2ncias WhatsApp","type":"screen","module":"super-admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":173,"name":"screen.super-admin.permissions","display_name":"Tela Gest\u00e3o de Permiss\u00f5es","type":"screen","module":"super-admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":174,"name":"screen.super-admin.users","display_name":"Tela Gest\u00e3o de Usu\u00e1rios Global","type":"screen","module":"super-admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":73,"name":"users.view","display_name":"Ver usu\u00e1rios da loja","type":"ability","module":"users"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":74,"name":"users.view-all","display_name":"Ver todos os usu\u00e1rios","type":"ability","module":"users"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":75,"name":"users.create","display_name":"Criar usu\u00e1rio","type":"ability","module":"users"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":76,"name":"users.update","display_name":"Editar usu\u00e1rio","type":"ability","module":"users"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":77,"name":"users.delete","display_name":"Excluir usu\u00e1rio","type":"ability","module":"users"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":78,"name":"screen.config.usuarios","display_name":"Tela Usu\u00e1rios","type":"screen","module":"users"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null}],"by_module":{"":[{"permission":{"id":183,"name":"wheel.admin","display_name":"Acesso ao M\u00f3dulo Roleta","type":"ability","module":null},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":191,"name":"wheel.analytics.view","display_name":"Ver Analytics","type":"ability","module":null},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":187,"name":"wheel.campaigns.manage","display_name":"Gerenciar Campanhas","type":"ability","module":null},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":186,"name":"wheel.campaigns.view","display_name":"Ver Campanhas","type":"ability","module":null},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":190,"name":"wheel.inventory.manage","display_name":"Gerenciar Estoque","type":"ability","module":null},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":192,"name":"wheel.logs.view","display_name":"Ver Logs","type":"ability","module":null},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":189,"name":"wheel.prizes.manage","display_name":"Gerenciar Pr\u00eamios","type":"ability","module":null},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":188,"name":"wheel.prizes.view","display_name":"Ver Pr\u00eamios","type":"ability","module":null},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":185,"name":"wheel.screens.manage","display_name":"Gerenciar TVs","type":"ability","module":null},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":184,"name":"wheel.screens.view","display_name":"Ver TVs","type":"ability","module":null},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null}],"admin":[{"permission":{"id":90,"name":"admin.audit.view","display_name":"Ver logs de auditoria","type":"ability","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":168,"name":"admin.audit.export","display_name":"Exportar logs de auditoria","type":"ability","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":91,"name":"admin.catalog.manage","display_name":"Gerenciar cat\u00e1logo de telefones","type":"ability","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":92,"name":"admin.whatsapp.manage","display_name":"Gerenciar inst\u00e2ncias WhatsApp","type":"ability","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":93,"name":"admin.roles.manage","display_name":"Gerenciar roles","type":"ability","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":94,"name":"admin.permissions.manage","display_name":"Gerenciar permiss\u00f5es","type":"ability","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":169,"name":"admin.users.impersonate","display_name":"Logar como outro usu\u00e1rio","type":"ability","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":170,"name":"admin.system.maintenance","display_name":"Ativar modo manuten\u00e7\u00e3o","type":"ability","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":95,"name":"screen.admin","display_name":"Menu Administra\u00e7\u00e3o","type":"screen","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":96,"name":"screen.admin.logs","display_name":"Tela Logs","type":"screen","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":97,"name":"screen.admin.catalogo","display_name":"Tela Cat\u00e1logo Telefones","type":"screen","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":98,"name":"screen.admin.whatsapp","display_name":"Tela WhatsApp","type":"screen","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":99,"name":"screen.admin.roles","display_name":"Tela Roles","type":"screen","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":100,"name":"screen.admin.permissions","display_name":"Tela Permiss\u00f5es","type":"screen","module":"admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null}],"analytics":[{"permission":{"id":130,"name":"analytics.view","display_name":"Ver analytics","type":"ability","module":"analytics"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":131,"name":"analytics.shift","display_name":"Ver analytics de turno","type":"ability","module":"analytics"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null}],"announcements":[{"permission":{"id":84,"name":"announcements.view","display_name":"Ver comunicados","type":"ability","module":"announcements"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":85,"name":"announcements.create","display_name":"Criar comunicado","type":"ability","module":"announcements"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":86,"name":"announcements.update","display_name":"Editar comunicado","type":"ability","module":"announcements"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":87,"name":"announcements.delete","display_name":"Excluir comunicado","type":"ability","module":"announcements"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":88,"name":"screen.comunicados","display_name":"Tela Comunicados","type":"screen","module":"announcements"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":89,"name":"screen.config.comunicados","display_name":"Tela Gerenciar Comunicados","type":"screen","module":"announcements"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null}],"caixa":[{"permission":{"id":37,"name":"caixa.view","display_name":"Ver fechamentos","type":"ability","module":"caixa"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":157,"name":"caixa.view-all","display_name":"Ver fechamentos de todos","type":"ability","module":"caixa"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":38,"name":"caixa.shift.open","display_name":"Abrir turno","type":"ability","module":"caixa"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":39,"name":"caixa.closing.create","display_name":"Fazer fechamento","type":"ability","module":"caixa"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":40,"name":"caixa.closing.approve","display_name":"Aprovar fechamento","type":"ability","module":"caixa"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":41,"name":"caixa.closing.reject","display_name":"Rejeitar fechamento","type":"ability","module":"caixa"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":158,"name":"caixa.reopen","display_name":"Reabrir fechamento rejeitado","type":"ability","module":"caixa"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":159,"name":"caixa.export","display_name":"Exportar relat\u00f3rio de caixa","type":"ability","module":"caixa"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":42,"name":"screen.caixa","display_name":"Menu Caixa","type":"screen","module":"caixa"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":43,"name":"screen.caixa.shift","display_name":"Tela Meu Turno","type":"screen","module":"caixa"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":44,"name":"screen.caixa.closing","display_name":"Tela Fechamento","type":"screen","module":"caixa"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":45,"name":"screen.caixa.approve","display_name":"Tela Aprovar Fechamentos","type":"screen","module":"caixa"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":160,"name":"screen.caixa.history","display_name":"Tela Hist\u00f3rico de Fechamentos","type":"screen","module":"caixa"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null}],"capas":[{"permission":{"id":24,"name":"capas.view","display_name":"Ver capas (pr\u00f3prias)","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":25,"name":"capas.view-all","display_name":"Ver todas as capas da loja","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":148,"name":"capas.view-global","display_name":"Ver capas de todas as lojas","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":26,"name":"capas.create","display_name":"Criar capa","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":27,"name":"capas.update","display_name":"Editar capa","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":28,"name":"capas.delete","display_name":"Excluir capa","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":149,"name":"capas.cancel","display_name":"Cancelar capa","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":150,"name":"capas.approve","display_name":"Aprovar capa","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":151,"name":"capas.reject","display_name":"Rejeitar capa","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":29,"name":"capas.status.update","display_name":"Alterar status da capa","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":30,"name":"capas.payment.update","display_name":"Registrar pagamento","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":31,"name":"capas.send-production","display_name":"Enviar para produ\u00e7\u00e3o","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":32,"name":"capas.bulk-status","display_name":"Alterar status em lote","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":152,"name":"capas.print","display_name":"Imprimir capa","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":153,"name":"capas.download-image","display_name":"Baixar imagem da capa","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":154,"name":"capas.send-whatsapp","display_name":"Enviar notifica\u00e7\u00e3o WhatsApp","type":"ability","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":33,"name":"screen.capas","display_name":"Menu Capas","type":"screen","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":34,"name":"screen.capas.list","display_name":"Tela Lista de Capas","type":"screen","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":35,"name":"screen.capas.create","display_name":"Tela Nova Capa","type":"screen","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":155,"name":"screen.capas.detail","display_name":"Tela Detalhe da Capa","type":"screen","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":156,"name":"screen.capas.edit","display_name":"Tela Editar Capa","type":"screen","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":36,"name":"screen.capas.production","display_name":"Tela Enviar Produ\u00e7\u00e3o","type":"screen","module":"capas"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null}],"config":[{"permission":{"id":101,"name":"config.metas","display_name":"Configurar metas mensais","type":"ability","module":"config"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":102,"name":"config.bonus","display_name":"Configurar tabela de b\u00f4nus","type":"ability","module":"config"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":103,"name":"config.comissoes","display_name":"Configurar regras de comiss\u00e3o","type":"ability","module":"config"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":104,"name":"screen.config","display_name":"Menu Configura\u00e7\u00f5es","type":"screen","module":"config"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":105,"name":"screen.config.metas","display_name":"Tela Metas","type":"screen","module":"config"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":106,"name":"screen.config.bonus","display_name":"Tela B\u00f4nus","type":"screen","module":"config"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":107,"name":"screen.config.comissoes","display_name":"Tela Comiss\u00f5es","type":"screen","module":"config"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":175,"name":"screen.config.brands","display_name":"Tela Marcas de Aparelhos","type":"screen","module":"config"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":176,"name":"screen.config.models","display_name":"Tela Modelos de Aparelhos","type":"screen","module":"config"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null}],"customers":[{"permission":{"id":3,"name":"customers.view","display_name":"Ver clientes (pr\u00f3prios)","type":"ability","module":"customers"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":132,"name":"customers.view-all","display_name":"Ver todos os clientes da loja","type":"ability","module":"customers"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":133,"name":"customers.view-global","display_name":"Ver clientes de todas as lojas","type":"ability","module":"customers"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":4,"name":"customers.create","display_name":"Criar cliente","type":"ability","module":"customers"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":5,"name":"customers.update","display_name":"Editar cliente","type":"ability","module":"customers"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":6,"name":"customers.delete","display_name":"Excluir cliente","type":"ability","module":"customers"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":134,"name":"customers.merge","display_name":"Mesclar clientes duplicados","type":"ability","module":"customers"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":7,"name":"screen.clientes","display_name":"Menu Clientes","type":"screen","module":"customers"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":135,"name":"screen.clientes.list","display_name":"Tela Lista de Clientes","type":"screen","module":"customers"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":136,"name":"screen.clientes.create","display_name":"Tela Novo Cliente","type":"screen","module":"customers"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":137,"name":"screen.clientes.detail","display_name":"Tela Detalhe do Cliente","type":"screen","module":"customers"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":138,"name":"screen.clientes.edit","display_name":"Tela Editar Cliente","type":"screen","module":"customers"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null}],"dashboard":[{"permission":{"id":1,"name":"dashboard.view","display_name":"Ver dashboard","type":"ability","module":"dashboard"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":2,"name":"screen.dashboard","display_name":"Tela Dashboard","type":"screen","module":"dashboard"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null}],"fabrica":[{"permission":{"id":68,"name":"fabrica.view","display_name":"Acessar portal da f\u00e1brica","type":"ability","module":"fabrica"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":69,"name":"fabrica.orders.accept","display_name":"Aceitar pedido","type":"ability","module":"fabrica"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":70,"name":"fabrica.orders.dispatch","display_name":"Despachar pedido","type":"ability","module":"fabrica"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":71,"name":"screen.fabrica","display_name":"Menu F\u00e1brica","type":"screen","module":"fabrica"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":166,"name":"screen.fabrica.dashboard","display_name":"Dashboard da F\u00e1brica","type":"screen","module":"fabrica"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":72,"name":"screen.fabrica.pedidos","display_name":"Tela Pedidos F\u00e1brica","type":"screen","module":"fabrica"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":167,"name":"screen.fabrica.dispatch","display_name":"Tela Despacho","type":"screen","module":"fabrica"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null}],"faturamento":[{"permission":{"id":54,"name":"faturamento.extrato","display_name":"Ver extrato de vendas","type":"ability","module":"faturamento"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":55,"name":"faturamento.bonus","display_name":"Ver b\u00f4nus","type":"ability","module":"faturamento"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":56,"name":"faturamento.comissoes","display_name":"Ver comiss\u00f5es","type":"ability","module":"faturamento"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":57,"name":"screen.faturamento","display_name":"Menu Faturamento","type":"screen","module":"faturamento"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":58,"name":"screen.faturamento.extrato","display_name":"Tela Extrato","type":"screen","module":"faturamento"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":59,"name":"screen.faturamento.bonus","display_name":"Tela B\u00f4nus","type":"screen","module":"faturamento"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":60,"name":"screen.faturamento.comissoes","display_name":"Tela Comiss\u00f5es","type":"screen","module":"faturamento"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null}],"features":[{"permission":{"id":112,"name":"feature.whatsapp-notifications","display_name":"Enviar notifica\u00e7\u00f5es WhatsApp","type":"feature","module":"features"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":113,"name":"feature.bulk-operations","display_name":"Opera\u00e7\u00f5es em lote","type":"feature","module":"features"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":114,"name":"feature.export-excel","display_name":"Exportar para Excel","type":"feature","module":"features"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":177,"name":"feature.dark-mode","display_name":"Tema escuro","type":"feature","module":"features"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":178,"name":"feature.beta-features","display_name":"Acesso a features beta","type":"feature","module":"features"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":179,"name":"feature.advanced-search","display_name":"Busca avan\u00e7ada","type":"feature","module":"features"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":180,"name":"feature.keyboard-shortcuts","display_name":"Atalhos de teclado","type":"feature","module":"features"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":181,"name":"feature.offline-mode","display_name":"Modo offline (PWA)","type":"feature","module":"features"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":182,"name":"feature.notifications-push","display_name":"Notifica\u00e7\u00f5es push","type":"feature","module":"features"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null}],"gestao":[{"permission":{"id":108,"name":"screen.gestao","display_name":"Menu Gest\u00e3o","type":"screen","module":"gestao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":109,"name":"screen.gestao.ranking","display_name":"Tela Ranking","type":"screen","module":"gestao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":110,"name":"screen.gestao.lojas","display_name":"Tela Performance Lojas","type":"screen","module":"gestao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":111,"name":"screen.gestao.kpis","display_name":"Tela KPIs","type":"screen","module":"gestao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null}],"goals":[{"permission":{"id":121,"name":"goals.view","display_name":"Ver metas","type":"ability","module":"goals"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":122,"name":"goals.create","display_name":"Criar meta","type":"ability","module":"goals"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":123,"name":"goals.update","display_name":"Editar meta","type":"ability","module":"goals"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":124,"name":"goals.delete","display_name":"Excluir meta","type":"ability","module":"goals"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":125,"name":"goals.splits","display_name":"Definir splits de meta","type":"ability","module":"goals"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null}],"payment-methods":[{"permission":{"id":8,"name":"payment-methods.view","display_name":"Ver formas de pagamento","type":"ability","module":"payment-methods"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":9,"name":"payment-methods.create","display_name":"Criar forma de pagamento","type":"ability","module":"payment-methods"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":10,"name":"payment-methods.update","display_name":"Editar forma de pagamento","type":"ability","module":"payment-methods"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":11,"name":"payment-methods.delete","display_name":"Excluir forma de pagamento","type":"ability","module":"payment-methods"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":139,"name":"payment-methods.toggle-status","display_name":"Ativar\/desativar forma de pagamento","type":"ability","module":"payment-methods"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":12,"name":"screen.config.payment-methods","display_name":"Tela Formas de Pagamento","type":"screen","module":"payment-methods"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null}],"pedidos":[{"permission":{"id":13,"name":"pedidos.view","display_name":"Ver pedidos (pr\u00f3prios)","type":"ability","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":14,"name":"pedidos.view-all","display_name":"Ver todos os pedidos da loja","type":"ability","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":140,"name":"pedidos.view-global","display_name":"Ver pedidos de todas as lojas","type":"ability","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":15,"name":"pedidos.create","display_name":"Criar pedido","type":"ability","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":16,"name":"pedidos.update","display_name":"Editar pedido","type":"ability","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":17,"name":"pedidos.delete","display_name":"Excluir pedido","type":"ability","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":141,"name":"pedidos.cancel","display_name":"Cancelar pedido","type":"ability","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":18,"name":"pedidos.status.update","display_name":"Alterar status do pedido","type":"ability","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":142,"name":"pedidos.status.revert","display_name":"Reverter status do pedido","type":"ability","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":19,"name":"pedidos.bulk-status","display_name":"Alterar status em lote","type":"ability","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":143,"name":"pedidos.print","display_name":"Imprimir comprovante","type":"ability","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":144,"name":"pedidos.send-whatsapp","display_name":"Enviar notifica\u00e7\u00e3o WhatsApp","type":"ability","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":145,"name":"pedidos.duplicate","display_name":"Duplicar pedido","type":"ability","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":20,"name":"screen.pedidos","display_name":"Menu Pedidos","type":"screen","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":21,"name":"screen.pedidos.list","display_name":"Tela Lista de Pedidos","type":"screen","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":22,"name":"screen.pedidos.create","display_name":"Tela Novo Pedido","type":"screen","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":146,"name":"screen.pedidos.detail","display_name":"Tela Detalhe do Pedido","type":"screen","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":147,"name":"screen.pedidos.edit","display_name":"Tela Editar Pedido","type":"screen","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":23,"name":"screen.pedidos.bulk","display_name":"Tela Opera\u00e7\u00f5es em Lote","type":"screen","module":"pedidos"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null}],"producao":[{"permission":{"id":66,"name":"screen.producao.carrinho","display_name":"Tela Carrinho","type":"screen","module":"producao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":67,"name":"screen.producao.pedidos","display_name":"Tela Pedidos Produ\u00e7\u00e3o","type":"screen","module":"producao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":61,"name":"producao.view","display_name":"Ver produ\u00e7\u00e3o","type":"ability","module":"producao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":62,"name":"producao.cart.add","display_name":"Adicionar ao carrinho","type":"ability","module":"producao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":162,"name":"producao.cart.remove","display_name":"Remover do carrinho","type":"ability","module":"producao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":63,"name":"producao.cart.close","display_name":"Fechar carrinho","type":"ability","module":"producao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":64,"name":"producao.orders.receive","display_name":"Receber pedido de produ\u00e7\u00e3o","type":"ability","module":"producao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":163,"name":"producao.orders.cancel","display_name":"Cancelar pedido de produ\u00e7\u00e3o","type":"ability","module":"producao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":65,"name":"screen.producao","display_name":"Menu Produ\u00e7\u00e3o","type":"screen","module":"producao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":164,"name":"screen.producao.cart","display_name":"Tela Carrinho","type":"screen","module":"producao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":165,"name":"screen.producao.orders","display_name":"Tela Pedidos Produ\u00e7\u00e3o","type":"screen","module":"producao"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null}],"reports":[{"permission":{"id":46,"name":"reports.view","display_name":"Ver relat\u00f3rios","type":"ability","module":"reports"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":47,"name":"reports.sales","display_name":"Relat\u00f3rio de vendas","type":"ability","module":"reports"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":48,"name":"reports.ranking","display_name":"Relat\u00f3rio de ranking","type":"ability","module":"reports"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":49,"name":"reports.performance","display_name":"Relat\u00f3rio de performance","type":"ability","module":"reports"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":50,"name":"reports.export","display_name":"Exportar relat\u00f3rios","type":"ability","module":"reports"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":51,"name":"screen.reports","display_name":"Menu Relat\u00f3rios","type":"screen","module":"reports"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":52,"name":"screen.reports.sales","display_name":"Tela Vendas","type":"screen","module":"reports"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":53,"name":"screen.reports.ranking","display_name":"Tela Ranking","type":"screen","module":"reports"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null}],"rules":[{"permission":{"id":126,"name":"rules.bonus.view","display_name":"Ver regras de b\u00f4nus","type":"ability","module":"rules"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":127,"name":"rules.bonus.manage","display_name":"Gerenciar regras de b\u00f4nus","type":"ability","module":"rules"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":128,"name":"rules.commission.view","display_name":"Ver regras de comiss\u00e3o","type":"ability","module":"rules"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":129,"name":"rules.commission.manage","display_name":"Gerenciar regras de comiss\u00e3o","type":"ability","module":"rules"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null}],"sales":[{"permission":{"id":115,"name":"sales.view","display_name":"Ver vendas (pr\u00f3prias)","type":"ability","module":"sales"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":116,"name":"sales.view-all","display_name":"Ver todas as vendas da loja","type":"ability","module":"sales"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":161,"name":"sales.view-global","display_name":"Ver vendas de todas as lojas","type":"ability","module":"sales"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":117,"name":"sales.create","display_name":"Registrar venda","type":"ability","module":"sales"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":118,"name":"sales.update","display_name":"Editar venda","type":"ability","module":"sales"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":119,"name":"sales.delete","display_name":"Excluir venda","type":"ability","module":"sales"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":120,"name":"screen.sales","display_name":"Tela Vendas","type":"screen","module":"sales"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null}],"stores":[{"permission":{"id":79,"name":"stores.view","display_name":"Ver lojas","type":"ability","module":"stores"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":80,"name":"stores.create","display_name":"Criar loja","type":"ability","module":"stores"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":81,"name":"stores.update","display_name":"Editar loja","type":"ability","module":"stores"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":82,"name":"stores.delete","display_name":"Excluir loja","type":"ability","module":"stores"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":83,"name":"screen.admin.stores","display_name":"Tela Lojas","type":"screen","module":"stores"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null}],"super-admin":[{"permission":{"id":171,"name":"screen.super-admin","display_name":"Menu Super Admin","type":"screen","module":"super-admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":172,"name":"screen.super-admin.whatsapp-instances","display_name":"Tela Inst\u00e2ncias WhatsApp","type":"screen","module":"super-admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":173,"name":"screen.super-admin.permissions","display_name":"Tela Gest\u00e3o de Permiss\u00f5es","type":"screen","module":"super-admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":174,"name":"screen.super-admin.users","display_name":"Tela Gest\u00e3o de Usu\u00e1rios Global","type":"screen","module":"super-admin"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null}],"users":[{"permission":{"id":73,"name":"users.view","display_name":"Ver usu\u00e1rios da loja","type":"ability","module":"users"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":74,"name":"users.view-all","display_name":"Ver todos os usu\u00e1rios","type":"ability","module":"users"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":75,"name":"users.create","display_name":"Criar usu\u00e1rio","type":"ability","module":"users"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":76,"name":"users.update","display_name":"Editar usu\u00e1rio","type":"ability","module":"users"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":77,"name":"users.delete","display_name":"Excluir usu\u00e1rio","type":"ability","module":"users"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null},{"permission":{"id":78,"name":"screen.config.usuarios","display_name":"Tela Usu\u00e1rios","type":"screen","module":"users"},"granted":false,"source":"none","source_name":null,"inherited_from_role":false,"is_overridden":false,"temporary":null}]},"summary":{"total":192,"granted":0,"denied":192,"overridden":0}}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          x-request-id: fc58d3b3-abd1-4b1e-903e-39e20ec05028
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null
@@ -264,14 +394,14 @@ endpoints:
     custom: []
     httpMethods:
       - PUT
-    uri: 'api/v1/admin/stores/{store_id}/permission-overrides/{override}'
+    uri: 'api/v1/admin/users/{user_id}/permission-overrides/{override_id}'
     metadata:
       custom: []
-      groupName: 'Admin - Store Permission Overrides'
+      groupName: 'Admin - User Permission Overrides'
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Update an existing store override.'
+      title: 'Update an existing override.'
       description: ''
       authenticated: true
       deprecated: false
@@ -280,10 +410,10 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      store_id:
+      user_id:
         custom: []
-        name: store_id
-        description: 'The ID of the store.'
+        name: user_id
+        description: 'The ID of the user.'
         required: true
         example: 1
         type: integer
@@ -291,20 +421,20 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      override:
+      override_id:
         custom: []
-        name: override
-        description: ''
+        name: override_id
+        description: 'The ID of the override.'
         required: true
-        example: architecto
-        type: string
+        example: 16
+        type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      store_id: 1
-      override: architecto
+      user_id: 1
+      override_id: 16
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
@@ -312,22 +442,46 @@ endpoints:
         custom: []
         name: granted
         description: ''
-        required: true
+        required: false
         example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
+      expires_at:
+        custom: []
+        name: expires_at
+        description: 'Must be a valid date. Must be a date after <code>now</code>.'
+        required: false
+        example: '2052-03-09'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      reason:
+        custom: []
+        name: reason
+        description: 'Must not be greater than 500 characters.'
+        required: false
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
     cleanBodyParameters:
       granted: true
+      expires_at: '2052-03-09'
+      reason: 'n'
     fileParameters: []
     responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null
@@ -335,10 +489,10 @@ endpoints:
     custom: []
     httpMethods:
       - DELETE
-    uri: 'api/v1/admin/stores/{store_id}/permission-overrides/{override}'
+    uri: 'api/v1/admin/users/{user_id}/permission-overrides/{override_id}'
     metadata:
       custom: []
-      groupName: 'Admin - Store Permission Overrides'
+      groupName: 'Admin - User Permission Overrides'
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
@@ -351,10 +505,10 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      store_id:
+      user_id:
         custom: []
-        name: store_id
-        description: 'The ID of the store.'
+        name: user_id
+        description: 'The ID of the user.'
         required: true
         example: 1
         type: integer
@@ -362,20 +516,20 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      override:
+      override_id:
         custom: []
-        name: override
-        description: ''
+        name: override_id
+        description: 'The ID of the override.'
         required: true
-        example: architecto
-        type: string
+        example: 16
+        type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      store_id: 1
-      override: architecto
+      user_id: 1
+      override_id: 16
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -386,7 +540,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null

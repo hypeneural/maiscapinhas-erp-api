@@ -1,31 +1,334 @@
-name: 'Relatórios - Ranking'
+name: Dashboards
 description: |-
 
-  Endpoints para ranking de vendedores e consultas relacionadas.
+  Endpoints de dashboard com métricas e KPIs personalizados por perfil de usuário.
+
+  Cada dashboard retorna informações otimizadas para o papel do usuário:
+  - **Vendedor**: Foco em gamificação, bônus e comissão pessoal
+  - **Conferente**: Foco em fechamentos pendentes e integridade de caixa
+  - **Admin/Gerente**: Visão consolidada de todas as lojas
+
+  **Regras de Acesso:**
+  - Usuário só vê dados das lojas às quais tem acesso
+  - Dashboard específico depende da role do usuário na loja
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/reports/ranking
+    uri: api/v1/dashboard/vendedor
     metadata:
       custom: []
-      groupName: 'Relatórios - Ranking'
+      groupName: Dashboards
       groupDescription: |-
 
-        Endpoints para ranking de vendedores e consultas relacionadas.
+        Endpoints de dashboard com métricas e KPIs personalizados por perfil de usuário.
+
+        Cada dashboard retorna informações otimizadas para o papel do usuário:
+        - **Vendedor**: Foco em gamificação, bônus e comissão pessoal
+        - **Conferente**: Foco em fechamentos pendentes e integridade de caixa
+        - **Admin/Gerente**: Visão consolidada de todas as lojas
+
+        **Regras de Acesso:**
+        - Usuário só vê dados das lojas às quais tem acesso
+        - Dashboard específico depende da role do usuário na loja
       subgroup: ''
       subgroupDescription: ''
-      title: 'Ranking de Vendedores'
+      title: 'Dashboard do Vendedor'
       description: |-
-        Retorna ranking completo de vendedores ordenado por vendas no período.
+        Retorna métricas completas para o vendedor, incluindo:
+        - Vendas pessoais do dia
+        - **Gamificação de Bônus** - quanto falta para o próximo nível
+        - **Projeção de Comissão** - tier atual e potencial
+        - **Pace Diário** - ritmo comparado à média
 
-        **Inclui:**
-        - Pódio (top 3) em destaque
-        - Ranking completo com estatísticas
-        - Meta, atingimento e bônus acumulado de cada vendedor
+        Este dashboard é projetado para **motivar** o vendedor mostrando
+        metas tangíveis e progresso em tempo real.
 
-        **Quem pode usar:** Todos os usuários autenticados.
+        **Quem pode usar:** Vendedores e níveis superiores.
+
+        **Métricas retornadas:**
+        | Métrica | Descrição |
+        |---------|-----------|
+        | `my_sales` | Quantidade e valor total das vendas do dia |
+        | `store_sales` | Total de vendas da loja (para comparação) |
+        | `bonus_gamification` | Gap para próximo bônus, bônus atual |
+        | `monthly_commission` | Tier atual, projeção, potencial |
+        | `daily_pace` | Ritmo vs média diária |
+        | `my_shifts` | Turnos do dia com status |
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'ID da loja.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      date:
+        custom: []
+        name: date
+        description: 'Data (YYYY-MM-DD), default: hoje.'
+        required: false
+        example: '2026-01-07'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      store_id: 1
+      date: '2026-01-07'
+    bodyParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'The <code>id</code> of an existing record in the stores table.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      date:
+        custom: []
+        name: date
+        description: 'Must be a valid date.'
+        required: false
+        example: '2026-02-13T14:00:17'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      store_id: 16
+      date: '2026-02-13T14:00:17'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "date": "2026-01-07",
+              "my_sales": { "count": 5, "total": 450.00 },
+              "store_sales": { "count": 23, "total": 3200.00 },
+              "bonus_gamification": {
+                "current_amount": 450.00,
+                "next_bonus_goal": 500.00,
+                "gap_to_bonus": 50.00,
+                "next_bonus_value": 10.00,
+                "current_bonus_earned": 0,
+                "message": "Faltam R$ 50,00 para ganhar R$ 10,00 de bônus!"
+              },
+              "monthly_commission": {
+                "sales_mtd": 8500.00,
+                "goal_amount": 15000.00,
+                "achievement_rate": 56.67,
+                "current_tier": 2.0,
+                "current_commission_value": 170.00,
+                "next_tier": 3.0,
+                "potential_commission": 450.00
+              },
+              "daily_pace": {
+                "today_sales": 450.00,
+                "average_daily_sales": 566.67,
+                "today_vs_average": -116.67,
+                "status": "BEHIND"
+              },
+              "my_shifts": []
+            },
+            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+          }
+        headers: []
+        description: 'Dashboard completo'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/dashboard/conferente
+    metadata:
+      custom: []
+      groupName: Dashboards
+      groupDescription: |-
+
+        Endpoints de dashboard com métricas e KPIs personalizados por perfil de usuário.
+
+        Cada dashboard retorna informações otimizadas para o papel do usuário:
+        - **Vendedor**: Foco em gamificação, bônus e comissão pessoal
+        - **Conferente**: Foco em fechamentos pendentes e integridade de caixa
+        - **Admin/Gerente**: Visão consolidada de todas as lojas
+
+        **Regras de Acesso:**
+        - Usuário só vê dados das lojas às quais tem acesso
+        - Dashboard específico depende da role do usuário na loja
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Dashboard do Conferente'
+      description: |-
+        Retorna métricas para conferência de caixa e auditoria,
+        incluindo fechamentos pendentes e ranking de vendedores.
+
+        **Foco:** Integridade de caixa e aprovação de fechamentos.
+
+        **Quem pode usar:** Conferentes, Gerentes e Admins.
+
+        **Métricas retornadas:**
+        | Métrica | Descrição |
+        |---------|-----------|
+        | `pending_closings` | Fechamentos aguardando aprovação |
+        | `pending_count` | Quantidade de pendentes |
+        | `store_sales` | Total de vendas da loja no dia |
+        | `shifts_today` | Resumo por status (open/closed/pending) |
+        | `top_sellers` | Top 5 vendedores do dia |
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'ID da loja.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      date:
+        custom: []
+        name: date
+        description: 'Data (YYYY-MM-DD), default: hoje.'
+        required: false
+        example: '2026-01-07'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      store_id: 1
+      date: '2026-01-07'
+    bodyParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'The <code>id</code> of an existing record in the stores table.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      date:
+        custom: []
+        name: date
+        description: 'Must be a valid date.'
+        required: false
+        example: '2026-02-13T14:00:17'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      store_id: 16
+      date: '2026-02-13T14:00:17'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": {
+              "date": "2026-01-07",
+              "pending_closings": [],
+              "pending_count": 0,
+              "store_sales": { "count": 23, "total": 3200.00 },
+              "shifts_today": { "open": 2, "closed": 4 },
+              "top_sellers": [
+                { "seller_id": 6, "name": "João Vendedor", "total": 1500.00 }
+              ]
+            }
+          }
+        headers: []
+        description: 'Dashboard do conferente'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/dashboard/admin
+    metadata:
+      custom: []
+      groupName: Dashboards
+      groupDescription: |-
+
+        Endpoints de dashboard com métricas e KPIs personalizados por perfil de usuário.
+
+        Cada dashboard retorna informações otimizadas para o papel do usuário:
+        - **Vendedor**: Foco em gamificação, bônus e comissão pessoal
+        - **Conferente**: Foco em fechamentos pendentes e integridade de caixa
+        - **Admin/Gerente**: Visão consolidada de todas as lojas
+
+        **Regras de Acesso:**
+        - Usuário só vê dados das lojas às quais tem acesso
+        - Dashboard específico depende da role do usuário na loja
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Dashboard do Admin'
+      description: |-
+        Retorna visão consolidada de todas as lojas administradas,
+        com métricas mensais agregadas.
+
+        **Foco:** Visão estratégica e gerencial do negócio.
+
+        **Quem pode usar:** Admins e Gerentes.
+
+        **Métricas retornadas:**
+        | Métrica | Descrição |
+        |---------|-----------|
+        | `total_sales` | Soma de vendas de todas as lojas no mês |
+        | `sales_by_store` | Vendas detalhadas por loja |
+        | `closings_summary` | Contagem de fechamentos por status |
+        | `top_sellers` | Top 10 vendedores do mês |
       authenticated: true
       deprecated: false
     headers:
@@ -46,44 +349,8 @@ endpoints:
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-      store_id:
-        custom: []
-        name: store_id
-        description: 'Filtrar por loja.'
-        required: false
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      limit:
-        custom: []
-        name: limit
-        description: 'Limite de resultados (default: 50).'
-        required: false
-        example: 10
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      order:
-        custom: []
-        name: order
-        description: "Ordenação: 'desc' (melhores) ou 'asc' (piores). Default: desc."
-        required: false
-        example: asc
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
     cleanQueryParameters:
       month: 2026-01
-      store_id: 1
-      limit: 10
-      order: asc
     bodyParameters:
       month:
         custom: []
@@ -96,46 +363,8 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      store_id:
-        custom: []
-        name: store_id
-        description: 'The <code>id</code> of an existing record in the stores table.'
-        required: false
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      limit:
-        custom: []
-        name: limit
-        description: 'Must be at least 1. Must not be greater than 100.'
-        required: false
-        example: 22
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      order:
-        custom: []
-        name: order
-        description: ''
-        required: false
-        example: asc
-        type: string
-        enumValues:
-          - asc
-          - desc
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
     cleanBodyParameters:
       month: 6425-59
-      store_id: 16
-      limit: 22
-      order: asc
     fileParameters: []
     responses:
       -
@@ -144,134 +373,24 @@ endpoints:
         content: |-
           {
             "data": {
-              "period": "2026-01",
-              "podium": [
-                {
-                  "position": 1,
-                  "seller": { "id": 5, "name": "João Silva", "avatar_url": "...", "store_name": "Tijucas" },
-                  "total_sold": 85000.00,
-                  "goal": 75000.00,
-                  "achievement_rate": 113.33,
-                  "bonus_accumulated": 450.00
-                }
+              "month": "2026-01",
+              "total_sales": { "count": 450, "total": 67500.00 },
+              "sales_by_store": [
+                { "store_id": 1, "store_name": "Mais Capinhas Tijucas", "count": 180, "total": 28000.00 }
               ],
-              "ranking": [...],
-              "stats": { "total_sellers": 25, "above_goal": 12, "average_achievement": 92.5 }
+              "closings_summary": { "approved": 40, "submitted": 5, "draft": 3 },
+              "top_sellers": [
+                { "seller_id": 6, "name": "João Vendedor", "total": 12500.00, "count": 85 }
+              ]
             }
           }
         headers: []
-        description: 'Ranking mensal'
+        description: 'Dashboard consolidado'
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: api/v1/users/birthdays
-    metadata:
-      custom: []
-      groupName: 'Relatórios - Ranking'
-      groupDescription: |-
-
-        Endpoints para ranking de vendedores e consultas relacionadas.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Aniversariantes do Mês'
-      description: |-
-        Lista vendedores que fazem aniversário no mês especificado.
-
-        **Quem pode usar:** Gerentes e Admins.
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters:
-      month:
-        custom: []
-        name: month
-        description: 'Mês (1-12), default: mês atual.'
-        required: false
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      store_id:
-        custom: []
-        name: store_id
-        description: 'Filtrar por loja.'
-        required: false
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanQueryParameters:
-      month: 1
-      store_id: 1
-    bodyParameters:
-      month:
-        custom: []
-        name: month
-        description: 'Must be at least 1. Must not be greater than 12.'
-        required: false
-        example: 4
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      store_id:
-        custom: []
-        name: store_id
-        description: 'The <code>id</code> of an existing record in the stores table.'
-        required: false
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      month: 4
-      store_id: 16
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "data": [
-              {
-                "id": 5,
-                "name": "João Silva",
-                "birth_date": "1990-01-15",
-                "day": 15,
-                "age": 36,
-                "avatar_url": "https://..."
-              }
-            ]
-          }
-        headers: []
-        description: 'Aniversariantes de janeiro'
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null

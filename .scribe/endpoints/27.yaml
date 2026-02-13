@@ -1,39 +1,44 @@
-name: 'PDV - Admin'
+name: Pedidos
 description: |-
 
-  Endpoints administrativos para observabilidade do pipeline PDV Sync.
+  Gestão de pedidos de clientes nas lojas.
+  Pedidos representam solicitações de clientes que podem incluir capas personalizadas ou produtos do catálogo.
 
-  Inclui:
-  - consulta de syncs recebidos (`/admin/pdv/syncs`)
-  - metricas operacionais consolidadas (`/admin/pdv/syncs/metrics`)
+  **Escopo de acesso:**
+  - Super admins e admins globais: acesso a todos os pedidos
+  - Outros usuários: apenas pedidos que criaram
 
-  Acesso:
-  - super admin, ou
-  - usuario com role `admin` em alguma loja
+  **Status do pedido:** 1=Novo, 2=Em produção, 3=Pronto, 4=Entregue, 5=Cancelado
+
+  **Permissões:** Todos os usuários autenticados.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/admin/pdv/syncs
+    uri: api/v1/pedidos
     metadata:
       custom: []
-      groupName: 'PDV - Admin'
+      groupName: Pedidos
       groupDescription: |-
 
-        Endpoints administrativos para observabilidade do pipeline PDV Sync.
+        Gestão de pedidos de clientes nas lojas.
+        Pedidos representam solicitações de clientes que podem incluir capas personalizadas ou produtos do catálogo.
 
-        Inclui:
-        - consulta de syncs recebidos (`/admin/pdv/syncs`)
-        - metricas operacionais consolidadas (`/admin/pdv/syncs/metrics`)
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todos os pedidos
+        - Outros usuários: apenas pedidos que criaram
 
-        Acesso:
-        - super admin, ou
-        - usuario com role `admin` em alguma loja
+        **Status do pedido:** 1=Novo, 2=Em produção, 3=Pronto, 4=Entregue, 5=Cancelado
+
+        **Permissões:** Todos os usuários autenticados.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Listar syncs PDV'
-      description: 'Retorna os syncs armazenados com filtros de status, risco, loja e periodo.'
+      title: 'Listar pedidos'
+      description: |-
+        Retorna lista paginada de pedidos com filtros diversos.
+
+        **Quem pode usar:** Todos os usuários autenticados.
       authenticated: true
       deprecated: false
     headers:
@@ -43,87 +48,10 @@ endpoints:
     urlParameters: []
     cleanUrlParameters: []
     queryParameters:
-      status:
-        custom: []
-        name: status
-        description: 'Filtrar por status (`queued`, `processing`, `processed`, `failed`, `blocked`).'
-        required: false
-        example: queued
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      event_type:
-        custom: []
-        name: event_type
-        description: 'Filtrar por tipo de evento (`sales`, `turno_closure`, `mixed`).'
-        required: false
-        example: mixed
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      sync_id:
-        custom: []
-        name: sync_id
-        description: 'Busca parcial por `sync_id`.'
-        required: false
-        example: a1b2
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      schema_version:
-        custom: []
-        name: schema_version
-        description: 'Filtrar por versao de schema.'
-        required: false
-        example: '3.0'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      request_id:
-        custom: []
-        name: request_id
-        description: 'Busca parcial por `request_id`.'
-        required: false
-        example: req-pdv
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      risk_flag:
-        custom: []
-        name: risk_flag
-        description: 'Filtrar por risk flag (JSON contains).'
-        required: false
-        example: gestao_db_failure
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      store_pdv_id:
-        custom: []
-        name: store_pdv_id
-        description: 'Filtrar por loja PDV.'
-        required: false
-        example: 13
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
       store_id:
         custom: []
         name: store_id
-        description: 'Filtrar por loja interna.'
+        description: 'Filtrar por loja (apenas admins).'
         required: false
         example: 1
         type: integer
@@ -131,23 +59,111 @@ endpoints:
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-      from:
+      user_id:
         custom: []
-        name: from
-        description: 'Inicio do periodo de `received_at` (`YYYY-MM-DD`).'
+        name: user_id
+        description: 'Filtrar por usuário (apenas admins).'
         required: false
-        example: '2026-02-01'
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      status:
+        custom: []
+        name: status
+        description: 'integer|array Status do pedido (aceita array para múltiplos).'
+        required: false
+        example: '1'
         type: string
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-      to:
+      customer_id:
         custom: []
-        name: to
-        description: 'Fim do periodo de `received_at` (`YYYY-MM-DD`).'
+        name: customer_id
+        description: 'Filtrar por cliente.'
         required: false
-        example: '2026-02-12'
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      initial_date:
+        custom: []
+        name: initial_date
+        description: 'Data inicial.'
+        required: false
+        example: '2026-01-01'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      final_date:
+        custom: []
+        name: final_date
+        description: 'Data final.'
+        required: false
+        example: '2026-12-31'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      brand_id:
+        custom: []
+        name: brand_id
+        description: 'Filtrar por marca do dispositivo.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      model_id:
+        custom: []
+        name: model_id
+        description: 'Filtrar por modelo do dispositivo.'
+        required: false
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      keyword:
+        custom: []
+        name: keyword
+        description: 'Busca em texto.'
+        required: false
+        example: João
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      sort:
+        custom: []
+        name: sort
+        description: 'Campo para ordenação.'
+        required: false
+        example: created_at
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      direction:
+        custom: []
+        name: direction
+        description: 'Direção: `asc` ou `desc`.'
+        required: false
+        example: desc
         type: string
         enumValues: []
         exampleWasSpecified: true
@@ -156,26 +172,27 @@ endpoints:
       per_page:
         custom: []
         name: per_page
-        description: 'Tamanho da pagina (1-100). Default: 25.'
+        description: 'Itens por página (máx 100).'
         required: false
-        example: 25
+        example: 15
         type: integer
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
     cleanQueryParameters:
-      status: queued
-      event_type: mixed
-      sync_id: a1b2
-      schema_version: '3.0'
-      request_id: req-pdv
-      risk_flag: gestao_db_failure
-      store_pdv_id: 13
       store_id: 1
-      from: '2026-02-01'
-      to: '2026-02-12'
-      per_page: 25
+      user_id: 1
+      status: '1'
+      customer_id: 1
+      initial_date: '2026-01-01'
+      final_date: '2026-12-31'
+      brand_id: 1
+      model_id: 5
+      keyword: João
+      sort: created_at
+      direction: desc
+      per_page: 15
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
@@ -185,74 +202,52 @@ endpoints:
         status: 200
         content: |-
           {
-            "data": [
-              {
-                "id": 31,
-                "sync_id": "a1b2c3d4e5f6",
-                "schema_version": "3.0",
-                "event_type": "mixed",
-                "store_pdv_id": 13,
-                "store_id": 1,
-                "status": "processed",
-                "ops_count": 1,
-                "ops_loja_count": 1,
-                "risk_flags": [],
-                "queue_delay_ms": 90,
-                "processing_ms": 45,
-                "end_to_end_ms": 150
-              }
-            ],
-            "meta": {
-              "request_id": "req-admin-1",
-              "timestamp": "2026-02-12T10:00:00+00:00",
-              "pagination": {"total": 1, "per_page": 25, "current_page": 1, "last_page": 1}
-            }
+            "data": [{
+              "id": 1,
+              "status": 1,
+              "selected_product": "Capa Personalizada",
+              "customer": {"id": 1, "name": "João"},
+              "store": {"id": 1, "name": "Loja Centro"}
+            }],
+            "meta": {"current_page": 1, "total": 50}
           }
         headers: []
-        description: ''
-      -
-        custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
-        headers: []
-        description: ''
-      -
-        custom: []
-        status: 403
-        content: '{"message":"Apenas administradores podem acessar este recurso."}'
-        headers: []
-        description: ''
+        description: 'Lista de pedidos'
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null
   -
     custom: []
     httpMethods:
-      - GET
-    uri: api/v1/admin/pdv/syncs/metrics
+      - POST
+    uri: api/v1/pedidos
     metadata:
       custom: []
-      groupName: 'PDV - Admin'
+      groupName: Pedidos
       groupDescription: |-
 
-        Endpoints administrativos para observabilidade do pipeline PDV Sync.
+        Gestão de pedidos de clientes nas lojas.
+        Pedidos representam solicitações de clientes que podem incluir capas personalizadas ou produtos do catálogo.
 
-        Inclui:
-        - consulta de syncs recebidos (`/admin/pdv/syncs`)
-        - metricas operacionais consolidadas (`/admin/pdv/syncs/metrics`)
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todos os pedidos
+        - Outros usuários: apenas pedidos que criaram
 
-        Acesso:
-        - super admin, ou
-        - usuario com role `admin` em alguma loja
+        **Status do pedido:** 1=Novo, 2=Em produção, 3=Pronto, 4=Entregue, 5=Cancelado
+
+        **Permissões:** Todos os usuários autenticados.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Metricas operacionais do PDV Sync'
-      description: 'Retorna painel consolidado de backlog, risco, latencia e saude por loja.'
+      title: 'Criar pedido'
+      description: |-
+        Cria um novo pedido associado a um cliente.
+
+        **Quem pode usar:** Todos os usuários autenticados.
       authenticated: true
       deprecated: false
     headers:
@@ -261,20 +256,216 @@ endpoints:
       Accept: application/json
     urlParameters: []
     cleanUrlParameters: []
-    queryParameters:
-      minutes_without_sync:
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      store_id:
         custom: []
-        name: minutes_without_sync
-        description: 'Limite para considerar loja silenciosa (5-1440 min). Default: config do monitor.'
+        name: store_id
+        description: 'ID da loja (usa loja do usuário se não informado).'
         required: false
-        example: 120
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-    cleanQueryParameters:
-      minutes_without_sync: 120
+      user_id:
+        custom: []
+        name: user_id
+        description: 'The <code>id</code> of an existing record in the users table.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      customer_id:
+        custom: []
+        name: customer_id
+        description: 'ID do cliente.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      customer_device_id:
+        custom: []
+        name: customer_device_id
+        description: 'ID do dispositivo do cliente.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      selected_product:
+        custom: []
+        name: selected_product
+        description: 'Produto selecionado.'
+        required: false
+        example: 'Capa Personalizada'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      obs:
+        custom: []
+        name: obs
+        description: 'Must not be greater than 5000 characters.'
+        required: false
+        example: g
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      status:
+        custom: []
+        name: status
+        description: ''
+        required: false
+        example: '5'
+        type: integer
+        enumValues:
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      observation:
+        custom: []
+        name: observation
+        description: Observações.
+        required: false
+        example: 'Cliente pediu urgência'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      value:
+        custom: []
+        name: value
+        description: 'Valor do pedido.'
+        required: false
+        example: 49.9
+        type: number
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      store_id: 1
+      user_id: 16
+      customer_id: 1
+      customer_device_id: 1
+      selected_product: 'Capa Personalizada'
+      obs: g
+      status: '5'
+      observation: 'Cliente pediu urgência'
+      value: 49.9
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 201
+        content: |-
+          {
+            "message": "Pedido criado com sucesso.",
+            "data": {"id": 1, "status": 1, "customer": {"name": "João"}}
+          }
+        headers: []
+        description: 'Pedido criado'
+      -
+        custom: []
+        status: 403
+        content: '{"message": "Você não tem acesso a esta loja."}'
+        headers: []
+        description: 'Sem acesso à loja'
+      -
+        custom: []
+        status: 422
+        content: '{"message": "Usuário não está vinculado a nenhuma loja."}'
+        headers: []
+        description: 'Sem loja'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/pedidos/{id}'
+    metadata:
+      custom: []
+      groupName: Pedidos
+      groupDescription: |-
+
+        Gestão de pedidos de clientes nas lojas.
+        Pedidos representam solicitações de clientes que podem incluir capas personalizadas ou produtos do catálogo.
+
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todos os pedidos
+        - Outros usuários: apenas pedidos que criaram
+
+        **Status do pedido:** 1=Novo, 2=Em produção, 3=Pronto, 4=Entregue, 5=Cancelado
+
+        **Permissões:** Todos os usuários autenticados.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Detalhes do pedido'
+      description: |-
+        Retorna detalhes completos do pedido.
+
+        **Quem pode usar:** Usuário com acesso ao pedido.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the pedido.'
+        required: true
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      pedido:
+        custom: []
+        name: pedido
+        description: 'ID do pedido.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 5
+      pedido: 1
+    queryParameters: []
+    cleanQueryParameters: []
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
@@ -285,35 +476,508 @@ endpoints:
         content: |-
           {
             "data": {
-              "status_breakdown": {"queued": 0, "processing": 0, "processed": 31, "failed": 0, "blocked": 0, "duplicate": 0},
-              "risk_flags": {"gestao_db_failure": 0, "vendedor_null": 0, "meio_pagamento_null": 0},
-              "by_event_type": {"sales": 20, "turno_closure": 2, "mixed": 9},
-              "by_schema_version": {"3.0": 31},
-              "by_canal": {"source": "pdv_vendas", "totals": {"HIPER_CAIXA": 150, "HIPER_LOJA": 23}},
-              "last_24h": {"total": 12, "failed": 0, "failure_rate_percent": 0},
-              "latency": {"avg_queue_delay_ms": 120, "avg_processing_ms": 35}
-            },
-            "meta": {"request_id":"req-admin-1","timestamp":"2026-02-12T10:00:00+00:00"}
+              "id": 1,
+              "status": 1,
+              "customer": {"id": 1, "name": "João"},
+              "status_history": [{"status": 1, "changed_by": "Admin", "created_at": "2026-01-13T15:00:00+00:00"}]
+            }
           }
         headers: []
-        description: ''
-      -
-        custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
-        headers: []
-        description: ''
+        description: 'Detalhes do pedido'
       -
         custom: []
         status: 403
-        content: '{"message":"Apenas administradores podem acessar este recurso."}'
+        content: '{"message": "Você não tem permissão para acessar este pedido."}'
         headers: []
-        description: ''
+        description: 'Sem permissão'
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: 'api/v1/pedidos/{id}'
+    metadata:
+      custom: []
+      groupName: Pedidos
+      groupDescription: |-
+
+        Gestão de pedidos de clientes nas lojas.
+        Pedidos representam solicitações de clientes que podem incluir capas personalizadas ou produtos do catálogo.
+
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todos os pedidos
+        - Outros usuários: apenas pedidos que criaram
+
+        **Status do pedido:** 1=Novo, 2=Em produção, 3=Pronto, 4=Entregue, 5=Cancelado
+
+        **Permissões:** Todos os usuários autenticados.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Atualizar pedido'
+      description: |-
+        Atualiza dados do pedido. Se o status for alterado, registra no histórico.
+
+        **Quem pode usar:** Usuário com acesso ao pedido.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the pedido.'
+        required: true
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      pedido:
+        custom: []
+        name: pedido
+        description: 'ID do pedido.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 5
+      pedido: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      customer_id:
+        custom: []
+        name: customer_id
+        description: 'The <code>id</code> of an existing record in the customers table.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      customer_device_id:
+        custom: []
+        name: customer_device_id
+        description: 'The <code>id</code> of an existing record in the customer_devices table.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      selected_product:
+        custom: []
+        name: selected_product
+        description: 'Produto selecionado.'
+        required: false
+        example: 'Capa Nova'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      obs:
+        custom: []
+        name: obs
+        description: 'Must not be greater than 5000 characters.'
+        required: false
+        example: g
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      status:
+        custom: []
+        name: status
+        description: 'Novo status do pedido.'
+        required: false
+        example: 2
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      observation:
+        custom: []
+        name: observation
+        description: Observações.
+        required: false
+        example: 'Cliente alterou pedido'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      customer_id: 16
+      customer_device_id: 16
+      selected_product: 'Capa Nova'
+      obs: g
+      status: 2
+      observation: 'Cliente alterou pedido'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "message": "Pedido atualizado com sucesso.",
+            "data": {"id": 1, "status": 2}
+          }
+        headers: []
+        description: 'Pedido atualizado'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/v1/pedidos/{id}'
+    metadata:
+      custom: []
+      groupName: Pedidos
+      groupDescription: |-
+
+        Gestão de pedidos de clientes nas lojas.
+        Pedidos representam solicitações de clientes que podem incluir capas personalizadas ou produtos do catálogo.
+
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todos os pedidos
+        - Outros usuários: apenas pedidos que criaram
+
+        **Status do pedido:** 1=Novo, 2=Em produção, 3=Pronto, 4=Entregue, 5=Cancelado
+
+        **Permissões:** Todos os usuários autenticados.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Excluir pedido'
+      description: |-
+        Remove um pedido (soft delete).
+
+        **Quem pode usar:** Usuário com acesso ao pedido.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the pedido.'
+        required: true
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      pedido:
+        custom: []
+        name: pedido
+        description: 'ID do pedido.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 5
+      pedido: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"message": "Pedido excluído com sucesso."}'
+        headers: []
+        description: 'Pedido excluído'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: 'api/v1/pedidos/{pedido_id}/status'
+    metadata:
+      custom: []
+      groupName: Pedidos
+      groupDescription: |-
+
+        Gestão de pedidos de clientes nas lojas.
+        Pedidos representam solicitações de clientes que podem incluir capas personalizadas ou produtos do catálogo.
+
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todos os pedidos
+        - Outros usuários: apenas pedidos que criaram
+
+        **Status do pedido:** 1=Novo, 2=Em produção, 3=Pronto, 4=Entregue, 5=Cancelado
+
+        **Permissões:** Todos os usuários autenticados.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Atualizar status do pedido'
+      description: |-
+        Atualiza apenas o status do pedido com registro no histórico.
+        Quando o status é alterado para "Disponível na Loja" (3), é possível
+        enviar uma notificação via WhatsApp para o cliente.
+
+        **Quem pode usar:** Usuário com acesso ao pedido.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      pedido_id:
+        custom: []
+        name: pedido_id
+        description: 'The ID of the pedido.'
+        required: true
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      pedido:
+        custom: []
+        name: pedido
+        description: 'ID do pedido.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      pedido_id: 5
+      pedido: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      status:
+        custom: []
+        name: status
+        description: 'Novo status.'
+        required: true
+        example: 3
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      reason:
+        custom: []
+        name: reason
+        description: 'Motivo da alteração.'
+        required: false
+        example: 'Cliente confirmou recebimento'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      notify_whatsapp:
+        custom: []
+        name: notify_whatsapp
+        description: 'Enviar notificação WhatsApp ao cliente (apenas para status 3).'
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      status: 3
+      reason: 'Cliente confirmou recebimento'
+      notify_whatsapp: true
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "message": "Status atualizado com sucesso.",
+            "data": {"id": 1, "status": 3}
+          }
+        headers: []
+        description: 'Status atualizado'
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "message": "Status atualizado com sucesso.",
+            "data": {"id": 1, "status": 3},
+            "whatsapp_notification": {"sent": true, "phone": "****9999"}
+          }
+        headers: []
+        description: 'Status atualizado com notificação'
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "message": "Status atualizado com sucesso.",
+            "data": {"id": 1, "status": 3},
+            "whatsapp_notification": {"sent": false, "phone": null, "error": "Cliente não possui telefone cadastrado."}
+          }
+        headers: []
+        description: 'Notificação falhou'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/pedidos/bulk-status
+    metadata:
+      custom: []
+      groupName: Pedidos
+      groupDescription: |-
+
+        Gestão de pedidos de clientes nas lojas.
+        Pedidos representam solicitações de clientes que podem incluir capas personalizadas ou produtos do catálogo.
+
+        **Escopo de acesso:**
+        - Super admins e admins globais: acesso a todos os pedidos
+        - Outros usuários: apenas pedidos que criaram
+
+        **Status do pedido:** 1=Novo, 2=Em produção, 3=Pronto, 4=Entregue, 5=Cancelado
+
+        **Permissões:** Todos os usuários autenticados.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Atualização em lote de status'
+      description: |-
+        Atualiza o status de múltiplos pedidos de uma só vez.
+
+        **Quem pode usar:** Apenas administradores.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      ids:
+        custom: []
+        name: ids
+        description: 'Lista de IDs dos pedidos.'
+        required: true
+        example:
+          - 1
+          - 2
+          - 3
+        type: 'string[]'
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      status:
+        custom: []
+        name: status
+        description: 'Novo status.'
+        required: true
+        example: 4
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      'ids.*':
+        custom: []
+        name: 'ids.*'
+        description: 'ID do pedido.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      ids:
+        - 1
+        - 2
+        - 3
+      status: 4
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "message": "Atualização em lote concluída. 3 atualizados, 0 ignorados.",
+            "data": {"updated": 3, "skipped": 0, "updated_ids": [1, 2, 3], "skipped_ids": []}
+          }
+        headers: []
+        description: 'Atualização concluída'
+      -
+        custom: []
+        status: 403
+        content: '{"message": "Apenas administradores podem alterar status em lote."}'
+        headers: []
+        description: 'Sem permissão'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null

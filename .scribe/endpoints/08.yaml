@@ -1,239 +1,95 @@
-name: 'Turnos de Caixa'
+name: 'Upload de Arquivos'
 description: |-
 
-  Endpoints para gerenciar turnos de caixa.
-  Cada turno representa um período de trabalho de um vendedor em uma loja.
+  Endpoints para upload de imagens de avatar e fotos.
 endpoints:
   -
     custom: []
     httpMethods:
-      - GET
-    uri: api/v1/cash/shifts
+      - PUT
+    uri: 'api/v1/users/{user_id}/avatar'
     metadata:
       custom: []
-      groupName: 'Turnos de Caixa'
+      groupName: 'Upload de Arquivos'
       groupDescription: |-
 
-        Endpoints para gerenciar turnos de caixa.
-        Cada turno representa um período de trabalho de um vendedor em uma loja.
+        Endpoints para upload de imagens de avatar e fotos.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Listar turnos de caixa'
+      title: 'Atualizar avatar do usuário'
       description: |-
-        Retorna os turnos de caixa das lojas às quais o usuário tem acesso,
-        com filtros por loja, data e status.
+        Permite ao usuário atualizar seu próprio avatar ou admins atualizarem
+        o avatar de qualquer usuário.
 
-        **Quem pode usar:** Qualquer usuário autenticado.
+        **Quem pode usar:**
+        - O próprio usuário (atualizar seu avatar)
+        - Admins (atualizar avatar de qualquer pessoa)
 
-        **Filtros disponíveis:**
-        - `store_id` - Filtrar por loja específica
-        - `date` - Filtrar por data específica (YYYY-MM-DD)
-        - `status` - Filtrar por status (open, closed, pending)
-
-        **Códigos de turno:**
-        - `1` ou `M` - Manhã
-        - `2` ou `T` - Tarde
-        - `3` ou `N` - Noite
+        **Validações:**
+        - Tipos: jpg, jpeg, png, webp
+        - Tamanho máximo: 2MB
+        - Dimensões mínimas: 200x200px
       authenticated: true
       deprecated: false
     headers:
       Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
+      Content-Type: multipart/form-data
       Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters:
-      store_id:
+    urlParameters:
+      user_id:
         custom: []
-        name: store_id
-        description: 'ID da loja para filtrar.'
-        required: false
+        name: user_id
+        description: 'The ID of the user.'
+        required: true
         example: 1
         type: integer
         enumValues: []
-        exampleWasSpecified: true
+        exampleWasSpecified: false
         nullable: false
         deprecated: false
-      date:
+      user:
         custom: []
-        name: date
-        description: 'Data específica (YYYY-MM-DD).'
-        required: false
-        example: '2026-01-07'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      status:
-        custom: []
-        name: status
-        description: 'Status do turno.'
-        required: false
-        example: open
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      per_page:
-        custom: []
-        name: per_page
-        description: 'Itens por página (1-100).'
-        required: false
-        example: 25
+        name: user
+        description: 'ID do usuário.'
+        required: true
+        example: 5
         type: integer
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-    cleanQueryParameters:
-      store_id: 1
-      date: '2026-01-07'
-      status: open
-      per_page: 25
+    cleanUrlParameters:
+      user_id: 1
+      user: 5
+    queryParameters: []
+    cleanQueryParameters: []
     bodyParameters:
-      store_id:
+      avatar:
         custom: []
-        name: store_id
-        description: 'The <code>id</code> of an existing record in the stores table.'
-        required: false
-        example: 16
-        type: integer
+        name: avatar
+        description: 'Arquivo de imagem.'
+        required: true
+        example: null
+        type: file
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: false
         deprecated: false
-      date:
+      remove:
         custom: []
-        name: date
-        description: 'Must be a valid date.'
+        name: remove
+        description: 'Remover avatar atual.'
         required: false
-        example: '2026-02-12T06:51:04'
-        type: string
+        example: false
+        type: boolean
         enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      status:
-        custom: []
-        name: status
-        description: ''
-        required: false
-        example: closed
-        type: string
-        enumValues:
-          - open
-          - closed
-          - pending
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      per_page:
-        custom: []
-        name: per_page
-        description: 'Must be at least 1. Must not be greater than 100.'
-        required: false
-        example: 22
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      store_id: 16
-      date: '2026-02-12T06:51:04'
-      status: closed
-      per_page: 22
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "data": [
-              {
-                "id": 1,
-                "store_id": 1,
-                "date": "2026-01-07",
-                "shift_code": "M",
-                "seller_id": 6,
-                "status": "open",
-                "store": { "id": 1, "name": "Mais Capinhas Tijucas" },
-                "seller": { "id": 6, "name": "João Vendedor" },
-                "cash_closing": null
-              }
-            ],
-            "meta": { "current_page": 1, "per_page": 25, "total": 84 }
-          }
-        headers: []
-        description: 'Lista de turnos'
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: api/v1/cash/shifts/pending
-    metadata:
-      custom: []
-      groupName: 'Turnos de Caixa'
-      groupDescription: |-
-
-        Endpoints para gerenciar turnos de caixa.
-        Cada turno representa um período de trabalho de um vendedor em uma loja.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Turnos pendentes de conferência'
-      description: |-
-        Lista turnos que ainda não foram aprovados, ordenados por prioridade
-        (mais antigos primeiro).
-
-        **Quem pode usar:** Conferentes, Gerentes e Admins.
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters:
-      store_id:
-        custom: []
-        name: store_id
-        description: 'Filtrar por loja.'
-        required: false
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanQueryParameters:
-      store_id: 1
-    bodyParameters:
-      store_id:
-        custom: []
-        name: store_id
-        description: 'The <code>id</code> of an existing record in the stores table.'
-        required: false
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      store_id: 16
-    fileParameters: []
+      remove: false
+    fileParameters:
+      avatar: null
     responses:
       -
         custom: []
@@ -241,118 +97,27 @@ endpoints:
         content: |-
           {
             "data": {
-              "total_pending": 12,
-              "shifts": [
-                {
-                  "id": 5,
-                  "date": "2026-01-06",
-                  "shift_code": "T",
-                  "days_pending": 2,
-                  "priority": "high",
-                  "store_name": "Tijucas",
-                  "seller_name": "João Silva",
-                  "system_total": 4500.00
-                }
-              ]
-            }
+              "user_id": 5,
+              "avatar_url": "https://api.maiscapinhas.com.br/storage/users/5/avatar.jpg"
+            },
+            "meta": { "request_id": "uuid", "timestamp": "2026-01-07T12:00:00Z" }
           }
         headers: []
-        description: 'Turnos pendentes'
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: api/v1/cash/shifts/divergent
-    metadata:
-      custom: []
-      groupName: 'Turnos de Caixa'
-      groupDescription: |-
-
-        Endpoints para gerenciar turnos de caixa.
-        Cada turno representa um período de trabalho de um vendedor em uma loja.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Turnos com divergência'
-      description: |-
-        Lista turnos que possuem divergência não justificada entre
-        valores do sistema e valores reais.
-
-        **Quem pode usar:** Conferentes, Gerentes e Admins.
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters:
-      store_id:
-        custom: []
-        name: store_id
-        description: 'Filtrar por loja.'
-        required: false
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanQueryParameters:
-      store_id: 1
-    bodyParameters:
-      store_id:
-        custom: []
-        name: store_id
-        description: 'The <code>id</code> of an existing record in the stores table.'
-        required: false
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      store_id: 16
-    fileParameters: []
-    responses:
+        description: 'Avatar atualizado'
       -
         custom: []
-        status: 200
+        status: 403
         content: |-
           {
-            "data": {
-              "total_divergent": 3,
-              "total_divergence_value": -85.00,
-              "shifts": [
-                {
-                  "id": 8,
-                  "date": "2026-01-05",
-                  "shift_code": "N",
-                  "store_name": "Bombinhas",
-                  "seller_name": "Maria Santos",
-                  "divergence": -50.00,
-                  "has_justification": false,
-                  "days_pending": 3
-                }
-              ]
-            }
+            "error": { "code": 403, "message": "Você não tem permissão para atualizar este avatar." }
           }
         headers: []
-        description: 'Turnos divergentes'
+        description: 'Sem permissão'
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null
@@ -360,185 +125,89 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/v1/cash/shifts
+    uri: 'api/v1/users/{user_id}/avatar'
     metadata:
       custom: []
-      groupName: 'Turnos de Caixa'
+      groupName: 'Upload de Arquivos'
       groupDescription: |-
 
-        Endpoints para gerenciar turnos de caixa.
-        Cada turno representa um período de trabalho de um vendedor em uma loja.
+        Endpoints para upload de imagens de avatar e fotos.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Criar novo turno de caixa'
+      title: 'Atualizar avatar do usuário'
       description: |-
-        Cria um novo turno de caixa para uma loja/data/período.
+        Permite ao usuário atualizar seu próprio avatar ou admins atualizarem
+        o avatar de qualquer usuário.
 
-        **Quem pode usar:** Usuários com acesso à loja.
+        **Quem pode usar:**
+        - O próprio usuário (atualizar seu avatar)
+        - Admins (atualizar avatar de qualquer pessoa)
 
-        **Regras de negócio:**
-        - Não pode haver dois turnos com mesma loja + data + turno + vendedor
-        - O turno inicia com status `open`
-        - Se `seller_id` não for informado, assume o usuário atual
-
-        **Códigos de turno:**
-        - `1` ou `M` - Manhã (08h-14h)
-        - `2` ou `T` - Tarde (14h-20h)
-        - `3` ou `N` - Noite (20h-00h)
+        **Validações:**
+        - Tipos: jpg, jpeg, png, webp
+        - Tamanho máximo: 2MB
+        - Dimensões mínimas: 200x200px
       authenticated: true
       deprecated: false
     headers:
       Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      store_id:
-        custom: []
-        name: store_id
-        description: 'ID da loja.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      date:
-        custom: []
-        name: date
-        description: 'Data do turno (YYYY-MM-DD).'
-        required: true
-        example: '2026-01-07'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      shift_code:
-        custom: []
-        name: shift_code
-        description: 'Código do turno (1, 2, 3 ou M, T, N).'
-        required: true
-        example: '1'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      seller_id:
-        custom: []
-        name: seller_id
-        description: 'ID do vendedor (padrão: usuário atual).'
-        required: false
-        example: 6
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      store_id: 1
-      date: '2026-01-07'
-      shift_code: '1'
-      seller_id: 6
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 201
-        content: |-
-          {
-            "data": {
-              "id": 1,
-              "store_id": 1,
-              "date": "2026-01-07",
-              "shift_code": "M",
-              "seller_id": 6,
-              "status": "open",
-              "store": { "id": 1, "name": "Mais Capinhas Tijucas" },
-              "seller": { "id": 6, "name": "João Vendedor" }
-            },
-            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
-          }
-        headers: []
-        description: 'Turno criado'
-      -
-        custom: []
-        status: 403
-        content: |-
-          {
-            "error": { "code": 403, "message": "You do not have access to this store." }
-          }
-        headers: []
-        description: 'Sem acesso'
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: 'api/v1/cash/shifts/{id}'
-    metadata:
-      custom: []
-      groupName: 'Turnos de Caixa'
-      groupDescription: |-
-
-        Endpoints para gerenciar turnos de caixa.
-        Cada turno representa um período de trabalho de um vendedor em uma loja.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Obter detalhes de um turno'
-      description: |-
-        Retorna os detalhes de um turno específico, incluindo o fechamento se existir.
-
-        **Quem pode usar:** Usuários com acesso à loja.
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
+      Content-Type: multipart/form-data
       Accept: application/json
     urlParameters:
-      id:
+      user_id:
         custom: []
-        name: id
-        description: 'The ID of the shift.'
+        name: user_id
+        description: 'The ID of the user.'
         required: true
-        example: 16
+        example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      shift:
+      user:
         custom: []
-        name: shift
-        description: 'ID do turno.'
+        name: user
+        description: 'ID do usuário.'
         required: true
-        example: 1
+        example: 5
         type: integer
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 16
-      shift: 1
+      user_id: 1
+      user: 5
     queryParameters: []
     cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
+    bodyParameters:
+      avatar:
+        custom: []
+        name: avatar
+        description: 'Arquivo de imagem.'
+        required: true
+        example: null
+        type: file
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      remove:
+        custom: []
+        name: remove
+        description: 'Remover avatar atual.'
+        required: false
+        example: false
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      remove: false
+    fileParameters:
+      avatar: null
     responses:
       -
         custom: []
@@ -546,26 +215,27 @@ endpoints:
         content: |-
           {
             "data": {
-              "id": 1,
-              "store_id": 1,
-              "date": "2026-01-07",
-              "shift_code": "M",
-              "status": "closed",
-              "cash_closing": {
-                "id": 1,
-                "status": "approved",
-                "lines": []
-              }
+              "user_id": 5,
+              "avatar_url": "https://api.maiscapinhas.com.br/storage/users/5/avatar.jpg"
             },
-            "meta": { "timestamp": "2026-01-07T12:00:00Z" }
+            "meta": { "request_id": "uuid", "timestamp": "2026-01-07T12:00:00Z" }
           }
         headers: []
-        description: 'Turno encontrado'
+        description: 'Avatar atualizado'
+      -
+        custom: []
+        status: 403
+        content: |-
+          {
+            "error": { "code": 403, "message": "Você não tem permissão para atualizar este avatar." }
+          }
+        headers: []
+        description: 'Sem permissão'
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null

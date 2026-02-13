@@ -1,42 +1,32 @@
-name: Pedidos
+name: 'Catálogo - Modelos de Telefone'
 description: |-
 
-  Gestão de pedidos de clientes nas lojas.
-  Pedidos representam solicitações de clientes que podem incluir capas personalizadas ou produtos do catálogo.
+  Gestão de modelos de telefone do catálogo.
+  Modelos são vinculados a marcas e usados para associar dispositivos de clientes.
 
-  **Escopo de acesso:**
-  - Super admins e admins globais: acesso a todos os pedidos
-  - Outros usuários: apenas pedidos que criaram
-
-  **Status do pedido:** 1=Novo, 2=Em produção, 3=Pronto, 4=Entregue, 5=Cancelado
-
-  **Permissões:** Todos os usuários autenticados.
+  **Leitura:** Todos os usuários autenticados.
+  **Escrita:** Apenas administradores.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/pedidos
+    uri: api/v1/phone-catalog/models
     metadata:
       custom: []
-      groupName: Pedidos
+      groupName: 'Catálogo - Modelos de Telefone'
       groupDescription: |-
 
-        Gestão de pedidos de clientes nas lojas.
-        Pedidos representam solicitações de clientes que podem incluir capas personalizadas ou produtos do catálogo.
+        Gestão de modelos de telefone do catálogo.
+        Modelos são vinculados a marcas e usados para associar dispositivos de clientes.
 
-        **Escopo de acesso:**
-        - Super admins e admins globais: acesso a todos os pedidos
-        - Outros usuários: apenas pedidos que criaram
-
-        **Status do pedido:** 1=Novo, 2=Em produção, 3=Pronto, 4=Entregue, 5=Cancelado
-
-        **Permissões:** Todos os usuários autenticados.
+        **Leitura:** Todos os usuários autenticados.
+        **Escrita:** Apenas administradores.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Listar pedidos'
+      title: 'Listar modelos'
       description: |-
-        Retorna lista paginada de pedidos com filtros diversos.
+        Retorna lista paginada de modelos com dados da marca.
 
         **Quem pode usar:** Todos os usuários autenticados.
       authenticated: true
@@ -48,67 +38,12 @@ endpoints:
     urlParameters: []
     cleanUrlParameters: []
     queryParameters:
-      store_id:
+      search:
         custom: []
-        name: store_id
-        description: 'Filtrar por loja (apenas admins).'
+        name: search
+        description: 'Buscar por nome.'
         required: false
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      user_id:
-        custom: []
-        name: user_id
-        description: 'Filtrar por usuário (apenas admins).'
-        required: false
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      status:
-        custom: []
-        name: status
-        description: 'integer|array Status do pedido (aceita array para múltiplos).'
-        required: false
-        example: '1'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      customer_id:
-        custom: []
-        name: customer_id
-        description: 'Filtrar por cliente.'
-        required: false
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      initial_date:
-        custom: []
-        name: initial_date
-        description: 'Data inicial.'
-        required: false
-        example: '2026-01-01'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      final_date:
-        custom: []
-        name: final_date
-        description: 'Data final.'
-        required: false
-        example: '2026-12-31'
+        example: iPhone
         type: string
         enumValues: []
         exampleWasSpecified: true
@@ -117,7 +52,7 @@ endpoints:
       brand_id:
         custom: []
         name: brand_id
-        description: 'Filtrar por marca do dispositivo.'
+        description: 'Filtrar por marca.'
         required: false
         example: 1
         type: integer
@@ -125,24 +60,24 @@ endpoints:
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-      model_id:
+      form_factor:
         custom: []
-        name: model_id
-        description: 'Filtrar por modelo do dispositivo.'
+        name: form_factor
+        description: 'Filtrar por formato.'
         required: false
-        example: 5
-        type: integer
+        example: smartphone
+        type: string
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-      keyword:
+      release_year:
         custom: []
-        name: keyword
-        description: 'Busca em texto.'
+        name: release_year
+        description: 'Filtrar por ano de lançamento.'
         required: false
-        example: João
-        type: string
+        example: 2024
+        type: integer
         enumValues: []
         exampleWasSpecified: true
         nullable: false
@@ -152,7 +87,7 @@ endpoints:
         name: sort
         description: 'Campo para ordenação.'
         required: false
-        example: created_at
+        example: marketing_name
         type: string
         enumValues: []
         exampleWasSpecified: true
@@ -163,7 +98,7 @@ endpoints:
         name: direction
         description: 'Direção: `asc` ou `desc`.'
         required: false
-        example: desc
+        example: asc
         type: string
         enumValues: []
         exampleWasSpecified: true
@@ -174,25 +109,20 @@ endpoints:
         name: per_page
         description: 'Itens por página (máx 100).'
         required: false
-        example: 15
+        example: 50
         type: integer
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
     cleanQueryParameters:
-      store_id: 1
-      user_id: 1
-      status: '1'
-      customer_id: 1
-      initial_date: '2026-01-01'
-      final_date: '2026-12-31'
+      search: iPhone
       brand_id: 1
-      model_id: 5
-      keyword: João
-      sort: created_at
-      direction: desc
-      per_page: 15
+      form_factor: smartphone
+      release_year: 2024
+      sort: marketing_name
+      direction: asc
+      per_page: 50
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
@@ -202,22 +132,18 @@ endpoints:
         status: 200
         content: |-
           {
-            "data": [{
-              "id": 1,
-              "status": 1,
-              "selected_product": "Capa Personalizada",
-              "customer": {"id": 1, "name": "João"},
-              "store": {"id": 1, "name": "Loja Centro"}
-            }],
-            "meta": {"current_page": 1, "total": 50}
+            "data": [
+              {"id": 1, "marketing_name": "iPhone 15", "brand": {"id": 1, "brand_name": "Apple"}}
+            ],
+            "meta": {"current_page": 1, "total": 100}
           }
         headers: []
-        description: 'Lista de pedidos'
+        description: 'Lista de modelos'
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null
@@ -225,681 +151,22 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/v1/pedidos
+    uri: api/v1/phone-catalog/models
     metadata:
       custom: []
-      groupName: Pedidos
+      groupName: 'Catálogo - Modelos de Telefone'
       groupDescription: |-
 
-        Gestão de pedidos de clientes nas lojas.
-        Pedidos representam solicitações de clientes que podem incluir capas personalizadas ou produtos do catálogo.
+        Gestão de modelos de telefone do catálogo.
+        Modelos são vinculados a marcas e usados para associar dispositivos de clientes.
 
-        **Escopo de acesso:**
-        - Super admins e admins globais: acesso a todos os pedidos
-        - Outros usuários: apenas pedidos que criaram
-
-        **Status do pedido:** 1=Novo, 2=Em produção, 3=Pronto, 4=Entregue, 5=Cancelado
-
-        **Permissões:** Todos os usuários autenticados.
+        **Leitura:** Todos os usuários autenticados.
+        **Escrita:** Apenas administradores.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Criar pedido'
+      title: 'Criar modelo'
       description: |-
-        Cria um novo pedido associado a um cliente.
-
-        **Quem pode usar:** Todos os usuários autenticados.
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      store_id:
-        custom: []
-        name: store_id
-        description: 'ID da loja (usa loja do usuário se não informado).'
-        required: false
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      user_id:
-        custom: []
-        name: user_id
-        description: 'The <code>id</code> of an existing record in the users table.'
-        required: false
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      customer_id:
-        custom: []
-        name: customer_id
-        description: 'ID do cliente.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      customer_device_id:
-        custom: []
-        name: customer_device_id
-        description: 'ID do dispositivo do cliente.'
-        required: false
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      selected_product:
-        custom: []
-        name: selected_product
-        description: 'Produto selecionado.'
-        required: false
-        example: 'Capa Personalizada'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      obs:
-        custom: []
-        name: obs
-        description: 'Must not be greater than 5000 characters.'
-        required: false
-        example: g
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      status:
-        custom: []
-        name: status
-        description: ''
-        required: false
-        example: '5'
-        type: integer
-        enumValues:
-          - '1'
-          - '2'
-          - '3'
-          - '4'
-          - '5'
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      observation:
-        custom: []
-        name: observation
-        description: Observações.
-        required: false
-        example: 'Cliente pediu urgência'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      value:
-        custom: []
-        name: value
-        description: 'Valor do pedido.'
-        required: false
-        example: 49.9
-        type: number
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      store_id: 1
-      user_id: 16
-      customer_id: 1
-      customer_device_id: 1
-      selected_product: 'Capa Personalizada'
-      obs: g
-      status: '5'
-      observation: 'Cliente pediu urgência'
-      value: 49.9
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 201
-        content: |-
-          {
-            "message": "Pedido criado com sucesso.",
-            "data": {"id": 1, "status": 1, "customer": {"name": "João"}}
-          }
-        headers: []
-        description: 'Pedido criado'
-      -
-        custom: []
-        status: 403
-        content: '{"message": "Você não tem acesso a esta loja."}'
-        headers: []
-        description: 'Sem acesso à loja'
-      -
-        custom: []
-        status: 422
-        content: '{"message": "Usuário não está vinculado a nenhuma loja."}'
-        headers: []
-        description: 'Sem loja'
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: 'api/v1/pedidos/{id}'
-    metadata:
-      custom: []
-      groupName: Pedidos
-      groupDescription: |-
-
-        Gestão de pedidos de clientes nas lojas.
-        Pedidos representam solicitações de clientes que podem incluir capas personalizadas ou produtos do catálogo.
-
-        **Escopo de acesso:**
-        - Super admins e admins globais: acesso a todos os pedidos
-        - Outros usuários: apenas pedidos que criaram
-
-        **Status do pedido:** 1=Novo, 2=Em produção, 3=Pronto, 4=Entregue, 5=Cancelado
-
-        **Permissões:** Todos os usuários autenticados.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Detalhes do pedido'
-      description: |-
-        Retorna detalhes completos do pedido.
-
-        **Quem pode usar:** Usuário com acesso ao pedido.
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        custom: []
-        name: id
-        description: 'The ID of the pedido.'
-        required: true
-        example: 5
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      pedido:
-        custom: []
-        name: pedido
-        description: 'ID do pedido.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      id: 5
-      pedido: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "data": {
-              "id": 1,
-              "status": 1,
-              "customer": {"id": 1, "name": "João"},
-              "status_history": [{"status": 1, "changed_by": "Admin", "created_at": "2026-01-13T15:00:00+00:00"}]
-            }
-          }
-        headers: []
-        description: 'Detalhes do pedido'
-      -
-        custom: []
-        status: 403
-        content: '{"message": "Você não tem permissão para acessar este pedido."}'
-        headers: []
-        description: 'Sem permissão'
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - PATCH
-    uri: 'api/v1/pedidos/{id}'
-    metadata:
-      custom: []
-      groupName: Pedidos
-      groupDescription: |-
-
-        Gestão de pedidos de clientes nas lojas.
-        Pedidos representam solicitações de clientes que podem incluir capas personalizadas ou produtos do catálogo.
-
-        **Escopo de acesso:**
-        - Super admins e admins globais: acesso a todos os pedidos
-        - Outros usuários: apenas pedidos que criaram
-
-        **Status do pedido:** 1=Novo, 2=Em produção, 3=Pronto, 4=Entregue, 5=Cancelado
-
-        **Permissões:** Todos os usuários autenticados.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Atualizar pedido'
-      description: |-
-        Atualiza dados do pedido. Se o status for alterado, registra no histórico.
-
-        **Quem pode usar:** Usuário com acesso ao pedido.
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        custom: []
-        name: id
-        description: 'The ID of the pedido.'
-        required: true
-        example: 5
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      pedido:
-        custom: []
-        name: pedido
-        description: 'ID do pedido.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      id: 5
-      pedido: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      customer_id:
-        custom: []
-        name: customer_id
-        description: 'The <code>id</code> of an existing record in the customers table.'
-        required: false
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      customer_device_id:
-        custom: []
-        name: customer_device_id
-        description: 'The <code>id</code> of an existing record in the customer_devices table.'
-        required: false
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      selected_product:
-        custom: []
-        name: selected_product
-        description: 'Produto selecionado.'
-        required: false
-        example: 'Capa Nova'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      obs:
-        custom: []
-        name: obs
-        description: 'Must not be greater than 5000 characters.'
-        required: false
-        example: g
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      status:
-        custom: []
-        name: status
-        description: 'Novo status do pedido.'
-        required: false
-        example: 2
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      observation:
-        custom: []
-        name: observation
-        description: Observações.
-        required: false
-        example: 'Cliente alterou pedido'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      customer_id: 16
-      customer_device_id: 16
-      selected_product: 'Capa Nova'
-      obs: g
-      status: 2
-      observation: 'Cliente alterou pedido'
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "message": "Pedido atualizado com sucesso.",
-            "data": {"id": 1, "status": 2}
-          }
-        headers: []
-        description: 'Pedido atualizado'
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - DELETE
-    uri: 'api/v1/pedidos/{id}'
-    metadata:
-      custom: []
-      groupName: Pedidos
-      groupDescription: |-
-
-        Gestão de pedidos de clientes nas lojas.
-        Pedidos representam solicitações de clientes que podem incluir capas personalizadas ou produtos do catálogo.
-
-        **Escopo de acesso:**
-        - Super admins e admins globais: acesso a todos os pedidos
-        - Outros usuários: apenas pedidos que criaram
-
-        **Status do pedido:** 1=Novo, 2=Em produção, 3=Pronto, 4=Entregue, 5=Cancelado
-
-        **Permissões:** Todos os usuários autenticados.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Excluir pedido'
-      description: |-
-        Remove um pedido (soft delete).
-
-        **Quem pode usar:** Usuário com acesso ao pedido.
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        custom: []
-        name: id
-        description: 'The ID of the pedido.'
-        required: true
-        example: 5
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      pedido:
-        custom: []
-        name: pedido
-        description: 'ID do pedido.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      id: 5
-      pedido: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: '{"message": "Pedido excluído com sucesso."}'
-        headers: []
-        description: 'Pedido excluído'
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - PATCH
-    uri: 'api/v1/pedidos/{pedido_id}/status'
-    metadata:
-      custom: []
-      groupName: Pedidos
-      groupDescription: |-
-
-        Gestão de pedidos de clientes nas lojas.
-        Pedidos representam solicitações de clientes que podem incluir capas personalizadas ou produtos do catálogo.
-
-        **Escopo de acesso:**
-        - Super admins e admins globais: acesso a todos os pedidos
-        - Outros usuários: apenas pedidos que criaram
-
-        **Status do pedido:** 1=Novo, 2=Em produção, 3=Pronto, 4=Entregue, 5=Cancelado
-
-        **Permissões:** Todos os usuários autenticados.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Atualizar status do pedido'
-      description: |-
-        Atualiza apenas o status do pedido com registro no histórico.
-        Quando o status é alterado para "Disponível na Loja" (3), é possível
-        enviar uma notificação via WhatsApp para o cliente.
-
-        **Quem pode usar:** Usuário com acesso ao pedido.
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      pedido_id:
-        custom: []
-        name: pedido_id
-        description: 'The ID of the pedido.'
-        required: true
-        example: 5
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      pedido:
-        custom: []
-        name: pedido
-        description: 'ID do pedido.'
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      pedido_id: 5
-      pedido: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      status:
-        custom: []
-        name: status
-        description: 'Novo status.'
-        required: true
-        example: 3
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      reason:
-        custom: []
-        name: reason
-        description: 'Motivo da alteração.'
-        required: false
-        example: 'Cliente confirmou recebimento'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      notify_whatsapp:
-        custom: []
-        name: notify_whatsapp
-        description: 'Enviar notificação WhatsApp ao cliente (apenas para status 3).'
-        required: false
-        example: true
-        type: boolean
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      status: 3
-      reason: 'Cliente confirmou recebimento'
-      notify_whatsapp: true
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "message": "Status atualizado com sucesso.",
-            "data": {"id": 1, "status": 3}
-          }
-        headers: []
-        description: 'Status atualizado'
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "message": "Status atualizado com sucesso.",
-            "data": {"id": 1, "status": 3},
-            "whatsapp_notification": {"sent": true, "phone": "****9999"}
-          }
-        headers: []
-        description: 'Status atualizado com notificação'
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "message": "Status atualizado com sucesso.",
-            "data": {"id": 1, "status": 3},
-            "whatsapp_notification": {"sent": false, "phone": null, "error": "Cliente não possui telefone cadastrado."}
-          }
-        headers: []
-        description: 'Notificação falhou'
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - POST
-    uri: api/v1/pedidos/bulk-status
-    metadata:
-      custom: []
-      groupName: Pedidos
-      groupDescription: |-
-
-        Gestão de pedidos de clientes nas lojas.
-        Pedidos representam solicitações de clientes que podem incluir capas personalizadas ou produtos do catálogo.
-
-        **Escopo de acesso:**
-        - Super admins e admins globais: acesso a todos os pedidos
-        - Outros usuários: apenas pedidos que criaram
-
-        **Status do pedido:** 1=Novo, 2=Em produção, 3=Pronto, 4=Entregue, 5=Cancelado
-
-        **Permissões:** Todos os usuários autenticados.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Atualização em lote de status'
-      description: |-
-        Atualiza o status de múltiplos pedidos de uma só vez.
+        Cria um novo modelo de telefone vinculado a uma marca.
 
         **Quem pode usar:** Apenas administradores.
       authenticated: true
@@ -913,35 +180,10 @@ endpoints:
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      ids:
+      brand_id:
         custom: []
-        name: ids
-        description: 'Lista de IDs dos pedidos.'
-        required: true
-        example:
-          - 1
-          - 2
-          - 3
-        type: 'string[]'
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      status:
-        custom: []
-        name: status
-        description: 'Novo status.'
-        required: true
-        example: 4
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      'ids.*':
-        custom: []
-        name: 'ids.*'
-        description: 'ID do pedido.'
+        name: brand_id
+        description: 'ID da marca.'
         required: true
         example: 1
         type: integer
@@ -949,12 +191,140 @@ endpoints:
         exampleWasSpecified: true
         nullable: false
         deprecated: false
+      marketing_name:
+        custom: []
+        name: marketing_name
+        description: 'Nome comercial.'
+        required: true
+        example: 'Galaxy S24'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      release_year:
+        custom: []
+        name: release_year
+        description: 'Ano de lançamento.'
+        required: false
+        example: 2024
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      form_factor:
+        custom: []
+        name: form_factor
+        description: 'Formato do dispositivo.'
+        required: false
+        example: smartphone
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      model_number:
+        custom: []
+        name: model_number
+        description: 'Número do modelo.'
+        required: false
+        example: SM-S921B
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
     cleanBodyParameters:
-      ids:
-        - 1
-        - 2
-        - 3
-      status: 4
+      brand_id: 1
+      marketing_name: 'Galaxy S24'
+      release_year: 2024
+      form_factor: smartphone
+      model_number: SM-S921B
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 201
+        content: |-
+          {
+            "message": "Modelo criado com sucesso.",
+            "data": {"id": 1, "marketing_name": "Galaxy S24", "brand": {"brand_name": "Samsung"}}
+          }
+        headers: []
+        description: 'Modelo criado'
+      -
+        custom: []
+        status: 403
+        content: '{"message": "Apenas administradores podem gerenciar modelos."}'
+        headers: []
+        description: 'Sem permissão'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/phone-catalog/models/{phoneModel_id}'
+    metadata:
+      custom: []
+      groupName: 'Catálogo - Modelos de Telefone'
+      groupDescription: |-
+
+        Gestão de modelos de telefone do catálogo.
+        Modelos são vinculados a marcas e usados para associar dispositivos de clientes.
+
+        **Leitura:** Todos os usuários autenticados.
+        **Escrita:** Apenas administradores.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Detalhes do modelo'
+      description: |-
+        Retorna detalhes de um modelo com dados da marca.
+
+        **Quem pode usar:** Todos os usuários autenticados.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      phoneModel_id:
+        custom: []
+        name: phoneModel_id
+        description: 'The ID of the phoneModel.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      phoneModel:
+        custom: []
+        name: phoneModel
+        description: 'ID do modelo.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      phoneModel_id: 1
+      phoneModel: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
     fileParameters: []
     responses:
       -
@@ -962,22 +332,241 @@ endpoints:
         status: 200
         content: |-
           {
-            "message": "Atualização em lote concluída. 3 atualizados, 0 ignorados.",
-            "data": {"updated": 3, "skipped": 0, "updated_ids": [1, 2, 3], "skipped_ids": []}
+            "data": {"id": 1, "marketing_name": "iPhone 15", "brand": {"id": 1, "brand_name": "Apple"}}
           }
         headers: []
-        description: 'Atualização concluída'
-      -
-        custom: []
-        status: 403
-        content: '{"message": "Apenas administradores podem alterar status em lote."}'
-        headers: []
-        description: 'Sem permissão'
+        description: 'Detalhes do modelo'
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+      - PATCH
+    uri: 'api/v1/phone-catalog/models/{phoneModel_id}'
+    metadata:
+      custom: []
+      groupName: 'Catálogo - Modelos de Telefone'
+      groupDescription: |-
+
+        Gestão de modelos de telefone do catálogo.
+        Modelos são vinculados a marcas e usados para associar dispositivos de clientes.
+
+        **Leitura:** Todos os usuários autenticados.
+        **Escrita:** Apenas administradores.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Atualizar modelo'
+      description: |-
+        Atualiza dados de um modelo existente.
+
+        **Quem pode usar:** Apenas administradores.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      phoneModel_id:
+        custom: []
+        name: phoneModel_id
+        description: 'The ID of the phoneModel.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      phoneModel:
+        custom: []
+        name: phoneModel
+        description: 'ID do modelo.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      phoneModel_id: 1
+      phoneModel: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      brand_id:
+        custom: []
+        name: brand_id
+        description: 'The <code>id</code> of an existing record in the phone_brands table.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      marketing_name:
+        custom: []
+        name: marketing_name
+        description: 'Nome comercial.'
+        required: false
+        example: 'iPhone 15 Pro'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      release_year:
+        custom: []
+        name: release_year
+        description: 'Must be at least 1990. Must not be greater than 2100.'
+        required: false
+        example: 7
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      form_factor:
+        custom: []
+        name: form_factor
+        description: ''
+        required: false
+        example: architecto
+        type: string
+        enumValues:
+          - smartphone
+          - tablet
+          - watch
+          - feature_phone
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      model_number:
+        custom: []
+        name: model_number
+        description: 'Número do modelo.'
+        required: false
+        example: A3101
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      brand_id: 16
+      marketing_name: 'iPhone 15 Pro'
+      release_year: 7
+      form_factor: architecto
+      model_number: A3101
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "message": "Modelo atualizado com sucesso.",
+            "data": {"id": 1, "marketing_name": "iPhone 15 Pro"}
+          }
+        headers: []
+        description: 'Modelo atualizado'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/v1/phone-catalog/models/{phoneModel_id}'
+    metadata:
+      custom: []
+      groupName: 'Catálogo - Modelos de Telefone'
+      groupDescription: |-
+
+        Gestão de modelos de telefone do catálogo.
+        Modelos são vinculados a marcas e usados para associar dispositivos de clientes.
+
+        **Leitura:** Todos os usuários autenticados.
+        **Escrita:** Apenas administradores.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Excluir modelo'
+      description: |-
+        Remove um modelo do catálogo.
+
+        **Quem pode usar:** Apenas administradores.
+
+        **Regras de negócio:**
+        - Modelos com dispositivos vinculados não podem ser excluídos
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      phoneModel_id:
+        custom: []
+        name: phoneModel_id
+        description: 'The ID of the phoneModel.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      phoneModel:
+        custom: []
+        name: phoneModel
+        description: 'ID do modelo.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      phoneModel_id: 1
+      phoneModel: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"message": "Modelo excluído com sucesso."}'
+        headers: []
+        description: 'Modelo excluído'
+      -
+        custom: []
+        status: 422
+        content: '{"message": "Não é possível excluir modelo com dispositivos vinculados."}'
+        headers: []
+        description: 'Tem dispositivos'
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null

@@ -1,70 +1,22 @@
-name: 'Wheel - Players (Admin)'
+name: 'Wheel - Analytics'
 description: |-
 
-  API para gerenciamento de Jogadores do módulo Roleta.
+  API para analytics e dashboard do módulo Roleta.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/admin/wheel/players
+    uri: api/v1/admin/wheel/analytics/summary
     metadata:
       custom: []
-      groupName: 'Wheel - Players (Admin)'
+      groupName: 'Wheel - Analytics'
       groupDescription: |-
 
-        API para gerenciamento de Jogadores do módulo Roleta.
+        API para analytics e dashboard do módulo Roleta.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Listar jogadores com filtros avançados.'
-      description: |-
-        Suporta filtros: search, city, state, store_id, campaign_id,
-        has_address, verified_only, date_from, date_to
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          vary: Origin
-        description: null
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: api/v1/admin/wheel/players/stats/by-city
-    metadata:
-      custom: []
-      groupName: 'Wheel - Players (Admin)'
-      groupDescription: |-
-
-        API para gerenciamento de Jogadores do módulo Roleta.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Estatísticas de jogadores por cidade.'
+      title: 'Resumo geral do dashboard.'
       description: ''
       authenticated: true
       deprecated: false
@@ -82,18 +34,19 @@ endpoints:
     responses:
       -
         custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
+        status: 200
+        content: '{"success":true,"data":{"screens":{"total":6,"online":0,"offline":6},"campaigns":{"active":1,"draft":0},"today":{"spins":0,"prizes_won":0},"events_24h":0}}'
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
+          x-request-id: eda4406e-8501-4cee-90cd-ca73b40a0aab
           vary: Origin
         description: null
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null
@@ -101,16 +54,16 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/admin/wheel/players/stats/by-store
+    uri: api/v1/admin/wheel/analytics/detailed
     metadata:
       custom: []
-      groupName: 'Wheel - Players (Admin)'
+      groupName: 'Wheel - Analytics'
       groupDescription: |-
 
-        API para gerenciamento de Jogadores do módulo Roleta.
+        API para analytics e dashboard do módulo Roleta.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Estatísticas de jogadores por loja.'
+      title: 'Analytics detalhado com métricas completas.'
       description: ''
       authenticated: true
       deprecated: false
@@ -120,276 +73,365 @@ endpoints:
       Accept: application/json
     urlParameters: []
     cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          vary: Origin
-        description: null
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: api/v1/admin/wheel/players/export
-    metadata:
-      custom: []
-      groupName: 'Wheel - Players (Admin)'
-      groupDescription: |-
-
-        API para gerenciamento de Jogadores do módulo Roleta.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Exportar jogadores (CSV).'
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          vary: Origin
-        description: null
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: 'api/v1/admin/wheel/players/{player_key}'
-    metadata:
-      custom: []
-      groupName: 'Wheel - Players (Admin)'
-      groupDescription: |-
-
-        API para gerenciamento de Jogadores do módulo Roleta.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Exibir detalhes de um jogador.'
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      player_key:
-        custom: []
-        name: player_key
-        description: ''
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      player_key: architecto
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          vary: Origin
-        description: null
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - PUT
-      - PATCH
-    uri: 'api/v1/admin/wheel/players/{player_key}'
-    metadata:
-      custom: []
-      groupName: 'Wheel - Players (Admin)'
-      groupDescription: |-
-
-        API para gerenciamento de Jogadores do módulo Roleta.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Atualizar dados de um jogador (admin).'
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      player_key:
-        custom: []
-        name: player_key
-        description: ''
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      player_key: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      full_name:
+      period:
         custom: []
-        name: full_name
-        description: 'Must not be greater than 100 characters.'
+        name: period
+        description: ''
         required: false
-        example: b
+        example: today
+        type: string
+        enumValues:
+          - today
+          - week
+          - month
+          - custom
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      from:
+        custom: []
+        name: from
+        description: 'Must be a valid date.'
+        required: false
+        example: '2026-02-13T14:01:30'
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: true
         deprecated: false
-      cep:
+      to:
         custom: []
-        name: cep
-        description: 'Must not be greater than 9 characters.'
+        name: to
+        description: 'Must be a valid date.'
         required: false
-        example: ngzmiyv
+        example: '2026-02-13T14:01:30'
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: true
         deprecated: false
-      street:
+      campaign_key:
         custom: []
-        name: street
-        description: 'Must not be greater than 200 characters.'
+        name: campaign_key
+        description: ''
         required: false
-        example: d
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: true
         deprecated: false
-      number:
+      store_id:
         custom: []
-        name: number
-        description: 'Must not be greater than 20 characters.'
+        name: store_id
+        description: ''
         required: false
-        example: ljnikhwaykcmyuwp
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      period: today
+      from: '2026-02-13T14:01:30'
+      to: '2026-02-13T14:01:30'
+      campaign_key: architecto
+      store_id: 16
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"success":true,"data":{"period":{"from":"2026-02-13","to":"2026-02-13"},"totals":{"spins":0,"prizes_won":0,"unique_phones":0,"conversion_rate":0},"by_day":[],"by_campaign":[],"by_prize":[],"inventory_alerts":[],"screens_needing_attention":[{"screen_key":"screen_ijSQu8Bb","name":"TV Kompr\u00e3o Centro","store":"Kompr\u00e3o Centro","issue":"never_connected","last_seen":null},{"screen_key":"screen_0b7AzX4q","name":"TV Kompr\u00e3o Morretes","store":"Kompr\u00e3o Morretes","issue":"never_connected","last_seen":null},{"screen_key":"screen_gsUbeVQi","name":"TV PB Outlet","store":"PB Outlet","issue":"never_connected","last_seen":null},{"screen_key":"screen_ebdkLZ43","name":"TV Kompr\u00e3o Centro","store":"Kompr\u00e3o Centro","issue":"never_connected","last_seen":null},{"screen_key":"screen_pcHHVMtM","name":"TV Kompr\u00e3o Morretes","store":"Kompr\u00e3o Morretes","issue":"never_connected","last_seen":null},{"screen_key":"screen_MzeGqcRf","name":"TV PB Outlet","store":"PB Outlet","issue":"never_connected","last_seen":null}]}}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          x-request-id: 2919936d-3f10-4027-aff7-c5ef1ff1af9d
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/admin/wheel/analytics/screens-online
+    metadata:
+      custom: []
+      groupName: 'Wheel - Analytics'
+      groupDescription: |-
+
+        API para analytics e dashboard do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Contagem de TVs online.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"success":true,"data":{"value":0,"total":6,"label":"0\/6"}}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          x-request-id: 404c1213-acd9-4470-adda-1ba5832ccde0
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/admin/wheel/analytics/active-campaigns
+    metadata:
+      custom: []
+      groupName: 'Wheel - Analytics'
+      groupDescription: |-
+
+        API para analytics e dashboard do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Contagem de campanhas ativas.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"success":true,"data":{"value":1,"label":"1"}}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          x-request-id: 914b0d1f-632f-4495-ac37-7295a2fa0e9f
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/admin/wheel/analytics/spins-today
+    metadata:
+      custom: []
+      groupName: 'Wheel - Analytics'
+      groupDescription: |-
+
+        API para analytics e dashboard do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Giros realizados hoje.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"success":true,"data":{"value":0,"label":"0"}}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          x-request-id: c26b78f1-f90c-4aab-a192-952223ad6db2
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/admin/wheel/analytics/prizes-won
+    metadata:
+      custom: []
+      groupName: 'Wheel - Analytics'
+      groupDescription: |-
+
+        API para analytics e dashboard do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Prêmios ganhos hoje.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"success":true,"data":{"value":0,"label":"0","breakdown":[]}}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          x-request-id: 35c04560-1d4b-4335-80c7-2cf37fa9293e
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/admin/wheel/analytics/by-store
+    metadata:
+      custom: []
+      groupName: 'Wheel - Analytics'
+      groupDescription: |-
+
+        API para analytics e dashboard do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Performance por loja/screen.'
+      description: 'Métricas agrupadas por store incluindo spins, prêmios e taxa de conversão.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      period:
+        custom: []
+        name: period
+        description: ''
+        required: false
+        example: today
+        type: string
+        enumValues:
+          - today
+          - week
+          - month
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      from:
+        custom: []
+        name: from
+        description: 'Must be a valid date.'
+        required: false
+        example: '2026-02-13T14:01:32'
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: true
         deprecated: false
-      complement:
+      to:
         custom: []
-        name: complement
-        description: 'Must not be greater than 100 characters.'
+        name: to
+        description: 'Must be a valid date.'
         required: false
-        example: w
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      neighborhood:
-        custom: []
-        name: neighborhood
-        description: 'Must not be greater than 100 characters.'
-        required: false
-        example: l
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      city:
-        custom: []
-        name: city
-        description: 'Must not be greater than 100 characters.'
-        required: false
-        example: v
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      state:
-        custom: []
-        name: state
-        description: 'Must not be greater than 2 characters.'
-        required: false
-        example: qw
+        example: '2026-02-13T14:01:32'
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: true
         deprecated: false
     cleanBodyParameters:
-      full_name: b
-      cep: ngzmiyv
-      street: d
-      number: ljnikhwaykcmyuwp
-      complement: w
-      neighborhood: l
-      city: v
-      state: qw
+      period: today
+      from: '2026-02-13T14:01:32'
+      to: '2026-02-13T14:01:32'
     fileParameters: []
-    responses: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"success":true,"data":{"period":{"from":"2026-02-13","to":"2026-02-13"},"by_store":[]}}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          x-request-id: 2daee311-c086-45e8-8e72-4a1bc937d83c
+          vary: Origin
+        description: null
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null
@@ -397,57 +439,61 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/admin/wheel/players/{player_key}/logs'
+    uri: api/v1/admin/wheel/analytics/peak-hours
     metadata:
       custom: []
-      groupName: 'Wheel - Players (Admin)'
+      groupName: 'Wheel - Analytics'
       groupDescription: |-
 
-        API para gerenciamento de Jogadores do módulo Roleta.
+        API para analytics e dashboard do módulo Roleta.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Logs de um jogador específico.'
-      description: ''
+      title: 'Pico de horário.'
+      description: 'Distribuição de spins por hora do dia e dia da semana.'
       authenticated: true
       deprecated: false
     headers:
       Authorization: 'Bearer {SEU_TOKEN}'
       Content-Type: application/json
       Accept: application/json
-    urlParameters:
-      player_key:
-        custom: []
-        name: player_key
-        description: ''
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      player_key: architecto
+    urlParameters: []
+    cleanUrlParameters: []
     queryParameters: []
     cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
+    bodyParameters:
+      period:
+        custom: []
+        name: period
+        description: ''
+        required: false
+        example: today
+        type: string
+        enumValues:
+          - today
+          - week
+          - month
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      period: today
     fileParameters: []
     responses:
       -
         custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
+        status: 200
+        content: '{"success":true,"data":{"period":"today","total_spins":0,"peak_hour":{"hour":0,"label":"00:00 - 00:59","spins":0},"peak_day":{"day":0,"name":"Domingo","spins":0},"by_hour":[{"hour":0,"label":"00:00","spins":0},{"hour":1,"label":"01:00","spins":0},{"hour":2,"label":"02:00","spins":0},{"hour":3,"label":"03:00","spins":0},{"hour":4,"label":"04:00","spins":0},{"hour":5,"label":"05:00","spins":0},{"hour":6,"label":"06:00","spins":0},{"hour":7,"label":"07:00","spins":0},{"hour":8,"label":"08:00","spins":0},{"hour":9,"label":"09:00","spins":0},{"hour":10,"label":"10:00","spins":0},{"hour":11,"label":"11:00","spins":0},{"hour":12,"label":"12:00","spins":0},{"hour":13,"label":"13:00","spins":0},{"hour":14,"label":"14:00","spins":0},{"hour":15,"label":"15:00","spins":0},{"hour":16,"label":"16:00","spins":0},{"hour":17,"label":"17:00","spins":0},{"hour":18,"label":"18:00","spins":0},{"hour":19,"label":"19:00","spins":0},{"hour":20,"label":"20:00","spins":0},{"hour":21,"label":"21:00","spins":0},{"hour":22,"label":"22:00","spins":0},{"hour":23,"label":"23:00","spins":0}],"by_day_of_week":[{"name":"Domingo","spins":0},{"name":"Segunda","spins":0},{"name":"Ter\u00e7a","spins":0},{"name":"Quarta","spins":0},{"name":"Quinta","spins":0},{"name":"Sexta","spins":0},{"name":"S\u00e1bado","spins":0}]}}'
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
+          x-request-id: 102d8989-2cf9-4438-ba8c-6fc108e64685
           vary: Origin
         description: null
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null
@@ -455,57 +501,135 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/admin/wheel/players/{player_key}/spins'
+    uri: api/v1/admin/wheel/analytics/geographic
     metadata:
       custom: []
-      groupName: 'Wheel - Players (Admin)'
+      groupName: 'Wheel - Analytics'
       groupDescription: |-
 
-        API para gerenciamento de Jogadores do módulo Roleta.
+        API para analytics e dashboard do módulo Roleta.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Histórico de giros de um jogador.'
-      description: ''
+      title: 'Mapa de calor geográfico.'
+      description: 'Participação por cidade e estado dos jogadores.'
       authenticated: true
       deprecated: false
     headers:
       Authorization: 'Bearer {SEU_TOKEN}'
       Content-Type: application/json
       Accept: application/json
-    urlParameters:
-      player_key:
-        custom: []
-        name: player_key
-        description: ''
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      player_key: architecto
+    urlParameters: []
+    cleanUrlParameters: []
     queryParameters: []
     cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
+    bodyParameters:
+      period:
+        custom: []
+        name: period
+        description: ''
+        required: false
+        example: month
+        type: string
+        enumValues:
+          - today
+          - week
+          - month
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      period: month
     fileParameters: []
     responses:
       -
         custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
+        status: 200
+        content: '{"success":true,"data":{"period":"month","total_players":60,"coverage":{"states":12,"cities":20},"by_state":[{"state":"CE","players":10},{"state":"RJ","players":9},{"state":"GO","players":8},{"state":"PE","players":6},{"state":"SC","players":6},{"state":"AM","players":5},{"state":"BA","players":4},{"state":"DF","players":4},{"state":"RS","players":3},{"state":"SP","players":2},{"state":"MG","players":2},{"state":"PR","players":1}],"by_city":[{"city_state":"S\u00e3o Paulo, AM","players":3},{"city_state":"Manaus, RJ","players":3},{"city_state":"Fortaleza, CE","players":2},{"city_state":"Manaus, GO","players":2},{"city_state":"Rio de Janeiro, CE","players":2},{"city_state":"Florian\u00f3polis, SC","players":2},{"city_state":"Florian\u00f3polis, GO","players":2},{"city_state":"Bras\u00edlia, CE","players":2},{"city_state":"Florian\u00f3polis, MG","players":2},{"city_state":"S\u00e3o Paulo, BA","players":2},{"city_state":"Belo Horizonte, PE","players":2},{"city_state":"Goi\u00e2nia, RJ","players":2},{"city_state":"Curitiba, PE","players":1},{"city_state":"Fortaleza, BA","players":1},{"city_state":"Salvador, SC","players":1},{"city_state":"Recife, CE","players":1},{"city_state":"Recife, PR","players":1},{"city_state":"Goi\u00e2nia, SP","players":1},{"city_state":"Porto Alegre, RS","players":1},{"city_state":"Bras\u00edlia, BA","players":1}]}}'
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
+          x-request-id: 7f1b77f3-6ec9-4d23-80f0-cebd07f43bd4
           vary: Origin
         description: null
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/admin/wheel/analytics/roi
+    metadata:
+      custom: []
+      groupName: 'Wheel - Analytics'
+      groupDescription: |-
+
+        API para analytics e dashboard do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Métricas de ROI.'
+      description: 'Valor médio por jogador e custo por engajamento.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      period:
+        custom: []
+        name: period
+        description: ''
+        required: false
+        example: week
+        type: string
+        enumValues:
+          - today
+          - week
+          - month
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      campaign_key:
+        custom: []
+        name: campaign_key
+        description: ''
+        required: false
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      period: week
+      campaign_key: architecto
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"success":true,"data":{"period":{"from":"2026-02-06","to":"2026-02-13"},"campaign":null,"totals":{"spins":0,"unique_players":0,"prizes_distributed":0,"prizes_redeemed":0,"total_value_distributed":0,"total_value_redeemed":0},"metrics":{"avg_value_per_player":0,"cost_per_engagement":0,"cost_per_redemption":0,"redemption_rate":0},"by_prize_type":[]}}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          x-request-id: a960120f-23cd-45e5-bffd-e573d38f04a6
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null

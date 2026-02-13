@@ -1,22 +1,22 @@
-name: 'Wheel - Inventory'
+name: 'Wheel - Segments'
 description: |-
 
-  API para gerenciamento de Inventário/Estoque de prêmios do módulo Roleta.
+  API para gerenciamento de Segmentos (fatias da roleta) do módulo Roleta.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}/inventory'
+    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}/segments'
     metadata:
       custom: []
-      groupName: 'Wheel - Inventory'
+      groupName: 'Wheel - Segments'
       groupDescription: |-
 
-        API para gerenciamento de Inventário/Estoque de prêmios do módulo Roleta.
+        API para gerenciamento de Segmentos (fatias da roleta) do módulo Roleta.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Listar inventário de uma campanha.'
+      title: 'Listar segmentos de uma campanha.'
       description: ''
       authenticated: true
       deprecated: false
@@ -46,18 +46,22 @@ endpoints:
     responses:
       -
         custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
+        status: 404
+        content: |-
+          {
+              "message": "No query results for model [App\\Models\\WheelCampaign]."
+          }
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
+          x-request-id: 7096eedd-f331-46b9-9405-e2b527688090
           vary: Origin
         description: null
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null
@@ -65,17 +69,17 @@ endpoints:
     custom: []
     httpMethods:
       - PUT
-    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}/inventory'
+    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}/segments'
     metadata:
       custom: []
-      groupName: 'Wheel - Inventory'
+      groupName: 'Wheel - Segments'
       groupDescription: |-
 
-        API para gerenciamento de Inventário/Estoque de prêmios do módulo Roleta.
+        API para gerenciamento de Segmentos (fatias da roleta) do módulo Roleta.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Sincronizar inventário (batch update).'
-      description: ''
+      title: 'Sincronizar segmentos (salvar lista completa).'
+      description: 'Útil para reordenação via drag-and-drop.'
       authenticated: true
       deprecated: false
     headers:
@@ -99,10 +103,10 @@ endpoints:
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      inventory:
+      segments:
         custom: []
-        name: inventory
-        description: ''
+        name: segments
+        description: 'Must have at least 1 items.'
         required: true
         example:
           - []
@@ -111,9 +115,53 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      'inventory[].prize_id':
+      'segments[].id':
         custom: []
-        name: 'inventory[].prize_id'
+        name: 'segments[].id'
+        description: ''
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      'segments[].segment_key':
+        custom: []
+        name: 'segments[].segment_key'
+        description: 'Must not be greater than 50 characters.'
+        required: false
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      'segments[].label':
+        custom: []
+        name: 'segments[].label'
+        description: 'Must not be greater than 50 characters.'
+        required: true
+        example: g
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'segments[].color':
+        custom: []
+        name: 'segments[].color'
+        description: 'Must not be greater than 20 characters.'
+        required: true
+        example: zmiyvdljnikhwayk
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'segments[].prize_id':
+        custom: []
+        name: 'segments[].prize_id'
         description: 'The <code>id</code> of an existing record in the wheel_prizes table.'
         required: true
         example: architecto
@@ -122,65 +170,45 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      'inventory[].total_limit':
+      'segments[].probability_weight':
         custom: []
-        name: 'inventory[].total_limit'
-        description: 'Must be at least 0.'
-        required: false
-        example: 39
+        name: 'segments[].probability_weight'
+        description: 'Must be at least 1.'
+        required: true
+        example: 22
         type: integer
         enumValues: []
         exampleWasSpecified: false
-        nullable: true
+        nullable: false
         deprecated: false
-      'inventory[].remaining':
+      'segments[].active':
         custom: []
-        name: 'inventory[].remaining'
-        description: 'Must be at least 0.'
+        name: 'segments[].active'
+        description: ''
         required: false
-        example: 84
-        type: integer
+        example: false
+        type: boolean
         enumValues: []
         exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      'inventory[].daily_limit':
-        custom: []
-        name: 'inventory[].daily_limit'
-        description: 'Must be at least 0.'
-        required: false
-        example: 12
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      'inventory[].daily_remaining':
-        custom: []
-        name: 'inventory[].daily_remaining'
-        description: 'Must be at least 0.'
-        required: false
-        example: 77
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
+        nullable: false
         deprecated: false
     cleanBodyParameters:
-      inventory:
+      segments:
         -
+          id: 16
+          segment_key: 'n'
+          label: g
+          color: zmiyvdljnikhwayk
           prize_id: architecto
-          total_limit: 39
-          remaining: 84
-          daily_limit: 12
-          daily_remaining: 77
+          probability_weight: 22
+          active: false
     fileParameters: []
     responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null
@@ -188,16 +216,16 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}/inventory/{prize_key}/add'
+    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}/segments'
     metadata:
       custom: []
-      groupName: 'Wheel - Inventory'
+      groupName: 'Wheel - Segments'
       groupDescription: |-
 
-        API para gerenciamento de Inventário/Estoque de prêmios do módulo Roleta.
+        API para gerenciamento de Segmentos (fatias da roleta) do módulo Roleta.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Adicionar estoque a um prêmio.'
+      title: 'Criar segmento.'
       description: ''
       authenticated: true
       deprecated: false
@@ -217,43 +245,79 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      prize_key:
-        custom: []
-        name: prize_key
-        description: ''
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
     cleanUrlParameters:
       campaign_key: architecto
-      prize_key: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      quantity:
+      label:
         custom: []
-        name: quantity
+        name: label
+        description: 'Must not be greater than 50 characters.'
+        required: true
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      color:
+        custom: []
+        name: color
+        description: 'Must not be greater than 20 characters.'
+        required: true
+        example: ngzmiyvdljnikhwa
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      prize_id:
+        custom: []
+        name: prize_id
+        description: 'The <code>id</code> of an existing record in the wheel_prizes table.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      probability_weight:
+        custom: []
+        name: probability_weight
         description: 'Must be at least 1.'
         required: true
-        example: 16
+        example: 22
         type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
+      active:
+        custom: []
+        name: active
+        description: ''
+        required: false
+        example: false
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
     cleanBodyParameters:
-      quantity: 16
+      label: b
+      color: ngzmiyvdljnikhwa
+      prize_id: architecto
+      probability_weight: 22
+      active: false
     fileParameters: []
     responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null
@@ -261,16 +325,79 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}/inventory/{prize_key}/reset-daily'
+    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}/segments/reorder'
     metadata:
       custom: []
-      groupName: 'Wheel - Inventory'
+      groupName: 'Wheel - Segments'
       groupDescription: |-
 
-        API para gerenciamento de Inventário/Estoque de prêmios do módulo Roleta.
+        API para gerenciamento de Segmentos (fatias da roleta) do módulo Roleta.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Resetar limite diário de um prêmio.'
+      title: 'Reordenar segmentos.'
+      description: 'Recebe array de IDs na nova ordem desejada.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      campaign_key:
+        custom: []
+        name: campaign_key
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      campaign_key: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      order:
+        custom: []
+        name: order
+        description: ''
+        required: false
+        example:
+          - 16
+        type: 'integer[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      order:
+        - 16
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}/segments/{segment_key}'
+    metadata:
+      custom: []
+      groupName: 'Wheel - Segments'
+      groupDescription: |-
+
+        API para gerenciamento de Segmentos (fatias da roleta) do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Excluir segmento.'
       description: ''
       authenticated: true
       deprecated: false
@@ -290,9 +417,9 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      prize_key:
+      segment_key:
         custom: []
-        name: prize_key
+        name: segment_key
         description: ''
         required: true
         example: architecto
@@ -303,7 +430,7 @@ endpoints:
         deprecated: false
     cleanUrlParameters:
       campaign_key: architecto
-      prize_key: architecto
+      segment_key: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -314,7 +441,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null

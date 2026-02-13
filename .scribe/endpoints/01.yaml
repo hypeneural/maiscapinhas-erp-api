@@ -4,7 +4,7 @@ description: |-
   Endpoint de ingestao do webhook PDV Sync Agent v3.
 
   Contrato:
-  - `schema_version` suportado: `3.0`
+  - `schema_version` suportado: `3.0` e `3.1`
   - idempotencia por `integrity.sync_id`
   - payload validado por regras Laravel + JSON Schema
   - enfileiramento assincorno para processamento (`ProcessPdvSyncJob`)
@@ -26,7 +26,7 @@ endpoints:
         Endpoint de ingestao do webhook PDV Sync Agent v3.
 
         Contrato:
-        - `schema_version` suportado: `3.0`
+        - `schema_version` suportado: `3.0` e `3.1`
         - idempotencia por `integrity.sync_id`
         - payload validado por regras Laravel + JSON Schema
         - enfileiramento assincorno para processamento (`ProcessPdvSyncJob`)
@@ -43,7 +43,7 @@ endpoints:
       authenticated: false
       deprecated: false
     headers:
-      X-PDV-Schema-Version: 'string Versao do schema enviada no header. Esperado: `3.0`. Example: 3.0'
+      X-PDV-Schema-Version: 'string Versao do schema enviada no header. Esperado: `3.0` ou `3.1`. Example: 3.1'
       X-PDV-Timestamp: 'integer Timestamp Unix para assinatura HMAC (obrigatorio em modo HMAC). Example: 1765212000'
       X-PDV-Signature: 'string Assinatura HMAC SHA-256 no formato hex (ou `sha256=...`). Example: 9b7a3f...'
       Authorization: 'string Token bearer legado/alternativo (`Bearer {token}`), quando habilitado por config. Example: Bearer abc123'
@@ -58,9 +58,9 @@ endpoints:
       schema_version:
         custom: []
         name: schema_version
-        description: 'Versao do schema. Valor aceito: `3.0`.'
+        description: 'Versao do schema. Valores aceitos: `3.0` ou `3.1`.'
         required: true
-        example: '3.0'
+        example: '3.1'
         type: string
         enumValues: []
         exampleWasSpecified: true
@@ -115,7 +115,7 @@ endpoints:
         name: agent.sent_at
         description: 'Must be a valid date.'
         required: false
-        example: '2026-02-12T06:51:03'
+        example: '2026-02-13T14:00:06'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -164,6 +164,17 @@ endpoints:
         enumValues: []
         exampleWasSpecified: true
         nullable: false
+        deprecated: false
+      store.cnpj:
+        custom: []
+        name: store.cnpj
+        description: 'CNPJ da loja (quando disponivel no agente).'
+        required: false
+        example: '61063019000333'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
         deprecated: false
       window:
         custom: []
@@ -264,6 +275,17 @@ endpoints:
         example:
           - architecto
         type: 'string[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      resumo.by_vendor:
+        custom: []
+        name: resumo.by_vendor
+        description: ''
+        required: false
+        example: null
+        type: 'object[]'
         enumValues: []
         exampleWasSpecified: false
         nullable: false
@@ -399,7 +421,7 @@ endpoints:
         name: 'turnos[].data_hora_inicio'
         description: 'Must be a valid date.'
         required: false
-        example: '2026-02-12T06:51:03'
+        example: '2026-02-13T14:00:06'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -410,7 +432,7 @@ endpoints:
         name: 'turnos[].data_hora_termino'
         description: 'Must be a valid date.'
         required: false
-        example: '2026-02-12T06:51:03'
+        example: '2026-02-13T14:00:06'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -425,7 +447,7 @@ endpoints:
         type: integer
         enumValues: []
         exampleWasSpecified: false
-        nullable: false
+        nullable: true
         deprecated: false
       'turnos[].periodo':
         custom: []
@@ -469,6 +491,39 @@ endpoints:
         type: string
         enumValues: []
         exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      'turnos[].operador':
+        custom: []
+        name: 'turnos[].operador'
+        description: ''
+        required: false
+        example: []
+        type: object
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'turnos[].operador.login':
+        custom: []
+        name: 'turnos[].operador.login'
+        description: 'Login do operador (contrato atual, enviado em payloads 3.0/3.1).'
+        required: false
+        example: operador.v3
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      'turnos[].responsavel.login':
+        custom: []
+        name: 'turnos[].responsavel.login'
+        description: 'Login do responsavel/vendedor principal (contrato atual, enviado em payloads 3.0/3.1).'
+        required: false
+        example: vendedor.lider
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
         nullable: true
         deprecated: false
       'turnos[].qtd_vendas':
@@ -520,7 +575,7 @@ endpoints:
         name: 'vendas[].canal'
         description: ''
         required: false
-        example: HIPER_CAIXA
+        example: HIPER_LOJA
         type: string
         enumValues:
           - HIPER_CAIXA
@@ -533,7 +588,7 @@ endpoints:
         name: 'vendas[].data_hora'
         description: 'Must be a valid date.'
         required: false
-        example: '2026-02-12T06:51:03'
+        example: '2026-02-13T14:00:06'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -594,6 +649,28 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
+      'vendas[].itens[].vendedor':
+        custom: []
+        name: 'vendas[].itens[].vendedor'
+        description: ''
+        required: false
+        example: []
+        type: object
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'vendas[].itens[].vendedor.login':
+        custom: []
+        name: 'vendas[].itens[].vendedor.login'
+        description: 'Login do vendedor por item (contrato atual, enviado em payloads 3.0/3.1).'
+        required: false
+        example: maria.silva
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
       'vendas[].pagamentos':
         custom: []
         name: 'vendas[].pagamentos'
@@ -610,7 +687,7 @@ endpoints:
         name: 'vendas[].pagamentos[].line_id'
         description: 'Must be at least 1.'
         required: false
-        example: 43
+        example: 16
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -621,7 +698,7 @@ endpoints:
         name: 'vendas[].pagamentos[].line_no'
         description: 'Must be at least 1.'
         required: false
-        example: 16
+        example: 26
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -632,7 +709,7 @@ endpoints:
         name: 'snapshot_turnos[].id_turno'
         description: 'Must not be greater than 64 characters.'
         required: false
-        example: d
+        example: l
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -643,7 +720,7 @@ endpoints:
         name: 'snapshot_turnos[].sequencial'
         description: 'Must be at least 1.'
         required: false
-        example: 40
+        example: 4
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -665,7 +742,7 @@ endpoints:
         name: 'snapshot_turnos[].data_hora_inicio'
         description: 'Must be a valid date.'
         required: false
-        example: '2026-02-12T06:51:03'
+        example: '2026-02-13T14:00:06'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -676,7 +753,7 @@ endpoints:
         name: 'snapshot_turnos[].data_hora_termino'
         description: 'Must be a valid date.'
         required: false
-        example: '2026-02-12T06:51:03'
+        example: '2026-02-13T14:00:06'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -687,18 +764,18 @@ endpoints:
         name: 'snapshot_turnos[].duracao_minutos'
         description: 'Must be at least 0.'
         required: false
-        example: 9
+        example: 52
         type: integer
         enumValues: []
         exampleWasSpecified: false
-        nullable: false
+        nullable: true
         deprecated: false
       'snapshot_turnos[].periodo':
         custom: []
         name: 'snapshot_turnos[].periodo'
         description: 'Must not be greater than 20 characters.'
         required: false
-        example: nikhwaykcmyuwpwl
+        example: ikhwaykcmyuwpwlv
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -720,7 +797,7 @@ endpoints:
         name: 'snapshot_turnos[].responsavel.id_usuario'
         description: 'Must be at least 1.'
         required: false
-        example: 40
+        example: 43
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -731,10 +808,43 @@ endpoints:
         name: 'snapshot_turnos[].responsavel.nome'
         description: 'Must not be greater than 200 characters.'
         required: false
-        example: q
+        example: w
         type: string
         enumValues: []
         exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      'snapshot_turnos[].operador':
+        custom: []
+        name: 'snapshot_turnos[].operador'
+        description: ''
+        required: false
+        example: []
+        type: object
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'snapshot_turnos[].operador.login':
+        custom: []
+        name: 'snapshot_turnos[].operador.login'
+        description: 'Login do operador no snapshot (contrato atual, enviado em payloads 3.0/3.1).'
+        required: false
+        example: operador.v3
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      'snapshot_turnos[].responsavel.login':
+        custom: []
+        name: 'snapshot_turnos[].responsavel.login'
+        description: 'Login do responsavel no snapshot (contrato atual, enviado em payloads 3.0/3.1).'
+        required: false
+        example: vendedor.lider
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
         nullable: true
         deprecated: false
       'snapshot_turnos[].qtd_vendas':
@@ -742,7 +852,7 @@ endpoints:
         name: 'snapshot_turnos[].qtd_vendas'
         description: 'Must be at least 0.'
         required: false
-        example: 22
+        example: 86
         type: integer
         enumValues: []
         exampleWasSpecified: false
@@ -786,7 +896,7 @@ endpoints:
         name: 'snapshot_vendas[].canal'
         description: ''
         required: false
-        example: HIPER_LOJA
+        example: HIPER_CAIXA
         type: string
         enumValues:
           - HIPER_CAIXA
@@ -799,7 +909,7 @@ endpoints:
         name: 'snapshot_vendas[].data_hora_inicio'
         description: 'Must be a valid date.'
         required: false
-        example: '2026-02-12T06:51:03'
+        example: '2026-02-13T14:00:06'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -810,7 +920,7 @@ endpoints:
         name: 'snapshot_vendas[].data_hora_termino'
         description: 'Must be a valid date.'
         required: false
-        example: '2026-02-12T06:51:03'
+        example: '2026-02-13T14:00:06'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -904,17 +1014,40 @@ endpoints:
         exampleWasSpecified: false
         nullable: true
         deprecated: false
+      'snapshot_vendas[].vendedor.login':
+        custom: []
+        name: 'snapshot_vendas[].vendedor.login'
+        description: 'Login do vendedor no snapshot (contrato atual, enviado em payloads 3.0/3.1).'
+        required: false
+        example: vendedor.lider
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      'resumo.by_vendor[].login':
+        custom: []
+        name: 'resumo.by_vendor[].login'
+        description: 'Login do vendedor no resumo agregado (contrato atual, enviado em payloads 3.0/3.1).'
+        required: false
+        example: maria.silva
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
     cleanBodyParameters:
-      schema_version: '3.0'
+      schema_version: '3.1'
       event_type: mixed
       agent:
         version: vdljnikhwaykcmyu
         machine: w
-        sent_at: '2026-02-12T06:51:03'
+        sent_at: '2026-02-13T14:00:06'
       store:
         id_ponto_venda: 13
         nome: 'Mais Capinhas Porto Belo'
         alias: porto-belo-13
+        cnpj: '61063019000333'
       window:
         from: '2026-02-12T09:50:00-03:00'
         to: '2026-02-12T10:00:00-03:00'
@@ -924,26 +1057,35 @@ endpoints:
           responsavel:
             id_usuario: 43
             nome: u
+            login: vendedor.lider
+          operador:
+            login: operador.v3
       vendas:
         -
           itens:
             -
               line_id: 27
               line_no: 35
+              vendedor:
+                login: maria.silva
           pagamentos:
             -
-              line_id: 43
-              line_no: 16
+              line_id: 16
+              line_no: 26
       snapshot_turnos:
         -
           responsavel:
-            id_usuario: 40
-            nome: q
+            id_usuario: 43
+            nome: w
+            login: vendedor.lider
+          operador:
+            login: operador.v3
       snapshot_vendas:
         -
           vendedor:
             id_usuario: 27
             nome: i
+            login: vendedor.lider
       ops:
         count: 5
         ids:
@@ -957,6 +1099,10 @@ endpoints:
         sync_id: a1b2c3d4e5f6
         warnings:
           - architecto
+      resumo:
+        by_vendor:
+          -
+            login: maria.silva
     fileParameters: []
     responses:
       -

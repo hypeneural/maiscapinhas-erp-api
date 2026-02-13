@@ -1,45 +1,64 @@
-name: 'PDV - Relatorios'
+name: 'Relatórios Gerenciais'
 description: |-
 
-  Endpoints de consulta e analytics do PDV Sync v3.
+  Endpoints de relatórios avançados para gestão e auditoria.
 
-  Escopo:
-  - Vendas por periodo, vendedor, canal, turno e meio de pagamento
-  - Turnos com totais de sistema/declarado/falta
-  - Rankings de vendedores e vendedor x loja
+  Este módulo fornece KPIs estratégicos para tomada de decisão:
+  - **Performance de Loja** - Atingimento de meta, crescimento YoY, projeções
+  - **Integridade de Caixa** - % de quebra, divergências, alertas
 
-  Autorizacao:
-  - Requer `auth:sanctum`
-  - Usuario comum: apenas lojas vinculadas em `store_users`
-  - Super admin: visao global
+  **Público-alvo:**
+  - Gerentes e Admins para visão estratégica
+  - Conferentes para auditoria de caixa
+  - Sócios para acompanhamento financeiro
+
+  **Cache:** Dados históricos (ano passado) são cacheados para performance.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/pdv/reports/turnos
+    uri: api/v1/reports/store-performance
     metadata:
       custom: []
-      groupName: 'PDV - Relatorios'
+      groupName: 'Relatórios Gerenciais'
       groupDescription: |-
 
-        Endpoints de consulta e analytics do PDV Sync v3.
+        Endpoints de relatórios avançados para gestão e auditoria.
 
-        Escopo:
-        - Vendas por periodo, vendedor, canal, turno e meio de pagamento
-        - Turnos com totais de sistema/declarado/falta
-        - Rankings de vendedores e vendedor x loja
+        Este módulo fornece KPIs estratégicos para tomada de decisão:
+        - **Performance de Loja** - Atingimento de meta, crescimento YoY, projeções
+        - **Integridade de Caixa** - % de quebra, divergências, alertas
 
-        Autorizacao:
-        - Requer `auth:sanctum`
-        - Usuario comum: apenas lojas vinculadas em `store_users`
-        - Super admin: visao global
+        **Público-alvo:**
+        - Gerentes e Admins para visão estratégica
+        - Conferentes para auditoria de caixa
+        - Sócios para acompanhamento financeiro
+
+        **Cache:** Dados históricos (ano passado) são cacheados para performance.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Listar turnos PDV por data'
+      title: 'Performance da Loja'
       description: |-
-        Retorna os turnos da data informada com consolidado de fechamento de caixa
-        e totais por tipo de pagamento (`sistema`, `declarado`, `falta`).
+        Retorna métricas completas de performance de uma loja,
+        incluindo atingimento de meta, comparação YoY e projeções.
+
+        Este relatório é equivalente à planilha de "Desempenho de Lojas"
+        que o gestor mantinha manualmente.
+
+        **Métricas retornadas:**
+        | Grupo | Métricas |
+        |-------|----------|
+        | `sales` | Vendas atuais, meta, atingimento %, restante |
+        | `comparison` | Mesmo período ano passado, total ano passado, crescimento YoY |
+        | `forecast` | Projeção linear, projeção por tendência, status |
+
+        **Status de projeção:**
+        - `ON_TRACK` - Projeção >= 100% da meta
+        - `AT_RISK` - Projeção entre 90-100% da meta
+        - `BEHIND` - Projeção < 90% da meta
+
+        **Quem pode usar:** Gerentes e Admins da loja.
       authenticated: true
       deprecated: false
     headers:
@@ -52,102 +71,54 @@ endpoints:
       store_id:
         custom: []
         name: store_id
-        description: 'ID da loja interna (`stores.id`). Obrigatorio se `store_pdv_id` nao for informado.'
-        required: false
+        description: 'ID da loja.'
+        required: true
         example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: true
-        nullable: true
+        nullable: false
         deprecated: false
-      store_pdv_id:
+      month:
         custom: []
-        name: store_pdv_id
-        description: 'ID da loja no PDV (`store.id_ponto_venda`). Obrigatorio se `store_id` nao for informado.'
+        name: month
+        description: 'Mês (YYYY-MM), default: mês atual.'
         required: false
-        example: 13
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      date:
-        custom: []
-        name: date
-        description: 'Data de referencia no formato `YYYY-MM-DD`.'
-        required: true
-        example: '2026-02-12'
+        example: 2026-01
         type: string
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-      sequencial:
-        custom: []
-        name: sequencial
-        description: 'Filtrar por numero sequencial do turno.'
-        required: false
-        example: 2
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      periodo:
-        custom: []
-        name: periodo
-        description: 'Filtrar por periodo do turno. Valores: `MATUTINO`, `VESPERTINO`, `NOTURNO`.'
-        required: false
-        example: MATUTINO
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      fechado:
-        custom: []
-        name: fechado
-        description: 'Filtrar status do turno (`true/false` ou `1/0`).'
-        required: false
-        example: true
-        type: boolean
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      operador_id:
-        custom: []
-        name: operador_id
-        description: 'Filtrar por operador do turno (`operador_pdv_id`).'
-        required: false
-        example: 12
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      responsavel_id:
-        custom: []
-        name: responsavel_id
-        description: 'Filtrar por responsavel do turno (`responsavel_pdv_id`).'
-        required: false
-        example: 80
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
     cleanQueryParameters:
       store_id: 1
-      store_pdv_id: 13
-      date: '2026-02-12'
-      sequencial: 2
-      periodo: MATUTINO
-      fechado: true
-      operador_id: 12
-      responsavel_id: 80
-    bodyParameters: []
-    cleanBodyParameters: []
+      month: 2026-01
+    bodyParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'The <code>id</code> of an existing record in the stores table.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      month:
+        custom: []
+        name: month
+        description: 'Must match the regex /^\d{4}-\d{2}$/.'
+        required: false
+        example: 6425-59
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      store_id: 16
+      month: 6425-59
     fileParameters: []
     responses:
       -
@@ -156,272 +127,35 @@ endpoints:
         content: |-
           {
             "data": {
-              "filters": {
-                "store_id": 1,
-                "store_pdv_id": 13,
-                "date": "2026-02-12",
-                "sequencial": null,
-                "periodo": null,
-                "fechado": null,
-                "operador_id": null,
-                "responsavel_id": null
+              "store_id": 1,
+              "period": "2026-01",
+              "days_elapsed": 15,
+              "days_total": 31,
+              "sales": {
+                "current_amount": 31981.29,
+                "goal_amount": 52000.00,
+                "achievement_rate": 61.50,
+                "remaining_to_goal": 20018.71
               },
-              "summary": {
-                "qtd_turnos": 1,
-                "qtd_turnos_fechados": 1,
-                "qtd_turnos_falta": 1,
-                "qtd_turnos_sobra": 0,
-                "qtd_turnos_conferido": 0,
-                "total_sistema": 1250.9,
-                "total_declarado": 1240,
-                "total_falta": 10.9,
-                "total_falta_absoluto": 10.9
+              "comparison": {
+                "same_period_last_year": 26950.00,
+                "total_last_year_month": 55835.00,
+                "yoy_growth": 18.60
               },
-              "turnos": []
-            },
-            "meta": {
-              "request_id": "req-123",
-              "timestamp": "2026-02-12T10:00:00+00:00"
-            }
-          }
-        headers: []
-        description: ''
-      -
-        custom: []
-        status: 403
-        content: '{"message":"Voce nao tem acesso a esta loja."}'
-        headers: []
-        description: ''
-      -
-        custom: []
-        status: 422
-        content: '{"message":"The given data was invalid.","errors":{"store":["Informe store_id ou store_pdv_id."]}}'
-        headers: []
-        description: ''
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: api/v1/pdv/reports/vendas
-    metadata:
-      custom: []
-      groupName: 'PDV - Relatorios'
-      groupDescription: |-
-
-        Endpoints de consulta e analytics do PDV Sync v3.
-
-        Escopo:
-        - Vendas por periodo, vendedor, canal, turno e meio de pagamento
-        - Turnos com totais de sistema/declarado/falta
-        - Rankings de vendedores e vendedor x loja
-
-        Autorizacao:
-        - Requer `auth:sanctum`
-        - Usuario comum: apenas lojas vinculadas em `store_users`
-        - Super admin: visao global
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Listar vendas PDV com filtros inteligentes'
-      description: 'Retorna vendas com agregados de itens e pagamentos por operacao.'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters:
-      store_id:
-        custom: []
-        name: store_id
-        description: 'ID da loja interna (`stores.id`).'
-        required: false
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      store_pdv_id:
-        custom: []
-        name: store_pdv_id
-        description: 'ID da loja no PDV (`store.id_ponto_venda`).'
-        required: false
-        example: 13
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      from:
-        custom: []
-        name: from
-        description: 'Data inicial (`YYYY-MM-DD`). Default: hoje-30d.'
-        required: false
-        example: '2026-02-01'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      to:
-        custom: []
-        name: to
-        description: 'Data final (`YYYY-MM-DD`). Default: hoje.'
-        required: false
-        example: '2026-02-12'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      vendedor_id:
-        custom: []
-        name: vendedor_id
-        description: 'Filtrar por vendedor (`vendedor_pdv_id`).'
-        required: false
-        example: 80
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      canal:
-        custom: []
-        name: canal
-        description: 'Filtrar por canal. Valores: `HIPER_CAIXA`, `HIPER_LOJA`.'
-        required: false
-        example: HIPER_LOJA
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      id_turno:
-        custom: []
-        name: id_turno
-        description: 'Filtrar por ID de turno (UUID/string).'
-        required: false
-        example: 656335C4-D6C4-455A-8E3D-FF6B3F570C64
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      id_finalizador:
-        custom: []
-        name: id_finalizador
-        description: 'Filtrar por finalizador (ex.: Pix, credito).'
-        required: false
-        example: 5
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      meio_pagamento:
-        custom: []
-        name: meio_pagamento
-        description: 'Filtrar por nome do meio de pagamento.'
-        required: false
-        example: Pix
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      per_page:
-        custom: []
-        name: per_page
-        description: 'Tamanho da pagina (1-100). Default: 25.'
-        required: false
-        example: 25
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      sort:
-        custom: []
-        name: sort
-        description: 'Ordenacao por data. Valores: `asc`, `desc`. Default: `desc`.'
-        required: false
-        example: desc
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-    cleanQueryParameters:
-      store_id: 1
-      store_pdv_id: 13
-      from: '2026-02-01'
-      to: '2026-02-12'
-      vendedor_id: 80
-      canal: HIPER_LOJA
-      id_turno: 656335C4-D6C4-455A-8E3D-FF6B3F570C64
-      id_finalizador: 5
-      meio_pagamento: Pix
-      per_page: 25
-      sort: desc
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "data": [
-              {
-                "store_id": 1,
-                "store_pdv_id": 13,
-                "id_operacao": 12345,
-                "canal": "HIPER_CAIXA",
-                "id_turno": "656335C4-D6C4-455A-8E3D-FF6B3F570C64",
-                "data_hora": "2026-02-12T09:55:00+00:00",
-                "total": 49.9,
-                "itens": {"qtd_linhas": 1, "qtd_total": 1, "valor_total": 49.9},
-                "pagamentos": {"qtd_linhas": 1, "valor_total": 50}
+              "forecast": {
+                "linear_projection": 66100.00,
+                "trend_projection": 66220.31,
+                "status": "ON_TRACK"
               }
-            ],
-            "summary": {"total_vendas": 1, "total_vendido": 49.9},
-            "filters": {"canal": "HIPER_CAIXA"},
-            "meta": {
-              "request_id": "req-123",
-              "timestamp": "2026-02-12T10:00:00+00:00",
-              "pagination": {"total": 1, "per_page": 25, "current_page": 1, "last_page": 1}
             }
           }
         headers: []
-        description: ''
-      -
-        custom: []
-        status: 403
-        content: '{"message":"Voce nao tem acesso a esta loja."}'
-        headers: []
-        description: ''
-      -
-        custom: []
-        status: 422
-        content: '{"message":"The given data was invalid.","errors":{"to":["O campo to deve ser maior ou igual ao campo from."]}}'
-        headers: []
-        description: ''
+        description: 'Performance da loja'
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null
@@ -429,32 +163,34 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/pdv/reports/ranking-vendedores
+    uri: api/v1/reports/consolidated
     metadata:
       custom: []
-      groupName: 'PDV - Relatorios'
+      groupName: 'Relatórios Gerenciais'
       groupDescription: |-
 
-        Endpoints de consulta e analytics do PDV Sync v3.
+        Endpoints de relatórios avançados para gestão e auditoria.
 
-        Escopo:
-        - Vendas por periodo, vendedor, canal, turno e meio de pagamento
-        - Turnos com totais de sistema/declarado/falta
-        - Rankings de vendedores e vendedor x loja
+        Este módulo fornece KPIs estratégicos para tomada de decisão:
+        - **Performance de Loja** - Atingimento de meta, crescimento YoY, projeções
+        - **Integridade de Caixa** - % de quebra, divergências, alertas
 
-        Autorizacao:
-        - Requer `auth:sanctum`
-        - Usuario comum: apenas lojas vinculadas em `store_users`
-        - Super admin: visao global
+        **Público-alvo:**
+        - Gerentes e Admins para visão estratégica
+        - Conferentes para auditoria de caixa
+        - Sócios para acompanhamento financeiro
+
+        **Cache:** Dados históricos (ano passado) são cacheados para performance.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Ranking de vendedores por periodo'
+      title: 'Performance Consolidada (Multi-Loja)'
       description: |-
-        Consolida vendas por vendedor a partir de `pdv_venda_itens` + `pdv_vendas`.
+        Retorna performance de todas as lojas que o usuário administra,
+        com totais consolidados.
 
-        Regras de periodo:
-        - Se `from/to` forem enviados, eles prevalecem sobre `mode`
-        - Sem `from/to`, usa `mode` + `reference_date`
+        Ideal para sócios e admins que gerenciam múltiplas unidades.
+
+        **Quem pode usar:** Admins e Gerentes.
       authenticated: true
       deprecated: false
     headers:
@@ -464,105 +200,33 @@ endpoints:
     urlParameters: []
     cleanUrlParameters: []
     queryParameters:
-      mode:
+      month:
         custom: []
-        name: mode
-        description: 'Modo de periodo: `daily`, `weekly`, `monthly`. Default: `monthly`.'
+        name: month
+        description: 'Mês (YYYY-MM), default: mês atual.'
         required: false
-        example: monthly
+        example: 2026-01
         type: string
         enumValues: []
         exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      reference_date:
-        custom: []
-        name: reference_date
-        description: 'Data base para `mode` (`YYYY-MM-DD`).'
-        required: false
-        example: '2026-02-12'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      from:
-        custom: []
-        name: from
-        description: 'Data inicial custom (`YYYY-MM-DD`).'
-        required: false
-        example: '2026-02-01'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      to:
-        custom: []
-        name: to
-        description: 'Data final custom (`YYYY-MM-DD`).'
-        required: false
-        example: '2026-02-12'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      store_id:
-        custom: []
-        name: store_id
-        description: 'Filtrar por loja interna.'
-        required: false
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      store_pdv_id:
-        custom: []
-        name: store_pdv_id
-        description: 'Filtrar por loja PDV.'
-        required: false
-        example: 13
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      canal:
-        custom: []
-        name: canal
-        description: 'Filtrar por canal (`HIPER_CAIXA` ou `HIPER_LOJA`).'
-        required: false
-        example: HIPER_CAIXA
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      limit:
-        custom: []
-        name: limit
-        description: 'Limite de linhas do ranking (1-200). Default: 50.'
-        required: false
-        example: 20
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
+        nullable: false
         deprecated: false
     cleanQueryParameters:
-      mode: monthly
-      reference_date: '2026-02-12'
-      from: '2026-02-01'
-      to: '2026-02-12'
-      store_id: 1
-      store_pdv_id: 13
-      canal: HIPER_CAIXA
-      limit: 20
-    bodyParameters: []
-    cleanBodyParameters: []
+      month: 2026-01
+    bodyParameters:
+      month:
+        custom: []
+        name: month
+        description: 'Must match the regex /^\d{4}-\d{2}$/.'
+        required: false
+        example: 6425-59
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      month: 6425-59
     fileParameters: []
     responses:
       -
@@ -571,36 +235,25 @@ endpoints:
         content: |-
           {
             "data": {
-              "mode": "monthly",
-              "period": {
-                "from": "2026-02-01T00:00:00+00:00",
-                "to": "2026-02-28T23:59:59+00:00"
-              },
-              "filters": {"store_id": 1, "store_pdv_id": 13, "canal": null, "limit": 50},
-              "summary": {"vendedores": 2, "total_vendido": 10000, "qtd_vendas": 120, "total_itens": 280},
-              "ranking": [{"position": 1, "vendedor_id": 80, "vendedor_nome": "Daren", "qtd_vendas": 70, "total_vendido": 6200, "total_itens": 170}]
-            },
-            "meta": {"request_id": "req-123", "timestamp": "2026-02-12T10:00:00+00:00"}
+              "period": "2026-01",
+              "stores": [
+                { "store_id": 1, "sales": { "current_amount": 31981.29 }, "forecast": { "status": "ON_TRACK" } }
+              ],
+              "consolidated": {
+                "total_sales": 95000.00,
+                "total_goal": 156000.00,
+                "total_achievement_rate": 60.90,
+                "total_linear_projection": 198000.00
+              }
+            }
           }
         headers: []
-        description: ''
-      -
-        custom: []
-        status: 403
-        content: '{"message":"Voce nao tem acesso a esta loja."}'
-        headers: []
-        description: ''
-      -
-        custom: []
-        status: 422
-        content: '{"message":"The given data was invalid.","errors":{"mode":["The selected mode is invalid."]}}'
-        headers: []
-        description: ''
+        description: 'Performance multi-loja'
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null
@@ -608,27 +261,51 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/pdv/reports/ranking-vendedor-loja
+    uri: api/v1/reports/cash-integrity
     metadata:
       custom: []
-      groupName: 'PDV - Relatorios'
+      groupName: 'Relatórios Gerenciais'
       groupDescription: |-
 
-        Endpoints de consulta e analytics do PDV Sync v3.
+        Endpoints de relatórios avançados para gestão e auditoria.
 
-        Escopo:
-        - Vendas por periodo, vendedor, canal, turno e meio de pagamento
-        - Turnos com totais de sistema/declarado/falta
-        - Rankings de vendedores e vendedor x loja
+        Este módulo fornece KPIs estratégicos para tomada de decisão:
+        - **Performance de Loja** - Atingimento de meta, crescimento YoY, projeções
+        - **Integridade de Caixa** - % de quebra, divergências, alertas
 
-        Autorizacao:
-        - Requer `auth:sanctum`
-        - Usuario comum: apenas lojas vinculadas em `store_users`
-        - Super admin: visao global
+        **Público-alvo:**
+        - Gerentes e Admins para visão estratégica
+        - Conferentes para auditoria de caixa
+        - Sócios para acompanhamento financeiro
+
+        **Cache:** Dados históricos (ano passado) são cacheados para performance.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Ranking vendedor x loja por periodo'
-      description: 'Consolida performance por combinacao `store` + `vendedor`, com paginacao.'
+      title: 'Integridade de Caixa'
+      description: |-
+        Retorna métricas de auditoria de caixa para uma loja,
+        incluindo % de quebra, divergências e alertas.
+
+        Este relatório é crítico para:
+        - Identificar possíveis fraudes ou roubos
+        - Monitorar qualidade operacional
+        - Decidir pagamento de bônus
+
+        **Métricas retornadas:**
+        | Grupo | Métricas |
+        |-------|----------|
+        | `cash_integrity` | Valores sistema vs real, % quebra, status |
+        | `divergence_analysis` | Justificadas vs não justificadas |
+        | `workflow_status` | Turnos totais, fechados, pendentes |
+        | `alerts` | Alertas automáticos baseados em thresholds |
+
+        **Alertas gerados:**
+        - `HIGH_CASH_BREAK` (CRITICAL) - Quebra > 5%
+        - `ELEVATED_CASH_BREAK` (WARNING) - Quebra > 2%
+        - `UNJUSTIFIED_DIVERGENCES` (WARNING) - Divergências sem justificativa
+        - `PENDING_BACKLOG` (INFO) - Muitos fechamentos pendentes
+
+        **Quem pode usar:** Conferentes, Gerentes e Admins.
       authenticated: true
       deprecated: false
     headers:
@@ -638,117 +315,57 @@ endpoints:
     urlParameters: []
     cleanUrlParameters: []
     queryParameters:
-      from:
-        custom: []
-        name: from
-        description: 'Data inicial (`YYYY-MM-DD`).'
-        required: true
-        example: '2026-02-01'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
-      to:
-        custom: []
-        name: to
-        description: 'Data final (`YYYY-MM-DD`).'
-        required: true
-        example: '2026-02-12'
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: false
-        deprecated: false
       store_id:
         custom: []
         name: store_id
-        description: 'Filtrar por loja interna.'
-        required: false
+        description: 'ID da loja.'
+        required: true
         example: 1
         type: integer
         enumValues: []
         exampleWasSpecified: true
-        nullable: true
+        nullable: false
         deprecated: false
-      store_pdv_id:
+      month:
         custom: []
-        name: store_pdv_id
-        description: 'Filtrar por loja PDV.'
+        name: month
+        description: 'Mês (YYYY-MM), default: mês atual.'
         required: false
-        example: 13
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      vendedor_id:
-        custom: []
-        name: vendedor_id
-        description: 'Filtrar por vendedor.'
-        required: false
-        example: 80
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      canal:
-        custom: []
-        name: canal
-        description: 'Filtrar por canal (`HIPER_CAIXA` ou `HIPER_LOJA`).'
-        required: false
-        example: HIPER_CAIXA
+        example: 2026-01
         type: string
         enumValues: []
         exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      sort_by:
-        custom: []
-        name: sort_by
-        description: 'Campo de ordenacao: `total_vendido`, `qtd_vendas`, `total_itens`. Default: `total_vendido`.'
-        required: false
-        example: total_vendido
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      sort:
-        custom: []
-        name: sort
-        description: 'Direcao da ordenacao: `asc` ou `desc`. Default: `desc`.'
-        required: false
-        example: desc
-        type: string
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
-        deprecated: false
-      per_page:
-        custom: []
-        name: per_page
-        description: 'Tamanho da pagina (1-200). Default: 50.'
-        required: false
-        example: 50
-        type: integer
-        enumValues: []
-        exampleWasSpecified: true
-        nullable: true
+        nullable: false
         deprecated: false
     cleanQueryParameters:
-      from: '2026-02-01'
-      to: '2026-02-12'
       store_id: 1
-      store_pdv_id: 13
-      vendedor_id: 80
-      canal: HIPER_CAIXA
-      sort_by: total_vendido
-      sort: desc
-      per_page: 50
-    bodyParameters: []
-    cleanBodyParameters: []
+      month: 2026-01
+    bodyParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'The <code>id</code> of an existing record in the stores table.'
+        required: true
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      month:
+        custom: []
+        name: month
+        description: 'Must match the regex /^\d{4}-\d{2}$/.'
+        required: false
+        example: 6425-59
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      store_id: 16
+      month: 6425-59
     fileParameters: []
     responses:
       -
@@ -756,46 +373,40 @@ endpoints:
         status: 200
         content: |-
           {
-            "data": [
-              {
-                "position": 1,
-                "store_id": 2,
-                "store_pdv_id": 14,
-                "store_nome": "Loja Centro",
-                "vendedor_id": 80,
-                "vendedor_nome": "Daren",
-                "qtd_vendas": 32,
-                "total_vendido": 8450,
-                "total_itens": 126
-              }
-            ],
-            "summary": {"linhas": 1, "total_vendido": 8450, "qtd_vendas": 32, "total_itens": 126},
-            "filters": {"canal": "HIPER_CAIXA", "sort_by": "total_vendido", "sort": "desc"},
-            "meta": {
-              "request_id": "req-123",
-              "timestamp": "2026-02-12T10:00:00+00:00",
-              "pagination": {"total": 1, "per_page": 50, "current_page": 1, "last_page": 1}
+            "data": {
+              "store_id": 1,
+              "period": "2026-01",
+              "cash_integrity": {
+                "total_system_value": 150000.00,
+                "total_real_value": 146250.00,
+                "total_divergence": -3750.00,
+                "cash_break_percentage": 2.5,
+                "status": "YELLOW"
+              },
+              "divergence_analysis": {
+                "total_lines_with_divergence": 15,
+                "justified_count": 12,
+                "unjustified_count": 3,
+                "justified_rate": 80.00
+              },
+              "workflow_status": {
+                "total_shifts": 45,
+                "closed_count": 40,
+                "pending_approval": 3,
+                "completion_rate": 88.89
+              },
+              "alerts": [
+                { "type": "WARNING", "code": "ELEVATED_CASH_BREAK", "message": "Quebra de 2.50% acima do limite" }
+              ]
             }
           }
         headers: []
-        description: ''
-      -
-        custom: []
-        status: 403
-        content: '{"message":"Voce nao tem acesso a esta loja."}'
-        headers: []
-        description: ''
-      -
-        custom: []
-        status: 422
-        content: '{"message":"The given data was invalid.","errors":{"from":["The from field is required."]}}'
-        headers: []
-        description: ''
+        description: 'Integridade de caixa'
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null

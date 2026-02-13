@@ -1,23 +1,23 @@
-name: 'Wheel - Campaigns'
+name: 'Wheel - Screens (TVs)'
 description: |-
 
-  API para gerenciamento de Campanhas do módulo Roleta.
+  API para gerenciamento de TVs/Totens do módulo Roleta.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/admin/wheel/campaigns
+    uri: api/v1/admin/wheel/screens
     metadata:
       custom: []
-      groupName: 'Wheel - Campaigns'
+      groupName: 'Wheel - Screens (TVs)'
       groupDescription: |-
 
-        API para gerenciamento de Campanhas do módulo Roleta.
+        API para gerenciamento de TVs/Totens do módulo Roleta.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Listar campanhas.'
-      description: ''
+      title: 'Listar TVs.'
+      description: 'Retorna lista paginada de TVs com filtros opcionais.'
       authenticated: true
       deprecated: false
     headers:
@@ -34,18 +34,19 @@ endpoints:
     responses:
       -
         custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
+        status: 200
+        content: '{"success":true,"data":[{"id":3,"screen_key":"screen_ijSQu8Bb","name":"TV Kompr\u00e3o Centro","status":"active","status_label":"Ativa","status_color":"green","store":{"id":1,"name":"Kompr\u00e3o Centro","city":"Tijucas"},"store_id":1,"device_info":"{\"volume\":80,\"brightness\":100,\"location\":\"Entrada principal\"}","is_online":false,"last_seen_at":null,"last_seen_ago":null,"active_campaign":{"id":4,"campaign_key":"camp_verao2026","name":"Campanha Ver\u00e3o 2026","status":"active"},"created_at":"2026-01-19T17:25:42.000000Z","updated_at":"2026-01-19T17:25:42.000000Z"},{"id":6,"screen_key":"screen_ebdkLZ43","name":"TV Kompr\u00e3o Centro","status":"active","status_label":"Ativa","status_color":"green","store":{"id":1,"name":"Kompr\u00e3o Centro","city":"Tijucas"},"store_id":1,"device_info":"{\"volume\":80,\"brightness\":100,\"location\":\"Entrada principal\"}","is_online":false,"last_seen_at":null,"last_seen_ago":null,"active_campaign":null,"created_at":"2026-01-19T17:27:01.000000Z","updated_at":"2026-01-19T17:27:01.000000Z"},{"id":4,"screen_key":"screen_0b7AzX4q","name":"TV Kompr\u00e3o Morretes","status":"active","status_label":"Ativa","status_color":"green","store":{"id":2,"name":"Kompr\u00e3o Morretes","city":"Itapema"},"store_id":2,"device_info":"{\"volume\":80,\"brightness\":100,\"location\":\"Entrada principal\"}","is_online":false,"last_seen_at":null,"last_seen_ago":null,"active_campaign":{"id":4,"campaign_key":"camp_verao2026","name":"Campanha Ver\u00e3o 2026","status":"active"},"created_at":"2026-01-19T17:25:42.000000Z","updated_at":"2026-01-19T17:25:42.000000Z"},{"id":7,"screen_key":"screen_pcHHVMtM","name":"TV Kompr\u00e3o Morretes","status":"active","status_label":"Ativa","status_color":"green","store":{"id":2,"name":"Kompr\u00e3o Morretes","city":"Itapema"},"store_id":2,"device_info":"{\"volume\":80,\"brightness\":100,\"location\":\"Entrada principal\"}","is_online":false,"last_seen_at":null,"last_seen_ago":null,"active_campaign":null,"created_at":"2026-01-19T17:27:01.000000Z","updated_at":"2026-01-19T17:27:01.000000Z"},{"id":5,"screen_key":"screen_gsUbeVQi","name":"TV PB Outlet","status":"active","status_label":"Ativa","status_color":"green","store":{"id":3,"name":"PB Outlet","city":"Porto Belo"},"store_id":3,"device_info":"{\"volume\":80,\"brightness\":100,\"location\":\"Entrada principal\"}","is_online":false,"last_seen_at":null,"last_seen_ago":null,"active_campaign":{"id":4,"campaign_key":"camp_verao2026","name":"Campanha Ver\u00e3o 2026","status":"active"},"created_at":"2026-01-19T17:25:42.000000Z","updated_at":"2026-01-19T17:25:42.000000Z"},{"id":8,"screen_key":"screen_MzeGqcRf","name":"TV PB Outlet","status":"active","status_label":"Ativa","status_color":"green","store":{"id":3,"name":"PB Outlet","city":"Porto Belo"},"store_id":3,"device_info":"{\"volume\":80,\"brightness\":100,\"location\":\"Entrada principal\"}","is_online":false,"last_seen_at":null,"last_seen_ago":null,"active_campaign":null,"created_at":"2026-01-19T17:27:01.000000Z","updated_at":"2026-01-19T17:27:01.000000Z"}],"meta":{"total":6,"per_page":15,"current_page":1}}'
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
+          x-request-id: 332dfcbe-752c-405b-8a0e-20294e763065
           vary: Origin
         description: null
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null
@@ -53,16 +54,16 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/v1/admin/wheel/campaigns
+    uri: api/v1/admin/wheel/screens
     metadata:
       custom: []
-      groupName: 'Wheel - Campaigns'
+      groupName: 'Wheel - Screens (TVs)'
       groupDescription: |-
 
-        API para gerenciamento de Campanhas do módulo Roleta.
+        API para gerenciamento de TVs/Totens do módulo Roleta.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Criar campanha.'
+      title: 'Criar TV.'
       description: ''
       authenticated: true
       deprecated: false
@@ -75,10 +76,10 @@ endpoints:
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      campaign_key:
+      screen_key:
         custom: []
-        name: campaign_key
-        description: 'Must match the regex /^[a-z0-9_]+$/. Must not be greater than 50 characters.'
+        name: screen_key
+        description: 'Must match the regex /^[a-z0-9\-]+$/. Must not be greater than 50 characters.'
         required: false
         example: b
         type: string
@@ -86,10 +87,21 @@ endpoints:
         exampleWasSpecified: false
         nullable: true
         deprecated: false
+      store_id:
+        custom: []
+        name: store_id
+        description: 'The <code>id</code> of an existing record in the stores table.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
       name:
         custom: []
         name: name
-        description: 'Must not be greater than 150 characters.'
+        description: 'Must not be greater than 100 characters.'
         required: true
         example: 'n'
         type: string
@@ -102,49 +114,18 @@ endpoints:
         name: status
         description: ''
         required: false
-        example: draft
+        example: inactive
         type: string
         enumValues:
-          - draft
+          - active
+          - inactive
+          - maintenance
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      starts_at:
+      device_info:
         custom: []
-        name: starts_at
-        description: 'Must be a valid date.'
-        required: false
-        example: '2026-02-12T06:51:16'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      ends_at:
-        custom: []
-        name: ends_at
-        description: 'Must be a valid date. Must be a date after <code>starts_at</code>.'
-        required: false
-        example: '2052-03-07'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      terms_version:
-        custom: []
-        name: terms_version
-        description: 'Must not be greater than 20 characters.'
-        required: false
-        example: ngzmiyvdljnikhwa
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      settings:
-        custom: []
-        name: settings
+        name: device_info
         description: ''
         required: false
         example: null
@@ -153,96 +134,18 @@ endpoints:
         exampleWasSpecified: false
         nullable: true
         deprecated: false
-      settings.qr_ttl_seconds:
-        custom: []
-        name: settings.qr_ttl_seconds
-        description: 'Must be at least 30. Must not be greater than 600.'
-        required: false
-        example: 24
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      settings.spin_duration_ms:
-        custom: []
-        name: settings.spin_duration_ms
-        description: 'Must be at least 3000. Must not be greater than 15000.'
-        required: false
-        example: 18
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      settings.min_rotations:
-        custom: []
-        name: settings.min_rotations
-        description: 'Must be at least 3. Must not be greater than 10.'
-        required: false
-        example: 3
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      settings.max_rotations:
-        custom: []
-        name: settings.max_rotations
-        description: 'Must be at least 5. Must not be greater than 15.'
-        required: false
-        example: 4
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      settings.max_queue_size:
-        custom: []
-        name: settings.max_queue_size
-        description: 'Must be at least 1. Must not be greater than 50.'
-        required: false
-        example: 8
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      settings.per_phone_limit:
-        custom: []
-        name: settings.per_phone_limit
-        description: ''
-        required: false
-        example: 1_per_day
-        type: string
-        enumValues:
-          - 1_per_campaign
-          - 1_per_day
-          - unlimited
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
     cleanBodyParameters:
-      campaign_key: b
+      screen_key: b
+      store_id: architecto
       name: 'n'
-      status: draft
-      starts_at: '2026-02-12T06:51:16'
-      ends_at: '2052-03-07'
-      terms_version: ngzmiyvdljnikhwa
-      settings:
-        qr_ttl_seconds: 24
-        spin_duration_ms: 18
-        min_rotations: 3
-        max_rotations: 4
-        max_queue_size: 8
-        per_phone_limit: 1_per_day
+      status: inactive
     fileParameters: []
     responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null
@@ -250,16 +153,16 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}'
+    uri: 'api/v1/admin/wheel/screens/{screen_key}'
     metadata:
       custom: []
-      groupName: 'Wheel - Campaigns'
+      groupName: 'Wheel - Screens (TVs)'
       groupDescription: |-
 
-        API para gerenciamento de Campanhas do módulo Roleta.
+        API para gerenciamento de TVs/Totens do módulo Roleta.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Exibir campanha.'
+      title: 'Exibir TV.'
       description: ''
       authenticated: true
       deprecated: false
@@ -268,9 +171,9 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      campaign_key:
+      screen_key:
         custom: []
-        name: campaign_key
+        name: screen_key
         description: ''
         required: true
         example: architecto
@@ -280,7 +183,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      campaign_key: architecto
+      screen_key: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -289,18 +192,22 @@ endpoints:
     responses:
       -
         custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
+        status: 404
+        content: |-
+          {
+              "message": "No query results for model [App\\Models\\WheelScreen]."
+          }
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
+          x-request-id: 3dd54494-cb9a-44f2-ae7e-81a904401b22
           vary: Origin
         description: null
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null
@@ -309,16 +216,16 @@ endpoints:
     httpMethods:
       - PUT
       - PATCH
-    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}'
+    uri: 'api/v1/admin/wheel/screens/{screen_key}'
     metadata:
       custom: []
-      groupName: 'Wheel - Campaigns'
+      groupName: 'Wheel - Screens (TVs)'
       groupDescription: |-
 
-        API para gerenciamento de Campanhas do módulo Roleta.
+        API para gerenciamento de TVs/Totens do módulo Roleta.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Atualizar campanha.'
+      title: 'Atualizar TV.'
       description: ''
       authenticated: true
       deprecated: false
@@ -327,9 +234,9 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      campaign_key:
+      screen_key:
         custom: []
-        name: campaign_key
+        name: screen_key
         description: ''
         required: true
         example: architecto
@@ -339,14 +246,25 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      campaign_key: architecto
+      screen_key: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
+      store_id:
+        custom: []
+        name: store_id
+        description: 'The <code>id</code> of an existing record in the stores table.'
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
       name:
         custom: []
         name: name
-        description: 'Must not be greater than 150 characters.'
+        description: 'Must not be greater than 100 characters.'
         required: false
         example: b
         type: string
@@ -354,42 +272,23 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      starts_at:
+      status:
         custom: []
-        name: starts_at
-        description: 'Must be a valid date.'
+        name: status
+        description: ''
         required: false
-        example: '2026-02-12T06:51:17'
+        example: inactive
         type: string
-        enumValues: []
+        enumValues:
+          - active
+          - inactive
+          - maintenance
         exampleWasSpecified: false
-        nullable: true
+        nullable: false
         deprecated: false
-      ends_at:
+      device_info:
         custom: []
-        name: ends_at
-        description: 'Must be a valid date. Must be a date after <code>starts_at</code>.'
-        required: false
-        example: '2052-03-07'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      terms_version:
-        custom: []
-        name: terms_version
-        description: 'Must not be greater than 20 characters.'
-        required: false
-        example: ngzmiyvdljnikhwa
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      settings:
-        custom: []
-        name: settings
+        name: device_info
         description: ''
         required: false
         example: null
@@ -398,94 +297,16 @@ endpoints:
         exampleWasSpecified: false
         nullable: true
         deprecated: false
-      settings.qr_ttl_seconds:
-        custom: []
-        name: settings.qr_ttl_seconds
-        description: 'Must be at least 30. Must not be greater than 600.'
-        required: false
-        example: 24
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      settings.spin_duration_ms:
-        custom: []
-        name: settings.spin_duration_ms
-        description: 'Must be at least 3000. Must not be greater than 15000.'
-        required: false
-        example: 18
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      settings.min_rotations:
-        custom: []
-        name: settings.min_rotations
-        description: 'Must be at least 3. Must not be greater than 10.'
-        required: false
-        example: 3
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      settings.max_rotations:
-        custom: []
-        name: settings.max_rotations
-        description: 'Must be at least 5. Must not be greater than 15.'
-        required: false
-        example: 4
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      settings.max_queue_size:
-        custom: []
-        name: settings.max_queue_size
-        description: 'Must be at least 1. Must not be greater than 50.'
-        required: false
-        example: 8
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      settings.per_phone_limit:
-        custom: []
-        name: settings.per_phone_limit
-        description: ''
-        required: false
-        example: 1_per_campaign
-        type: string
-        enumValues:
-          - 1_per_campaign
-          - 1_per_day
-          - unlimited
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
     cleanBodyParameters:
       name: b
-      starts_at: '2026-02-12T06:51:17'
-      ends_at: '2052-03-07'
-      terms_version: ngzmiyvdljnikhwa
-      settings:
-        qr_ttl_seconds: 24
-        spin_duration_ms: 18
-        min_rotations: 3
-        max_rotations: 4
-        max_queue_size: 8
-        per_phone_limit: 1_per_campaign
+      status: inactive
     fileParameters: []
     responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null
@@ -493,16 +314,16 @@ endpoints:
     custom: []
     httpMethods:
       - DELETE
-    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}'
+    uri: 'api/v1/admin/wheel/screens/{screen_key}'
     metadata:
       custom: []
-      groupName: 'Wheel - Campaigns'
+      groupName: 'Wheel - Screens (TVs)'
       groupDescription: |-
 
-        API para gerenciamento de Campanhas do módulo Roleta.
+        API para gerenciamento de TVs/Totens do módulo Roleta.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Excluir campanha.'
+      title: 'Excluir TV.'
       description: ''
       authenticated: true
       deprecated: false
@@ -511,9 +332,9 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      campaign_key:
+      screen_key:
         custom: []
-        name: campaign_key
+        name: screen_key
         description: ''
         required: true
         example: architecto
@@ -523,7 +344,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      campaign_key: architecto
+      screen_key: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -534,7 +355,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null
@@ -542,17 +363,19 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}/activate'
+    uri: 'api/v1/admin/wheel/screens/{screen_key}/rotate-secret'
     metadata:
       custom: []
-      groupName: 'Wheel - Campaigns'
+      groupName: 'Wheel - Screens (TVs)'
       groupDescription: |-
 
-        API para gerenciamento de Campanhas do módulo Roleta.
+        API para gerenciamento de TVs/Totens do módulo Roleta.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Ativar campanha.'
-      description: ''
+      title: 'Gerar novo token de autenticação.'
+      description: |-
+        O token atual será invalidado. A TV precisará ser reconfigurada.
+        O novo token é exibido apenas 1x.
       authenticated: true
       deprecated: false
     headers:
@@ -560,9 +383,9 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      campaign_key:
+      screen_key:
         custom: []
-        name: campaign_key
+        name: screen_key
         description: ''
         required: true
         example: architecto
@@ -572,7 +395,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      campaign_key: architecto
+      screen_key: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -583,7 +406,7 @@ endpoints:
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null
@@ -591,16 +414,16 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}/pause'
+    uri: 'api/v1/admin/wheel/screens/{screen_key}/set-status'
     metadata:
       custom: []
-      groupName: 'Wheel - Campaigns'
+      groupName: 'Wheel - Screens (TVs)'
       groupDescription: |-
 
-        API para gerenciamento de Campanhas do módulo Roleta.
+        API para gerenciamento de TVs/Totens do módulo Roleta.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Pausar campanha.'
+      title: 'Alterar status da TV.'
       description: ''
       authenticated: true
       deprecated: false
@@ -609,9 +432,9 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      campaign_key:
+      screen_key:
         custom: []
-        name: campaign_key
+        name: screen_key
         description: ''
         required: true
         example: architecto
@@ -621,128 +444,29 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      campaign_key: architecto
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses: []
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - POST
-    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}/end'
-    metadata:
-      custom: []
-      groupName: 'Wheel - Campaigns'
-      groupDescription: |-
-
-        API para gerenciamento de Campanhas do módulo Roleta.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Encerrar campanha.'
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      campaign_key:
-        custom: []
-        name: campaign_key
-        description: ''
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      campaign_key: architecto
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses: []
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - POST
-    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}/duplicate'
-    metadata:
-      custom: []
-      groupName: 'Wheel - Campaigns'
-      groupDescription: |-
-
-        API para gerenciamento de Campanhas do módulo Roleta.
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Duplicar campanha.'
-      description: 'Cria uma cópia da campanha com status draft, incluindo segmentos e inventário.'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {SEU_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      campaign_key:
-        custom: []
-        name: campaign_key
-        description: ''
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      campaign_key: architecto
+      screen_key: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      new_name:
+      status:
         custom: []
-        name: new_name
-        description: 'Must not be greater than 100 characters.'
+        name: status
+        description: ''
         required: false
-        example: b
+        example: null
         type: string
         enumValues: []
         exampleWasSpecified: false
-        nullable: true
+        nullable: false
         deprecated: false
-    cleanBodyParameters:
-      new_name: b
+    cleanBodyParameters: []
     fileParameters: []
     responses: []
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null
@@ -750,17 +474,17 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/admin/wheel/campaigns/{campaign_key}/preview'
+    uri: 'api/v1/admin/wheel/screens/{screen_key}/health'
     metadata:
       custom: []
-      groupName: 'Wheel - Campaigns'
+      groupName: 'Wheel - Screens (TVs)'
       groupDescription: |-
 
-        API para gerenciamento de Campanhas do módulo Roleta.
+        API para gerenciamento de TVs/Totens do módulo Roleta.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Preview da roleta.'
-      description: 'Retorna dados formatados para renderização visual da roleta.'
+      title: 'Health check da TV.'
+      description: 'Retorna informações de saúde: último heartbeat, status, campanha ativa.'
       authenticated: true
       deprecated: false
     headers:
@@ -768,9 +492,9 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      campaign_key:
+      screen_key:
         custom: []
-        name: campaign_key
+        name: screen_key
         description: ''
         required: true
         example: architecto
@@ -780,7 +504,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      campaign_key: architecto
+      screen_key: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -789,18 +513,234 @@ endpoints:
     responses:
       -
         custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
+        status: 404
+        content: |-
+          {
+              "message": "No query results for model [App\\Models\\WheelScreen]."
+          }
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
+          x-request-id: d148889b-a3de-47c9-b4d5-5211e30fde37
           vary: Origin
         description: null
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/admin/wheel/screens/{screen_key}/campaigns'
+    metadata:
+      custom: []
+      groupName: 'Wheel - Screens (TVs)'
+      groupDescription: |-
+
+        API para gerenciamento de TVs/Totens do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Listar campanhas vinculadas à TV.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      screen_key:
+        custom: []
+        name: screen_key
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      screen_key: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 404
+        content: |-
+          {
+              "message": "No query results for model [App\\Models\\WheelScreen]."
+          }
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          x-request-id: 1e68900e-f51e-4880-ba99-b06643e42c35
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+    uri: 'api/v1/admin/wheel/screens/{screen_key}/campaigns'
+    metadata:
+      custom: []
+      groupName: 'Wheel - Screens (TVs)'
+      groupDescription: |-
+
+        API para gerenciamento de TVs/Totens do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Sincronizar campanhas da TV.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      screen_key:
+        custom: []
+        name: screen_key
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      screen_key: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      campaigns:
+        custom: []
+        name: campaigns
+        description: ''
+        required: true
+        example:
+          - []
+        type: 'object[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'campaigns[].campaign_id':
+        custom: []
+        name: 'campaigns[].campaign_id'
+        description: 'The <code>id</code> of an existing record in the wheel_campaigns table.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'campaigns[].status':
+        custom: []
+        name: 'campaigns[].status'
+        description: ''
+        required: true
+        example: inactive
+        type: string
+        enumValues:
+          - active
+          - inactive
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      campaigns:
+        -
+          campaign_id: architecto
+          status: inactive
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/admin/wheel/screens/{screen_key}/campaigns/{campaign_key}/activate'
+    metadata:
+      custom: []
+      groupName: 'Wheel - Screens (TVs)'
+      groupDescription: |-
+
+        API para gerenciamento de TVs/Totens do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Ativar uma campanha específica na TV.'
+      description: 'Desativa outras campanhas vinculadas.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      screen_key:
+        custom: []
+        name: screen_key
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      campaign_key:
+        custom: []
+        name: campaign_key
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      screen_key: architecto
+      campaign_key: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null

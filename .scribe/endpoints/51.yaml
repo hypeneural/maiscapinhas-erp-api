@@ -1,22 +1,22 @@
-name: 'Wheel - Events/Logs'
+name: 'Wheel - Prizes'
 description: |-
 
-  API para visualização de logs de eventos do módulo Roleta.
+  API para gerenciamento de Prêmios do módulo Roleta.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/admin/wheel/logs/events
+    uri: api/v1/admin/wheel/prizes
     metadata:
       custom: []
-      groupName: 'Wheel - Events/Logs'
+      groupName: 'Wheel - Prizes'
       groupDescription: |-
 
-        API para visualização de logs de eventos do módulo Roleta.
+        API para gerenciamento de Prêmios do módulo Roleta.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Listar eventos/logs.'
+      title: 'Listar prêmios.'
       description: ''
       authenticated: true
       deprecated: false
@@ -34,18 +34,454 @@ endpoints:
     responses:
       -
         custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
+        status: 200
+        content: '{"success":true,"data":[{"id":1,"prize_key":"asdasdasd","name":"asdasdasd","type":"product","type_label":"Produto","type_icon":"\ud83c\udf81","type_color":"green","icon":"\ud83c\udf81","description":"asdasdasd","redeem_instructions":null,"code_prefix":null,"requires_redeem":true,"consumes_inventory":true,"active":true,"segments_count":6,"created_at":"2026-01-19T05:59:51.000000Z","updated_at":"2026-01-19T06:34:46.000000Z"},{"id":6,"prize_key":"prize_DUYBMpu8","name":"Chaveiro Exclusivo","type":"product","type_label":"Produto","type_icon":"\ud83c\udf81","type_color":"green","icon":"\ud83d\udd11","description":"Chaveiro personaliz\u00e1vel exclusivo","redeem_instructions":"Retire seu pr\u00eamio no caixa.","code_prefix":"CHV","requires_redeem":true,"consumes_inventory":true,"active":true,"segments_count":1,"created_at":"2026-01-19T17:27:01.000000Z","updated_at":"2026-01-19T17:27:01.000000Z"},{"id":2,"prize_key":"prize_A92zZyBQ","name":"Pel\u00edcula Premium","type":"product","type_label":"Produto","type_icon":"\ud83c\udf81","type_color":"green","icon":"\ud83c\udf81","description":"Pel\u00edcula de vidro temperado 9D para qualquer modelo","redeem_instructions":"Apresente este c\u00f3digo no caixa para resgatar.","code_prefix":"PEL","requires_redeem":true,"consumes_inventory":true,"active":true,"segments_count":1,"created_at":"2026-01-19T17:27:01.000000Z","updated_at":"2026-01-19T17:27:01.000000Z"},{"id":5,"prize_key":"prize_8ZGygg57","name":"Cupom 10% OFF","type":"coupon","type_label":"Cupom","type_icon":"\ud83c\udf9f\ufe0f","type_color":"blue","icon":"\ud83c\udf9f\ufe0f","description":"Desconto de 10% em qualquer produto","redeem_instructions":"Apresente este c\u00f3digo no caixa.","code_prefix":"C10","requires_redeem":true,"consumes_inventory":true,"active":true,"segments_count":1,"created_at":"2026-01-19T17:27:01.000000Z","updated_at":"2026-01-19T17:27:01.000000Z"},{"id":4,"prize_key":"prize_GeLjORDI","name":"Cupom 20% OFF","type":"coupon","type_label":"Cupom","type_icon":"\ud83c\udf9f\ufe0f","type_color":"blue","icon":"\ud83c\udff7\ufe0f","description":"Desconto de 20% em qualquer produto","redeem_instructions":"Apresente este c\u00f3digo no caixa.","code_prefix":"C20","requires_redeem":true,"consumes_inventory":true,"active":true,"segments_count":1,"created_at":"2026-01-19T17:27:01.000000Z","updated_at":"2026-01-19T17:27:01.000000Z"},{"id":3,"prize_key":"prize_VlVUUfiz","name":"Cupom 30% OFF","type":"coupon","type_label":"Cupom","type_icon":"\ud83c\udf9f\ufe0f","type_color":"blue","icon":"\ud83d\udcb0","description":"Desconto de 30% em qualquer capa","redeem_instructions":"Apresente este c\u00f3digo no caixa.","code_prefix":"C30","requires_redeem":true,"consumes_inventory":true,"active":true,"segments_count":1,"created_at":"2026-01-19T17:27:01.000000Z","updated_at":"2026-01-19T17:27:01.000000Z"},{"id":7,"prize_key":"prize_H4Y8pwYl","name":"Frete Gr\u00e1tis","type":"coupon","type_label":"Cupom","type_icon":"\ud83c\udf9f\ufe0f","type_color":"blue","icon":"\ud83d\ude9a","description":"Frete gr\u00e1tis na pr\u00f3xima compra online","redeem_instructions":"Use este c\u00f3digo no carrinho.","code_prefix":"FRT","requires_redeem":true,"consumes_inventory":true,"active":true,"segments_count":1,"created_at":"2026-01-19T17:27:01.000000Z","updated_at":"2026-01-19T17:27:01.000000Z"},{"id":9,"prize_key":"prize_ACOfucO9","name":"Nada","type":"nothing","type_label":"Nada","type_icon":"\ud83d\ude22","type_color":"gray","icon":"\u274c","description":"Poxa, n\u00e3o foi dessa vez!","redeem_instructions":null,"code_prefix":null,"requires_redeem":false,"consumes_inventory":false,"active":true,"segments_count":1,"created_at":"2026-01-19T17:27:02.000000Z","updated_at":"2026-01-19T17:27:02.000000Z"},{"id":8,"prize_key":"prize_ccFQlzBO","name":"Tente Novamente","type":"try_again","type_label":"Tente Novamente","type_icon":"\ud83d\udd04","type_color":"yellow","icon":"\ud83d\udd04","description":"N\u00e3o foi dessa vez! Tente novamente.","redeem_instructions":null,"code_prefix":null,"requires_redeem":false,"consumes_inventory":false,"active":true,"segments_count":1,"created_at":"2026-01-19T17:27:01.000000Z","updated_at":"2026-01-19T17:27:01.000000Z"}],"meta":{"total":9,"per_page":15}}'
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
+          x-request-id: c3a0b911-f262-40f2-96d2-7ef55109d338
           vary: Origin
         description: null
     responseFields: []
     auth:
       - headers
       - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/admin/wheel/prizes
+    metadata:
+      custom: []
+      groupName: 'Wheel - Prizes'
+      groupDescription: |-
+
+        API para gerenciamento de Prêmios do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Criar prêmio.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      prize_key:
+        custom: []
+        name: prize_key
+        description: 'Must match the regex /^[a-z0-9_]+$/. Must not be greater than 50 characters.'
+        required: false
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      name:
+        custom: []
+        name: name
+        description: 'Must not be greater than 100 characters.'
+        required: true
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      type:
+        custom: []
+        name: type
+        description: ''
+        required: true
+        example: nothing
+        type: string
+        enumValues:
+          - product
+          - coupon
+          - nothing
+          - try_again
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      icon:
+        custom: []
+        name: icon
+        description: 'Must not be greater than 50 characters.'
+        required: false
+        example: g
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      description:
+        custom: []
+        name: description
+        description: 'Must not be greater than 1000 characters.'
+        required: false
+        example: 'Quos velit et fugiat sunt nihil accusantium harum.'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      redeem_instructions:
+        custom: []
+        name: redeem_instructions
+        description: 'Must not be greater than 2000 characters.'
+        required: false
+        example: i
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      code_prefix:
+        custom: []
+        name: code_prefix
+        description: 'Must not be greater than 20 characters.'
+        required: false
+        example: khwaykcmyuwpwlvq
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      active:
+        custom: []
+        name: active
+        description: ''
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      prize_key: b
+      name: 'n'
+      type: nothing
+      icon: g
+      description: 'Quos velit et fugiat sunt nihil accusantium harum.'
+      redeem_instructions: i
+      code_prefix: khwaykcmyuwpwlvq
+      active: true
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/admin/wheel/prizes/{prize_key}'
+    metadata:
+      custom: []
+      groupName: 'Wheel - Prizes'
+      groupDescription: |-
+
+        API para gerenciamento de Prêmios do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Exibir prêmio.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      prize_key:
+        custom: []
+        name: prize_key
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      prize_key: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 404
+        content: |-
+          {
+              "message": "No query results for model [App\\Models\\WheelPrize]."
+          }
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          x-request-id: 2fa7c47e-c1d5-4630-abc4-977c2521e161
+          vary: Origin
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+      - PATCH
+    uri: 'api/v1/admin/wheel/prizes/{prize_key}'
+    metadata:
+      custom: []
+      groupName: 'Wheel - Prizes'
+      groupDescription: |-
+
+        API para gerenciamento de Prêmios do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Atualizar prêmio.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      prize_key:
+        custom: []
+        name: prize_key
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      prize_key: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      name:
+        custom: []
+        name: name
+        description: 'Must not be greater than 100 characters.'
+        required: false
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      type:
+        custom: []
+        name: type
+        description: ''
+        required: false
+        example: nothing
+        type: string
+        enumValues:
+          - product
+          - coupon
+          - nothing
+          - try_again
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      icon:
+        custom: []
+        name: icon
+        description: 'Must not be greater than 50 characters.'
+        required: false
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      description:
+        custom: []
+        name: description
+        description: 'Must not be greater than 1000 characters.'
+        required: false
+        example: 'Animi quos velit et fugiat.'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      redeem_instructions:
+        custom: []
+        name: redeem_instructions
+        description: 'Must not be greater than 2000 characters.'
+        required: false
+        example: d
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      code_prefix:
+        custom: []
+        name: code_prefix
+        description: 'Must not be greater than 20 characters.'
+        required: false
+        example: ljnikhwaykcmyuwp
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      active:
+        custom: []
+        name: active
+        description: ''
+        required: false
+        example: false
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      name: b
+      type: nothing
+      icon: 'n'
+      description: 'Animi quos velit et fugiat.'
+      redeem_instructions: d
+      code_prefix: ljnikhwaykcmyuwp
+      active: false
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/v1/admin/wheel/prizes/{prize_key}'
+    metadata:
+      custom: []
+      groupName: 'Wheel - Prizes'
+      groupDescription: |-
+
+        API para gerenciamento de Prêmios do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Excluir prêmio.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      prize_key:
+        custom: []
+        name: prize_key
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      prize_key: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/admin/wheel/prizes/{prize_key}/toggle'
+    metadata:
+      custom: []
+      groupName: 'Wheel - Prizes'
+      groupDescription: |-
+
+        API para gerenciamento de Prêmios do módulo Roleta.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Ativar/Desativar prêmio.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SEU_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      prize_key:
+        custom: []
+        name: prize_key
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      prize_key: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 232|aHgjIivt3dwQoWV48izE0qCoJQiVlXEbOpLANcUq1f0c9407'
     controller: null
     method: null
     route: null

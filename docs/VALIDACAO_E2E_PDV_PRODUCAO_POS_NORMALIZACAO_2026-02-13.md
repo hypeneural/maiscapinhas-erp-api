@@ -45,7 +45,7 @@ Resultado desta validacao:
   - `store_id` resolvido por `store.cnpj` mesmo com `store.alias` errado
   - `vendedor_user_id` resolvido por `vendedor.login` mesmo com `id_usuario` divergente
 - Persistencia de `login` nas tabelas operacionais: **OK**
-- `GET /pdv/reports/*` (com auth Sanctum): **OK** (200 + filtros retornando resultados)
+- `GET /pdv/reports/*` (com auth Sanctum): **OK** (200 + filtros retornando resultados; usuario precisa ter acesso a pelo menos 1 loja)
 
 ---
 
@@ -86,6 +86,38 @@ Persistencia verificada:
 - `pdv_vendas`: `id_operacao=900000102`, `canal=HIPER_CAIXA`, `store_id=8`, `sync_id=e2e-prod-...`
 - `pdv_venda_itens`: `vendedor_pdv_id=41`, `vendedor_login=biancabrasil`, `vendedor_user_id=19`
 - `pdv_venda_pagamentos`: `id_finalizador=4`, `meio_pagamento=Cartao de credito`, `valor=22.50`
+
+### 3.2.2 Ingestao + Fila (E2E) - Execucao Codex (2026-02-13 13:48 UTC)
+
+Payload controlado enviado diretamente para o endpoint (sem n8n), para validar:
+- parse do JSON
+- resolucao de loja por `store.cnpj`
+- resolucao de usuario por `vendedor.login`
+- consumo automatico da fila (worker + cron)
+- persistencia em `pdv_vendas`/`pdv_venda_itens`/`pdv_venda_pagamentos`
+
+**Request**
+- Endpoint: `POST /api/v1/pdv/sync`
+- Headers:
+  - `Content-Type: application/json`
+  - `Accept: application/json`
+  - `X-PDV-Schema-Version: 3.0`
+
+**Response**
+- `201 created`
+- `pdv_sync_id=201`
+- `risk_flags=[]`
+
+**Fila**
+- `pdv_syncs.id=201`:
+  - `status`: `queued` -> `processed`
+  - `processing_started_at`: `2026-02-13 13:49:02` UTC
+  - `processed_at`: `2026-02-13 13:49:02` UTC
+
+**Persistencia**
+- `pdv_vendas`: `store_id=8`, `store_pdv_id=9`, `canal=HIPER_CAIXA`, `id_operacao=99900001`, `total=10.00`
+- `pdv_venda_itens`: `line_id=9990000101`, `vendedor_pdv_id=46`, `vendedor_login=biancabrasil`, `vendedor_user_id=19`
+- `pdv_venda_pagamentos`: `line_id=9990000201`, `id_finalizador=1`, `meio_pagamento=Dinheiro`, `valor=10.00`, `troco=0.00`
 
 ### 3.3 Turno aberto com `duracao_minutos=null` (caso que dava 422 no n8n)
 
@@ -173,24 +205,27 @@ Persistencia:
 
 Observacao: os endpoints de relatorio exigem `auth:sanctum`.
 
-Nota operacional importante (Plesk / revenda):
-- Ao testar via CLI (curl/Postman) com `Authorization: Bearer <token>`, houve resposta `{"message":"Unauthenticated."}`.
-- Isso pode indicar que o header `Authorization` nao esta sendo repassado pelo webserver ao PHP-FPM (config Nginx/Apache), ou que o ambiente esta operando apenas no modo de sessao/cookie.
-- Para testes de relatorios em producao, utilizar uma sessao autenticada (SPA/cookie) ou ajustar a infra para repassar `Authorization`.
+Requisitos validados em producao:
+- Enviar `Accept: application/json` (sem isso o servidor pode responder HTML em alguns cenarios).
+- Enviar `Authorization: Bearer <token>` (Sanctum).
+- O usuario autenticado precisa ter acesso a pelo menos 1 loja (tabela `store_users`), senao retorna `403 Usuario sem acesso a lojas.`.
 
 Endpoints validados (200):
 
 - `GET /api/v1/pdv/reports/turnos`
   - `store_id=8&date=2026-02-13`
-  - retornou `qtd_turnos=1` (turno E2E)
+  - retornou turnos (incluindo turno E2E)
 - `GET /api/v1/pdv/reports/vendas`
   - `store_id=8&from=2026-02-13&to=2026-02-13`
-  - retornou `total_vendas=1` (venda E2E)
+  - retornou vendas (incluindo venda E2E)
 - Filtros em vendas (todos retornaram 1):
-  - `vendedor_id=46`
+  - `vendedor_id=46` (**vendedor_id = vendedor_pdv_id**, id do Hiper/PDV; nao e `users.id`)
   - `id_finalizador=1&meio_pagamento=Dinheiro`
   - `canal=HIPER_CAIXA`
   - `id_turno=4EAC6F06-...`
+- `GET /api/v1/pdv/reports/vendas/detalhe`
+  - `store_id=8&canal=HIPER_CAIXA&id_operacao=99900001`
+  - retornou itens + pagamentos + summary (extrato detalhado)
 - `GET /api/v1/pdv/reports/ranking-vendedores`
   - retornou Bianca Brasil como #1 (periodo 2026-02-13)
 - `GET /api/v1/pdv/reports/ranking-vendedor-loja`
@@ -220,6 +255,8 @@ Backend aceita `turnos.*.duracao_minutos = null` (turno aberto).
 
 Se ainda ocorrer `422` no n8n:
 - verificar se o n8n esta enviando `\"null\"` (string) ou `\"\"` (string vazia) ao inves de `null` JSON.
+- validar tambem se o HTTP node esta enviando o body como **objeto JSON puro** (nao como wrapper do n8n tipo `[{\"body\": {...}}]`).
+- se estiver testando via arquivo/script (fora do n8n), garantir **UTF-8 sem BOM** (BOM faz o Laravel nao parsear JSON e retorna "campos obrigatorios ausentes").
 
 ---
 
@@ -277,4 +314,4 @@ O pipeline PDV esta **funcional de ponta a ponta** em producao para o contrato a
 
 Pendencia recomendada:
 - tratar/reprocessar os syncs `failed` antigos (90..94) para limpar ruido operacional.
-- se a equipe precisar testar relatorios via ferramentas CLI, ajustar a infra para repassar `Authorization: Bearer ...` ao PHP-FPM.
+- documentar no Scribe que `vendedor_id` nos filtros significa `vendedor_pdv_id` (id do Hiper/PDV), nao `users.id`.
