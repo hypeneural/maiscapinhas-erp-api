@@ -1306,28 +1306,18 @@ class PdvReportsController extends Controller
         }
         $storePdvId = (int) $mapping->pdv_store_id;
 
-        $rows = DB::table('pdv_turno_pagamentos')
+        $rows = DB::table('pdv_venda_pagamentos')
             ->where('store_pdv_id', $storePdvId)
-            ->select('tipo', 'meio_pagamento', 'id_finalizador')
+            ->select('meio_pagamento', 'id_finalizador')
             ->distinct()
             ->get();
 
         $result = $rows->map(function ($row) {
-            $label = $row->meio_pagamento;
-            $tipo = $row->tipo;
-
-            // Se tipo for diferente e relevante, adicionar
-            if ($tipo && $tipo !== $label && $tipo !== 'Não Definido') {
-                $label .= " ({$tipo})";
-            }
-
             return [
-                'id' => (string) $row->id_finalizador, // Usar ID do finalizador como chave se possível
-                'nome' => $label,
-                'tipo' => $tipo,
-                'meio_pagamento' => $row->meio_pagamento,
+                'id' => (string) $row->id_finalizador,
+                'nome' => $row->meio_pagamento,
             ];
-        })->unique('nome')->values()->all();
+        })->unique('id')->values()->all();
 
         return $this->success($result);
     }
