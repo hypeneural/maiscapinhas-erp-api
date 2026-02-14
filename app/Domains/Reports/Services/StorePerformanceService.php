@@ -25,7 +25,7 @@ class StorePerformanceService
     /**
      * Gera relatório de performance da loja.
      */
-    public function getPerformance(int $storeId, string $month): array
+    public function getPerformance(int $storeId, string $month, ?string $storeName = null): array
     {
         $startOfMonth = Carbon::parse($month . '-01')->startOfMonth();
         $endOfMonth = Carbon::parse($month . '-01')->endOfMonth();
@@ -35,6 +35,11 @@ class StorePerformanceService
         $effectiveEndDate = $today->lt($endOfMonth) ? $today : $endOfMonth;
         $daysElapsed = $startOfMonth->diffInDays($effectiveEndDate) + 1;
         $daysTotal = $endOfMonth->day;
+
+        // Fetch store name if not provided
+        if ($storeName === null) {
+            $storeName = \App\Models\Store::find($storeId)?->name;
+        }
 
         // Vendas do mês atual (PDV Data Source)
         $currentSales = (float) DB::table('pdv_vendas')
@@ -127,6 +132,7 @@ class StorePerformanceService
 
         return [
             'store_id' => $storeId,
+            'store_name' => $storeName,
             'period' => $month,
             'days_elapsed' => $daysElapsed,
             'days_total' => $daysTotal,
@@ -163,8 +169,13 @@ class StorePerformanceService
     {
         $results = [];
 
+        // Pre-fetch store names to avoid N+1 queries
+        $storeNames = \App\Models\Store::whereIn('id', $storeIds)
+            ->pluck('name', 'id');
+
         foreach ($storeIds as $storeId) {
-            $results[] = $this->getPerformance($storeId, $month);
+            $storeName = $storeNames[$storeId] ?? null;
+            $results[] = $this->getPerformance($storeId, $month, $storeName);
         }
 
         // Totais consolidados
