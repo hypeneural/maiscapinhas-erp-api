@@ -272,10 +272,10 @@ class PdvMappingController extends Controller
 
         return PdvUserMapping::updateOrCreate(
             [
-                'store_pdv_id' => $storePdvId,
                 'pdv_user_id' => $pdvUserId,
             ],
             [
+                'store_pdv_id' => $storePdvId,
                 'user_id' => $userId,
                 'pdv_user_name' => $pdvUserName,
                 'active' => true,
