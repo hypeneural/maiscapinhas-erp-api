@@ -84,6 +84,33 @@ class UserController extends Controller
      *   "message": "Apenas administradores podem acessar este recurso."
      * }
      */
+    /**
+     * Search for users (Autocomplete).
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function search(Request $request): JsonResponse
+    {
+        $this->authorizeAdmin($request);
+
+        $query = User::query()
+            ->select(['id', 'name', 'email'])
+            ->where('active', true);
+
+        if ($request->filled('q')) {
+            $search = $request->input('q');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $users = $query->limit(20)->get();
+
+        return $this->success($users);
+    }
+
     public function index(Request $request): JsonResponse
     {
         $this->authorizeAdmin($request);

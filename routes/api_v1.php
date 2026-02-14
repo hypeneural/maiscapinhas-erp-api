@@ -335,6 +335,7 @@ Route::middleware('auth:sanctum')->group(function () {
         });
 
         // Users Management
+        Route::get('users/search', [AdminUserController::class, 'search'])->name('users.search');
         Route::apiResource('users', AdminUserController::class);
 
         // User Bulk Store Operations
