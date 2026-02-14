@@ -13,6 +13,7 @@ use App\Models\Sale;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @group Dashboards
@@ -113,25 +114,55 @@ class DashboardController extends Controller
             return $this->forbidden('You do not have access to this store.');
         }
 
-        // Vendas do vendedor no dia
-        $mySales = Sale::where('store_id', $storeId)
-            ->where('seller_id', $user->id)
-            ->whereDate('sold_at', $date)
-            ->selectRaw('COUNT(*) as count, COALESCE(SUM(amount), 0) as total')
+        // Vendas do vendedor no dia (PDV)
+        $mySales = DB::table('pdv_venda_itens as vi')
+            ->join('pdv_vendas as v', function ($join) {
+                $join->on('v.store_pdv_id', '=', 'vi.store_pdv_id')
+                    ->on('v.canal', '=', 'vi.canal')
+                    ->on('v.id_operacao', '=', 'vi.id_operacao');
+            })
+            ->join('pdv_user_mappings as pum', function ($join) {
+                $join->on('pum.store_pdv_id', '=', 'vi.store_pdv_id')
+                    ->on('pum.pdv_user_id', '=', 'vi.vendedor_pdv_id');
+            })
+            ->where('v.store_id', $storeId)
+            ->where('pum.user_id', $user->id)
+            ->where('pum.active', true)
+            ->whereDate('v.data_hora', $date)
+            ->selectRaw('COUNT(DISTINCT v.id) as count, COALESCE(SUM(vi.total), 0) as total')
             ->first();
 
-        // Vendas da loja no dia
-        $storeSales = Sale::where('store_id', $storeId)
-            ->whereDate('sold_at', $date)
-            ->selectRaw('COUNT(*) as count, COALESCE(SUM(amount), 0) as total')
+        // Vendas da loja no dia (PDV)
+        $storeSales = DB::table('pdv_vendas as v')
+            ->where('v.store_id', $storeId)
+            ->whereDate('v.data_hora', $date)
+            ->selectRaw('COUNT(*) as count, COALESCE(SUM(v.total), 0) as total')
             ->first();
 
-        // Turnos do vendedor
-        $myShifts = CashShift::where('store_id', $storeId)
-            ->where('seller_id', $user->id)
-            ->where('date', $date->format('Y-m-d'))
-            ->with('cashClosing:id,cash_shift_id,status')
-            ->get();
+        // Turnos do vendedor (PDV)
+        $myShifts = DB::table('pdv_turnos as t')
+            ->join('pdv_user_mappings as pum', function ($join) {
+                $join->on('pum.store_pdv_id', '=', 't.store_pdv_id')
+                    ->on('pum.pdv_user_id', '=', 't.operador_pdv_id');
+            })
+            ->where('t.store_id', $storeId)
+            ->where('pum.user_id', $user->id)
+            ->where('pum.active', true)
+            ->whereDate('t.data_hora_inicio', $date)
+            ->select([
+                't.id_turno',
+                't.sequencial',
+                't.fechado',
+                't.data_hora_inicio',
+                't.data_hora_termino'
+            ])
+            ->get()
+            ->map(fn($t) => [
+                'id' => $t->id_turno,
+                'status' => $t->fechado ? 'closed' : 'open',
+                'start' => $t->data_hora_inicio,
+                'end' => $t->data_hora_termino
+            ]);
 
         // Gamificação de Bônus
         $bonusGamification = $this->gamificationService->getBonusGamification(
@@ -228,28 +259,44 @@ class DashboardController extends Controller
             ->with(['cashShift:id,date,shift_code,seller_id,store_id', 'cashShift.seller:id,name'])
             ->get();
 
-        $storeSales = Sale::where('store_id', $storeId)
-            ->whereDate('sold_at', $date)
-            ->selectRaw('COUNT(*) as count, COALESCE(SUM(amount), 0) as total')
+        $storeSales = DB::table('pdv_vendas as v')
+            ->where('v.store_id', $storeId)
+            ->whereDate('v.data_hora', $date)
+            ->selectRaw('COUNT(*) as count, COALESCE(SUM(v.total), 0) as total')
             ->first();
 
-        $shiftsToday = CashShift::where('store_id', $storeId)
-            ->where('date', $date)
-            ->selectRaw('status, COUNT(*) as count')
-            ->groupBy('status')
-            ->pluck('count', 'status');
+        $shiftsToday = DB::table('pdv_turnos as t')
+            ->where('t.store_id', $storeId)
+            ->whereDate('t.data_hora_inicio', $date)
+            ->selectRaw('fechado, COUNT(*) as count')
+            ->groupBy('fechado')
+            ->get()
+            ->mapWithKeys(fn($row) => [
+                ($row->fechado ? 'closed' : 'open') => $row->count
+            ]);
 
-        $topSellers = Sale::where('store_id', $storeId)
-            ->whereDate('sold_at', $date)
-            ->selectRaw('seller_id, SUM(amount) as total')
-            ->groupBy('seller_id')
+        $topSellers = DB::table('pdv_venda_itens as vi')
+            ->join('pdv_vendas as v', function ($join) {
+                $join->on('v.store_pdv_id', '=', 'vi.store_pdv_id')
+                    ->on('v.canal', '=', 'vi.canal')
+                    ->on('v.id_operacao', '=', 'vi.id_operacao');
+            })
+            ->join('pdv_user_mappings as pum', function ($join) {
+                $join->on('pum.store_pdv_id', '=', 'vi.store_pdv_id')
+                    ->on('pum.pdv_user_id', '=', 'vi.vendedor_pdv_id');
+            })
+            ->join('users', 'users.id', '=', 'pum.user_id')
+            ->where('v.store_id', $storeId)
+            ->where('pum.active', true)
+            ->whereDate('v.data_hora', $date)
+            ->selectRaw('pum.user_id as seller_id, users.name, SUM(vi.total) as total')
+            ->groupBy('pum.user_id', 'users.name')
             ->orderByDesc('total')
             ->limit(5)
-            ->with('seller:id,name')
             ->get()
             ->map(fn($s) => [
                 'seller_id' => $s->seller_id,
-                'name' => $s->seller->name,
+                'name' => $s->name,
                 'total' => (float) $s->total,
             ]);
 
@@ -327,22 +374,24 @@ class DashboardController extends Controller
         $startOfMonth = Carbon::parse($month . '-01')->startOfMonth();
         $endOfMonth = Carbon::parse($month . '-01')->endOfMonth();
 
-        $salesByStore = Sale::whereIn('store_id', $userStoreIds)
-            ->whereBetween('sold_at', [$startOfMonth, $endOfMonth])
-            ->selectRaw('store_id, COUNT(*) as count, COALESCE(SUM(amount), 0) as total')
-            ->groupBy('store_id')
-            ->with('store:id,name')
+        $salesByStore = DB::table('pdv_vendas as v')
+            ->join('stores as s', 's.id', '=', 'v.store_id')
+            ->whereIn('v.store_id', $userStoreIds)
+            ->whereBetween('v.data_hora', [$startOfMonth, $endOfMonth])
+            ->selectRaw('v.store_id, s.name as store_name, COUNT(*) as count, COALESCE(SUM(v.total), 0) as total')
+            ->groupBy('v.store_id', 's.name')
             ->get()
             ->map(fn($s) => [
                 'store_id' => $s->store_id,
-                'store_name' => $s->store->name,
+                'store_name' => $s->store_name,
                 'count' => (int) $s->count,
                 'total' => (float) $s->total,
             ]);
 
-        $totalSales = Sale::whereIn('store_id', $userStoreIds)
-            ->whereBetween('sold_at', [$startOfMonth, $endOfMonth])
-            ->selectRaw('COUNT(*) as count, COALESCE(SUM(amount), 0) as total')
+        $totalSales = DB::table('pdv_vendas as v')
+            ->whereIn('v.store_id', $userStoreIds)
+            ->whereBetween('v.data_hora', [$startOfMonth, $endOfMonth])
+            ->selectRaw('COUNT(*) as count, COALESCE(SUM(v.total), 0) as total')
             ->first();
 
         $closingsSummary = CashClosing::whereHas('cashShift', function ($q) use ($userStoreIds, $startOfMonth, $endOfMonth) {
@@ -353,17 +402,28 @@ class DashboardController extends Controller
             ->groupBy('status')
             ->pluck('count', 'status');
 
-        $topSellers = Sale::whereIn('store_id', $userStoreIds)
-            ->whereBetween('sold_at', [$startOfMonth, $endOfMonth])
-            ->selectRaw('seller_id, SUM(amount) as total, COUNT(*) as count')
-            ->groupBy('seller_id')
+        $topSellers = DB::table('pdv_venda_itens as vi')
+            ->join('pdv_vendas as v', function ($join) {
+                $join->on('v.store_pdv_id', '=', 'vi.store_pdv_id')
+                    ->on('v.canal', '=', 'vi.canal')
+                    ->on('v.id_operacao', '=', 'vi.id_operacao');
+            })
+            ->join('pdv_user_mappings as pum', function ($join) {
+                $join->on('pum.store_pdv_id', '=', 'vi.store_pdv_id')
+                    ->on('pum.pdv_user_id', '=', 'vi.vendedor_pdv_id');
+            })
+            ->join('users', 'users.id', '=', 'pum.user_id')
+            ->whereIn('v.store_id', $userStoreIds)
+            ->where('pum.active', true)
+            ->whereBetween('v.data_hora', [$startOfMonth, $endOfMonth])
+            ->selectRaw('pum.user_id as seller_id, users.name, SUM(vi.total) as total, COUNT(DISTINCT v.id) as count')
+            ->groupBy('pum.user_id', 'users.name')
             ->orderByDesc('total')
             ->limit(10)
-            ->with('seller:id,name')
             ->get()
             ->map(fn($s) => [
                 'seller_id' => $s->seller_id,
-                'name' => $s->seller->name,
+                'name' => $s->name,
                 'total' => (float) $s->total,
                 'count' => (int) $s->count,
             ]);

@@ -36,10 +36,11 @@ class StorePerformanceService
         $daysElapsed = $startOfMonth->diffInDays($effectiveEndDate) + 1;
         $daysTotal = $endOfMonth->day;
 
-        // Vendas do mês atual
-        $currentSales = (float) Sale::where('store_id', $storeId)
-            ->whereBetween('sold_at', [$startOfMonth, $effectiveEndDate->endOfDay()])
-            ->sum('amount');
+        // Vendas do mês atual (PDV Data Source)
+        $currentSales = (float) DB::table('pdv_vendas')
+            ->where('store_id', $storeId)
+            ->whereBetween('data_hora', [$startOfMonth, $effectiveEndDate->endOfDay()])
+            ->sum('total');
 
         // Meta da loja
         $goal = StoreMonthlyGoal::forStore($storeId)->forMonth($month)->first();
@@ -60,13 +61,15 @@ class StorePerformanceService
         $lastYearSameDay = min($daysElapsed, $lastYearEnd->day);
         $lastYearSamePeriodEnd = $lastYearStart->copy()->addDays($lastYearSameDay - 1);
 
-        $samePeriodLastYear = (float) Sale::where('store_id', $storeId)
-            ->whereBetween('sold_at', [$lastYearStart, $lastYearSamePeriodEnd->endOfDay()])
-            ->sum('amount');
+        $samePeriodLastYear = (float) DB::table('pdv_vendas')
+            ->where('store_id', $storeId)
+            ->whereBetween('data_hora', [$lastYearStart, $lastYearSamePeriodEnd->endOfDay()])
+            ->sum('total');
 
-        $totalLastYear = (float) Sale::where('store_id', $storeId)
-            ->whereBetween('sold_at', [$lastYearStart, $lastYearEnd->endOfDay()])
-            ->sum('amount');
+        $totalLastYear = (float) DB::table('pdv_vendas')
+            ->where('store_id', $storeId)
+            ->whereBetween('data_hora', [$lastYearStart, $lastYearEnd->endOfDay()])
+            ->sum('total');
 
         // Crescimento YoY
         $yoyGrowth = $samePeriodLastYear > 0
@@ -82,13 +85,15 @@ class StorePerformanceService
         $lastMonthSameDay = min($daysElapsed, $lastMonthEnd->day);
         $lastMonthSamePeriodEnd = $lastMonthStart->copy()->addDays($lastMonthSameDay - 1);
 
-        $samePeriodLastMonth = (float) Sale::where('store_id', $storeId)
-            ->whereBetween('sold_at', [$lastMonthStart, $lastMonthSamePeriodEnd->endOfDay()])
-            ->sum('amount');
+        $samePeriodLastMonth = (float) DB::table('pdv_vendas')
+            ->where('store_id', $storeId)
+            ->whereBetween('data_hora', [$lastMonthStart, $lastMonthSamePeriodEnd->endOfDay()])
+            ->sum('total');
 
-        $totalLastMonth = (float) Sale::where('store_id', $storeId)
-            ->whereBetween('sold_at', [$lastMonthStart, $lastMonthEnd->endOfDay()])
-            ->sum('amount');
+        $totalLastMonth = (float) DB::table('pdv_vendas')
+            ->where('store_id', $storeId)
+            ->whereBetween('data_hora', [$lastMonthStart, $lastMonthEnd->endOfDay()])
+            ->sum('total');
 
         // Crescimento MoM
         $momGrowth = $samePeriodLastMonth > 0

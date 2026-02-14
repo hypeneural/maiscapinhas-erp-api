@@ -32,11 +32,22 @@ class SellerGamificationService
      */
     public function getBonusGamification(int $storeId, int $userId, Carbon $date): array
     {
-        // Vendas do dia
-        $todaySales = (float) Sale::where('store_id', $storeId)
-            ->where('seller_id', $userId)
-            ->whereDate('sold_at', $date)
-            ->sum('amount');
+        // Vendas do dia (PDV Data Source)
+        $todaySales = (float) DB::table('pdv_venda_itens as vi')
+            ->join('pdv_vendas as v', function ($join) {
+                $join->on('v.store_pdv_id', '=', 'vi.store_pdv_id')
+                    ->on('v.canal', '=', 'vi.canal')
+                    ->on('v.id_operacao', '=', 'vi.id_operacao');
+            })
+            ->join('pdv_user_mappings as pum', function ($join) {
+                $join->on('pum.store_pdv_id', '=', 'vi.store_pdv_id')
+                    ->on('pum.pdv_user_id', '=', 'vi.vendedor_pdv_id');
+            })
+            ->where('v.store_id', $storeId)
+            ->where('pum.user_id', $userId)
+            ->where('pum.active', true)
+            ->whereDate('v.data_hora', $date)
+            ->sum('vi.total');
 
         // Buscar regra de bônus aplicável
         $rule = $this->rulesService->getApplicableBonusRule($storeId, $date);
@@ -137,10 +148,22 @@ class SellerGamificationService
         $daysTotal = $endDate->day;
 
         // Vendas do mês até agora
-        $salesMtd = (float) Sale::where('store_id', $storeId)
-            ->where('seller_id', $userId)
-            ->whereBetween('sold_at', [$startDate, min($today, $endDate)])
-            ->sum('amount');
+        // Vendas do mês até agora (PDV Data Source)
+        $salesMtd = (float) DB::table('pdv_venda_itens as vi')
+            ->join('pdv_vendas as v', function ($join) {
+                $join->on('v.store_pdv_id', '=', 'vi.store_pdv_id')
+                    ->on('v.canal', '=', 'vi.canal')
+                    ->on('v.id_operacao', '=', 'vi.id_operacao');
+            })
+            ->join('pdv_user_mappings as pum', function ($join) {
+                $join->on('pum.store_pdv_id', '=', 'vi.store_pdv_id')
+                    ->on('pum.pdv_user_id', '=', 'vi.vendedor_pdv_id');
+            })
+            ->where('v.store_id', $storeId)
+            ->where('pum.user_id', $userId)
+            ->where('pum.active', true)
+            ->whereBetween('v.data_hora', [$startDate, min($today, $endDate)->endOfDay()])
+            ->sum('vi.total');
 
         // Meta individual do vendedor
         $goal = StoreMonthlyGoal::forStore($storeId)->forMonth($month)->first();
@@ -250,30 +273,66 @@ class SellerGamificationService
         $startOfMonth = Carbon::parse($month . '-01')->startOfMonth();
 
         // Dias trabalhados no mês (até ontem, para ter média confiável)
-        $daysWorkedQuery = Sale::where('store_id', $storeId)
-            ->where('seller_id', $userId)
-            ->whereBetween('sold_at', [$startOfMonth, $date->copy()->subDay()])
-            ->selectRaw('COUNT(DISTINCT DATE(sold_at)) as days')
-            ->first();
+        // Dias trabalhados no mês (até ontem, para ter média confiável)
+        $daysWorked = DB::table('pdv_venda_itens as vi')
+            ->join('pdv_vendas as v', function ($join) {
+                $join->on('v.store_pdv_id', '=', 'vi.store_pdv_id')
+                    ->on('v.canal', '=', 'vi.canal')
+                    ->on('v.id_operacao', '=', 'vi.id_operacao');
+            })
+            ->join('pdv_user_mappings as pum', function ($join) {
+                $join->on('pum.store_pdv_id', '=', 'vi.store_pdv_id')
+                    ->on('pum.pdv_user_id', '=', 'vi.vendedor_pdv_id');
+            })
+            ->where('v.store_id', $storeId)
+            ->where('pum.user_id', $userId)
+            ->where('pum.active', true)
+            ->whereBetween('v.data_hora', [$startOfMonth, $date->copy()->subDay()->endOfDay()])
+            ->distinct()
+            ->count(DB::raw('DATE(v.data_hora)'));
 
-        $daysWorked = (int) ($daysWorkedQuery->days ?? 0);
+        // Casting direto pois count retorna int
+        $daysWorked = (int) $daysWorked;
 
         // Vendas até ontem
-        $salesUntilYesterday = (float) Sale::where('store_id', $storeId)
-            ->where('seller_id', $userId)
-            ->whereBetween('sold_at', [$startOfMonth, $date->copy()->subDay()->endOfDay()])
-            ->sum('amount');
+        // Vendas até ontem
+        $salesUntilYesterday = (float) DB::table('pdv_venda_itens as vi')
+            ->join('pdv_vendas as v', function ($join) {
+                $join->on('v.store_pdv_id', '=', 'vi.store_pdv_id')
+                    ->on('v.canal', '=', 'vi.canal')
+                    ->on('v.id_operacao', '=', 'vi.id_operacao');
+            })
+            ->join('pdv_user_mappings as pum', function ($join) {
+                $join->on('pum.store_pdv_id', '=', 'vi.store_pdv_id')
+                    ->on('pum.pdv_user_id', '=', 'vi.vendedor_pdv_id');
+            })
+            ->where('v.store_id', $storeId)
+            ->where('pum.user_id', $userId)
+            ->where('pum.active', true)
+            ->whereBetween('v.data_hora', [$startOfMonth, $date->copy()->subDay()->endOfDay()])
+            ->sum('vi.total');
 
         // Média diária
         $averageDailySales = $daysWorked > 0
             ? round($salesUntilYesterday / $daysWorked, 2)
             : 0;
 
-        // Vendas de hoje
-        $todaySales = (float) Sale::where('store_id', $storeId)
-            ->where('seller_id', $userId)
-            ->whereDate('sold_at', $date)
-            ->sum('amount');
+        // Vendas de hoje (PDV Data Source)
+        $todaySales = (float) DB::table('pdv_venda_itens as vi')
+            ->join('pdv_vendas as v', function ($join) {
+                $join->on('v.store_pdv_id', '=', 'vi.store_pdv_id')
+                    ->on('v.canal', '=', 'vi.canal')
+                    ->on('v.id_operacao', '=', 'vi.id_operacao');
+            })
+            ->join('pdv_user_mappings as pum', function ($join) {
+                $join->on('pum.store_pdv_id', '=', 'vi.store_pdv_id')
+                    ->on('pum.pdv_user_id', '=', 'vi.vendedor_pdv_id');
+            })
+            ->where('v.store_id', $storeId)
+            ->where('pum.user_id', $userId)
+            ->where('pum.active', true)
+            ->whereDate('v.data_hora', $date)
+            ->sum('vi.total');
 
         // Comparação
         $todayVsAverage = round($todaySales - $averageDailySales, 2);

@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @deprecated Use PdvVenda, PdvVendaItem, and PdvUserMapping instead.
+ */
 class Sale extends Model
 {
     use HasFactory;

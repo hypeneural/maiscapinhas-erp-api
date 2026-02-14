@@ -34,15 +34,25 @@ class RankingService
         $startOfMonth = Carbon::parse($month . '-01')->startOfMonth();
         $endOfMonth = Carbon::parse($month . '-01')->endOfMonth();
 
-        // Query de vendas agrupadas por vendedor
-        $salesQuery = Sale::query()
+        // Query de vendas agrupadas por vendedor (PDV Data Source)
+        $salesQuery = DB::table('pdv_venda_itens as vi')
+            ->join('pdv_vendas as v', function ($join) {
+                $join->on('v.store_pdv_id', '=', 'vi.store_pdv_id')
+                    ->on('v.canal', '=', 'vi.canal')
+                    ->on('v.id_operacao', '=', 'vi.id_operacao');
+            })
+            ->join('pdv_user_mappings as pum', function ($join) {
+                $join->on('pum.store_pdv_id', '=', 'vi.store_pdv_id')
+                    ->on('pum.pdv_user_id', '=', 'vi.vendedor_pdv_id');
+            })
+            ->where('pum.active', true)
+            ->whereBetween('v.data_hora', [$startOfMonth, $endOfMonth->endOfDay()])
             ->select([
-                'seller_id',
-                DB::raw('SUM(amount) as total_sold'),
-                DB::raw('COUNT(*) as sale_count'),
+                'pum.user_id as seller_id',
+                DB::raw('SUM(vi.total) as total_sold'),
+                DB::raw('COUNT(DISTINCT v.id) as sale_count'),
             ])
-            ->whereBetween('sold_at', [$startOfMonth, $endOfMonth->endOfDay()])
-            ->groupBy('seller_id');
+            ->groupBy('pum.user_id');
 
         // Ordenação: desc para melhores, asc para piores
         if ($order === 'asc') {
@@ -52,7 +62,7 @@ class RankingService
         }
 
         if ($storeId) {
-            $salesQuery->where('store_id', $storeId);
+            $salesQuery->where('v.store_id', $storeId);
         }
 
         $salesData = $salesQuery->limit($limit)->get();
