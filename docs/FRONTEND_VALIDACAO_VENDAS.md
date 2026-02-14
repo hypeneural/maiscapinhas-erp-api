@@ -83,6 +83,18 @@ A resposta indica se a venda foi encontrada (`found`) e se os dados batem perfei
 }
 ```
 
+### Exemplo: Venda Cancelada (Aviso)
+
+```json
+{
+  "ok": true,
+  "found": false,
+  "match_100": false,
+  "reason": "Venda está CANCELADA no ERP.",
+  "status_erp": "CANCELLED"
+}
+```
+
 ### Exemplo: Não Encontrado (Erro)
 
 ```json

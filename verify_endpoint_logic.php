@@ -73,6 +73,19 @@ $payloadLoja4 = json_encode([
     'Loja' => [
         'Nome' => 'Loja 4 - iTuntz',
         'Id' => 'uuid-qualquer'
+    ],
+    // Adicionando itens fakes para teste de estrutura, não vai bater 100% se o DB tiver itens reais, 
+    // mas evita o "Matches because both empty" se o DB estiver vazio.
+    // O objetivo aqui é ver se o script roda sem erros.
+    'Itens' => [
+        ['Codigo' => '999', 'Quantidade' => 1, 'ValorTotalLiquido' => 84.90]
+    ],
+    'MeiosDePagamentosAgrupados' => [
+        [
+            'MeiosDePagamentos' => [
+                ['Descricao' => 'Pix', 'Valor' => 84.90]
+            ]
+        ]
     ]
 ]);
 
@@ -87,6 +100,7 @@ if ($result4['found'] ?? false) {
     echo "    [SUCCESS] Encontrado!\n";
     echo "    Match 100%: " . ($result4['match_100'] ? 'SIM' : 'NAO') . "\n";
     echo "    Best Match ID: " . ($result4['best_match']['pdv_venda_id'] ?? 'N/A') . "\n";
+} else {
     echo "    [FAIL] Nao encontrado.\n";
     print_r($result4);
 }
@@ -94,7 +108,7 @@ if ($result4['found'] ?? false) {
 // Caso Loja 5 (MC Komprão) - Venda de R$ 32,81 (Liq) - Total Bruto 35.00
 // Data ERP: 2026-02-14 15:29:31.6079127 (Local) -> UTC ~18:29
 $payloadLoja5 = json_encode([
-    'CodigoDaOperacao' => 297561, // Corrigido ID operacao com base no JSON Loja 5 (Exemplo 3) - Ops, o Exemplo 3 tem CodigoDaOperacao 297561? Nao, o exemplo 3 tem valor liquido 60.00 e Data 15:28:05.
+    // Corrigido ID operacao com base no JSON Loja 5 (Exemplo 3) - Ops, o Exemplo 3 tem CodigoDaOperacao 297561? Nao, o exemplo 3 tem valor liquido 60.00 e Data 15:28:05.
     // Analisando JSON Loja 5 do User:
     // Exemplo 3:
     // "CodigoDaOperacao": 297561, "Data": "2026-02-14T15:28:05", "ValorTotalLiquido": 60.00, "Loja": {"Nome": "Loja 5 - MC Komprão BR Tijucas"}
