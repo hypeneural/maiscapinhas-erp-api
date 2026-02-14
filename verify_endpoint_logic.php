@@ -120,6 +120,18 @@ $payloadLoja5 = json_encode([
     'Loja' => [
         'Nome' => 'Loja 5 - MC Komprão BR Tijucas',
         'Id' => 'cbfa4e39-c3db-45cf-8b9b-a9a6b6574227'
+    ],
+    // Adicionando Itens e Pagamentos corretos para o teste de Match 100%
+    'Itens' => [
+        ['Codigo' => '7259', 'Quantidade' => 1.0, 'ValorTotalLiquido' => 32.81],
+        ['Codigo' => '7277', 'Quantidade' => 1.0, 'ValorTotalLiquido' => 27.19]
+    ],
+    'MeiosDePagamentosAgrupados' => [
+        [
+            'MeiosDePagamentos' => [
+                ['Descricao' => 'Cartão de débito', 'Valor' => 60.00]
+            ]
+        ]
     ]
 ]);
 
@@ -129,6 +141,14 @@ $result5 = $validator->validateFromErpPayload($input5);
 if ($result5['found'] ?? false) {
     echo "    [SUCCESS] Encontrado!\n";
     echo "    Match 100%: " . ($result5['match_100'] ? 'SIM' : 'NAO') . "\n";
+    if (!($result5['match_100'] ?? false)) {
+        echo "    Debug DIV (Loja 5):\n";
+        print_r($result5['best_match']['signatures'] ?? 'No sigs');
+    }
+    if (isset($result5['best_match']['db_details'])) {
+        echo "    [ENRICHED DATA]:\n";
+        print_r($result5['best_match']['db_details']);
+    }
 } else {
     echo "    [FAIL] Nao encontrado.\n";
     print_r($result5['reason'] ?? $result5);
@@ -151,4 +171,42 @@ if (($resultCancel['status_erp'] ?? '') === 'CANCELLED') {
 } else {
     echo "    [FAIL] Falhou em identificar cancelamento.\n";
     print_r($resultCancel);
+}
+
+// Caso Loja 7 (Bombinhas) - ID 458 - Total 100.00
+// Data ERP: 2026-02-14 16:40:23.8581143 (Local) -> UTC ~19:40
+$payloadLoja7 = json_encode([
+    'CodigoDaOperacao' => 297606,
+    'Data' => '2026-02-14T16:40:23',
+    'ValorTotalLiquido' => 100.00,
+    'Loja' => ['Nome' => 'Loja 7 - Bombinhas'],
+    'Itens' => [
+        ['Codigo' => '7206', 'Quantidade' => 1, 'ValorTotalLiquido' => 100.00]
+    ],
+    'MeiosDePagamentosAgrupados' => [
+        [
+            'MeiosDePagamentos' => [
+                ['Descricao' => 'CARTão DE CRéDITO', 'Valor' => 100.00]
+            ]
+        ]
+    ]
+]);
+
+$input7 = ['payload' => $payloadLoja7];
+echo "\n[5] Testando Loja 7 (Esperado: Found=true, Match 100%=SIM)...\n";
+$result7 = $validator->validateFromErpPayload($input7);
+if ($result7['found'] ?? false) {
+    echo "    [SUCCESS] Encontrado!\n";
+    echo "    Match 100%: " . ($result7['match_100'] ? 'SIM' : 'NAO') . "\n";
+    if (!($result7['match_100'] ?? false)) {
+        echo "    Debug DIV (Loja 7):\n";
+        print_r($result7['best_match']['signatures'] ?? 'No sigs');
+    }
+    if (isset($result7['best_match']['db_details'])) {
+        echo "    [ENRICHED DATA]:\n";
+        print_r($result7['best_match']['db_details']);
+    }
+} else {
+    echo "    [FAIL] Nao encontrado.\n";
+    print_r($result7);
 }

@@ -53,17 +53,41 @@ A resposta indica se a venda foi encontrada (`found`) e se os dados batem perfei
   "match_100": true,
   "best_match": {
     "pdv_venda_id": 12345,
-    "id_operacao_db": 987654,
-    "erp_id_orig": 112233,
-    "data_hora_utc": "2026-02-14T18:22:04.000000Z",
-    "total": 35.00,
+    "id_operacao_db": 998877,
+    "erp_id_orig": 555444,
+    "data_hora_utc": "2026-02-14T14:30:00+00:00",
+    "total": 150.50,
     "items_exact": true,
     "payments_exact": true,
+    "match_100": true,
+    "db_details": {
+        "store_db": {
+            "id": 7,
+            "nome_hiper": "Loja 5 - MC Komprão BR Tijucas"
+        },
+        "user_db": {
+            "nome": "Loja 5 - Komprão BR/Tijucas",
+            "login": "tijucas3",
+            "user_id": 101
+        },
+        "timestamps": {
+            "data_venda": "2026-02-14T14:30:00+00:00",
+            "created_at": "2026-02-14T14:32:01+00:00",
+            "updated_at": "2026-02-14T14:32:01+00:00",
+            "last_seen": "2026-02-14T14:40:05+00:00"
+        },
+        "identifiers": {
+            "id_operacao": 998877,
+            "id_turno": "UUID-DO-TURNO",
+            "pdv_venda_id": 12345
+        }
+    },
     "signatures": {
-       "erp_items": [...],
-       "db_items": [...]
+       "erp_items": [ ... ],
+       "db_items": [ ... ]
     }
   },
+  "all_candidates_count": 1,
   "search": { ... }
 }
 ```

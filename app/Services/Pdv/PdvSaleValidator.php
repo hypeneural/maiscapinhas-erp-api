@@ -99,8 +99,9 @@ class PdvSaleValidator
         $end = $targetUtc->copy()->addMinutes($plusMin);
 
         // 5) Buscar candidatos (assinatura: loja + total + janela)
+        // Nota: Removido eager loading (with) pois a chave composta (store_pdv_id + id_operacao)
+        // nao funciona bem com o padrao do Eloquent hasMany. Faremos load manual.
         $candidates = PdvVenda::query()
-            ->with(['itens', 'pagamentos'])
             ->where('store_pdv_id', $storePdvId)
             ->when($canal, fn($q) => $q->where('canal', $canal))
             ->whereBetween('total', [$erpTotal - $tolTotal, $erpTotal + $tolTotal])
@@ -129,6 +130,22 @@ class PdvSaleValidator
 
         $ranked = [];
         foreach ($candidates as $venda) {
+            /** @var PdvVenda $venda */
+            // Load manual dos relacionamentos com chave composta
+            $dbItens = DB::table('pdv_venda_itens')
+                ->where('store_pdv_id', $venda->store_pdv_id)
+                ->where('id_operacao', $venda->id_operacao)
+                ->get();
+
+            $dbPagtos = DB::table('pdv_venda_pagamentos')
+                ->where('store_pdv_id', $venda->store_pdv_id)
+                ->where('id_operacao', $venda->id_operacao)
+                ->get();
+
+            // Hidratar os relacionamentos no modelo para o assinador usar
+            $venda->setRelation('itens', $dbItens);
+            $venda->setRelation('pagamentos', $dbPagtos);
+
             $dbItemSig = $this->dbItemsSignature($venda);
             $dbPaySig = $this->dbPaymentsSignature($venda);
 
@@ -159,6 +176,14 @@ class PdvSaleValidator
 
         // Se não tem match 100, pega o primeiro da lista (que já bateu total e horario)
         $bestCandidate = $best100 ?? $ranked[0];
+
+        // Enrich best match
+        if ($bestCandidate) {
+            $vendaModel = PdvVenda::find($bestCandidate['pdv_venda_id']);
+            if ($vendaModel) {
+                $bestCandidate['db_details'] = $this->enrichMatchData($vendaModel);
+            }
+        }
 
         return [
             'ok' => true,
@@ -200,6 +225,8 @@ class PdvSaleValidator
             return 4;
         if (str_contains($lojaNome, 'Loja 5') || str_contains($lojaNome, 'Komprão'))
             return 7;
+        if (str_contains($lojaNome, 'Loja 7') || str_contains($lojaNome, 'Bombinhas'))
+            return 6;
 
         return null;
     }
@@ -243,9 +270,7 @@ class PdvSaleValidator
     private function dbItemsSignature($venda): array
     {
         $sig = [];
-        // Carrega relacionamento se nao vier
-        if (!$venda->relationLoaded('itens'))
-            $venda->load('itens');
+        // Relacionamento ja foi setado manualmente
 
         foreach ($venda->itens as $i) {
             $sig[] = [
@@ -261,8 +286,7 @@ class PdvSaleValidator
     private function dbPaymentsSignature($venda): array
     {
         $sig = [];
-        if (!$venda->relationLoaded('pagamentos'))
-            $venda->load('pagamentos');
+        // Relacionamento ja foi setado manualmente
 
         foreach ($venda->pagamentos as $p) {
             $sig[] = [
@@ -278,5 +302,36 @@ class PdvSaleValidator
     private function normalizePaymentName(string $name): string
     {
         return strtoupper(trim($name));
+    }
+
+    private function enrichMatchData(PdvVenda $venda): array
+    {
+        // Carregar Store e Turno de forma Lazy para garantir que o 'where constraint' do model funcione
+        // (venda->turno depende de venda->store_pdv_id)
+        $loja = $venda->loja;
+        $turno = $venda->turno;
+
+        return [
+            'store_db' => [
+                'id' => $loja->id_ponto_venda ?? $venda->store_pdv_id,
+                'nome_hiper' => $loja->nome_hiper ?? null,
+            ],
+            'user_db' => [
+                'nome' => $turno->operador_nome ?? null,
+                'login' => $turno->operador_login ?? null,
+                'user_id' => $turno->operador_user_id ?? null,
+            ],
+            'timestamps' => [
+                'data_venda' => $venda->data_hora?->toIso8601String(),
+                'created_at' => $venda->created_at?->toIso8601String(),
+                'updated_at' => $venda->updated_at?->toIso8601String(),
+                'last_seen' => $venda->last_seen_in_snapshot_at?->toIso8601String(),
+            ],
+            'identifiers' => [
+                'id_operacao' => $venda->id_operacao,
+                'id_turno' => $venda->id_turno,
+                'pdv_venda_id' => $venda->id,
+            ]
+        ];
     }
 }
