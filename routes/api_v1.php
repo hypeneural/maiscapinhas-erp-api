@@ -42,6 +42,7 @@ use App\Http\Controllers\Api\V1\ProducaoAdminController;
 use App\Http\Controllers\Api\V1\FabricaPedidoController;
 use App\Http\Controllers\Api\V1\Admin\RoleController as AdminRoleController;
 use App\Http\Controllers\Api\V1\Admin\PermissionController as AdminPermissionController;
+use App\Http\Controllers\Api\V1\PdvMappingController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -317,6 +318,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('pdv')->name('pdv.')->group(function () {
             Route::get('/syncs', [PdvSyncAdminController::class, 'index'])->name('syncs.index');
             Route::get('/syncs/metrics', [PdvSyncAdminController::class, 'metrics'])->name('syncs.metrics');
+
+            // Mappings (Store & User)
+            Route::prefix('mappings')->name('mappings.')->middleware('super-admin')->group(function () {
+                // Stores
+                Route::get('/stores', [PdvMappingController::class, 'indexStores'])->name('stores.index');
+                Route::post('/stores', [PdvMappingController::class, 'storeStore'])->name('stores.store');
+
+                // Users
+                Route::get('/users', [PdvMappingController::class, 'indexUsers'])->name('users.index');
+                Route::post('/users', [PdvMappingController::class, 'storeUser'])->name('users.store');
+                Route::post('/users/bulk', [PdvMappingController::class, 'bulkStoreUsers'])->name('users.bulk');
+                Route::delete('/users/{id}', [PdvMappingController::class, 'destroyUser'])->name('users.destroy');
+                Route::get('/users/suggestions', [PdvMappingController::class, 'suggestUsers'])->name('users.suggestions');
+            });
         });
 
         // Users Management

@@ -40,4 +40,9 @@ class PdvUserMapping extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function storeMapping(): BelongsTo
+    {
+        return $this->belongsTo(PdvStoreMapping::class, 'store_pdv_id', 'pdv_store_id');
+    }
 }
