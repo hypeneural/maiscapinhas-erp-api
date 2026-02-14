@@ -42,9 +42,32 @@ class PdvSaleValidator
         $erpId = data_get($erp, 'CodigoDaOperacao');
 
         if (!$erpDate || $erpTotal <= 0) {
+            // Se for cancelada, pode ter total zerado ou nao, mas vamos checar a flag
+            if (data_get($erp, 'Cancelada') === true) {
+                return [
+                    'ok' => true,
+                    'found' => false,
+                    'match_100' => false,
+                    'reason' => 'Venda está CANCELADA no ERP.',
+                    'status_erp' => 'CANCELLED',
+                ];
+            }
+
             return [
                 'ok' => false,
                 'error' => 'Campos mínimos ausentes: Data e/ou ValorTotalLiquido.',
+            ];
+        }
+
+        // Checagem explicita de cancelamento mesmo com dados ok
+        if (data_get($erp, 'Cancelada') === true) {
+            return [
+                'ok' => true,
+                'found' => false, // Por padrao consideramos nao 'encontrada' como venda valida
+                'match_100' => false,
+                'reason' => 'Venda está marcada como CANCELADA no JSON do ERP.',
+                'status_erp' => 'CANCELLED',
+                'debug' => ['id_operacao' => $erpId, 'loja_id' => $lojaId]
             ];
         }
 
@@ -55,9 +78,10 @@ class PdvSaleValidator
             return [
                 'ok' => false,
                 'error' => 'Não consegui resolver store_pdv_id. Verifique se a loja está mapeada.',
-                'debug' => ['LojaId' => $lojaId, 'NfeChave' => $nfeKey],
+                'debug' => ['LojaId' => $lojaId, 'NfeChave' => $nfeKey, 'NomeLoja' => data_get($erp, 'Loja.Nome')],
             ];
         }
+
 
         // 4) Normalizar tempo: ERP local -> UTC
         // Tenta parsear com timezone informado
@@ -174,6 +198,8 @@ class PdvSaleValidator
             return 13;
         if (str_contains($lojaNome, 'iTuntz'))
             return 4;
+        if (str_contains($lojaNome, 'Loja 5') || str_contains($lojaNome, 'Komprão'))
+            return 7;
 
         return null;
     }

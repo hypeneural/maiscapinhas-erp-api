@@ -87,7 +87,54 @@ if ($result4['found'] ?? false) {
     echo "    [SUCCESS] Encontrado!\n";
     echo "    Match 100%: " . ($result4['match_100'] ? 'SIM' : 'NAO') . "\n";
     echo "    Best Match ID: " . ($result4['best_match']['pdv_venda_id'] ?? 'N/A') . "\n";
-} else {
     echo "    [FAIL] Nao encontrado.\n";
     print_r($result4);
+}
+
+// Caso Loja 5 (MC Komprão) - Venda de R$ 32,81 (Liq) - Total Bruto 35.00
+// Data ERP: 2026-02-14 15:29:31.6079127 (Local) -> UTC ~18:29
+$payloadLoja5 = json_encode([
+    'CodigoDaOperacao' => 297561, // Corrigido ID operacao com base no JSON Loja 5 (Exemplo 3) - Ops, o Exemplo 3 tem CodigoDaOperacao 297561? Nao, o exemplo 3 tem valor liquido 60.00 e Data 15:28:05.
+    // Analisando JSON Loja 5 do User:
+    // Exemplo 3:
+    // "CodigoDaOperacao": 297561, "Data": "2026-02-14T15:28:05", "ValorTotalLiquido": 60.00, "Loja": {"Nome": "Loja 5 - MC Komprão BR Tijucas"}
+
+    // Vou usar esse do exemplo 3 (Loja 5 - 60.00)
+    'CodigoDaOperacao' => 297561,
+    'Data' => '2026-02-14T15:28:05',
+    'ValorTotalLiquido' => 60.00,
+    'Loja' => [
+        'Nome' => 'Loja 5 - MC Komprão BR Tijucas',
+        'Id' => 'cbfa4e39-c3db-45cf-8b9b-a9a6b6574227'
+    ]
+]);
+
+$input5 = ['payload' => $payloadLoja5];
+echo "\n[3] Testando Loja 5 (Esperado: Found=true)...\n";
+$result5 = $validator->validateFromErpPayload($input5);
+if ($result5['found'] ?? false) {
+    echo "    [SUCCESS] Encontrado!\n";
+    echo "    Match 100%: " . ($result5['match_100'] ? 'SIM' : 'NAO') . "\n";
+} else {
+    echo "    [FAIL] Nao encontrado.\n";
+    print_r($result5['reason'] ?? $result5);
+}
+
+// Caso Cancelada
+// Exemplo 2: "Cancelada": true, "ValorTotalLiquido": 1450.00
+$payloadCancelada = json_encode([
+    'Cancelada' => true,
+    'CodigoDaOperacao' => 297565,
+    'Data' => '2026-02-14T15:35:23',
+    'ValorTotalLiquido' => 1450.00,
+    'Loja' => ['Nome' => 'Loja 4 - iTuntz']
+]);
+$inputCancel = ['payload' => $payloadCancelada];
+echo "\n[4] Testando Venda Cancelada (Esperado: Found=false, status_erp=CANCELLED)...\n";
+$resultCancel = $validator->validateFromErpPayload($inputCancel);
+if (($resultCancel['status_erp'] ?? '') === 'CANCELLED') {
+    echo "    [SUCCESS] Identificou cancelamento corretamente.\n";
+} else {
+    echo "    [FAIL] Falhou em identificar cancelamento.\n";
+    print_r($resultCancel);
 }
