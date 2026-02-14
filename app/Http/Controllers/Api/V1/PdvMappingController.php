@@ -270,7 +270,7 @@ class PdvMappingController extends Controller
             // Ignore if table doesn't exist or other error
         }
 
-        return PdvUserMapping::updateOrCreate(
+        $mapping = PdvUserMapping::updateOrCreate(
             [
                 'pdv_user_id' => $pdvUserId,
             ],
@@ -283,5 +283,19 @@ class PdvMappingController extends Controller
                 'confidence' => 100,
             ]
         );
+
+        // TRIGGER BACKFILL: Update existing sales items with the new user_id
+        DB::table('pdv_venda_itens')
+            ->where('vendedor_pdv_id', $pdvUserId)
+            ->whereNull('vendedor_user_id')
+            ->update(['vendedor_user_id' => $userId]);
+
+        // Also update turnos (shifts)
+        DB::table('pdv_turnos')
+            ->where('operador_pdv_id', $pdvUserId)
+            ->whereNull('operador_user_id')
+            ->update(['operador_user_id' => $userId]);
+
+        return $mapping;
     }
 }
