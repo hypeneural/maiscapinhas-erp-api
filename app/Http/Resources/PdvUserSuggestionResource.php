@@ -23,6 +23,8 @@ class PdvUserSuggestionResource extends JsonResource
             'identity' => [
                 'store_pdv_id' => $resource->store_pdv_id,
                 'user_pdv_id' => $resource->vendedor_pdv_id,
+                'original_name' => $resource->pdv_user_name ?? null,
+                'original_login' => $resource->pdv_user_login ?? null,
             ],
             'last_seen_at' => $resource->last_seen_at ?? null,
             'sales_count' => $resource->sales_count ?? 0,

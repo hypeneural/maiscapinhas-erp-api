@@ -132,7 +132,9 @@ class PdvMappingController extends Controller
                 'vi.store_pdv_id',
                 'vi.vendedor_pdv_id',
                 DB::raw('MAX(vi.updated_at) as last_seen_at'),
-                DB::raw('COUNT(*) as sales_count')
+                DB::raw('COUNT(*) as sales_count'),
+                DB::raw('MAX(vi.vendedor_nome) as pdv_user_name'),
+                DB::raw('MAX(vi.vendedor_login) as pdv_user_login'),
             ])
             ->leftJoin('pdv_user_mappings as m', function ($join) {
                 $join->on('m.store_pdv_id', '=', 'vi.store_pdv_id')
@@ -145,34 +147,35 @@ class PdvMappingController extends Controller
             ->limit(50)
             ->get();
 
-        // 2. Try to find name and suggest match
-        // We need to look up a name. Ideally `pdv_venda_itens` doesn't have names, but `pdv_usuarios` might?
-        // Or maybe we captured it in `pdv_user_mappings` previously? No.
-        // Let's assume we don't have the name easily unless we query `pdv_usuarios` if it exists (it does).
-
         $suggestions = $unmapped->map(function ($item) {
             $suggestion = null;
             $matchConfidence = 0;
 
-            // Try to find name in pdv_usuarios (if synced)
-            $pdvUser = DB::table('pdv_usuarios')
-                ->where('id', $item->vendedor_pdv_id) // Assuming ID matches? Or compound key?
-                // The schema for pdv_usuarios usually has 'id' as PK or similar.
-                // Let's safe check. If it fails, we skip suggestion.
-                ->first();
+            // Try to enhance data from pdv_usuarios if missing/incomplete
+            if (empty($item->pdv_user_name) || empty($item->pdv_user_login)) {
+                $pdvUser = DB::table('pdv_usuarios')
+                    ->where('id_usuario_hiper', $item->vendedor_pdv_id)
+                    ->first();
 
-            if ($pdvUser && isset($pdvUser->nome)) {
-                $item->pdv_user_name = $pdvUser->nome;
+                if ($pdvUser) {
+                    if (empty($item->pdv_user_name)) {
+                        $item->pdv_user_name = $pdvUser->nome_hiper ?? $pdvUser->nome_padronizado;
+                    }
+                    if (empty($item->pdv_user_login)) {
+                        $item->pdv_user_login = $pdvUser->login_hiper;
+                    }
+                }
+            }
 
+            if (!empty($item->pdv_user_name)) {
                 // Fuzzy match against active ERP users
-                // Simple implementation: exact match or "like"
-                $match = User::where('name', 'LIKE', $pdvUser->nome)
-                    ->orWhere('name', 'LIKE', "%{$pdvUser->nome}%")
+                $match = User::where('name', 'LIKE', $item->pdv_user_name)
+                    ->orWhere('name', 'LIKE', "%{$item->pdv_user_name}%")
                     ->first();
 
                 if ($match) {
                     $suggestion = $match;
-                    $matchConfidence = 80; // Arbitrary high confidence
+                    $matchConfidence = 80;
                 }
             }
 
