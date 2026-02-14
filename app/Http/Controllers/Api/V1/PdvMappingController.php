@@ -137,8 +137,8 @@ class PdvMappingController extends Controller
                 DB::raw('MAX(vi.vendedor_login) as pdv_user_login'),
             ])
             ->leftJoin('pdv_user_mappings as m', function ($join) {
-                $join->on('m.store_pdv_id', '=', 'vi.store_pdv_id')
-                    ->on('m.pdv_user_id', '=', 'vi.vendedor_pdv_id');
+                // Join only on PDV User ID because mapping is global/unique per PDV User
+                $join->on('m.pdv_user_id', '=', 'vi.vendedor_pdv_id');
             })
             ->whereNull('m.id') // Only unmapped
             ->where('vi.updated_at', '>=', now()->subDays(30))
