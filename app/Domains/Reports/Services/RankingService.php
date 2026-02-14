@@ -65,8 +65,10 @@ class RankingService
             $salesQuery->where('v.store_id', $storeId);
         }
 
-        $salesData = $salesQuery->limit($limit)->get();
-
+        // Calculate total stats before limiting
+        // We fetch ALL data to calculate correct stats (above_goal, average, etc)
+        // Seller count is usually low (< 500), so this is safe.
+        $salesData = $salesQuery->get();
 
         // Buscar dados complementares dos vendedores
         $sellerIds = $salesData->pluck('seller_id')->toArray();
@@ -127,16 +129,23 @@ class RankingService
             ];
         }
 
-        // Separar pódio (top 3)
-        $podium = array_slice($ranking, 0, 3);
-        $restOfRanking = array_slice($ranking, 3);
-
-        // Estatísticas gerais
+        // Estatísticas gerais (sobredos TODOS os vendedores)
         $totalSellers = count($ranking);
         $aboveGoal = collect($ranking)->filter(fn($r) => $r['achievement_rate'] >= 100)->count();
         $avgAchievement = $totalSellers > 0
             ? round(collect($ranking)->avg('achievement_rate'), 2)
             : 0;
+
+        // Separar pódio (top 3)
+        $podium = array_slice($ranking, 0, 3);
+
+        // Ranking listado (Respeitando o LIMIT)
+        // Remove podium from main list if desired, OR just slice everything.
+        // Usually podium is separate, and ranking list shows everyone OR rest.
+        // Based on previous code: $restOfRanking = array_slice($ranking, 3);
+        // But we need to apply limit to the "rest".
+
+        $restOfRanking = array_slice($ranking, 3, $limit);
 
         return [
             'period' => $month,

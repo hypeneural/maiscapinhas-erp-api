@@ -803,6 +803,17 @@ class PdvReportsController extends Controller
             $query->where('v.canal', (string) $validated['canal']);
         }
 
+        // Calculate summary stats before limiting
+        // We use fromSub because the original query is grouped
+        $summaryQuery = DB::query()->fromSub(clone $query, 'ranking_base');
+
+        $summaryTotalVendedores = $summaryQuery->count();
+        // Note: sum() on QueryBuilder returns sum of column. 
+        // In the subquery 'total_vendido', 'qtd_vendas', 'total_itens' are the columns we want to sum.
+        $summaryTotalVendido = (float) ($summaryQuery->sum('total_vendido') ?? 0);
+        $summaryQtdVendas = (int) ($summaryQuery->sum('qtd_vendas') ?? 0);
+        $summaryTotalItens = (float) ($summaryQuery->sum('total_itens') ?? 0);
+
         $ranking = $query
             ->orderByDesc('total_vendido')
             ->orderBy('vi.vendedor_pdv_id')
@@ -834,10 +845,10 @@ class PdvReportsController extends Controller
                 'limit' => $limit,
             ],
             'summary' => [
-                'vendedores' => $ranking->count(),
-                'total_vendido' => round((float) $ranking->sum('total_vendido'), 2),
-                'qtd_vendas' => (int) $ranking->sum('qtd_vendas'),
-                'total_itens' => round((float) $ranking->sum('total_itens'), 3),
+                'vendedores' => $summaryTotalVendedores,
+                'total_vendido' => round($summaryTotalVendido, 2),
+                'qtd_vendas' => $summaryQtdVendas,
+                'total_itens' => round($summaryTotalItens, 3),
             ],
             'ranking' => $ranking->all(),
         ]);
