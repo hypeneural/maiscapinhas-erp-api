@@ -239,6 +239,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/aux/meios-pagamento', [PdvReportsController::class, 'meiosPagamento'])->name('aux.meios-pagamento');
         Route::get('/ranking-vendedores', [PdvReportsController::class, 'rankingVendedores'])->name('ranking-vendedores');
         Route::get('/ranking-vendedor-loja', [PdvReportsController::class, 'rankingVendedorLoja'])->name('ranking-vendedor-loja');
+
+        // Validator Endpoint
+        Route::post('/sales/validate', \App\Http\Controllers\Api\PdvSaleValidateController::class)->name('sales.validate');
     });
 
     // ============================================

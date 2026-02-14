@@ -324,6 +324,7 @@ class PdvReportsController extends Controller
                 DB::raw('COALESCE(SUM(vi.qtd), 0) as itens_qtd_total'),
                 DB::raw('COALESCE(SUM(vi.total), 0) as itens_valor_total'),
                 DB::raw('MIN(vi.vendedor_pdv_id) as vendedor_pdv_id'),
+                DB::raw('MAX(vi.vendedor_nome) as vendedor_nome_pdv'),
             ])
             ->groupBy('vi.store_pdv_id', 'vi.canal', 'vi.id_operacao');
 
@@ -364,7 +365,7 @@ class PdvReportsController extends Controller
                 'v.id_turno',
                 'v.data_hora',
                 'v.total',
-                'u.name as seller_name',
+                DB::raw('COALESCE(u.name, it.vendedor_nome_pdv) as seller_name'),
                 'u.whatsapp as seller_whatsapp',
                 'u.avatar_url as seller_avatar_url',
                 'u.hire_date as seller_hire_date',
