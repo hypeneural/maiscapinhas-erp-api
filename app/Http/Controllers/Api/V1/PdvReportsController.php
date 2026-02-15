@@ -808,15 +808,20 @@ class PdvReportsController extends Controller
         $idOperacao = (int) $validated['id_operacao'];
 
         $vendaQuery = DB::table('pdv_vendas as v')
+            ->leftJoin('stores as s', 'v.store_id', '=', 's.id')
+            ->leftJoin('pdv_lojas as pl', 'v.store_pdv_id', '=', 'pl.id_ponto_venda')
             ->select([
                 'v.store_id',
+                's.name as store_name', // Internal Store Name
                 'v.store_pdv_id',
+                'pl.nome_padronizado as store_pdv_name', // PDV Store Name
                 'v.canal',
                 'v.id_operacao',
                 'v.id_turno',
                 'v.data_hora',
                 'v.total',
                 'v.erp_operacao_uuid',
+                'v.erp_loja_uuid',
                 'v.nfce_chave',
                 'v.nfce_modelo',
                 'v.nfce_numero',
@@ -854,6 +859,7 @@ class PdvReportsController extends Controller
                 'vi.vendedor_nome',
                 'vi.vendedor_login',
                 'vi.vendedor_user_id',
+                'vi.vendedor_guid', // V5 UUID
             ])
             ->where('vi.store_pdv_id', $resolvedStorePdvId)
             ->where('vi.canal', $resolvedCanal)
@@ -910,6 +916,7 @@ class PdvReportsController extends Controller
             'total' => (float) $row->total,
             'desconto' => (float) $row->desconto,
             'vendedor_pdv_id' => $row->vendedor_pdv_id !== null ? (int) $row->vendedor_pdv_id : null,
+            'vendedor_guid' => $row->vendedor_guid ?? null,
             'vendedor_nome' => $row->vendedor_nome,
             'vendedor_login' => $row->vendedor_login,
             'vendedor_user_id' => $row->vendedor_user_id !== null ? (int) $row->vendedor_user_id : null,
@@ -938,13 +945,18 @@ class PdvReportsController extends Controller
             ],
             'venda' => [
                 'store_id' => $venda->store_id !== null ? (int) $venda->store_id : null,
+                'store_name' => $venda->store_name ?? null,
                 'store_pdv_id' => $resolvedStorePdvId,
+                'store_pdv_name' => $venda->store_pdv_name ?? null,
+                // 'store_cnpj' => $venda->store_cnpj ?? null, // Removed
+                // 'store_razao_social' => $venda->store_razao_social ?? null, // Removed
                 'canal' => $resolvedCanal,
                 'id_operacao' => $resolvedIdOperacao,
                 'id_turno' => $venda->id_turno,
                 'data_hora' => $this->toIso8601($venda->data_hora),
                 'total' => (float) $venda->total,
                 'erp_operacao_uuid' => $venda->erp_operacao_uuid ?? null,
+                'erp_loja_uuid' => $venda->erp_loja_uuid ?? null,
                 'fiscal' => [
                     'nfce' => [
                         'chave' => $venda->nfce_chave ?? null,

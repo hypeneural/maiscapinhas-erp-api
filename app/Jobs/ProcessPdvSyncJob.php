@@ -623,13 +623,13 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                         continue;
                     }
 
-                    $idProduto = $this->asInt(data_get($item, 'id_produto'));
-                    $codigoBarras = $this->asString(data_get($item, 'codigo_barras'));
-                    $nomeProduto = $this->asString(data_get($item, 'nome'));
-                    $qtd = $this->asDecimal(data_get($item, 'qtd', 1), 3);
-                    $precoUnit = $this->asDecimal(data_get($item, 'preco_unit'), 2);
-                    $totalItem = $this->asDecimal(data_get($item, 'total'), 2);
-                    $desconto = $this->asDecimal(data_get($item, 'desconto'), 2);
+                    $idProduto = $this->asInt(data_get($item, 'id_produto') ?? data_get($item, 'Codigo'));
+                    $codigoBarras = $this->asString(data_get($item, 'codigo_barras') ?? data_get($item, 'CodigoBarras'));
+                    $nomeProduto = $this->asString(data_get($item, 'nome') ?? data_get($item, 'Nome'));
+                    $qtd = $this->asDecimal(data_get($item, 'qtd') ?? data_get($item, 'Quantidade') ?? 1, 3);
+                    $precoUnit = $this->asDecimal(data_get($item, 'preco_unit') ?? data_get($item, 'ValorUnitario'), 2);
+                    $totalItem = $this->asDecimal(data_get($item, 'total') ?? data_get($item, 'ValorTotal'), 2);
+                    $desconto = $this->asDecimal(data_get($item, 'desconto') ?? data_get($item, 'Desconto'), 2);
                     $vendedorPdvId = $this->asInt(data_get($item, 'vendedor.id_usuario'));
                     $vendedorLogin = $this->asString(data_get($item, 'vendedor.login'));
                     $vendedorUserId = $hasVendedorUserId
@@ -703,18 +703,18 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             }
 
             $paymentOccurrences = [];
-            $pagamentos = data_get($venda, 'pagamentos', []);
+            $pagamentos = data_get($venda, 'pagamentos') ?? data_get($venda, 'Pagamentos', []);
             if (is_array($pagamentos)) {
                 foreach ($pagamentos as $index => $pagamento) {
                     if (!is_array($pagamento)) {
                         continue;
                     }
 
-                    $idFinalizador = max(0, (int) data_get($pagamento, 'id_finalizador', 0));
-                    $meioPagamento = $this->asString(data_get($pagamento, 'meio'));
-                    $valor = $this->asDecimal(data_get($pagamento, 'valor'), 2);
-                    $troco = $this->asDecimal(data_get($pagamento, 'troco'), 2);
-                    $parcelas = max(1, (int) data_get($pagamento, 'parcelas', 1));
+                    $idFinalizador = max(0, (int) (data_get($pagamento, 'id_finalizador') ?? data_get($pagamento, 'Codigo') ?? 0));
+                    $meioPagamento = $this->asString(data_get($pagamento, 'meio') ?? data_get($pagamento, 'Descricao'));
+                    $valor = $this->asDecimal(data_get($pagamento, 'valor') ?? data_get($pagamento, 'Valor'), 2);
+                    $troco = $this->asDecimal(data_get($pagamento, 'troco') ?? data_get($pagamento, 'Troco'), 2);
+                    $parcelas = max(1, (int) (data_get($pagamento, 'parcelas') ?? data_get($pagamento, 'Parcelas') ?? 1));
                     $lineId = $this->asInt(data_get($pagamento, 'line_id'));
                     $lineId = $lineId !== null && $lineId > 0 ? $lineId : null;
                     $lineNo = $this->resolveLineNumber($pagamento, $index);
