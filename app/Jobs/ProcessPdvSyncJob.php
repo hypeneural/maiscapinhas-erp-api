@@ -1576,7 +1576,10 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                         $this->asString(data_get($summary, 'login')),
                         'VENDEDOR',
                         $this->asString(data_get($summary, 'guid')),
-                        $this->asInt(data_get($summary, 'id_hiper'))
+                        $this->asInt(data_get($summary, 'id_hiper')),
+                        null,
+                        null,
+                        null
                     );
                 }
             }
