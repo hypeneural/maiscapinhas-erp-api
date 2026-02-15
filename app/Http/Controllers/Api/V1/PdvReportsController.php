@@ -324,6 +324,7 @@ class PdvReportsController extends Controller
                 DB::raw('COALESCE(SUM(vi.qtd), 0) as itens_qtd_total'),
                 DB::raw('COALESCE(SUM(vi.total), 0) as itens_valor_total'),
                 DB::raw('MIN(vi.vendedor_pdv_id) as vendedor_pdv_id'),
+                DB::raw('MAX(vi.vendedor_guid) as vendedor_guid'), // Added for V5
                 DB::raw('MAX(vi.vendedor_nome) as vendedor_nome_pdv'),
             ])
             ->groupBy('vi.store_pdv_id', 'vi.canal', 'vi.id_operacao');
@@ -345,11 +346,13 @@ class PdvReportsController extends Controller
                     ->on('it.canal', '=', 'v.canal')
                     ->on('it.id_operacao', '=', 'v.id_operacao');
             })
+            // V5 Refactor: Try joining by GUID first, then fallback to mapping
+            ->leftJoin('pdv_usuarios as u_guid', 'u_guid.guid_usuario', '=', 'it.vendedor_guid')
             ->leftJoin('pdv_user_mappings as pum', function ($join): void {
                 $join->on('pum.store_pdv_id', '=', 'v.store_pdv_id')
                     ->on('pum.pdv_user_id', '=', 'it.vendedor_pdv_id');
             })
-            ->leftJoin('users as u', 'pum.user_id', '=', 'u.id')
+            ->leftJoin('users as u_map', 'pum.user_id', '=', 'u_map.id')
             ->leftJoinSub($paymentAgg, 'pg', function ($join): void {
                 $join->on('pg.store_pdv_id', '=', 'v.store_pdv_id')
                     ->on('pg.canal', '=', 'v.canal')
@@ -365,10 +368,10 @@ class PdvReportsController extends Controller
                 'v.id_turno',
                 'v.data_hora',
                 'v.total',
-                DB::raw('COALESCE(u.name, it.vendedor_nome_pdv) as seller_name'),
-                'u.whatsapp as seller_whatsapp',
-                'u.avatar_url as seller_avatar_url',
-                'u.hire_date as seller_hire_date',
+                DB::raw('COALESCE(u_guid.name, u_map.name, it.vendedor_nome_pdv) as seller_name'),
+                DB::raw('COALESCE(u_guid.whatsapp, u_map.whatsapp) as seller_whatsapp'),
+                DB::raw('COALESCE(u_guid.avatar_url, u_map.avatar_url) as seller_avatar_url'),
+                DB::raw('COALESCE(u_guid.hire_date, u_map.hire_date) as seller_hire_date'),
                 DB::raw('COALESCE(it.itens_count, 0) as itens_count'),
                 DB::raw('COALESCE(it.itens_qtd_total, 0) as itens_qtd_total'),
                 DB::raw('COALESCE(it.itens_valor_total, 0) as itens_valor_total'),
@@ -788,15 +791,23 @@ class PdvReportsController extends Controller
                     ->on('v.canal', '=', 'vi.canal')
                     ->on('v.id_operacao', '=', 'vi.id_operacao');
             })
-            ->leftJoin('pdv_usuarios as pu', 'pu.id_usuario_hiper', '=', 'vi.vendedor_pdv_id')
-            ->selectRaw('vi.vendedor_pdv_id as vendedor_id')
+            // V5: Prefer joining by GUID if available, else legacy ID
+            ->leftJoin('pdv_usuarios as pu', function ($join) {
+                $join->on('pu.guid_usuario', '=', 'vi.vendedor_guid')
+                    ->orOn('pu.id_usuario_hiper', '=', 'vi.vendedor_pdv_id');
+            })
+            // Use GUID as primary grouping key if present (for global ranking), else ID
+            ->selectRaw('COALESCE(vi.vendedor_guid, CAST(vi.vendedor_pdv_id as CHAR)) as vendedor_id')
             ->selectRaw('MAX(COALESCE(pu.nome_padronizado, pu.nome_hiper, vi.vendedor_nome)) as vendedor_nome')
             ->selectRaw('COUNT(DISTINCT v.id) as qtd_vendas')
             ->selectRaw('COALESCE(SUM(vi.total), 0) as total_vendido')
             ->selectRaw('COALESCE(SUM(vi.qtd), 0) as total_itens')
-            ->whereNotNull('vi.vendedor_pdv_id')
+            ->where(function ($q) {
+                $q->whereNotNull('vi.vendedor_pdv_id')
+                    ->orWhereNotNull('vi.vendedor_guid');
+            })
             ->whereBetween('v.data_hora', [$from->toDateTimeString(), $to->toDateTimeString()])
-            ->groupBy('vi.vendedor_pdv_id');
+            ->groupBy(DB::raw('COALESCE(vi.vendedor_guid, CAST(vi.vendedor_pdv_id as CHAR))'));
 
         $this->applyStoreScopeToQuery($query, $scope, 'v');
 

@@ -17,4 +17,13 @@ class PdvTurno extends Model
         'total_sistema' => 'decimal:2',
         'total_vendas' => 'decimal:2',
     ];
+    public function operador()
+    {
+        return $this->belongsTo(PdvUsuario::class, 'operador_guid', 'guid_usuario');
+    }
+
+    public function responsavel()
+    {
+        return $this->belongsTo(PdvUsuario::class, 'responsavel_guid', 'guid_usuario');
+    }
 }

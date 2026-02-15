@@ -15,4 +15,8 @@ class PdvVendaItem extends Model
         'qtd' => 'decimal:3', // Quantidade pode ser fracionada em alguns casos, mas geralmente int
         'preco_unit' => 'decimal:2',
     ];
+    public function vendedor()
+    {
+        return $this->belongsTo(PdvUsuario::class, 'vendedor_guid', 'guid_usuario');
+    }
 }

@@ -441,6 +441,48 @@ class PdvSyncAdminController extends Controller
             }
         }
 
+        // V5 Metadata: Calculate usage of GUIDs (Identity V5)
+        $v5Metadata = [
+            'total_sales_checked' => 0,
+            'sales_with_guid_store' => 0,
+            'sales_with_guid_seller' => 0,
+            'adoption_rate_store_percent' => 0.0,
+            'adoption_rate_seller_percent' => 0.0,
+        ];
+
+        if (Schema::hasTable('pdv_vendas') && Schema::hasTable('pdv_venda_itens')) {
+            // Check last 24h sales for GUID presence
+            $sales24hQuery = DB::table('pdv_vendas as v')
+                ->where('v.data_hora', '>=', $last24hStart)
+                ->join('pdv_lojas as l', 'l.id_ponto_venda', '=', 'v.store_pdv_id')
+                ->selectRaw('COUNT(*) as total')
+                ->selectRaw('COUNT(l.guid_loja) as with_guid_store')
+                ->first();
+
+            if ($sales24hQuery && $sales24hQuery->total > 0) {
+                $v5Metadata['total_sales_checked'] = (int) $sales24hQuery->total;
+                $v5Metadata['sales_with_guid_store'] = (int) $sales24hQuery->with_guid_store;
+                $v5Metadata['adoption_rate_store_percent'] = round(($sales24hQuery->with_guid_store / $sales24hQuery->total) * 100, 2);
+            }
+
+            // Check sellers GUID adoption (via item join)
+            $sellers24hQuery = DB::table('pdv_venda_itens as vi')
+                ->join('pdv_vendas as v', function ($join) {
+                    $join->on('v.store_pdv_id', '=', 'vi.store_pdv_id')
+                        ->on('v.canal', '=', 'vi.canal')
+                        ->on('v.id_operacao', '=', 'vi.id_operacao');
+                })
+                ->where('v.data_hora', '>=', $last24hStart)
+                ->selectRaw('COUNT(*) as total_items')
+                ->selectRaw('COUNT(vi.vendedor_guid) as with_guid_seller')
+                ->first();
+
+            if ($sellers24hQuery && $sellers24hQuery->total_items > 0) {
+                $v5Metadata['sales_with_guid_seller'] = (int) $sellers24hQuery->with_guid_seller;
+                $v5Metadata['adoption_rate_seller_percent'] = round(($sellers24hQuery->with_guid_seller / $sellers24hQuery->total_items) * 100, 2);
+            }
+        }
+
         $samples = PdvSync::query()
             ->whereNotNull('processing_started_at')
             ->whereNotNull('processed_at')
@@ -450,14 +492,14 @@ class PdvSyncAdminController extends Controller
 
         $avgQueueDelayMs = (int) round(
             $samples
-                ->filter(fn (PdvSync $s) => $s->received_at && $s->processing_started_at)
-                ->map(fn (PdvSync $s) => $s->processing_started_at->diffInMilliseconds($s->received_at))
+                ->filter(fn(PdvSync $s) => $s->received_at && $s->processing_started_at)
+                ->map(fn(PdvSync $s) => $s->processing_started_at->diffInMilliseconds($s->received_at))
                 ->avg() ?? 0
         );
 
         $avgProcessingMs = (int) round(
             $samples
-                ->map(fn (PdvSync $s) => $s->processed_at->diffInMilliseconds($s->processing_started_at))
+                ->map(fn(PdvSync $s) => $s->processed_at->diffInMilliseconds($s->processing_started_at))
                 ->avg() ?? 0
         );
 
@@ -518,8 +560,10 @@ class PdvSyncAdminController extends Controller
             'syncs_with_snapshots_total' => null,
         ];
 
-        if (Schema::hasColumn('pdv_syncs', 'snapshot_turnos_count')
-            && Schema::hasColumn('pdv_syncs', 'snapshot_vendas_count')) {
+        if (
+            Schema::hasColumn('pdv_syncs', 'snapshot_turnos_count')
+            && Schema::hasColumn('pdv_syncs', 'snapshot_vendas_count')
+        ) {
             $snapshotMetrics['available'] = true;
             $snapshotMetrics['turnos_processed_total'] = (int) PdvSync::query()->sum('snapshot_turnos_count');
             $snapshotMetrics['vendas_processed_total'] = (int) PdvSync::query()->sum('snapshot_vendas_count');
@@ -548,6 +592,7 @@ class PdvSyncAdminController extends Controller
                 'source' => $canalSource,
                 'totals' => $canalBreakdown,
             ],
+            'v5_metadata' => $v5Metadata,
             'snapshots' => $snapshotMetrics,
             'last_24h' => [
                 'total' => $total24h,

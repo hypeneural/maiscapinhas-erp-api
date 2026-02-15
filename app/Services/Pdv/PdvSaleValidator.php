@@ -201,20 +201,44 @@ class PdvSaleValidator
 
     private function resolveStorePdvId(array $erp): ?int
     {
+        // 1. Try match by GUID (LojaId) - Priority 1 (V5)
+        $guidLoja = data_get($erp, 'LojaId') ?? data_get($erp, 'Loja.LojaId');
+        if ($guidLoja) {
+            // Check mappings first (most likely place for active stores)
+            $mapping = DB::table('pdv_store_mappings')
+                ->where('guid_loja', $guidLoja)
+                ->where('active', true)
+                ->first();
+
+            if ($mapping) {
+                return (int) $mapping->pdv_store_id;
+            }
+
+            // Check pdv_lojas direct table
+            $store = DB::table('pdv_lojas')
+                ->where('guid_loja', $guidLoja)
+                ->first();
+
+            if ($store) {
+                return (int) $store->id_ponto_venda;
+            }
+        }
+
+        // 2. Fallback to Name Matching (Legacy/V4)
         $lojaNome = data_get($erp, 'Loja.Nome');
         if ($lojaNome) {
             $store = DB::table('pdv_lojas')
                 ->where('nome_hiper', $lojaNome)
                 ->first();
             if ($store) {
-                return $store->id_ponto_venda;
+                return (int) $store->id_ponto_venda;
             }
             // Tenta match parcial
             $store = DB::table('pdv_lojas')
                 ->where('nome_hiper', 'like', '%' . $lojaNome . '%')
                 ->first();
             if ($store)
-                return $store->id_ponto_venda;
+                return (int) $store->id_ponto_venda;
         }
 
         // Fallback: Hardcoded map for known stores in this analysis context
