@@ -98,7 +98,46 @@ class PdvSaleValidator
         $start = $targetUtc->copy()->subMinutes($minusMin);
         $end = $targetUtc->copy()->addMinutes($plusMin);
 
-        // 5) Buscar candidatos (assinatura: loja + total + janela)
+        // 5) BUSCA HIERARQUICA (Golden Key -> Fiscal -> Heuristica)
+
+        $matchFn = function ($venda, $source) use ($erpId, $erpTotal) {
+            return $this->buildMatchResult($venda, $source, $erpId, $erpTotal);
+        };
+
+        // --- NÍVEL 1: GOLDEN KEY (UUID da Operação) ---
+        $erpOperacaoUuid = strtolower(trim((string) data_get($erp, 'ErpOperacaoUuid')));
+        $erpLojaUuid = $this->resolveErpLojaUuid($erp);
+
+        if ($erpOperacaoUuid && $erpLojaUuid) {
+            /** @var PdvVenda|null $goldenMatch */
+            $goldenMatch = PdvVenda::where('erp_loja_uuid', $erpLojaUuid)
+                ->where('erp_operacao_uuid', $erpOperacaoUuid)
+                ->first();
+
+            if ($goldenMatch) {
+                return $matchFn($goldenMatch, 'golden_key_uuid');
+            }
+        }
+
+        // --- NÍVEL 2: FISCAL KEY (Chave NFC-e) ---
+        // $nfeKey já extraído acima
+        if ($nfeKey && $erpLojaUuid) {
+            $fiscalMatch = PdvVenda::where('erp_loja_uuid', $erpLojaUuid)
+                ->where('nfce_chave', $nfeKey)
+                ->first();
+
+            if ($fiscalMatch) {
+                return $matchFn($fiscalMatch, 'fiscal_key_nfce');
+            }
+        }
+
+        // --- NÍVEL 3: FISCAL DADOS (Número + Série + Modelo + Data) ---
+        // TODO: Implementar se necessário, mas geralmente Chave cobre tudo.
+
+        // --- NÍVEL 4: HEURÍSTICA (Legacy Fallback) ---
+        // (Continua com a lógica existente de janela de tempo + valor)
+
+        // Buscar candidatos (assinatura: loja + total + janela)
         // Nota: Removido eager loading (with) pois a chave composta (store_pdv_id + id_operacao)
         // nao funciona bem com o padrao do Eloquent hasMany. Faremos load manual.
         $candidates = PdvVenda::query()
@@ -114,7 +153,7 @@ class PdvSaleValidator
                 'ok' => true, // Request ok, mas não achou venda
                 'found' => false,
                 'match_100' => false,
-                'reason' => 'Nenhuma venda candidata encontrada (loja+total+janela).',
+                'reason' => 'Nenhuma venda encontrada (Golden Key falhou, Fiscal Key falhou, Heurística vazia).',
                 'search' => [
                     'store_pdv_id' => $storePdvId,
                     'erp_id' => $erpId,
@@ -162,6 +201,7 @@ class PdvSaleValidator
                 'items_exact' => $itemsExact,
                 'payments_exact' => $payExact,
                 'match_100' => ($itemsExact && $payExact),
+                'match_type' => 'heuristic',
                 'signatures' => [
                     'erp_items' => $erpItemSig,
                     'db_items' => $dbItemSig,
@@ -181,6 +221,7 @@ class PdvSaleValidator
         if ($bestCandidate) {
             $vendaModel = PdvVenda::find($bestCandidate['pdv_venda_id']);
             if ($vendaModel) {
+                // Se foi match 100 heurístico, continua sendo um match válido
                 $bestCandidate['db_details'] = $this->enrichMatchData($vendaModel);
             }
         }
@@ -196,6 +237,36 @@ class PdvSaleValidator
                 'total_target' => $erpTotal,
                 'window_utc' => [$start->toIso8601String(), $end->toIso8601String()],
             ],
+        ];
+    }
+
+    private function resolveErpLojaUuid(array $erp): ?string
+    {
+        $uuid = data_get($erp, 'LojaId') ?? data_get($erp, 'Loja.LojaId');
+        return $uuid ? strtolower(trim($uuid)) : null;
+    }
+
+    private function buildMatchResult(PdvVenda $venda, string $matchType, $erpId, $erpTotal): array
+    {
+        // Para matches diretos (Gold/Fiscal), assumimos 100% de confiança
+        // mas ainda podemos carregar os dados para detalhamento
+        $enriched = $this->enrichMatchData($venda);
+
+        return [
+            'ok' => true,
+            'found' => true,
+            'match_100' => true, // Golden/Fiscal são considerados definitivos
+            'best_match' => [
+                'pdv_venda_id' => $venda->id,
+                'id_operacao_db' => $venda->id_operacao,
+                'erp_id_orig' => $erpId,
+                'data_hora_utc' => optional($venda->data_hora)->toIso8601String(),
+                'total' => (float) $venda->total,
+                'match_type' => $matchType,
+                'db_details' => $enriched,
+            ],
+            'all_candidates_count' => 1,
+            'search' => ['type' => $matchType]
         ];
     }
 
