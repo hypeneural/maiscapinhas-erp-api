@@ -542,6 +542,7 @@ class PdvReportsController extends Controller
 
         $query = DB::table('pdv_vendas as v')
             ->leftJoin('stores as s', 'v.store_id', '=', 's.id')
+            ->leftJoin('pdv_lojas as pl', 'v.store_pdv_id', '=', 'pl.id_ponto_venda')
             ->leftJoinSub($itemAgg, 'it', function ($join): void {
                 $join->on('it.store_pdv_id', '=', 'v.store_pdv_id')
                     ->on('it.canal', '=', 'v.canal')
@@ -564,14 +565,16 @@ class PdvReportsController extends Controller
                 'v.store_id',
                 's.name as store_name',
                 'v.store_pdv_id',
+                'pl.nome_padronizado as store_pdv_name',
                 'v.id_operacao',
                 'v.canal',
                 'v.id_turno',
                 'v.data_hora',
                 'v.total',
                 DB::raw('COALESCE(u_guid.nome_padronizado, u_map.name, it.vendedor_nome_pdv) as seller_name'),
+                DB::raw('COALESCE(u_guid.email, u_map.email) as seller_email'),
                 DB::raw('COALESCE(u_map.whatsapp) as seller_whatsapp'),
-                DB::raw('COALESCE(u_map.avatar_url) as seller_avatar_url'),
+                DB::raw('COALESCE(u_map.avatar_url, u_guid.avatar_url) as seller_avatar_url'), // Prefer map avatar? or guid?
                 DB::raw('COALESCE(u_map.hire_date) as seller_hire_date'),
                 DB::raw('COALESCE(it.itens_count, 0) as itens_count'),
                 DB::raw('COALESCE(it.itens_qtd_total, 0) as itens_qtd_total'),
@@ -579,6 +582,7 @@ class PdvReportsController extends Controller
                 DB::raw('COALESCE(pg.pagamentos_count, 0) as pagamentos_count'),
                 DB::raw('COALESCE(pg.pagamentos_valor_total, 0) as pagamentos_valor_total'),
                 'v.erp_operacao_uuid',
+                'v.erp_loja_uuid',
                 'v.nfce_chave',
                 'v.nfce_modelo',
                 'v.nfce_numero',
