@@ -1,0 +1,819 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://maiscapinhas.local/schemas/pdv-sync/v4.0/schema_v4.0.json",
+    "title": "PDV Sync Agent Payload v4.0",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "schema_version",
+        "store",
+        "window",
+        "integrity"
+    ],
+    "properties": {
+        "schema_version": {
+            "type": "string",
+            "enum": [
+                "4.0",
+                "5.0"
+            ]
+        },
+        "event_type": {
+            "type": "string",
+            "enum": [
+                "sales",
+                "turno_closure",
+                "mixed"
+            ]
+        },
+        "agent": {
+            "$ref": "#/$defs/agentInfo"
+        },
+        "store": {
+            "$ref": "#/$defs/storeInfo"
+        },
+        "window": {
+            "$ref": "#/$defs/windowInfo"
+        },
+        "turnos": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/turnoDetail"
+            }
+        },
+        "vendas": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/saleDetail"
+            }
+        },
+        "resumo": {
+            "$ref": "#/$defs/summaryInfo"
+        },
+        "snapshot_turnos": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/turnoSnapshot"
+            }
+        },
+        "snapshot_vendas": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/vendaSnapshot"
+            }
+        },
+        "ops": {
+            "$ref": "#/$defs/opsInfo"
+        },
+        "integrity": {
+            "$ref": "#/$defs/integrityInfo"
+        }
+    },
+    "$defs": {
+        "dateTimeWithOffset": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "(Z|[+\\-]\\d{2}:\\d{2})$"
+        },
+        "decimalLike": {
+            "oneOf": [
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "string",
+                    "pattern": "^-?\\d+(\\.\\d+)?$"
+                }
+            ]
+        },
+        "agentInfo": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "version": {
+                    "type": "string",
+                    "maxLength": 20
+                },
+                "machine": {
+                    "type": "string",
+                    "maxLength": 120
+                },
+                "sent_at": {
+                    "$ref": "#/$defs/dateTimeWithOffset"
+                }
+            }
+        },
+        "storeInfo": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "id_ponto_venda"
+            ],
+            "properties": {
+                "id_ponto_venda": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "nome": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "alias": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "cnpj": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "maxLength": 18
+                },
+                "guid": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "maxLength": 36
+                },
+                "id_hiper": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "id_filial": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "nome_fantasia": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "maxLength": 200
+                },
+                "razao_social": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "maxLength": 200
+                }
+            }
+        },
+        "windowInfo": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "from",
+                "to"
+            ],
+            "properties": {
+                "from": {
+                    "$ref": "#/$defs/dateTimeWithOffset"
+                },
+                "to": {
+                    "$ref": "#/$defs/dateTimeWithOffset"
+                },
+                "minutes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10080
+                }
+            }
+        },
+        "operatorInfo": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "id_usuario": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "minimum": 1
+                },
+                "nome": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "maxLength": 200
+                },
+                "login": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "maxLength": 100
+                },
+                "guid": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "maxLength": 36
+                },
+                "id_hiper": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "email": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "maxLength": 255
+                },
+                "documento": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "maxLength": 50
+                },
+                "tipo": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "maxLength": 20
+                },
+                "perfil": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "maxLength": 50
+                },
+                "local_trabalho": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "maxLength": 200
+                },
+                "bloqueado": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "paymentBreakdown": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "id_finalizador": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "meio": {
+                    "type": "string",
+                    "maxLength": 120
+                },
+                "total": {
+                    "$ref": "#/$defs/decimalLike"
+                },
+                "qtd_vendas": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "Id": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "maxLength": 36
+                }
+            }
+        },
+        "totalGroup": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "total": {
+                    "$ref": "#/$defs/decimalLike"
+                },
+                "qtd_vendas": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "por_pagamento": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/paymentBreakdown"
+                    }
+                },
+                "Id": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "maxLength": 36
+                },
+                "data_hora": {
+                    "oneOf": [
+                        {
+                            "$ref": "#/$defs/dateTimeWithOffset"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                }
+            }
+        },
+        "turnoDetail": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "id_turno"
+            ],
+            "properties": {
+                "id_turno": {
+                    "type": "string",
+                    "maxLength": 64
+                },
+                "sequencial": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "fechado": {
+                    "type": "boolean"
+                },
+                "data_hora_inicio": {
+                    "$ref": "#/$defs/dateTimeWithOffset"
+                },
+                "data_hora_termino": {
+                    "oneOf": [
+                        {
+                            "$ref": "#/$defs/dateTimeWithOffset"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "duracao_minutos": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "minimum": 0
+                },
+                "periodo": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "maxLength": 20
+                },
+                "operador": {
+                    "$ref": "#/$defs/operatorInfo"
+                },
+                "responsavel": {
+                    "oneOf": [
+                        {
+                            "$ref": "#/$defs/operatorInfo"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "qtd_vendas": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "total_vendas": {
+                    "$ref": "#/$defs/decimalLike"
+                },
+                "qtd_vendedores": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "totais_sistema": {
+                    "$ref": "#/$defs/totalGroup"
+                },
+                "fechamento_declarado": {
+                    "oneOf": [
+                        {
+                            "$ref": "#/$defs/totalGroup"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "falta_caixa": {
+                    "oneOf": [
+                        {
+                            "$ref": "#/$defs/totalGroup"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "sobra_caixa": {
+                    "oneOf": [
+                        {
+                            "$ref": "#/$defs/totalGroup"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                }
+            }
+        },
+        "sellerInfo": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "id_usuario": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "minimum": 1
+                },
+                "nome": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "maxLength": 200
+                },
+                "login": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "maxLength": 100
+                },
+                "guid": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "maxLength": 36
+                },
+                "id_hiper": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                }
+            }
+        },
+        "saleItem": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "line_id": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "minimum": 1
+                },
+                "line_no": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "minimum": 1
+                },
+                "id_produto": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "minimum": 1
+                },
+                "codigo_barras": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "maxLength": 80
+                },
+                "nome": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "maxLength": 300
+                },
+                "qtd": {
+                    "$ref": "#/$defs/decimalLike"
+                },
+                "preco_unit": {
+                    "$ref": "#/$defs/decimalLike"
+                },
+                "total": {
+                    "$ref": "#/$defs/decimalLike"
+                },
+                "desconto": {
+                    "$ref": "#/$defs/decimalLike"
+                },
+                "vendedor": {
+                    "$ref": "#/$defs/sellerInfo"
+                }
+            }
+        },
+        "salePayment": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "line_id": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "minimum": 1
+                },
+                "line_no": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "minimum": 1
+                },
+                "id_finalizador": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "meio": {
+                    "type": "string",
+                    "maxLength": 120
+                },
+                "valor": {
+                    "$ref": "#/$defs/decimalLike"
+                },
+                "troco": {
+                    "$ref": "#/$defs/decimalLike"
+                },
+                "parcelas": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "minimum": 1
+                }
+            }
+        },
+        "saleDetail": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "id_operacao"
+            ],
+            "properties": {
+                "id_operacao": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "canal": {
+                    "type": "string",
+                    "enum": [
+                        "HIPER_CAIXA",
+                        "HIPER_LOJA"
+                    ]
+                },
+                "data_hora": {
+                    "$ref": "#/$defs/dateTimeWithOffset"
+                },
+                "id_turno": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "maxLength": 64
+                },
+                "itens": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/saleItem"
+                    }
+                },
+                "pagamentos": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/salePayment"
+                    }
+                },
+                "total": {
+                    "$ref": "#/$defs/decimalLike"
+                }
+            }
+        },
+        "summaryByVendor": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "id_usuario": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "minimum": 1
+                },
+                "nome": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "login": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "maxLength": 100
+                },
+                "qtd_cupons": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "total_vendido": {
+                    "$ref": "#/$defs/decimalLike"
+                }
+            }
+        },
+        "summaryByPayment": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "id_finalizador": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "meio": {
+                    "type": "string",
+                    "maxLength": 120
+                },
+                "total": {
+                    "$ref": "#/$defs/decimalLike"
+                }
+            }
+        },
+        "summaryInfo": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "by_vendor": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/summaryByVendor"
+                    }
+                },
+                "by_payment": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/summaryByPayment"
+                    }
+                }
+            }
+        },
+        "turnoSnapshot": {
+            "allOf": [
+                {
+                    "$ref": "#/$defs/turnoDetail"
+                }
+            ]
+        },
+        "vendaSnapshot": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "id_operacao"
+            ],
+            "properties": {
+                "id_operacao": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "canal": {
+                    "type": "string",
+                    "enum": [
+                        "HIPER_CAIXA",
+                        "HIPER_LOJA"
+                    ]
+                },
+                "data_hora_inicio": {
+                    "oneOf": [
+                        {
+                            "$ref": "#/$defs/dateTimeWithOffset"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "data_hora_termino": {
+                    "oneOf": [
+                        {
+                            "$ref": "#/$defs/dateTimeWithOffset"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "duracao_segundos": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "minimum": 0
+                },
+                "id_turno": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "maxLength": 64
+                },
+                "turno_seq": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "minimum": 0
+                },
+                "vendedor": {
+                    "oneOf": [
+                        {
+                            "$ref": "#/$defs/sellerInfo"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "qtd_itens": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "total_itens": {
+                    "$ref": "#/$defs/decimalLike"
+                }
+            }
+        },
+        "opsInfo": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer",
+                        "minimum": 1
+                    }
+                },
+                "loja_count": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "loja_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer",
+                        "minimum": 1
+                    }
+                }
+            }
+        },
+        "integrityInfo": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "sync_id"
+            ],
+            "properties": {
+                "sync_id": {
+                    "type": "string",
+                    "minLength": 8,
+                    "maxLength": 128
+                },
+                "warnings": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "maxLength": 1000
+                    }
+                }
+            }
+        }
+    }
+}

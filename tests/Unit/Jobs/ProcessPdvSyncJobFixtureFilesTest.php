@@ -69,6 +69,7 @@ beforeEach(function () {
         $table->id();
         $table->unsignedBigInteger('store_pdv_id');
         $table->unsignedBigInteger('store_id')->nullable();
+        $table->string('canal', 20)->default('HIPER_CAIXA');
         $table->string('id_turno', 64);
         $table->unsignedSmallInteger('sequencial')->nullable();
         $table->boolean('fechado')->default(false);
@@ -92,13 +93,14 @@ beforeEach(function () {
         $table->dateTime('created_at')->nullable();
         $table->dateTime('updated_at')->nullable();
 
-        $table->unique(['store_pdv_id', 'id_turno'], 'pdv_turnos_store_pdv_id_id_turno_unique');
+        $table->unique(['store_pdv_id', 'canal', 'id_turno'], 'pdv_turnos_store_pdv_id_id_turno_unique');
     });
 
     Schema::create('pdv_turno_pagamentos', function (Blueprint $table) {
         $table->id();
         $table->unsignedBigInteger('store_pdv_id');
         $table->unsignedBigInteger('store_id')->nullable();
+        $table->string('canal', 20)->default('HIPER_CAIXA');
         $table->string('id_turno', 64);
         $table->string('tipo', 20);
         $table->unsignedBigInteger('id_finalizador')->default(0);
@@ -109,7 +111,7 @@ beforeEach(function () {
         $table->dateTime('created_at')->nullable();
         $table->dateTime('updated_at')->nullable();
 
-        $table->unique(['store_pdv_id', 'id_turno', 'tipo', 'id_finalizador'], 'pdv_turno_pagamentos_unique_key');
+        $table->unique(['store_pdv_id', 'canal', 'id_turno', 'tipo', 'id_finalizador'], 'pdv_turno_pagamentos_unique_key');
     });
 
     Schema::create('pdv_vendas', function (Blueprint $table) {
@@ -366,50 +368,58 @@ test('keeps child rows isolated when line_id collides across canais', function (
                 'canal' => 'HIPER_CAIXA',
                 'data_hora' => '2026-02-12T09:55:00-03:00',
                 'total' => 100.00,
-                'itens' => [[
-                    'line_id' => 50000,
-                    'line_no' => 1,
-                    'id_produto' => 1,
-                    'nome' => 'Item Caixa',
-                    'qtd' => 1,
-                    'preco_unit' => 100,
-                    'total' => 100,
-                    'desconto' => 0,
-                ]],
-                'pagamentos' => [[
-                    'line_id' => 70000,
-                    'line_no' => 1,
-                    'id_finalizador' => 5,
-                    'meio' => 'Pix',
-                    'valor' => 100,
-                    'troco' => 0,
-                    'parcelas' => 1,
-                ]],
+                'itens' => [
+                    [
+                        'line_id' => 50000,
+                        'line_no' => 1,
+                        'id_produto' => 1,
+                        'nome' => 'Item Caixa',
+                        'qtd' => 1,
+                        'preco_unit' => 100,
+                        'total' => 100,
+                        'desconto' => 0,
+                    ]
+                ],
+                'pagamentos' => [
+                    [
+                        'line_id' => 70000,
+                        'line_no' => 1,
+                        'id_finalizador' => 5,
+                        'meio' => 'Pix',
+                        'valor' => 100,
+                        'troco' => 0,
+                        'parcelas' => 1,
+                    ]
+                ],
             ],
             [
                 'id_operacao' => 77701,
                 'canal' => 'HIPER_LOJA',
                 'data_hora' => '2026-02-12T09:56:00-03:00',
                 'total' => 200.00,
-                'itens' => [[
-                    'line_id' => 50000,
-                    'line_no' => 1,
-                    'id_produto' => 2,
-                    'nome' => 'Item Loja',
-                    'qtd' => 1,
-                    'preco_unit' => 200,
-                    'total' => 200,
-                    'desconto' => 0,
-                ]],
-                'pagamentos' => [[
-                    'line_id' => 70000,
-                    'line_no' => 1,
-                    'id_finalizador' => 4,
-                    'meio' => 'Credito',
-                    'valor' => 200,
-                    'troco' => 0,
-                    'parcelas' => 1,
-                ]],
+                'itens' => [
+                    [
+                        'line_id' => 50000,
+                        'line_no' => 1,
+                        'id_produto' => 2,
+                        'nome' => 'Item Loja',
+                        'qtd' => 1,
+                        'preco_unit' => 200,
+                        'total' => 200,
+                        'desconto' => 0,
+                    ]
+                ],
+                'pagamentos' => [
+                    [
+                        'line_id' => 70000,
+                        'line_no' => 1,
+                        'id_finalizador' => 4,
+                        'meio' => 'Credito',
+                        'valor' => 200,
+                        'troco' => 0,
+                        'parcelas' => 1,
+                    ]
+                ],
             ],
         ],
         'resumo' => [

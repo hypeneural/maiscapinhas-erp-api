@@ -30,7 +30,8 @@ class PdvStoreResolver
             (int) data_get($payload, 'store.id_ponto_venda', 0),
             $this->normalizeText(data_get($payload, 'store.alias')),
             $this->normalizeText(data_get($payload, 'store.nome')),
-            $this->normalizeCnpj(data_get($payload, 'store.cnpj'))
+            $this->normalizeCnpj(data_get($payload, 'store.cnpj')),
+            $this->normalizeText(data_get($payload, 'store.guid'))
         );
     }
 
@@ -47,10 +48,22 @@ class PdvStoreResolver
      *   candidate_aliases:array<int,string>
      * }
      */
-    public function resolve(int $storePdvId, ?string $storeAlias = null, ?string $storeName = null, ?string $cnpj = null): array
+    public function resolve(int $storePdvId, ?string $storeAlias = null, ?string $storeName = null, ?string $cnpj = null, ?string $guid = null): array
     {
         if ($storePdvId <= 0 || !Schema::hasTable('pdv_store_mappings')) {
             return $this->missing($storePdvId);
+        }
+
+        if ($guid !== null && Schema::hasColumn('pdv_store_mappings', 'guid_loja')) {
+            $guidMatch = DB::table('pdv_store_mappings')
+                ->where('pdv_store_id', $storePdvId)
+                ->where('active', true)
+                ->where('guid_loja', $guid)
+                ->first(['id', 'store_id', 'alias']);
+
+            if ($guidMatch) {
+                return $this->resolved($storePdvId, $guidMatch, 'guid');
+            }
         }
 
         $baseQuery = DB::table('pdv_store_mappings')
@@ -214,15 +227,15 @@ class PdvStoreResolver
             'risk_flags' => array_values(array_unique($riskFlags)),
             'candidate_store_ids' => $rows
                 ->pluck('store_id')
-                ->filter(static fn (mixed $id): bool => $id !== null)
-                ->map(static fn (mixed $id): int => (int) $id)
+                ->filter(static fn(mixed $id): bool => $id !== null)
+                ->map(static fn(mixed $id): int => (int) $id)
                 ->unique()
                 ->values()
                 ->all(),
             'candidate_aliases' => $rows
                 ->pluck('alias')
-                ->filter(static fn (mixed $alias): bool => is_string($alias) && trim($alias) !== '')
-                ->map(static fn (mixed $alias): string => trim((string) $alias))
+                ->filter(static fn(mixed $alias): bool => is_string($alias) && trim($alias) !== '')
+                ->map(static fn(mixed $alias): string => trim((string) $alias))
                 ->unique()
                 ->values()
                 ->all(),
@@ -256,4 +269,5 @@ class PdvStoreResolver
             'candidate_aliases' => [],
         ];
     }
-};
+}
+;

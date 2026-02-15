@@ -69,6 +69,7 @@ beforeEach(function () {
         $table->id();
         $table->unsignedBigInteger('store_pdv_id');
         $table->unsignedBigInteger('store_id')->nullable();
+        $table->string('canal', 20)->default('HIPER_CAIXA');
         $table->string('id_turno', 64);
         $table->unsignedSmallInteger('sequencial')->nullable();
         $table->boolean('fechado')->default(false);
@@ -91,13 +92,14 @@ beforeEach(function () {
         $table->dateTime('last_window_to')->nullable();
         $table->dateTime('created_at')->nullable();
         $table->dateTime('updated_at')->nullable();
-        $table->unique(['store_pdv_id', 'id_turno'], 'pdv_turnos_store_pdv_id_id_turno_unique');
+        $table->unique(['store_pdv_id', 'canal', 'id_turno'], 'pdv_turnos_store_pdv_id_id_turno_unique');
     });
 
     Schema::create('pdv_turno_pagamentos', function (Blueprint $table) {
         $table->id();
         $table->unsignedBigInteger('store_pdv_id');
         $table->unsignedBigInteger('store_id')->nullable();
+        $table->string('canal', 20)->default('HIPER_CAIXA');
         $table->string('id_turno', 64);
         $table->string('tipo', 20);
         $table->unsignedBigInteger('id_finalizador')->default(0);
@@ -107,7 +109,7 @@ beforeEach(function () {
         $table->string('last_sync_id', 128)->nullable();
         $table->dateTime('created_at')->nullable();
         $table->dateTime('updated_at')->nullable();
-        $table->unique(['store_pdv_id', 'id_turno', 'tipo', 'id_finalizador'], 'pdv_turno_pagamentos_unique_key');
+        $table->unique(['store_pdv_id', 'canal', 'id_turno', 'tipo', 'id_finalizador'], 'pdv_turno_pagamentos_unique_key');
     });
 
     Schema::create('pdv_vendas_resumo', function (Blueprint $table) {
@@ -192,40 +194,44 @@ function buildMasterDataPayload(array $overrides = []): array
             'to' => '2026-02-11T13:10:00-03:00',
             'minutes' => 10,
         ],
-        'turnos' => [[
-            'id_turno' => 'turno-master-001',
-            'sequencial' => 1,
-            'fechado' => true,
-            'operador' => ['id_usuario' => 12, 'nome' => 'Carlos'],
-            'responsavel' => ['id_usuario' => 80, 'nome' => 'Daren Novo'],
-            'totais_sistema' => [
-                'total' => 500.00,
-                'qtd_vendas' => 5,
-                'por_pagamento' => [
-                    ['id_finalizador' => 5, 'meio' => 'Pix', 'total' => 300.00, 'qtd_vendas' => 3],
-                    ['id_finalizador' => 4, 'meio' => 'Cartao de credito', 'total' => 200.00, 'qtd_vendas' => 2],
+        'turnos' => [
+            [
+                'id_turno' => 'turno-master-001',
+                'sequencial' => 1,
+                'fechado' => true,
+                'operador' => ['id_usuario' => 12, 'nome' => 'Carlos'],
+                'responsavel' => ['id_usuario' => 80, 'nome' => 'Daren Novo'],
+                'totais_sistema' => [
+                    'total' => 500.00,
+                    'qtd_vendas' => 5,
+                    'por_pagamento' => [
+                        ['id_finalizador' => 5, 'meio' => 'Pix', 'total' => 300.00, 'qtd_vendas' => 3],
+                        ['id_finalizador' => 4, 'meio' => 'Cartao de credito', 'total' => 200.00, 'qtd_vendas' => 2],
+                    ],
                 ],
-            ],
-            'fechamento_declarado' => [
-                'total' => 500.00,
-                'qtd_vendas' => 5,
-                'por_pagamento' => [],
-            ],
-            'falta_caixa' => [
-                'total' => 0.00,
-                'qtd_vendas' => 0,
-                'por_pagamento' => [],
-            ],
-        ]],
+                'fechamento_declarado' => [
+                    'total' => 500.00,
+                    'qtd_vendas' => 5,
+                    'por_pagamento' => [],
+                ],
+                'falta_caixa' => [
+                    'total' => 0.00,
+                    'qtd_vendas' => 0,
+                    'por_pagamento' => [],
+                ],
+            ]
+        ],
         'vendas' => [],
         'snapshot_turnos' => [],
-        'snapshot_vendas' => [[
-            'id_operacao' => 2001,
-            'canal' => 'HIPER_CAIXA',
-            'vendedor' => ['id_usuario' => 90, 'nome' => 'Vendedor Snapshot'],
-            'qtd_itens' => 1,
-            'total_itens' => 50.00,
-        ]],
+        'snapshot_vendas' => [
+            [
+                'id_operacao' => 2001,
+                'canal' => 'HIPER_CAIXA',
+                'vendedor' => ['id_usuario' => 90, 'nome' => 'Vendedor Snapshot'],
+                'qtd_itens' => 1,
+                'total_itens' => 50.00,
+            ]
+        ],
         'ops' => [
             'count' => 0,
             'ids' => [],
@@ -348,22 +354,24 @@ test('master data auto registration is idempotent on replay', function () {
             'nome' => 'Loja Hyper 10 Atualizada',
             'alias' => 'loja-10-new',
         ],
-        'turnos' => [[
-            'id_turno' => 'turno-master-001',
-            'sequencial' => 1,
-            'fechado' => true,
-            'operador' => ['id_usuario' => 12, 'nome' => 'Carlos Atualizado'],
-            'responsavel' => ['id_usuario' => 80, 'nome' => 'Daren Atualizado'],
-            'totais_sistema' => [
-                'total' => 500.00,
-                'qtd_vendas' => 5,
-                'por_pagamento' => [
-                    ['id_finalizador' => 5, 'meio' => 'PIX', 'total' => 500.00, 'qtd_vendas' => 5],
+        'turnos' => [
+            [
+                'id_turno' => 'turno-master-001',
+                'sequencial' => 1,
+                'fechado' => true,
+                'operador' => ['id_usuario' => 12, 'nome' => 'Carlos Atualizado'],
+                'responsavel' => ['id_usuario' => 80, 'nome' => 'Daren Atualizado'],
+                'totais_sistema' => [
+                    'total' => 500.00,
+                    'qtd_vendas' => 5,
+                    'por_pagamento' => [
+                        ['id_finalizador' => 5, 'meio' => 'PIX', 'total' => 500.00, 'qtd_vendas' => 5],
+                    ],
                 ],
-            ],
-            'fechamento_declarado' => ['total' => 500.00, 'qtd_vendas' => 5, 'por_pagamento' => []],
-            'falta_caixa' => ['total' => 0.00, 'qtd_vendas' => 0, 'por_pagamento' => []],
-        ]],
+                'fechamento_declarado' => ['total' => 500.00, 'qtd_vendas' => 5, 'por_pagamento' => []],
+                'falta_caixa' => ['total' => 0.00, 'qtd_vendas' => 0, 'por_pagamento' => []],
+            ]
+        ],
         'integrity' => ['sync_id' => 'sync-master-data-replay-002'],
     ]);
     $secondSync = createSyncForMasterDataTest($secondPayload);

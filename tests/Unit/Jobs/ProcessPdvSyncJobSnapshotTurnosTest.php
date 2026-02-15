@@ -69,6 +69,7 @@ beforeEach(function () {
         $table->id();
         $table->unsignedBigInteger('store_pdv_id');
         $table->unsignedBigInteger('store_id')->nullable();
+        $table->string('canal', 20)->default('HIPER_CAIXA');
         $table->string('id_turno', 64);
         $table->unsignedSmallInteger('sequencial')->nullable();
         $table->boolean('fechado')->default(false);
@@ -92,7 +93,7 @@ beforeEach(function () {
         $table->dateTime('created_at')->nullable();
         $table->dateTime('updated_at')->nullable();
 
-        $table->unique(['store_pdv_id', 'id_turno'], 'pdv_turnos_store_pdv_id_id_turno_unique');
+        $table->unique(['store_pdv_id', 'canal', 'id_turno'], 'pdv_turnos_store_pdv_id_id_turno_unique');
     });
 });
 
@@ -278,36 +279,40 @@ test('snapshot_turnos creates missing turno when main turnos is empty', function
 test('snapshot_turnos replay with different data corrects existing turno', function () {
     $firstSync = createSyncForSnapshotTurnosTest(
         [],
-        [[
-            'id_turno' => 'turno-snapshot-replay-001',
-            'sequencial' => 7,
-            'fechado' => true,
-            'duracao_minutos' => 280,
-            'periodo' => 'NOTURNO',
-            'operador' => ['id_usuario' => 33, 'nome' => 'Rafa'],
-            'responsavel' => ['id_usuario' => 45, 'nome' => 'Bia'],
-            'qtd_vendas' => 9,
-            'total_vendas' => 2100.00,
-            'qtd_vendedores' => 2,
-        ]],
+        [
+            [
+                'id_turno' => 'turno-snapshot-replay-001',
+                'sequencial' => 7,
+                'fechado' => true,
+                'duracao_minutos' => 280,
+                'periodo' => 'NOTURNO',
+                'operador' => ['id_usuario' => 33, 'nome' => 'Rafa'],
+                'responsavel' => ['id_usuario' => 45, 'nome' => 'Bia'],
+                'qtd_vendas' => 9,
+                'total_vendas' => 2100.00,
+                'qtd_vendedores' => 2,
+            ]
+        ],
         'sync-pr34-snapshot-replay-001-a'
     );
     (new ProcessPdvSyncJob($firstSync->id))->handle();
 
     $secondSync = createSyncForSnapshotTurnosTest(
         [],
-        [[
-            'id_turno' => 'turno-snapshot-replay-001',
-            'sequencial' => 7,
-            'fechado' => true,
-            'duracao_minutos' => 295,
-            'periodo' => 'NOTURNO',
-            'operador' => ['id_usuario' => 33, 'nome' => 'Rafa'],
-            'responsavel' => ['id_usuario' => 46, 'nome' => 'Luca'],
-            'qtd_vendas' => 11,
-            'total_vendas' => 2590.50,
-            'qtd_vendedores' => 3,
-        ]],
+        [
+            [
+                'id_turno' => 'turno-snapshot-replay-001',
+                'sequencial' => 7,
+                'fechado' => true,
+                'duracao_minutos' => 295,
+                'periodo' => 'NOTURNO',
+                'operador' => ['id_usuario' => 33, 'nome' => 'Rafa'],
+                'responsavel' => ['id_usuario' => 46, 'nome' => 'Luca'],
+                'qtd_vendas' => 11,
+                'total_vendas' => 2590.50,
+                'qtd_vendedores' => 3,
+            ]
+        ],
         'sync-pr34-snapshot-replay-001-b'
     );
     (new ProcessPdvSyncJob($secondSync->id))->handle();
