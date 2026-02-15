@@ -545,6 +545,11 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             }
 
             $idOperacao = (int) data_get($venda, 'id_operacao', 0);
+            // Fallback for V5 PascalCase
+            if ($idOperacao <= 0) {
+                $idOperacao = (int) data_get($venda, 'SaleId', 0);
+            }
+
             if ($idOperacao <= 0) {
                 Log::warning('Skipping venda without id_operacao.', [
                     'pdv_sync_id' => $sync->id,
@@ -555,12 +560,35 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             }
 
             $idTurno = $this->asString(data_get($venda, 'id_turno'));
+            if ($idTurno === null) {
+                $idTurno = $this->asString(data_get($venda, 'TurnoId')); // V5
+            }
+
             $canal = $this->resolveVendaCanal(
                 $sync,
                 $storePdvId,
                 $idOperacao,
-                data_get($venda, 'canal')
+                data_get($venda, 'canal') ?? data_get($venda, 'Canal') // V5 fallback
             );
+
+            // V5 Data Extraction
+            $erpOperacaoUuid = $this->asString(data_get($venda, 'ErpOperacaoUuid'));
+            $erpLojaUuid = $this->asString(data_get($venda, 'ErpLojaUuid') ?? data_get($payload, 'store.LojaId'));
+
+            $fiscal = data_get($venda, 'Fiscal', []);
+            $nfceChave = $this->asString(data_get($fiscal, 'NfceChave'));
+            $nfceProtocolo = $this->asString(data_get($fiscal, 'NfceProtocolo'));
+            $nfceNumero = $this->asString(data_get($fiscal, 'NfceNumero'));
+            $nfceSerie = $this->asString(data_get($fiscal, 'NfceSerie'));
+            $nfceModelo = $this->asString(data_get($fiscal, 'NfceModelo'));
+            $nfeChave = $this->asString(data_get($fiscal, 'NfeChave'));
+
+            $clienteCpf = $this->asString(data_get($venda, 'ClientCpf'));
+            $signatureHash = $this->asString(data_get($venda, 'Signature.HashValue'));
+
+            // V5 Date/Total fallbacks
+            $dataHora = $this->asDateTimeString(data_get($venda, 'data_hora') ?? data_get($venda, 'DateTime'));
+            $total = $this->asDecimal(data_get($venda, 'total') ?? data_get($venda, 'TotalAmount') ?? data_get($venda, 'Total'), 2);
 
             $vendaRows[] = [
                 'store_pdv_id' => $storePdvId,
@@ -568,16 +596,27 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                 'canal' => $canal,
                 'id_operacao' => $idOperacao,
                 'id_turno' => $idTurno,
-                'data_hora' => $this->asDateTimeString(data_get($venda, 'data_hora')),
-                'total' => $this->asDecimal(data_get($venda, 'total'), 2),
+                'data_hora' => $dataHora,
+                'total' => $total,
                 'sync_id' => $sync->sync_id,
                 'last_window_to' => $sync->window_to?->toDateTimeString(),
                 'created_at' => $now,
                 'updated_at' => $now,
+                // V5 Columns
+                'erp_operacao_uuid' => $erpOperacaoUuid,
+                'erp_loja_uuid' => $erpLojaUuid,
+                'nfce_chave' => $nfceChave,
+                'nfce_protocolo' => $nfceProtocolo,
+                'nfce_numero' => $nfceNumero,
+                'nfce_serie' => $nfceSerie,
+                'nfce_modelo' => $nfceModelo,
+                'nfe_chave' => $nfeChave,
+                'cliente_cpf' => $clienteCpf,
+                'signature_hash' => $signatureHash,
             ];
 
             $itemOccurrences = [];
-            $itens = data_get($venda, 'itens', []);
+            $itens = data_get($venda, 'itens') ?? data_get($venda, 'Itens', []);
             if (is_array($itens)) {
                 foreach ($itens as $index => $item) {
                     if (!is_array($item)) {
@@ -728,7 +767,25 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             'pdv_vendas',
             $vendaRows,
             ['store_pdv_id', 'canal', 'id_operacao'],
-            ['store_id', 'id_turno', 'data_hora', 'total', 'sync_id', 'last_window_to', 'updated_at']
+            [
+                'store_id',
+                'id_turno',
+                'data_hora',
+                'total',
+                'sync_id',
+                'last_window_to',
+                'updated_at',
+                'erp_operacao_uuid',
+                'erp_loja_uuid',
+                'nfce_chave',
+                'nfce_protocolo',
+                'nfce_numero',
+                'nfce_serie',
+                'nfce_modelo',
+                'nfe_chave',
+                'cliente_cpf',
+                'signature_hash'
+            ]
         );
 
         $itemUpdateColumnsByLineId = [
@@ -1396,7 +1453,10 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                         $this->asString(data_get($turno, 'operador.login')),
                         'OPERADOR',
                         $this->asString(data_get($turno, 'operador.guid')),
-                        $this->asInt(data_get($turno, 'operador.id_hiper'))
+                        $this->asInt(data_get($turno, 'operador.id_hiper')),
+                        null,
+                        null,
+                        null
                     );
                     $observeUser(
                         $observedUsers,
@@ -1405,7 +1465,10 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                         $this->asString(data_get($turno, 'responsavel.login')),
                         'VENDEDOR',
                         $this->asString(data_get($turno, 'responsavel.guid')),
-                        $this->asInt(data_get($turno, 'responsavel.id_hiper'))
+                        $this->asInt(data_get($turno, 'responsavel.id_hiper')),
+                        null,
+                        null,
+                        null
                     );
                 }
             }
@@ -1424,7 +1487,10 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                         $this->asString(data_get($turno, 'operador.login')),
                         'OPERADOR',
                         $this->asString(data_get($turno, 'operador.guid')),
-                        $this->asInt(data_get($turno, 'operador.id_hiper'))
+                        $this->asInt(data_get($turno, 'operador.id_hiper')),
+                        null,
+                        null,
+                        null
                     );
                     $observeUser(
                         $observedUsers,
@@ -1433,7 +1499,10 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                         $this->asString(data_get($turno, 'responsavel.login')),
                         'VENDEDOR',
                         $this->asString(data_get($turno, 'responsavel.guid')),
-                        $this->asInt(data_get($turno, 'responsavel.id_hiper'))
+                        $this->asInt(data_get($turno, 'responsavel.id_hiper')),
+                        null,
+                        null,
+                        null
                     );
                 }
             }
@@ -1462,7 +1531,10 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                             $this->asString(data_get($item, 'vendedor.login')),
                             'VENDEDOR',
                             $this->asString(data_get($item, 'vendedor.guid')),
-                            $this->asInt(data_get($item, 'vendedor.id_hiper'))
+                            $this->asInt(data_get($item, 'vendedor.id_hiper')),
+                            null,
+                            null,
+                            null
                         );
                     }
                 }
@@ -1482,7 +1554,10 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                         $this->asString(data_get($venda, 'vendedor.login')),
                         'VENDEDOR',
                         $this->asString(data_get($venda, 'vendedor.guid')),
-                        $this->asInt(data_get($venda, 'vendedor.id_hiper'))
+                        $this->asInt(data_get($venda, 'vendedor.id_hiper')),
+                        null,
+                        null,
+                        null
                     );
                 }
             }

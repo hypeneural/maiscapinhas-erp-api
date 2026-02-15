@@ -578,6 +578,13 @@ class PdvReportsController extends Controller
                 DB::raw('COALESCE(it.itens_valor_total, 0) as itens_valor_total'),
                 DB::raw('COALESCE(pg.pagamentos_count, 0) as pagamentos_count'),
                 DB::raw('COALESCE(pg.pagamentos_valor_total, 0) as pagamentos_valor_total'),
+                'v.erp_operacao_uuid',
+                'v.nfce_chave',
+                'v.nfce_modelo',
+                'v.nfce_numero',
+                'v.nfce_serie',
+                'v.cliente_cpf',
+                'v.signature_hash',
             ])
             ->whereBetween('v.data_hora', [$from->toDateTimeString(), $to->toDateTimeString()]);
 
@@ -666,6 +673,17 @@ class PdvReportsController extends Controller
                     'qtd_linhas' => (int) $row->itens_count,
                     'qtd_total' => (float) $row->itens_qtd_total,
                     'valor_total' => (float) $row->itens_valor_total,
+                ],
+                'fiscal' => [
+                    'nfce' => [
+                        'chave' => $row->nfce_chave ?? null,
+                        'modelo' => $row->nfce_modelo ?? null,
+                        'numero' => $row->nfce_numero ?? null,
+                        'serie' => $row->nfce_serie ?? null,
+                    ],
+                    'cliente_cpf' => $row->cliente_cpf ?? null,
+                    'signature_hash' => $row->signature_hash ?? null,
+                    'erp_operacao_uuid' => $row->erp_operacao_uuid ?? null,
                 ],
                 'pagamentos' => [
                     'qtd_linhas' => (int) $row->pagamentos_count,
@@ -798,6 +816,13 @@ class PdvReportsController extends Controller
                 'v.id_turno',
                 'v.data_hora',
                 'v.total',
+                'v.erp_operacao_uuid',
+                'v.nfce_chave',
+                'v.nfce_modelo',
+                'v.nfce_numero',
+                'v.nfce_serie',
+                'v.cliente_cpf',
+                'v.signature_hash',
             ])
             ->where('v.canal', $canal)
             ->where('v.id_operacao', $idOperacao);
@@ -919,6 +944,17 @@ class PdvReportsController extends Controller
                 'id_turno' => $venda->id_turno,
                 'data_hora' => $this->toIso8601($venda->data_hora),
                 'total' => (float) $venda->total,
+                'erp_operacao_uuid' => $venda->erp_operacao_uuid ?? null,
+                'fiscal' => [
+                    'nfce' => [
+                        'chave' => $venda->nfce_chave ?? null,
+                        'modelo' => $venda->nfce_modelo ?? null,
+                        'numero' => $venda->nfce_numero ?? null,
+                        'serie' => $venda->nfce_serie ?? null,
+                    ],
+                    'cliente_cpf' => $venda->cliente_cpf ?? null,
+                    'signature_hash' => $venda->signature_hash ?? null,
+                ],
             ],
             'itens' => $itens,
             'pagamentos' => $pagamentos,
