@@ -105,7 +105,7 @@ class PdvSaleValidator
         };
 
         // --- NÍVEL 1: GOLDEN KEY (UUID da Operação) ---
-        $erpOperacaoUuid = strtolower(trim((string) data_get($erp, 'ErpOperacaoUuid')));
+        $erpOperacaoUuid = strtolower(trim((string) (data_get($erp, 'ErpOperacaoUuid') ?? data_get($erp, 'Id'))));
         $erpLojaUuid = $this->resolveErpLojaUuid($erp);
 
         if ($erpOperacaoUuid && $erpLojaUuid) {
