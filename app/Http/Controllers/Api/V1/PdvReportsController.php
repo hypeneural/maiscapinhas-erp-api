@@ -574,7 +574,7 @@ class PdvReportsController extends Controller
                 DB::raw('COALESCE(u_guid.nome_padronizado, u_map.name, it.vendedor_nome_pdv) as seller_name'),
                 DB::raw('COALESCE(u_guid.email, u_map.email) as seller_email'),
                 DB::raw('COALESCE(u_map.whatsapp) as seller_whatsapp'),
-                DB::raw('COALESCE(u_map.avatar_url, u_guid.avatar_url) as seller_avatar_url'), // Prefer map avatar? or guid?
+                DB::raw('COALESCE(u_map.avatar_url) as seller_avatar_url'),
                 DB::raw('COALESCE(u_map.hire_date) as seller_hire_date'),
                 DB::raw('COALESCE(it.itens_count, 0) as itens_count'),
                 DB::raw('COALESCE(it.itens_qtd_total, 0) as itens_qtd_total'),
