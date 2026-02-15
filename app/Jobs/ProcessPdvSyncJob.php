@@ -1829,6 +1829,37 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
         $resolutionFlags = is_array($resolution['flags'] ?? null)
             ? array_values(array_unique($resolution['flags']))
             : [];
+
+        // Self-Healing: If we found the user but the mapping is missing the GUID, update it.
+        if (in_array('guid_missing_in_mapping', $resolutionFlags, true)) {
+            // We resolved to a user_id, but the mapping didn't have the GUID.
+            // Find the mapping (by ID or Login) and update it.
+            // Since we don't have the mapping ID explicitly returned, we infer it via pdvUserId/Login match
+
+            // NOTE: We only update if we are SURE. PdvUserResolver returns 'resolved' which means we trusted the mapping.
+            if ($resolution['status'] === 'resolved' && $pdvUserGuid !== null && $storePdvId > 0) {
+                // Determine criteria to find the specific mapping row
+                $query = DB::table('pdv_user_mappings')
+                    ->where('store_pdv_id', $storePdvId)
+                    ->where('active', true);
+
+                if ($pdvUserId > 0) {
+                    $query->where('pdv_user_id', $pdvUserId);
+                } elseif ($pdvUserLogin !== null) {
+                    $query->where('pdv_user_login', $pdvUserLogin);
+                } else {
+                    $query = null;
+                }
+
+                if ($query) {
+                    $query->update(['guid_usuario' => $pdvUserGuid, 'updated_at' => now()]);
+                    // Remove the flag so we don't log it as a risk, or keep it to track healing events? 
+                    // Let's keep it but maybe log it differently if we wanted. 
+                    // For now, standard risk flag is fine, users seeing it will see "Oh it healed".
+                }
+            }
+        }
+
         foreach ($resolutionFlags as $flag) {
             $this->markRuntimeRiskFlag($flag);
         }

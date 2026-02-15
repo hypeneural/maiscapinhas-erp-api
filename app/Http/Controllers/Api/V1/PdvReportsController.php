@@ -250,6 +250,207 @@ class PdvReportsController extends Controller
     }
 
     /**
+     * Relatorio Hierarquico de Turnos (V5)
+     * 
+     * Estrutura: Turno -> Vendedor -> Canal -> Pagamento
+     *
+     * @authenticated
+     * @queryParam store_id integer ID da loja interna. Example: 1
+     * @queryParam store_pdv_id integer ID da loja PDV. Example: 13
+     * @queryParam date string required Data de referencia. Example: 2026-02-12
+     */
+    public function turnosHierarchical(PdvReportsTurnosRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+        $date = CarbonImmutable::parse((string) $validated['date'])->toDateString();
+
+        // Reuse scope logic (validated in previous method, but we need to re-validate basic inputs)
+        $storeId = isset($validated['store_id']) ? (int) $validated['store_id'] : null;
+        $storePdvId = isset($validated['store_pdv_id']) ? (int) $validated['store_pdv_id'] : null;
+        $storeAlias = isset($validated['store_alias']) ? trim((string) $validated['store_alias']) : null;
+        if ($storeId === null && $storePdvId === null) {
+            throw ValidationException::withMessages(['store' => ['Informe store_id ou store_pdv_id.']]);
+        }
+        $scope = $this->resolveStoreScope($request, $storeId, $storePdvId, $storeAlias);
+
+        // 1. Fetch Turnos
+        $turnosQuery = DB::table('pdv_turnos as t')
+            ->select([
+                't.store_pdv_id',
+                't.id_turno',
+                't.sequencial',
+                't.fechado',
+                't.periodo',
+                't.data_hora_inicio',
+                't.data_hora_termino'
+            ])
+            ->whereDate('t.data_hora_inicio', $date);
+        $this->applyStoreScopeToQuery($turnosQuery, $scope, 't');
+        $turnos = $turnosQuery->get()->keyBy(fn($t) => $t->store_pdv_id . '|' . $t->id_turno);
+
+        if ($turnos->isEmpty()) {
+            return $this->success(['date' => $date, 'data' => []]);
+        }
+
+        // 2. Fetch Data
+        $storePdvIds = $turnos->pluck('store_pdv_id')->unique()->toArray();
+        $turnoIds = $turnos->pluck('id_turno')->unique()->toArray();
+
+        // Items: Who sold what (and how much)
+        $items = DB::table('pdv_venda_itens as vi')
+            ->join('pdv_vendas as v', function ($join) {
+                $join->on('v.store_pdv_id', '=', 'vi.store_pdv_id')
+                    ->on('v.canal', '=', 'vi.canal')
+                    ->on('v.id_operacao', '=', 'vi.id_operacao');
+            })
+            ->whereIn('v.store_pdv_id', $storePdvIds)
+            ->whereIn('v.id_turno', $turnoIds)
+            ->select([
+                'v.store_pdv_id',
+                'v.id_turno',
+                'v.canal',
+                'v.id_operacao',
+                'vi.vendedor_guid',
+                'vi.vendedor_pdv_id',
+                'vi.vendedor_nome',
+                'vi.total as valor_item'
+            ])
+            ->get();
+
+        // Payments: How it was paid
+        $payments = DB::table('pdv_venda_pagamentos as vp')
+            ->join('pdv_vendas as v', function ($join) {
+                $join->on('v.store_pdv_id', '=', 'vp.store_pdv_id')
+                    ->on('v.canal', '=', 'vp.canal')
+                    ->on('v.id_operacao', '=', 'vp.id_operacao');
+            })
+            ->whereIn('v.store_pdv_id', $storePdvIds)
+            ->whereIn('v.id_turno', $turnoIds)
+            ->select([
+                'v.store_pdv_id',
+                'v.id_turno',
+                'v.canal',
+                'v.id_operacao',
+                'vp.meio_pagamento',
+                'vp.valor as valor_pagamento'
+            ])
+            ->get();
+
+        // 3. Aggregation Strategy: Proportional Split
+        $opsShares = [];
+        foreach ($items as $item) {
+            $opKey = $item->store_pdv_id . '|' . $item->canal . '|' . $item->id_operacao;
+            if (!isset($opsShares[$opKey])) {
+                $opsShares[$opKey] = ['total' => 0.0, 'sellers' => [], 'turno_id' => $item->id_turno];
+            }
+
+            $sellerKey = $item->vendedor_guid ?: ('legacy_' . $item->vendedor_pdv_id);
+            if (!isset($opsShares[$opKey]['sellers'][$sellerKey])) {
+                $opsShares[$opKey]['sellers'][$sellerKey] = [
+                    'guid' => $item->vendedor_guid,
+                    'id_pdv' => $item->vendedor_pdv_id,
+                    'nome' => $item->vendedor_nome,
+                    'total_items' => 0.0
+                ];
+            }
+
+            $val = (float) $item->valor_item;
+            $opsShares[$opKey]['total'] += $val;
+            $opsShares[$opKey]['sellers'][$sellerKey]['total_items'] += $val;
+        }
+
+        $hierarchy = [];
+
+        foreach ($payments as $pay) {
+            $opKey = $pay->store_pdv_id . '|' . $pay->canal . '|' . $pay->id_operacao;
+            $opData = $opsShares[$opKey] ?? null;
+
+            if (!$opData)
+                continue;
+
+            $turnoKey = $pay->store_pdv_id . '|' . $pay->id_turno;
+            if (!isset($turnos[$turnoKey]))
+                continue;
+
+            $turnoObj = $turnos[$turnoKey];
+            $turnoId = (string) $pay->id_turno;
+
+            $opTotal = $opData['total'];
+            $paymentValue = (float) $pay->valor_pagamento;
+            $meio = $pay->meio_pagamento ?? 'OUTROS';
+            $canal = $pay->canal;
+
+            foreach ($opData['sellers'] as $sellerKey => $seller) {
+                $share = ($opTotal > 0) ? ($seller['total_items'] / $opTotal) : 0;
+                if ($opTotal == 0 && count($opData['sellers']) > 0) {
+                    $share = 1.0 / count($opData['sellers']);
+                }
+
+                $attribValue = $paymentValue * $share;
+
+                if (!isset($hierarchy[$turnoId])) {
+                    $hierarchy[$turnoId] = [
+                        'sequencial' => $turnoObj->sequencial,
+                        'fechado' => (bool) $turnoObj->fechado,
+                        'id_turno' => $turnoId,
+                        'periodo' => $turnoObj->periodo,
+                        'data_hora_inicio' => $this->toIso8601($turnoObj->data_hora_inicio),
+                        'vendedores' => []
+                    ];
+                }
+
+                if (!isset($hierarchy[$turnoId]['vendedores'][$sellerKey])) {
+                    $hierarchy[$turnoId]['vendedores'][$sellerKey] = [
+                        'guid' => $seller['guid'],
+                        'id_pdv' => $seller['id_pdv'],
+                        'nome' => $seller['nome'] ?? 'Desconhecido',
+                        'total_venda' => 0.0,
+                        'canais' => []
+                    ];
+                }
+
+                if (!isset($hierarchy[$turnoId]['vendedores'][$sellerKey]['canais'][$canal])) {
+                    $hierarchy[$turnoId]['vendedores'][$sellerKey]['canais'][$canal] = [
+                        'pagamentos' => [],
+                        'total_canal' => 0.0
+                    ];
+                }
+
+                if (!isset($hierarchy[$turnoId]['vendedores'][$sellerKey]['canais'][$canal]['pagamentos'][$meio])) {
+                    $hierarchy[$turnoId]['vendedores'][$sellerKey]['canais'][$canal]['pagamentos'][$meio] = 0.0;
+                }
+
+                $hierarchy[$turnoId]['vendedores'][$sellerKey]['canais'][$canal]['pagamentos'][$meio] += $attribValue;
+                $hierarchy[$turnoId]['vendedores'][$sellerKey]['canais'][$canal]['total_canal'] += $attribValue;
+                $hierarchy[$turnoId]['vendedores'][$sellerKey]['total_venda'] += $attribValue;
+            }
+        }
+
+        // Rounding values including top-level totals if needed
+        $hierarchy = array_map(function ($turno) {
+            usort($turno['vendedores'], fn($a, $b) => $b['total_venda'] <=> $a['total_venda']); // Sort sellers by value
+            $turno['vendedores'] = array_values(array_map(function ($vendedor) {
+                $vendedor['total_venda'] = round($vendedor['total_venda'], 2);
+                $vendedor['canais'] = array_map(function ($canal) {
+                    $canal['total_canal'] = round($canal['total_canal'], 2);
+                    $canal['pagamentos'] = array_map(fn($val) => round($val, 2), $canal['pagamentos']);
+                    return $canal;
+                }, $vendedor['canais']);
+                return $vendedor;
+            }, $turno['vendedores']));
+            return $turno;
+        }, $hierarchy);
+
+
+        return $this->success([
+            'date' => $date,
+            'store_id' => $scope['store_id'],
+            'store_pdv_id' => $scope['store_pdv_id'],
+            'data' => array_values($hierarchy)
+        ]);
+    }
+
+    /**
      * Listar vendas PDV com filtros inteligentes
      *
      * Retorna vendas com agregados de itens e pagamentos por operacao.

@@ -58,6 +58,7 @@ class PdvUserResolver
                 'is_store_operator' => (bool) ($row->is_store_operator ?? false),
                 'pdv_user_name' => $row->pdv_user_name !== null ? (string) $row->pdv_user_name : null,
                 'pdv_user_login' => $row->pdv_user_login !== null ? (string) $row->pdv_user_login : null,
+                'guid_usuario' => isset($row->guid_usuario) ? (string) $row->guid_usuario : null,
             ];
 
             $pdvUserId = (int) ($row->pdv_user_id ?? 0);
@@ -125,6 +126,19 @@ class PdvUserResolver
 
             $guidUserId = (int) ($guidMapping['user_id'] ?? 0);
             if ($guidUserId > 0) {
+                // Check for ID mismatch (Integrity Check)
+                if ($pdvUserId > 0) {
+                    $mappedPdvId = (int) ($guidMapping['pdv_user_id'] ?? 0);
+                    // If mapping has a specific PDV ID and it differs from payload
+                    if ($mappedPdvId > 0 && $mappedPdvId !== $pdvUserId) {
+                        // This is a specialized case of guid_mismatch (GUID points to X, ID points to Y?? No wait)
+                        // Actually, if we found by GUID, we trust GUID. 
+                        // But if the mapped row has a DIFFERENT pdv_user_id than what we received, it implies the ID changed locally but GUID stayed same.
+                        // This is fine (ID reuse/change), but maybe worth noting.
+                        // For now, we trust GUID implicitly.
+                    }
+                }
+
                 return [
                     'status' => 'resolved',
                     'user_id' => $guidUserId,
@@ -137,6 +151,22 @@ class PdvUserResolver
         $idMapping = ($pdvUserId !== null && $pdvUserId > 0) ? ($byId[$pdvUserId] ?? null) : null;
         $loginMapping = $loginKey !== null ? ($byLogin[$loginKey] ?? null) : null;
         $flags = [];
+
+        // Helper to check GUID consistency on fallback resolution
+        $checkGuidConsistency = function (array $mapping) use ($pdvUserGuid, &$flags) {
+            if ($pdvUserGuid !== null) {
+                $mappedGuid = $mapping['guid_usuario'] ?? null; // currently loadActiveMappings might not select this, checking...
+
+                // We need to ensure loadActiveMappings selects guid_usuario. 
+                // It does: $columns[] = 'guid_usuario' (lines 37-39).
+
+                if (empty($mappedGuid)) {
+                    $flags[] = 'guid_missing_in_mapping';
+                } elseif ($mappedGuid !== $pdvUserGuid) {
+                    $flags[] = 'guid_mismatch';
+                }
+            }
+        };
 
         if ($loginMapping !== null) {
             if ($idMapping !== null && !$this->sameIdentity($idMapping, $loginMapping)) {
@@ -154,6 +184,7 @@ class PdvUserResolver
 
             $loginUserId = (int) ($loginMapping['user_id'] ?? 0);
             if ($loginUserId > 0) {
+                $checkGuidConsistency($loginMapping);
                 return [
                     'status' => 'resolved',
                     'user_id' => $loginUserId,
@@ -179,6 +210,7 @@ class PdvUserResolver
 
             $idUserId = (int) ($idMapping['user_id'] ?? 0);
             if ($idUserId > 0) {
+                $checkGuidConsistency($idMapping);
                 return [
                     'status' => 'resolved',
                     'user_id' => $idUserId,
