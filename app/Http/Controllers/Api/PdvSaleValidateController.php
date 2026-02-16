@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\HiperConnection;
 use App\Models\HiperEndpoint;
+use App\Models\Store;
 use App\Services\HiperCookieService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Services\Pdv\PdvSaleValidator;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 
 class PdvSaleValidateController extends Controller
@@ -200,6 +202,18 @@ class PdvSaleValidateController extends Controller
             'tolerance' => $options['tolerance'] ?? [],
         ];
 
+        // Pre-load store names by guid (single query)
+        $storeGuids = collect($lista)
+            ->pluck('Turno.LojaId')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $storeMap = !empty($storeGuids)
+            ? Store::whereIn('guid', $storeGuids)->pluck('name', 'guid')->all()
+            : [];
+
         foreach ($lista as $item) {
             if (!is_array($item)) {
                 continue;
@@ -213,12 +227,54 @@ class PdvSaleValidateController extends Controller
 
             $key = $item['Id'] ?? $item['CodigoDaOperacao'] ?? uniqid();
 
+            // ── Sale summary ──
+            $lojaId = $item['Turno']['LojaId'] ?? null;
+            $storeName = $lojaId ? ($storeMap[$lojaId] ?? null) : null;
+
             $results[] = [
                 'input_id' => $key,
+                'sale_summary' => $this->buildSaleSummary($item, $storeName),
                 'validation' => $res,
             ];
         }
 
         return $results;
+    }
+
+    /**
+     * Build a human-readable summary for a single ERP sale item.
+     */
+    private function buildSaleSummary(array $item, ?string $storeName): array
+    {
+        // Format date: "16/02/2026 às 14:50"
+        $formattedDate = null;
+        if (!empty($item['Data'])) {
+            try {
+                $dt = Carbon::parse($item['Data']);
+                $formattedDate = $dt->format('d/m/Y') . ' às ' . $dt->format('H:i');
+            } catch (\Exception $e) {
+                $formattedDate = $item['Data'];
+            }
+        }
+
+        // Shift label: "1º Turno"
+        $sequencial = $item['Turno']['Sequencial'] ?? null;
+        $turnoLabel = $sequencial ? "{$sequencial}º Turno" : null;
+
+        $lojaId = $item['Turno']['LojaId'] ?? null;
+
+        return [
+            'codigo' => $item['CodigoDaOperacao'] ?? null,
+            'erp_id' => $item['Id'] ?? null,
+            'valor' => $item['ValorTotalLiquidoFormatado'] ?? $item['ValorTotalLiquido'] ?? null,
+            'data' => $formattedDate,
+            'turno' => $turnoLabel,
+            'turno_id' => $item['Turno']['Id'] ?? null,
+            'loja_erp_id' => $lojaId,
+            'loja_nome' => $storeName,
+            'found_in_db' => $storeName !== null,
+            'cancelada' => $item['Cancelada'] ?? false,
+            'itens' => $item['NumeroDeItens'] ?? null,
+        ];
     }
 }
