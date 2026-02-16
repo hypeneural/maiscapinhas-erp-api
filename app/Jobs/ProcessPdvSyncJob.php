@@ -578,6 +578,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             if ($idTurno === null) {
                 $idTurno = $this->asString(data_get($venda, 'TurnoId')); // V5
             }
+            $turnoSeq = $this->asInt(data_get($venda, 'turno_seq') ?? data_get($venda, 'TurnoSeq'));
 
             $canal = $this->resolveVendaCanal(
                 $sync,
@@ -791,6 +792,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             [
                 'store_id',
                 'id_turno',
+                'turno_seq',
                 'data_hora',
                 'total',
                 'sync_id',

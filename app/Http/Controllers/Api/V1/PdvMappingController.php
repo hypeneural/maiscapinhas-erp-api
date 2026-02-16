@@ -259,7 +259,7 @@ class PdvMappingController extends Controller
 
     // --- Helpers ---
 
-    private function upsertUserMapping(int $storePdvId, int $pdvUserId, int $userId): PdvUserMapping
+    private function upsertUserMapping(int $storePdvId, int $pdvUserId, int $userId, ?string $userGuid = null): PdvUserMapping
     {
         // Try to fetch PDV user name for reference
         $pdvUserName = null;
@@ -278,6 +278,7 @@ class PdvMappingController extends Controller
                 'store_pdv_id' => $storePdvId,
                 'user_id' => $userId,
                 'pdv_user_name' => $pdvUserName,
+                'guid_usuario' => $userGuid,
                 'active' => true,
                 'source' => 'manual_api',
                 'confidence' => 100,

@@ -548,8 +548,9 @@ class PdvReportsController extends Controller
                     ->on('it.canal', '=', 'v.canal')
                     ->on('it.id_operacao', '=', 'v.id_operacao');
             })
-            // V5 Refactor: Try joining by GUID first, then fallback to mapping
-            ->leftJoin('pdv_usuarios as u_guid', 'u_guid.guid_usuario', '=', 'it.vendedor_guid')
+            // V5 Refactor: Try joining by GUID first (direct to users table), then fallback to mapping
+            ->leftJoin('users as u_by_guid', 'u_by_guid.guid', '=', 'it.vendedor_guid')
+            ->leftJoin('pdv_usuarios as u_legacy', 'u_legacy.guid_usuario', '=', 'it.vendedor_guid')
             ->leftJoin('pdv_user_mappings as pum', function ($join): void {
                 $join->on('pum.store_pdv_id', '=', 'v.store_pdv_id')
                     ->on('pum.pdv_user_id', '=', 'it.vendedor_pdv_id');
@@ -571,13 +572,14 @@ class PdvReportsController extends Controller
                 'v.id_operacao',
                 'v.canal',
                 'v.id_turno',
+                'v.turno_seq',
                 'v.data_hora',
                 'v.total',
-                DB::raw('COALESCE(u_guid.nome_padronizado, u_map.name, it.vendedor_nome_pdv) as seller_name'),
-                DB::raw('COALESCE(u_guid.email, u_map.email) as seller_email'),
-                DB::raw('COALESCE(u_map.whatsapp) as seller_whatsapp'),
-                DB::raw('COALESCE(u_map.avatar_url) as seller_avatar_url'),
-                DB::raw('COALESCE(u_map.hire_date) as seller_hire_date'),
+                DB::raw('COALESCE(u_by_guid.name, u_map.name, u_legacy.nome_padronizado, it.vendedor_nome_pdv) as seller_name'),
+                DB::raw('COALESCE(u_by_guid.email, u_map.email, u_legacy.email) as seller_email'),
+                DB::raw('COALESCE(u_by_guid.whatsapp, u_map.whatsapp) as seller_whatsapp'),
+                DB::raw('COALESCE(u_by_guid.avatar_url, u_map.avatar_url) as seller_avatar_url'),
+                DB::raw('COALESCE(u_by_guid.hire_date, u_map.hire_date) as seller_hire_date'),
                 DB::raw('COALESCE(it.itens_count, 0) as itens_count'),
                 DB::raw('COALESCE(it.itens_qtd_total, 0) as itens_qtd_total'),
                 DB::raw('COALESCE(it.itens_valor_total, 0) as itens_valor_total'),
@@ -675,6 +677,7 @@ class PdvReportsController extends Controller
                 'id_operacao' => (int) $row->id_operacao,
                 'canal' => (string) ($row->canal ?? 'HIPER_CAIXA'),
                 'id_turno' => $row->id_turno,
+                'turno_seq' => $row->turno_seq ?? null,
                 'data_hora' => $this->toIso8601($row->data_hora),
                 'total' => (float) $row->total,
                 'itens' => [
@@ -828,6 +831,7 @@ class PdvReportsController extends Controller
                 'v.canal',
                 'v.id_operacao',
                 'v.id_turno',
+                'v.turno_seq',
                 'v.data_hora',
                 'v.total',
                 'v.erp_operacao_uuid',
@@ -881,10 +885,13 @@ class PdvReportsController extends Controller
                     ->on('pum.pdv_user_id', '=', 'vi.vendedor_pdv_id');
             })
             ->leftJoin('users as u', 'pum.user_id', '=', 'u.id')
+            ->leftJoin('users as u_by_guid', 'u_by_guid.guid', '=', 'vi.vendedor_guid')
             ->addSelect([
-                'u.whatsapp as vendedor_whatsapp',
-                'u.avatar_url as vendedor_avatar_url',
-                'u.hire_date as vendedor_hire_date',
+                DB::raw('COALESCE(u_by_guid.name, u.name) as vendedor_name_normalized'),
+                DB::raw('COALESCE(u_by_guid.whatsapp, u.whatsapp) as vendedor_whatsapp'),
+                DB::raw('COALESCE(u_by_guid.avatar_url, u.avatar_url) as vendedor_avatar_url'),
+                DB::raw('COALESCE(u_by_guid.hire_date, u.hire_date) as vendedor_hire_date'),
+                'u.name as mapped_user_name',
             ])
             ->get();
 
@@ -927,7 +934,7 @@ class PdvReportsController extends Controller
             'desconto' => (float) $row->desconto,
             'vendedor_pdv_id' => $row->vendedor_pdv_id !== null ? (int) $row->vendedor_pdv_id : null,
             'vendedor_guid' => $row->vendedor_guid ?? null,
-            'vendedor_nome' => $row->vendedor_nome,
+            'vendedor_nome' => $row->vendedor_name_normalized ?? $row->vendedor_nome, // Enriched name
             'vendedor_login' => $row->vendedor_login,
             'vendedor_user_id' => $row->vendedor_user_id !== null ? (int) $row->vendedor_user_id : null,
             'vendedor_whatsapp' => $row->vendedor_whatsapp ?? null,
@@ -963,6 +970,7 @@ class PdvReportsController extends Controller
                 'canal' => $resolvedCanal,
                 'id_operacao' => $resolvedIdOperacao,
                 'id_turno' => $venda->id_turno,
+                'turno_seq' => $venda->turno_seq ?? null,
                 'data_hora' => $this->toIso8601($venda->data_hora),
                 'total' => (float) $venda->total,
                 'erp_operacao_uuid' => $venda->erp_operacao_uuid ?? null,

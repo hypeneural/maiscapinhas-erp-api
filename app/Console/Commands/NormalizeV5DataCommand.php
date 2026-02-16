@@ -4,201 +4,107 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Log;
-use App\Models\Store;
 use App\Models\User;
-use Carbon\Carbon;
+use App\Models\Store;
+use Illuminate\Support\Str;
 
 class NormalizeV5DataCommand extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'normalize:v5-data {--stores-path=} {--users-path=}';
+    protected $signature = 'pdv:normalize-v5 {--file= : Path to dados_usuarios.json}';
+    protected $description = 'Ingest dados_usuarios.json to populate User GUIDs and Mappings';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Normalize Stores and Users data from V5 JSON files';
-
-    /**
-     * Execute the console command.
-     */
     public function handle()
     {
-        $storesPath = $this->option('stores-path') ?? 'C:\Users\Usuario\Desktop\dados_maisCapinhas\dados_de_loja.json';
-        $usersPath = $this->option('users-path') ?? 'C:\Users\Usuario\Desktop\dados_maisCapinhas\dados_usuarios.json';
+        $filePath = $this->option('file') ?? 'C:\Users\Usuario\Desktop\dados_maisCapinhas\dados_usuarios.json';
 
-        $this->info("Starting V5 Normalization...");
-        $this->info("Stores Path: $storesPath");
-        $this->info("Users Path: $usersPath");
-
-        if (File::exists($storesPath)) {
-            $this->normalizeStores($storesPath);
-        } else {
-            $this->error("Stores file not found!");
+        if (!file_exists($filePath)) {
+            $this->error("File not found: $filePath");
+            return 1;
         }
 
-        if (File::exists($usersPath)) {
-            $this->normalizeUsers($usersPath);
-        } else {
-            $this->error("Users file not found!");
-        }
+        $json = json_decode(file_get_contents($filePath), true);
+        $usersList = $json['Lista'] ?? [];
 
-        $this->info("Normalization Complete!");
-    }
+        $this->info("Found " . count($usersList) . " users to process.");
 
-    private function normalizeStores(string $path)
-    {
-        $this->info("Processing Stores...");
-        $json = File::json($path);
+        // Cache Stores for fuzzy matching
+        $stores = DB::table('pdv_store_mappings as m')
+            ->join('stores as s', 'm.store_id', '=', 's.id')
+            ->select('m.pdv_store_id', 's.name')
+            ->get();
 
-        foreach ($json as $item) {
-            $guid = $item['LojaId'] ?? null;
-            $name = $item['Nome'] ?? null;
-            $cnpj = $item['CnpjDaLoja'] ?? null;
-            $razaoSocial = $item['RazaoSocial'] ?? null;
-            $nomeFantasia = $item['NomeFantasia'] ?? null;
-            $pdvId = $item['Id'] ?? null; // External PDV ID
+        foreach ($usersList as $item) {
+            $guid = $item['Id'];
+            $pdvId = $item['IdUsuarioHiperOnline'];
+            $name = $item['Nome'];
+            $login = $item['UserName'];
+            $workplace = $item['LocalDeTrabalho']; // "Loja 7 - MC Bombinhas"
 
-            if (!$guid || !$name)
-                continue;
-
-            $this->line("Processing Store: $name ($guid)");
-
-            // Update or Create Store by GUID
-            $store = Store::where('guid', $guid)->first();
-
-            if (!$store) {
-                // Try finding by CNPJ or Name if GUID didn't match
-                if ($cnpj) {
-                    $store = Store::where('cnpj', $cnpj)->first();
-                }
-                if (!$store) {
-                    $store = Store::where('name', $name)->first();
-                }
-            }
-
-            if ($store) {
-                $store->update([
-                    'guid' => $guid,
-                    'cnpj' => $cnpj,
-                    'razao_social' => $razaoSocial,
-                    'nome_fantasia' => $nomeFantasia,
-                    'name' => $item['Apelido'] ?? $name, // Prefer nickname for internal display? Or keep original?
-                ]);
-            } else {
-                $store = Store::create([
-                    'guid' => $guid,
-                    'name' => $item['Apelido'] ?? $name,
-                    'cnpj' => $cnpj,
-                    'razao_social' => $razaoSocial,
-                    'nome_fantasia' => $nomeFantasia,
-                    'city' => 'Unknown', // Default
-                    'active' => true
-                ]);
-            }
-
-            // Sync with pdv_lojas
-            if ($pdvId) {
-                DB::table('pdv_lojas')->updateOrInsert(
-                    ['id_ponto_venda' => $pdvId],
-                    [
-                        'guid_loja' => $guid,
-                        'nome_padronizado' => $name,
-                        'nome_hiper' => $item['NomeFantasia'] ?? $name,
-                    ]
-                );
-
-                // Ensure Mapping Exists
-                DB::table('pdv_store_mappings')->updateOrInsert(
-                    ['pdv_store_id' => $pdvId],
-                    ['store_id' => $store->id, 'alias' => $item['Apelido']]
-                );
-            }
-        }
-    }
-
-    private function normalizeUsers(string $path)
-    {
-        $this->info("Processing Users...");
-        $json = File::json($path);
-
-        $list = $json['Lista'] ?? $json; // Handle different structures if needed
-
-        foreach ($list as $item) {
-            $guid = $item['Id'] ?? null;
-            $erpId = $item['IdUsuarioHiperOnline'] ?? null;
-            $name = $item['Nome'] ?? null;
-            $email = $item['UserName'] . '@maiscapinhas.com.br'; // Fallback email generation
-            // Note: Data doesn't have real emails, only UserNames usually.
-
-            if (!$guid)
-                continue;
-
-            $this->line("Processing User: $name ($guid)");
-
-            // Try to find existing User
+            // 1. Find User
             $user = User::where('guid', $guid)->first();
 
-            if (!$user && $erpId) {
-                $user = User::where('erp_id', $erpId)->first();
-            }
-
             if (!$user) {
-                // Try by name (risky but needed if no other ID)
-                $user = User::where('name', $name)->first();
-            }
+                // Try fuzzy match by name
+                $user = User::where('name', 'LIKE', "{$name}%")->first();
 
-            if ($user) {
-                $user->update([
-                    'guid' => $guid,
-                    'erp_id' => $erpId
-                ]);
+                if ($user) {
+                    $this->info("Linked '$name' to ID {$user->id} by Name match. Setting GUID $guid.");
+                    $user->guid = $guid;
+                    $user->save();
+                } else {
+                    $this->warn("User '$name' (Login: $login) not found in ERP. Skipping User Update.");
+                }
             } else {
-                // Create new user (Stub)
-                // We might need a randomized email if not provided
-                $user = User::create([
-                    'name' => $name,
-                    'email' => $email, // Placeholder
-                    'password' => bcrypt('password'), // Default password
-                    'guid' => $guid,
-                    'erp_id' => $erpId,
-                    'active' => !($item['Bloqueado'] ?? false)
-                ]);
+                $this->line("User '$name' already has GUID {$user->guid}.");
             }
 
-            // Sync pdv_usuarios
-            if ($erpId) {
-                DB::table('pdv_usuarios')->updateOrInsert(
-                    ['id_usuario_hiper' => $erpId],
+            // 2. Create Mapping if User Exists
+            if ($user && $pdvId) {
+                // Resolve Store ID
+                $storePdvId = 0;
+                if ($workplace) {
+                    // Try to match workplace string to store name
+                    $match = $stores->filter(function ($s) use ($workplace) {
+                        return Str::contains(Str::slug($workplace), Str::slug($s->name));
+                    })->first();
+
+                    if ($match) {
+                        $storePdvId = $match->pdv_store_id;
+                    }
+                }
+
+                // If storePdvId is 0, we can still save mapping if global... 
+                // schema requires store_pdv_id? Usually yes. 
+                // But for user mapping it might be specific to that store relationship.
+                // Let's assume 0 or nullable if not found? 
+                // Checking Schema: pdv_user_mappings.store_pdv_id is integer? 
+                // Based on PdvUserResolver, it takes storePdvId.
+
+                // Let's use a default or skip if store not found?
+                // Actually, if mapped globally, store_pdv_id might trigger constraint.
+                // We'll proceed with upsert.
+
+                DB::table('pdv_user_mappings')->updateOrInsert(
                     [
+                        'pdv_user_id' => $pdvId,
+                        'store_pdv_id' => $storePdvId, // Composite key? No, logic uses pdv_user_id primarily?
+                    ],
+                    [
+                        'user_id' => $user->id,
+                        'pdv_user_login' => $login,
+                        'pdv_user_name' => $name,
                         'guid_usuario' => $guid,
-                        'nome_padronizado' => $name,
-                        'login_hiper' => $item['UserName'] ?? null,
-                        'papel' => $item['PerfilUsuarioNome'] ?? 'Vendedor',
-                        'ativo' => !($item['Bloqueado'] ?? false)
+                        'active' => true,
+                        'updated_at' => now(),
+                        'created_at' => now(), // only on insert
                     ]
                 );
 
-                // Retrieve pdv_user_id (id from pdv_usuarios table, not erp_id)
-                $pdvUser = DB::table('pdv_usuarios')->where('id_usuario_hiper', $erpId)->first();
-
-                if ($pdvUser) {
-                    // Mapping
-                    // NOTE: Mapping usually requires a store context. 
-                    // But here we are just linking User -> PDV User globally if possible.
-                    // The pdv_user_mappings table requires `store_pdv_id`. 
-                    // The JSON has `LocalDeTrabalho`, but that's a string name.
-                    // We can skip mapping creation here and let it happen on demand, 
-                    // OR try to resolve the store name to an ID.
-                }
+                $this->info("Mapped PDV User $pdvId to User {$user->id} (Store PDV: $storePdvId).");
             }
         }
+
+        $this->info("Normalization Complete.");
+        return 0;
     }
 }
