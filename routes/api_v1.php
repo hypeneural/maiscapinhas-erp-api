@@ -246,7 +246,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // PDV Sales Validation
     // ============================================
     Route::prefix('pdv')->name('pdv.')->group(function () {
-        Route::post('/sales/validate', \App\Http\Controllers\Api\PdvSaleValidateController::class)->name('sales.validate');
+        Route::post('/sales/validate', [\App\Http\Controllers\Api\PdvSaleValidateController::class, 'validateSingle'])->name('sales.validate');
+        Route::post('/sales/validate-batch', [\App\Http\Controllers\Api\PdvSaleValidateController::class, 'validateBatch'])->name('sales.validate-batch');
     });
 
     // ============================================
