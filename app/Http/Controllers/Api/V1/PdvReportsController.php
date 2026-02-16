@@ -503,12 +503,15 @@ class PdvReportsController extends Controller
         $storeAlias = isset($validated['store_alias']) ? trim((string) $validated['store_alias']) : null;
         $scope = $this->resolveStoreScope($request, $storeId, $storePdvId, $storeAlias);
 
+
+        $timezone = 'America/Sao_Paulo';
+
         $from = isset($validated['from'])
-            ? CarbonImmutable::parse((string) $validated['from'])->startOfDay()
-            : CarbonImmutable::now()->subDays(30)->startOfDay();
+            ? CarbonImmutable::parse((string) $validated['from'], $timezone)->startOfDay()->setTimezone('UTC')
+            : CarbonImmutable::now($timezone)->subDays(30)->startOfDay()->setTimezone('UTC');
         $to = isset($validated['to'])
-            ? CarbonImmutable::parse((string) $validated['to'])->endOfDay()
-            : CarbonImmutable::now()->endOfDay();
+            ? CarbonImmutable::parse((string) $validated['to'], $timezone)->endOfDay()->setTimezone('UTC')
+            : CarbonImmutable::now($timezone)->endOfDay()->setTimezone('UTC');
 
         if ($to->lt($from)) {
             throw ValidationException::withMessages([

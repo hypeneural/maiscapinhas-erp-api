@@ -612,6 +612,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                 'canal' => $canal,
                 'id_operacao' => $idOperacao,
                 'id_turno' => $idTurno,
+                'turno_seq' => $turnoSeq,
                 'data_hora' => $dataHora,
                 'total' => $total,
                 'sync_id' => $sync->sync_id,
