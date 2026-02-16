@@ -645,12 +645,18 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                     $precoUnit = $this->asDecimal(data_get($item, 'preco_unit') ?? data_get($item, 'ValorUnitario'), 2);
                     $totalItem = $this->asDecimal(data_get($item, 'total') ?? data_get($item, 'ValorTotal'), 2);
                     $desconto = $this->asDecimal(data_get($item, 'desconto') ?? data_get($item, 'Desconto'), 2);
-                    $vendedorPdvId = $this->asInt(data_get($item, 'vendedor.id_usuario'));
-                    $vendedorLogin = $this->asString(data_get($item, 'vendedor.login'));
+
+                    // V5 Vendedor Normalization
+                    $vendedorObj = data_get($item, 'vendedor') ?? data_get($item, 'Vendedor', []);
+                    $vendedorPdvId = $this->asInt(data_get($vendedorObj, 'id_usuario') ?? data_get($vendedorObj, 'IdUsuarioHiperOnline'));
+                    $vendedorLogin = $this->asString(data_get($vendedorObj, 'login') ?? data_get($vendedorObj, 'Login') ?? data_get($vendedorObj, 'UserName'));
+                    $vendedorNome = $this->asString(data_get($vendedorObj, 'nome') ?? data_get($vendedorObj, 'Nome'));
+                    $vendedorGuid = $this->asString(data_get($vendedorObj, 'guid') ?? data_get($vendedorObj, 'Id') ?? data_get($item, 'SellerId'));
+
                     $vendedorUserId = $hasVendedorUserId
-                        ? $this->resolveMappedUserId($storePdvId, $vendedorPdvId, $vendedorLogin, $userMappings, $this->asString(data_get($item, 'vendedor.guid')))
+                        ? $this->resolveMappedUserId($storePdvId, $vendedorPdvId, $vendedorLogin, $userMappings, $vendedorGuid)
                         : null;
-                    $vendedorNome = $this->asString(data_get($item, 'vendedor.nome'));
+
                     $lineId = $this->asInt(data_get($item, 'line_id'));
                     $lineId = $lineId !== null && $lineId > 0 ? $lineId : null;
                     $lineNo = $this->resolveLineNumber($item, $index);
@@ -705,8 +711,8 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                         $itemRow['vendedor_login'] = $vendedorLogin;
                     }
                     if ($hasVendedorGuid) {
-                        $itemRow['vendedor_guid'] = $this->asString(data_get($item, 'vendedor.guid'));
-                        $itemRow['vendedor_hiper_id'] = $this->asInt(data_get($item, 'vendedor.id_hiper'));
+                        $itemRow['vendedor_guid'] = $vendedorGuid;
+                        $itemRow['vendedor_hiper_id'] = $this->asInt(data_get($vendedorObj, 'id_hiper') ?? data_get($vendedorObj, 'IdUsuarioHiperOnline'));
                     }
 
                     if ($lineId !== null) {
@@ -963,8 +969,8 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                 'duracao_segundos' => $this->asInt(data_get($snapshotVenda, 'duracao_segundos')),
                 'id_turno' => $this->asString(data_get($snapshotVenda, 'id_turno')),
                 'turno_seq' => $this->asInt(data_get($snapshotVenda, 'turno_seq')),
-                'vendedor_pdv_id' => $this->asInt(data_get($snapshotVenda, 'vendedor.id_usuario')),
-                'vendedor_nome' => $this->asString(data_get($snapshotVenda, 'vendedor.nome')),
+                'vendedor_pdv_id' => $this->asInt(data_get($snapshotVenda, 'vendedor.id_usuario') ?? data_get($snapshotVenda, 'Vendedor.IdUsuarioHiperOnline')),
+                'vendedor_nome' => $this->asString(data_get($snapshotVenda, 'vendedor.nome') ?? data_get($snapshotVenda, 'Vendedor.Nome')),
                 'qtd_itens' => max(0, (int) data_get($snapshotVenda, 'qtd_itens', 0)),
                 'total_itens' => $this->asDecimal(data_get($snapshotVenda, 'total_itens', 0), 2),
                 'last_sync_id' => $sync->sync_id,
@@ -972,7 +978,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                 'updated_at' => $now,
             ];
             if ($hasResumoVendedorLogin) {
-                $rows[array_key_last($rows)]['vendedor_login'] = $this->asString(data_get($snapshotVenda, 'vendedor.login'));
+                $rows[array_key_last($rows)]['vendedor_login'] = $this->asString(data_get($snapshotVenda, 'vendedor.login') ?? data_get($snapshotVenda, 'Vendedor.Login') ?? data_get($snapshotVenda, 'Vendedor.UserName'));
             }
         }
 
@@ -1059,11 +1065,18 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             }
 
             $canal = $this->resolveTurnoCanal($sync, $storePdvId, data_get($snapshotTurno, 'canal'));
-            $operadorPdvId = $this->asInt(data_get($snapshotTurno, 'operador.id_usuario'));
-            $operadorLogin = $this->asString(data_get($snapshotTurno, 'operador.login'));
-            $responsavelLogin = $this->asString(data_get($snapshotTurno, 'responsavel.login'));
+
+            $operadorObj = data_get($snapshotTurno, 'operador') ?? data_get($snapshotTurno, 'Operador', []);
+            $responsavelObj = data_get($snapshotTurno, 'responsavel') ?? data_get($snapshotTurno, 'Responsavel', []);
+
+            $operadorPdvId = $this->asInt(data_get($operadorObj, 'id_usuario') ?? data_get($operadorObj, 'IdUsuarioHiperOnline') ?? data_get($operadorObj, 'Codigo'));
+            $operadorLogin = $this->asString(data_get($operadorObj, 'login') ?? data_get($operadorObj, 'Login') ?? data_get($operadorObj, 'UserName'));
+            $operadorGuid = $this->asString(data_get($operadorObj, 'guid') ?? data_get($operadorObj, 'Id'));
+
+            $responsavelLogin = $this->asString(data_get($responsavelObj, 'login') ?? data_get($responsavelObj, 'Login') ?? data_get($responsavelObj, 'UserName'));
+
             $operadorUserId = $hasOperadorUserId
-                ? $this->resolveMappedUserId($storePdvId, $operadorPdvId, $operadorLogin, $userMappings, $this->asString(data_get($snapshotTurno, 'operador.guid')))
+                ? $this->resolveMappedUserId($storePdvId, $operadorPdvId, $operadorLogin, $userMappings, $operadorGuid)
                 : null;
 
             $rows[] = [
@@ -1103,10 +1116,10 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             }
             if ($hasOperadorGuid) {
                 $lastKey = array_key_last($rows);
-                $rows[$lastKey]['operador_guid'] = $this->asString(data_get($snapshotTurno, 'operador.guid'));
-                $rows[$lastKey]['operador_hiper_id'] = $this->asInt(data_get($snapshotTurno, 'operador.id_hiper'));
-                $rows[$lastKey]['responsavel_guid'] = $this->asString(data_get($snapshotTurno, 'responsavel.guid'));
-                $rows[$lastKey]['responsavel_hiper_id'] = $this->asInt(data_get($snapshotTurno, 'responsavel.id_hiper'));
+                $rows[$lastKey]['operador_guid'] = $operadorGuid;
+                $rows[$lastKey]['operador_hiper_id'] = $this->asInt(data_get($operadorObj, 'id_hiper') ?? data_get($operadorObj, 'IdUsuarioHiperOnline'));
+                $rows[$lastKey]['responsavel_guid'] = $this->asString(data_get($responsavelObj, 'guid') ?? data_get($responsavelObj, 'Id'));
+                $rows[$lastKey]['responsavel_hiper_id'] = $this->asInt(data_get($responsavelObj, 'id_hiper') ?? data_get($responsavelObj, 'IdUsuarioHiperOnline'));
             }
         }
 

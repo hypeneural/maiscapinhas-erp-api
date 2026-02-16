@@ -87,6 +87,38 @@ class PdvUserResolver
     }
 
     /**
+     * Tenta vincular automaticamente um usuário existente pelo GUID, se o mapping não existir.
+     */
+    private function autoLinkUserByGuid(int $storePdvId, int $pdvUserId, string $pdvUserLogin, string $userGuid): ?int
+    {
+        // 1. Verificar se usuário já existe com esse GUID
+        $user = DB::table('users')->where('guid', $userGuid)->first(['id']);
+
+        if (!$user) {
+            return null;
+        }
+
+        // 2. Criar ou atualizar o mapping
+        // Use updateOrInsert to avoid unique constraint violations in race conditions
+        DB::table('pdv_user_mappings')->updateOrInsert(
+            [
+                'store_pdv_id' => $storePdvId,
+                'pdv_user_id' => $pdvUserId,
+            ],
+            [
+                'user_id' => $user->id,
+                'pdv_user_login' => $pdvUserLogin,
+                'guid_usuario' => $userGuid,
+                'active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+
+        return (int) $user->id;
+    }
+
+    /**
      * @param array{
      *   by_id?:array<int, array{user_id:int|null,is_store_operator:bool,pdv_user_name:?string,pdv_user_login:?string}>,
      *   by_login?:array<string, array{user_id:int|null,is_store_operator:bool,pdv_user_name:?string,pdv_user_login:?string}>,
@@ -94,15 +126,19 @@ class PdvUserResolver
      * }|array<int, array{user_id:int|null,is_store_operator:bool,pdv_user_name:?string,pdv_user_login:?string}> $mappings
      * @return array{status:string,user_id:int|null,is_store_operator:bool,flags:array<int,string>}
      */
-    public function resolve(?int $pdvUserId, ?string $pdvUserLogin, array $mappings, ?string $pdvUserGuid = null): array
+    public function resolve(int $storePdvId, ?int $pdvUserId, ?string $pdvUserLogin, array $mappings, ?string $pdvUserGuid = null): array
     {
         $byId = $this->extractByIdMappings($mappings);
         $byLogin = $this->extractByLoginMappings($mappings);
         $byGuid = $this->extractByGuidMappings($mappings);
 
+        // Normalize
+        $pdvUserId = (int) $pdvUserId;
+        $pdvUserLogin = (string) $pdvUserLogin;
+
         $loginKey = $this->normalizeLogin($pdvUserLogin);
 
-        if (($pdvUserId === null || $pdvUserId <= 0) && $loginKey === null && $pdvUserGuid === null) {
+        if (($pdvUserId <= 0) && $loginKey === null && $pdvUserGuid === null) {
             return [
                 'status' => 'empty',
                 'user_id' => null,
@@ -112,41 +148,42 @@ class PdvUserResolver
         }
 
         // Try resolving by GUID first
-        if ($pdvUserGuid !== null && isset($byGuid[$pdvUserGuid])) {
-            $guidMapping = $byGuid[$pdvUserGuid];
+        if ($pdvUserGuid !== null) {
+            if (isset($byGuid[$pdvUserGuid])) {
+                $guidMapping = $byGuid[$pdvUserGuid];
 
-            if ((bool) ($guidMapping['is_store_operator'] ?? false)) {
-                return [
-                    'status' => 'operator',
-                    'user_id' => null,
-                    'is_store_operator' => true,
-                    'flags' => [],
-                ];
-            }
-
-            $guidUserId = (int) ($guidMapping['user_id'] ?? 0);
-            if ($guidUserId > 0) {
-                // Check for ID mismatch (Integrity Check)
-                if ($pdvUserId > 0) {
-                    $mappedPdvId = (int) ($guidMapping['pdv_user_id'] ?? 0);
-                    // If mapping has a specific PDV ID and it differs from payload
-                    if ($mappedPdvId > 0 && $mappedPdvId !== $pdvUserId) {
-                        // This is a specialized case of guid_mismatch (GUID points to X, ID points to Y?? No wait)
-                        // Actually, if we found by GUID, we trust GUID. 
-                        // But if the mapped row has a DIFFERENT pdv_user_id than what we received, it implies the ID changed locally but GUID stayed same.
-                        // This is fine (ID reuse/change), but maybe worth noting.
-                        // For now, we trust GUID implicitly.
-                    }
+                if ((bool) ($guidMapping['is_store_operator'] ?? false)) {
+                    return [
+                        'status' => 'operator',
+                        'user_id' => null,
+                        'is_store_operator' => true,
+                        'flags' => [],
+                    ];
                 }
 
+                $guidUserId = (int) ($guidMapping['user_id'] ?? 0);
+                if ($guidUserId > 0) {
+                    return [
+                        'status' => 'resolved',
+                        'user_id' => $guidUserId,
+                        'is_store_operator' => false,
+                        'flags' => [],
+                    ];
+                }
+            }
+
+            // Auto-Link fallback: If GUID matches a User but no mapping exists
+            $autoLinkedUserId = $this->autoLinkUserByGuid($storePdvId, $pdvUserId, $pdvUserLogin, $pdvUserGuid);
+            if ($autoLinkedUserId) {
                 return [
-                    'status' => 'resolved',
-                    'user_id' => $guidUserId,
+                    'status' => 'auto_linked',
+                    'user_id' => $autoLinkedUserId,
                     'is_store_operator' => false,
                     'flags' => [],
                 ];
             }
         }
+
 
         $idMapping = ($pdvUserId !== null && $pdvUserId > 0) ? ($byId[$pdvUserId] ?? null) : null;
         $loginMapping = $loginKey !== null ? ($byLogin[$loginKey] ?? null) : null;
