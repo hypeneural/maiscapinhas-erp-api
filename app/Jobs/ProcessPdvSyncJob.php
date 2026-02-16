@@ -1933,7 +1933,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
      */
     private function resolveMappedUserId(int $storePdvId, ?int $pdvUserId, ?string $pdvUserLogin, array $userMappings, ?string $pdvUserGuid = null): ?int
     {
-        $resolution = app(PdvUserResolver::class)->resolve($pdvUserId, $pdvUserLogin, $userMappings, $pdvUserGuid);
+        $resolution = app(PdvUserResolver::class)->resolve($storePdvId, $pdvUserId, $pdvUserLogin, $userMappings, $pdvUserGuid);
 
         // Fallback: Resolve via Deep Lookup (pdv_usuarios table) if standard resolution failed but GUID is present
         if (($resolution['status'] === 'missing' || $resolution['status'] === 'empty') && $pdvUserGuid !== null) {
