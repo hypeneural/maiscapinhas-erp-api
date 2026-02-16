@@ -229,6 +229,21 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
     private function resolveStoreContext(PdvSync $sync, array $payload): array
     {
         $storePdvId = (int) ($sync->store_pdv_id ?: (int) data_get($payload, 'store.id_ponto_venda', 0));
+
+        // Fallback: Resolve store_pdv_id from GUID if missing (V5 Payload Support)
+        if ($storePdvId <= 0) {
+            $storeGuid = $this->asString(data_get($payload, 'store.LojaId') ?? data_get($payload, 'store.guid'));
+            if ($storeGuid !== null) {
+                $resolvedPdv = DB::table('pdv_lojas')
+                    ->where('guid', $storeGuid)
+                    ->value('id_ponto_venda');
+
+                if ($resolvedPdv) {
+                    $storePdvId = (int) $resolvedPdv;
+                }
+            }
+        }
+
         if ($storePdvId <= 0) {
             throw new RuntimeException('Missing store.id_ponto_venda for PDV sync.');
         }
@@ -1904,6 +1919,31 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
     private function resolveMappedUserId(int $storePdvId, ?int $pdvUserId, ?string $pdvUserLogin, array $userMappings, ?string $pdvUserGuid = null): ?int
     {
         $resolution = app(PdvUserResolver::class)->resolve($pdvUserId, $pdvUserLogin, $userMappings, $pdvUserGuid);
+
+        // Fallback: Resolve via Deep Lookup (pdv_usuarios table) if standard resolution failed but GUID is present
+        if (($resolution['status'] === 'missing' || $resolution['status'] === 'empty') && $pdvUserGuid !== null) {
+            $pdvUser = DB::table('pdv_usuarios')->where('guid_usuario', $pdvUserGuid)->first(['id_usuario_hiper']);
+
+            if ($pdvUser && $storePdvId > 0) {
+                // Check for existing mapping using the resolved ID
+                $mapping = DB::table('pdv_user_mappings')
+                    ->where('store_pdv_id', $storePdvId)
+                    ->where('pdv_user_id', $pdvUser->id_usuario_hiper)
+                    ->where('active', true)
+                    ->first(['id', 'user_id', 'guid_usuario']);
+
+                if ($mapping) {
+                    // Self-healing: Update mapping with GUID if missing
+                    if (empty($mapping->guid_usuario)) {
+                        DB::table('pdv_user_mappings')
+                            ->where('id', $mapping->id)
+                            ->update(['guid_usuario' => $pdvUserGuid, 'updated_at' => now()]);
+                    }
+
+                    return (int) $mapping->user_id;
+                }
+            }
+        }
         $resolutionFlags = is_array($resolution['flags'] ?? null)
             ? array_values(array_unique($resolution['flags']))
             : [];

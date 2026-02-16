@@ -564,6 +564,8 @@ class PdvReportsController extends Controller
                 'v.id',
                 'v.store_id',
                 's.name as store_name',
+                's.razao_social as store_razao_social',
+                's.cnpj as store_cnpj',
                 'v.store_pdv_id',
                 'pl.nome_padronizado as store_pdv_name',
                 'v.id_operacao',
@@ -663,6 +665,8 @@ class PdvReportsController extends Controller
             ->map(fn($row): array => [
                 'store_id' => $row->store_id !== null ? (int) $row->store_id : null,
                 'store_name' => $row->store_name,
+                'store_razao_social' => $row->store_razao_social ?? null,
+                'store_cnpj' => $row->store_cnpj ?? null,
                 'store_pdv_id' => (int) $row->store_pdv_id,
                 'seller_name' => $row->seller_name ?? null,
                 'seller_whatsapp' => $row->seller_whatsapp ?? null,
@@ -817,6 +821,8 @@ class PdvReportsController extends Controller
             ->select([
                 'v.store_id',
                 's.name as store_name', // Internal Store Name
+                's.razao_social as store_razao_social',
+                's.cnpj as store_cnpj',
                 'v.store_pdv_id',
                 'pl.nome_padronizado as store_pdv_name', // PDV Store Name
                 'v.canal',
@@ -952,8 +958,8 @@ class PdvReportsController extends Controller
                 'store_name' => $venda->store_name ?? null,
                 'store_pdv_id' => $resolvedStorePdvId,
                 'store_pdv_name' => $venda->store_pdv_name ?? null,
-                // 'store_cnpj' => $venda->store_cnpj ?? null, // Removed
-                // 'store_razao_social' => $venda->store_razao_social ?? null, // Removed
+                'store_cnpj' => $venda->store_cnpj ?? null,
+                'store_razao_social' => $venda->store_razao_social ?? null,
                 'canal' => $resolvedCanal,
                 'id_operacao' => $resolvedIdOperacao,
                 'id_turno' => $venda->id_turno,

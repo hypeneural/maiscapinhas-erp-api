@@ -33,6 +33,9 @@ class Store extends Model
         'opening_hours',
         'cnpj',
         'troco_padrao',
+        'guid',
+        'razao_social',
+        'nome_fantasia',
     ];
 
     protected $casts = [

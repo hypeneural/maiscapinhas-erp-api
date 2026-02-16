@@ -37,6 +37,8 @@ class User extends Authenticatable
         'instagram',
         'cpf',
         'pix_key',
+        'guid',
+        'erp_id',
     ];
 
     protected $hidden = [
