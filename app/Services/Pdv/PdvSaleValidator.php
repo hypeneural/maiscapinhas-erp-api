@@ -253,7 +253,9 @@ class PdvSaleValidator
 
     private function resolveErpLojaUuid(array $erp): ?string
     {
-        $uuid = data_get($erp, 'LojaId') ?? data_get($erp, 'Loja.LojaId');
+        $uuid = data_get($erp, 'LojaId')
+            ?? data_get($erp, 'Loja.LojaId')
+            ?? data_get($erp, 'Turno.LojaId'); // Adicionado fallback para payload V5 completo
         return $uuid ? strtolower(trim($uuid)) : null;
     }
 
@@ -361,7 +363,9 @@ class PdvSaleValidator
     private function resolveStorePdvId(array $erp): ?int
     {
         // 1. Try match by GUID (LojaId) - Priority 1 (V5)
-        $guidLoja = data_get($erp, 'LojaId') ?? data_get($erp, 'Loja.LojaId');
+        $guidLoja = data_get($erp, 'LojaId')
+            ?? data_get($erp, 'Loja.LojaId')
+            ?? data_get($erp, 'Turno.LojaId'); // Adicionado fallback
         if ($guidLoja) {
             // Check mappings first (most likely place for active stores)
             $mapping = DB::table('pdv_store_mappings')
