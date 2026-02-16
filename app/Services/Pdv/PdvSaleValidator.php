@@ -35,9 +35,15 @@ class PdvSaleValidator
         }
 
         // 2) Extrair campos principais do ERP
-        $erpTotal = (float) data_get($erp, 'ValorTotalLiquido', 0);
-        $erpDate = data_get($erp, 'Data'); // ex: 2026-02-14T11:44:11
-        $lojaId = data_get($erp, 'LojaId') ?? data_get($erp, 'Loja.Id');
+        $erpTotal = (float) (data_get($erp, 'ValorTotalLiquido') ?? data_get($erp, 'total') ?? 0);
+        $erpDate = data_get($erp, 'Data') ?? data_get($erp, 'data_hora'); // ex: 2026-02-14T11:44:11
+
+        // Extração robusta do ID da Loja (UUID)
+        $lojaId = data_get($erp, 'LojaId')
+            ?? data_get($erp, 'Loja.LojaId')
+            ?? data_get($erp, 'Turno.LojaId')
+            ?? data_get($erp, 'Loja.Id');
+
         $nfeKey = data_get($erp, 'DocumentosFiscais.0.Chave');
         $erpId = data_get($erp, 'CodigoDaOperacao');
 
@@ -56,6 +62,11 @@ class PdvSaleValidator
             return [
                 'ok' => false,
                 'error' => 'Campos mínimos ausentes: Data e/ou ValorTotalLiquido.',
+                'debug' => [
+                    'received_total' => $erpTotal,
+                    'received_date' => $erpDate,
+                    'keys_found' => array_keys($erp)
+                ]
             ];
         }
 
