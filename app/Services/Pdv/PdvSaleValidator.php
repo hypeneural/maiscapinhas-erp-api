@@ -71,10 +71,16 @@ class PdvSaleValidator
             ];
         }
 
-        // 3) Resolver store_pdv_id
+        // 3) Resolver store_pdv_id (Int)
+        // Isso é crucial para busca heurística e performance, mas se tivermos UUIDs, podemos tentar Golden Match antes de falhar.
         $storePdvId = $this->resolveStorePdvId($erp);
 
-        if (!$storePdvId) {
+        $erpLojaUuid = $this->resolveErpLojaUuid($erp);
+        $erpOperacaoUuid = strtolower(trim((string) (data_get($erp, 'ErpOperacaoUuid') ?? data_get($erp, 'Id'))));
+
+        // Se falhar a resolução da loja (ID Interno), só retornamos erro se NÃO tivermos UUIDs para tentar o Golden Match.
+        // Se tiver UUID da Loja e da Operação, vamos tentar achar direto no banco, talvez a loja não esteja mapeada "localmente" (store_pdv_id) mas exista no banco (erp_loja_uuid).
+        if (!$storePdvId && !($erpLojaUuid && $erpOperacaoUuid)) {
             return [
                 'ok' => false,
                 'error' => 'Não consegui resolver store_pdv_id. Verifique se a loja está mapeada.',
