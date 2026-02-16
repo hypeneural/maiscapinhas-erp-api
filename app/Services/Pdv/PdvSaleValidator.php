@@ -102,15 +102,18 @@ class PdvSaleValidator
         $erpItemSig = $this->erpItemsSignature($erp);
         $erpPaySig = $this->erpPaymentsSignature($erp);
 
+        $erpLojaUuid = $this->resolveErpLojaUuid($erp);
+        $erpVendedorUuid = $this->resolveErpVendedorUuid($erp); // Helper to extract from items/user
+
         // 5) BUSCA HIERARQUICA (Golden Key -> Fiscal -> Heuristica)
 
-        $matchFn = function ($venda, $source) use ($erpId, $erpTotal, $erpItemSig, $erpPaySig) {
-            return $this->buildMatchResult($venda, $source, $erpId, $erpTotal, $erpItemSig, $erpPaySig);
+        $matchFn = function ($venda, $source) use ($erpId, $erpTotal, $erpItemSig, $erpPaySig, $erpLojaUuid, $erpVendedorUuid) {
+            return $this->buildMatchResult($venda, $source, $erpId, $erpTotal, $erpItemSig, $erpPaySig, $erpLojaUuid, $erpVendedorUuid);
         };
 
         // --- NÍVEL 1: GOLDEN KEY (UUID da Operação) ---
         $erpOperacaoUuid = strtolower(trim((string) (data_get($erp, 'ErpOperacaoUuid') ?? data_get($erp, 'Id'))));
-        $erpLojaUuid = $this->resolveErpLojaUuid($erp);
+        // $erpLojaUuid resolved above
 
         if ($erpOperacaoUuid && $erpLojaUuid) {
             /** @var PdvVenda|null $goldenMatch */
@@ -248,7 +251,23 @@ class PdvSaleValidator
         return $uuid ? strtolower(trim($uuid)) : null;
     }
 
-    private function buildMatchResult(PdvVenda $venda, string $matchType, $erpId, $erpTotal, $erpItemSig, $erpPaySig): array
+    private function resolveErpVendedorUuid(array $erp): ?string
+    {
+        // Tenta pegar do primeiro item (onde geralmente vem)
+        $firstItem = data_get($erp, 'Itens.0');
+        if ($firstItem) {
+            $uuid = data_get($firstItem, 'VendedorId');
+            if ($uuid)
+                return strtolower(trim($uuid));
+        }
+
+        // Tenta pegar de campos de usuário da operação (se existirem com esse nome no futuro)
+        // Por hora, apenas Itens.VendedorId é garantido pelo exemplo do usuário.
+
+        return null;
+    }
+
+    private function buildMatchResult(PdvVenda $venda, string $matchType, $erpId, $erpTotal, $erpItemSig, $erpPaySig, $erpLojaUuid, $erpVendedorUuid): array
     {
         // Carregar relações para calcular assinaturas DB e enriquecer output
         $this->loadRelationsManual($venda);
@@ -259,16 +278,42 @@ class PdvSaleValidator
         $itemsExact = ($erpItemSig == $dbItemSig);
         $payExact = ($erpPaySig == $dbPaySig);
 
-        // Para matches diretos (Gold/Fiscal), assumimos 100% de confiança na Identidade
-        // MAS reportamos se o conteúdo diverge (Sync Lag)
+        // --- Identity Matches (Store & Seller) ---
+        // Store Match: Comparar UUID da Loja do Payload com UUID da Loja salva na Venda
+        // Nota: $venda->erp_loja_uuid deve existir. Se não, comparamos com base na loja vinculada.
+        $dbLojaUuid = strtolower(trim($venda->erp_loja_uuid ?? ''));
+        if (!$dbLojaUuid && $venda->loja) {
+            $dbLojaUuid = strtolower(trim($venda->loja->guid_loja ?? ''));
+        }
+        $storeIdentityMatch = $erpLojaUuid && $dbLojaUuid && ($erpLojaUuid === $dbLojaUuid);
+
+        // Seller Match: Comparar UUID do Vendedor do Payload (Item 0) com UUID salvo nos Itens da Venda
+        // Assumimos que a venda pertence a um vendedor principal. Verificamos se ALGUM item tem esse GUID.
+        $dbVendedorUuid = null;
+        $sellerIdentityMatch = false;
+
+        if ($erpVendedorUuid) {
+            // Tenta achar esse GUID nos itens da venda
+            foreach ($venda->itens as $item) {
+                $itemGuid = strtolower(trim($item->vendedor_guid ?? ''));
+                if ($itemGuid === $erpVendedorUuid) {
+                    $sellerIdentityMatch = true;
+                    $dbVendedorUuid = $itemGuid;
+                    break;
+                }
+            }
+        }
+
+        // Para matches diretos (Gold/Fiscal), assumimos 100% de confiança na Identidade (da Operação)
+        // MAS reportamos se o conteúdo ou os atores (Store/Seller) divergem.
 
         $enriched = $this->enrichMatchData($venda);
 
         return [
             'ok' => true,
             'found' => true,
-            'match_100' => true, // Identity match is 100%
-            'content_match' => ($itemsExact && $payExact), // New flag for content
+            'match_100' => true, // Identity match (Operation UUID) is 100%
+            'content_match' => ($itemsExact && $payExact),
             'best_match' => [
                 'pdv_venda_id' => $venda->id,
                 'id_operacao_db' => $venda->id_operacao,
@@ -278,6 +323,8 @@ class PdvSaleValidator
                 'match_type' => $matchType,
                 'items_exact' => $itemsExact,
                 'payments_exact' => $payExact,
+                'store_identity_match' => $storeIdentityMatch,
+                'seller_identity_match' => $sellerIdentityMatch,
                 'db_details' => $enriched,
             ],
             'all_candidates_count' => 1,
