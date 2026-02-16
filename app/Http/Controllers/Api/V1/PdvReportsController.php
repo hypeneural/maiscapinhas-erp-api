@@ -607,6 +607,9 @@ class PdvReportsController extends Controller
         if (!empty($validated['id_turno'])) {
             $query->where('v.id_turno', (string) $validated['id_turno']);
         }
+        if (!empty($validated['turno_seq'])) {
+            $query->where('v.turno_seq', (int) $validated['turno_seq']);
+        }
         if (isset($validated['min_total'])) {
             $query->where('v.total', '>=', (float) $validated['min_total']);
         }
@@ -935,6 +938,8 @@ class PdvReportsController extends Controller
             'preco_unit' => (float) $row->preco_unit,
             'total' => (float) $row->total,
             'desconto' => (float) $row->desconto,
+            'valor_original' => round((float) ($row->total + $row->desconto), 2),
+            'preco_original' => $row->qtd > 0 ? round((float) (($row->total + $row->desconto) / $row->qtd), 2) : 0.0,
             'vendedor_pdv_id' => $row->vendedor_pdv_id !== null ? (int) $row->vendedor_pdv_id : null,
             'vendedor_guid' => $row->vendedor_guid ?? null,
             'vendedor_nome' => $row->vendedor_name_normalized ?? $row->vendedor_nome, // Enriched name
@@ -1525,72 +1530,140 @@ class PdvReportsController extends Controller
      * Retorna lista de vendedores que já realizaram vendas na loja.
      * Prioriza nomes mapeados (usuários do sistema), depois nomes do PDV, e por fim ID.
      */
+    /**
+     * Lista de Vendedores para Filtro
+     *
+     * Retorna lista de vendedores que já realizaram vendas na loja (ou em todas as lojas permitidas).
+     * Prioriza nomes mapeados (usuários do sistema), depois nomes do PDV, e por fim ID.
+     */
     public function vendedores(Request $request): JsonResponse
     {
         $request->validate([
-            'store_id' => ['required', 'integer'],
+            'store_id' => ['nullable', 'integer'],
         ]);
 
-        $storeId = (int) $request->input('store_id');
+        $user = $request->user();
+        $targetStoreIds = [];
 
-        // Resolver pdv_store_id via tabela de mappings
-        $mapping = DB::table('pdv_store_mappings')
-            ->where('store_id', $storeId)
-            ->where('active', true)
-            ->first();
+        // 1. Determine Scope (Specific Store or All Allowed)
+        if ($request->has('store_id') && $request->input('store_id') !== null) {
+            $storeId = (int) $request->input('store_id');
+            if (!$user->isSuperAdmin() && !$user->hasAccessToStore($storeId)) {
+                return $this->success([]); // Or 403, but empty list is safer for dropdowns
+            }
+            $targetStoreIds = [$storeId];
+        } else {
+            // Global Search: Get all allowed stores
+            $targetStoreIds = $user->isSuperAdmin()
+                ? DB::table('stores')->pluck('id')->toArray()
+                : $user->allowedStores()->pluck('stores.id')->toArray();
+        }
 
-        if (!$mapping) {
+        if (empty($targetStoreIds)) {
             return $this->success([]);
         }
-        $storePdvId = (int) $mapping->pdv_store_id;
 
-        // 1. Buscar Mappings ativos para esta loja
-        $mappings = DB::table('pdv_user_mappings')
-            ->where('store_pdv_id', $storePdvId)
+        // 2. Resolve PDV Store IDs from mappings
+        $storeMappings = DB::table('pdv_store_mappings')
+            ->whereIn('store_id', $targetStoreIds)
+            ->where('active', true)
+            ->get(); // distinct store_id -> pdv_store_id
+
+        if ($storeMappings->isEmpty()) {
+            return $this->success([]);
+        }
+
+        $pdvStoreIds = $storeMappings->pluck('pdv_store_id')->unique()->toArray();
+
+        // Map pdv_store_id => store_name for context
+        $storesMap = DB::table('stores')->whereIn('id', $storeMappings->pluck('store_id'))->pluck('name', 'id');
+        $pdvToStoreName = [];
+        foreach ($storeMappings as $map) {
+            $pdvToStoreName[$map->pdv_store_id] = $storesMap[$map->store_id] ?? 'Loja Desconhecida';
+        }
+
+        // 3. Get Active User Mappings for these stores (to resolve names)
+        $userMappings = DB::table('pdv_user_mappings')
+            ->whereIn('store_pdv_id', $pdvStoreIds)
             ->where('active', true)
             ->get()
-            ->keyBy('pdv_user_id');
+            ->groupBy('store_pdv_id'); // Group by Store to handle collisions if needed
 
-        // 2. Buscar IDs de vendedores usados em vendas (histórico)
-        $sellerIds = DB::table('pdv_venda_itens')
-            ->where('store_pdv_id', $storePdvId)
-            ->select('vendedor_pdv_id')
+        // 4. Get Actual Sellers from Sales History
+        // We select distinct store_pdv_id + vendedor_pdv_id to handle same ID in different stores
+        $sellers = DB::table('pdv_venda_itens')
+            ->whereIn('store_pdv_id', $pdvStoreIds)
+            ->select('store_pdv_id', 'vendedor_pdv_id')
             ->distinct()
-            ->pluck('vendedor_pdv_id');
+            ->get();
 
-        // 3. Buscar dados crus em pdv_usuarios para enriquecer nomes (fallback)
+        // 5. Fetch Raw PDV Users for fallback names
+        $allSellerIds = $sellers->pluck('vendedor_pdv_id')->unique();
         $pdvUsers = DB::table('pdv_usuarios')
-            ->whereIn('id_usuario_hiper', $sellerIds)
+            ->whereIn('id_usuario_hiper', $allSellerIds)
             ->get()
             ->keyBy('id_usuario_hiper');
 
         $result = [];
-        foreach ($sellerIds as $id) {
-            $id = (int) $id;
-            $mapping = $mappings[$id] ?? null;
-            $pdvUser = $pdvUsers[$id] ?? null;
+        $processedKeys = []; // To deduplicate if same person exists in multiple stores? 
+        // For now, let's list them contextualized: "Juan (Loja 1)", "Juan (Loja 2)"
+        // But if filtering by ID=10 merges them, maybe we should just merge them if names match?
+        // Let's list distinct combinations first.
 
-            // Nome: Mapping > PdvUser > Fallback
-            if ($mapping && $mapping->pdv_user_name) {
-                $nome = $mapping->pdv_user_name;
-            } elseif ($pdvUser) {
-                $nome = $pdvUser->nome_hiper ?? $pdvUser->nome_padronizado;
-            } else {
-                $nome = "Vendedor #{$id}";
+        foreach ($sellers as $row) {
+            $storePdvId = (int) $row->store_pdv_id;
+            $sellerPdvId = (int) $row->vendedor_pdv_id;
+
+            // Resolve Name
+            $nome = "Vendedor #{$sellerPdvId}";
+            $userId = null;
+            $source = 'fallback';
+
+            // Try Mapping for this specific store
+            $map = isset($userMappings[$storePdvId])
+                ? $userMappings[$storePdvId]->firstWhere('pdv_user_id', $sellerPdvId)
+                : null;
+
+            if ($map && $map->pdv_user_name) {
+                $nome = $map->pdv_user_name;
+                $userId = $map->user_id;
+                $source = 'mapped';
+            } elseif (isset($pdvUsers[$sellerPdvId])) {
+                $u = $pdvUsers[$sellerPdvId];
+                $nome = $u->nome_hiper ?? $u->nome_padronizado;
+                $source = 'pdv_registry';
             }
 
-            // Capitalizar nome para ficar bonito (Ex: JOAO DA SILVA -> Joao Da Silva)
             $nome = \Illuminate\Support\Str::title(\Illuminate\Support\Str::lower($nome));
 
+            // Context logic: If global search, append store name ONLY if we have collisions?
+            // Simpler: Just allow the FE to decide. We pass store_name.
+            // Actually, for the dropdown, if we have "Joao" in Store A and "Joao" in Store B (both ID 10),
+            // We return TWO rows. The FE might deduplicate by ID, which implicitly merges them.
+            // If we want to support unique selection, we need unique IDs (composite), but the filter API uses Int.
+            // So we will just return them. The FE can choose to show "Joao (Loja A)" and "Joao (Loja B)".
+
+            // Unique Key for result array
+            $key = $storePdvId . '|' . $sellerPdvId;
+
             $result[] = [
-                'id' => (string) $id,
+                'id' => (int) $sellerPdvId, // Keep as int for filter compatibility
                 'nome' => $nome,
-                'user_id' => $mapping?->user_id,
-                'source' => $mapping ? 'mapped' : ($pdvUser ? 'pdv_registry' : 'fallback'),
+                'store_name' => $pdvToStoreName[$storePdvId] ?? '',
+                'user_id' => $userId,
+                'source' => $source,
+                'unique_key' => $key // Frontend can use this for 'key' prop
             ];
         }
 
-        // Ordenar por nome
+        // Deduplication Logic for Frontend Convenience:
+        // If the user wants a simple list of names and doesn't care about Store separation in the dropdown
+        // (since selecting ID 10 filters globally anyway), we can deduplicate by ID?
+        // Risk: ID 10 is "Joao" in A and "Maria" in B. If we dedup by ID, we show "Joao". User selects "Joao", sees sales for "Maria" too.
+        // This is dangerous.
+        // Better to return all.
+
+        // Sort by Name
         usort($result, fn($a, $b) => strcasecmp($a['nome'], $b['nome']));
 
         return $this->success($result);
