@@ -18,6 +18,47 @@ class HiperConnectionController extends Controller
     }
 
     /**
+     * List all connections (without cookies for security).
+     */
+    public function index(): JsonResponse
+    {
+        $connections = HiperConnection::select([
+            'id',
+            'name',
+            'base_url',
+            'default_referer',
+            'is_active',
+            'last_used_at',
+            'created_at',
+            'updated_at',
+        ])->orderByDesc('updated_at')->get();
+
+        return response()->json(['ok' => true, 'connections' => $connections]);
+    }
+
+    /**
+     * Show a single connection (with cookie summary, not raw values).
+     */
+    public function show(HiperConnection $connection): JsonResponse
+    {
+        $cookieSummary = null;
+        if ($connection->cookies) {
+            $byDomain = $connection->cookies['by_domain'] ?? [];
+            $cookieSummary = [
+                'domains' => array_keys($byDomain),
+                'total_cookies' => array_sum(array_map('count', $byDomain)),
+                'last_imported_at' => $connection->cookies['last_imported_at'] ?? null,
+            ];
+        }
+
+        return response()->json([
+            'ok' => true,
+            'connection' => $connection->makeHidden('cookies'),
+            'cookie_summary' => $cookieSummary,
+        ]);
+    }
+
+    /**
      * Create or update a Hiper ERP connection.
      *
      * POST /api/v1/hiper/connections/upsert

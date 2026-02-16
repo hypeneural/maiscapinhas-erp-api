@@ -23,33 +23,65 @@ O módulo permite conectar nosso sistema ao ERP **Hiper Gestão Online** (web) f
 
 ## 🗂️ Endpoints da API
 
-### 1. Criar/Atualizar Conexão
+### Connections
 
-```
-POST /api/v1/hiper/connections/upsert
-```
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `/hiper/connections` | Listar todas as conexões |
+| GET | `/hiper/connections/{id}` | Ver conexão + resumo de cookies |
+| POST | `/hiper/connections/upsert` | Criar ou atualizar conexão |
+| POST | `/hiper/connections/{id}/import-tsv` | Importar cookies (TSV DevTools) |
+| GET | `/hiper/connections/{id}/curl?url=...` | Gerar cookie + cURL |
 
-**Request:**
+### Endpoints (Catálogo)
+
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `/hiper/endpoints` | Listar todos os endpoints cadastrados |
+| GET | `/hiper/endpoints/{id}` | Ver detalhes de um endpoint |
+| POST | `/hiper/endpoints/upsert` | Criar ou atualizar endpoint |
+| DELETE | `/hiper/endpoints/{id}` | Deletar endpoint |
+
+### Execute (Playground)
+
+| Método | Rota | Descrição |
+|---|---|---|
+| POST | `/hiper/execute` | Executar request no ERP |
+
+---
+
+## 📡 Detalhes de cada endpoint
+
+### GET /hiper/connections
+
+Lista todas as conexões (sem cookies — por segurança).
+
+**Response:**
 ```json
 {
-  "id": null,
-  "name": "Hiper - Maiscapinhas",
-  "base_url": "https://maiscapinhas.hiper.com.br",
-  "default_referer": "https://maiscapinhas.hiper.com.br/operacoes",
-  "default_headers": {
-    "Accept": "application/json, text/plain, */*",
-    "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
-    "User-Agent": "Mozilla/5.0 ...",
-    "X-Requested-With": "XMLHttpRequest"
-  }
+  "ok": true,
+  "connections": [
+    {
+      "id": 1,
+      "name": "Hiper - Maiscapinhas",
+      "base_url": "https://maiscapinhas.hiper.com.br",
+      "default_referer": "https://maiscapinhas.hiper.com.br/operacoes",
+      "is_active": true,
+      "last_used_at": "2026-02-16T14:30:00.000000Z",
+      "created_at": "...",
+      "updated_at": "..."
+    }
+  ]
 }
 ```
 
-- Se `id` for `null`, **cria** nova conexão (resposta `201`)
-- Se `id` existir, **atualiza** (resposta `200`)
-- Se `default_headers` for omitido, o backend usa headers padrão automaticamente
+---
 
-**Response (201/200):**
+### GET /hiper/connections/{id}
+
+Retorna a conexão + resumo dos cookies (quantos domínios, quantos cookies, última importação).
+
+**Response:**
 ```json
 {
   "ok": true,
@@ -58,32 +90,57 @@ POST /api/v1/hiper/connections/upsert
     "name": "Hiper - Maiscapinhas",
     "base_url": "https://maiscapinhas.hiper.com.br",
     "default_referer": "https://maiscapinhas.hiper.com.br/operacoes",
-    "default_headers": { ... },
-    "cookies": { ... },
+    "default_headers": { "Accept": "...", "User-Agent": "..." },
     "is_active": true,
-    "last_used_at": null,
-    "created_at": "2026-02-16T14:00:00.000000Z",
-    "updated_at": "2026-02-16T14:00:00.000000Z"
+    "last_used_at": "2026-02-16T14:30:00.000000Z"
+  },
+  "cookie_summary": {
+    "domains": ["maiscapinhas.hiper.com.br", ".hiper.com.br", "app.hiper.com.br"],
+    "total_cookies": 15,
+    "last_imported_at": "2026-02-16T14:05:00-03:00"
   }
 }
 ```
 
+> Se nunca importou cookies, `cookie_summary` será `null`.
+
 ---
 
-### 2. Importar Cookies (TSV do DevTools)
+### POST /hiper/connections/upsert
 
+**Request (criar):**
+```json
+{
+  "name": "Hiper - Maiscapinhas",
+  "base_url": "https://maiscapinhas.hiper.com.br",
+  "default_referer": "https://maiscapinhas.hiper.com.br/operacoes"
+}
 ```
-POST /api/v1/hiper/connections/{id}/import-tsv
+
+**Request (atualizar):**
+```json
+{
+  "id": 1,
+  "name": "Hiper - Maiscapinhas (Prod)",
+  "base_url": "https://maiscapinhas.hiper.com.br",
+  "default_referer": "https://maiscapinhas.hiper.com.br/operacoes"
+}
 ```
+
+Se `default_headers` for omitido, o backend usa headers padrão (Accept, User-Agent, etc).
+
+---
+
+### POST /hiper/connections/{id}/import-tsv
 
 **Request:**
 ```json
 {
-  "tsv": "dominio_hiper\tmaiscapinhas\tmaiscapinhas.hiper.com.br\t/\t...\nTempDataProvider\tabc123\tmaiscapinhas.hiper.com.br\t/\t...\n..."
+  "tsv": "dominio_hiper\tmaiscapinhas\tmaiscapinhas.hiper.com.br\t/\t...\n..."
 }
 ```
 
-> O campo `tsv` é a **string crua** que o usuário cola da aba `Application > Cookies` no DevTools (Ctrl+A → Ctrl+C).
+> O campo `tsv` é a string crua colada da aba `Application > Cookies` do DevTools.
 
 **Response (200):**
 ```json
@@ -91,82 +148,128 @@ POST /api/v1/hiper/connections/{id}/import-tsv
   "ok": true,
   "imported": 12,
   "total_cookies": 15,
-  "domains": [
-    "maiscapinhas.hiper.com.br",
-    ".hiper.com.br",
-    "app.hiper.com.br"
-  ],
+  "domains": ["maiscapinhas.hiper.com.br", ".hiper.com.br", "app.hiper.com.br"],
   "last_imported_at": "2026-02-16T14:05:00-03:00"
 }
 ```
 
-**Response (422) — TSV inválido:**
+**Response (422):**
 ```json
-{
-  "ok": false,
-  "error": "Não foi possível ler nenhum cookie do TSV fornecido."
-}
+{ "ok": false, "error": "Não foi possível ler nenhum cookie do TSV fornecido." }
 ```
 
 ---
 
-### 3. Gerar Cookie + cURL
+### GET /hiper/endpoints
 
-```
-GET /api/v1/hiper/connections/{id}/curl?url=https://maiscapinhas.hiper.com.br/operacoes/123/detalhes
-```
-
-**Response (200):**
+**Response:**
 ```json
 {
   "ok": true,
-  "cookie": "dominio_hiper=maiscapinhas; TempDataProvider=abc123; __RequestVerificationToken=xyz; .AspNet.ApplicationCookie=big_token; .AspNet.TwoFactorRememberBrowser=2fa_token",
-  "missing": [],
-  "curl": "curl --location 'https://...' \\\n  --header 'Accept: ...' \\\n  --header 'Cookie: ...'"
+  "endpoints": [
+    {
+      "id": 1,
+      "key": "operacoes.detalhes",
+      "method": "GET",
+      "path": "/operacoes/{id}/detalhes",
+      "headers": null,
+      "query_template": null,
+      "body_template": null
+    },
+    {
+      "id": 2,
+      "key": "operacoes.listar",
+      "method": "POST",
+      "path": "/operacoes/ListarOperacoes",
+      "headers": { "Content-Type": "application/json" },
+      "query_template": null,
+      "body_template": {
+        "filtro": {
+          "ApenasOperacoesMaquininhaStone": false,
+          "CodigoPedidoVenda": null,
+          "Lojas": []
+        }
+      }
+    }
+  ]
 }
 ```
 
-Se faltarem cookies essenciais, `missing` terá os nomes. Ex: `["TempDataProvider", ".AspNet.ApplicationCookie"]`
+---
+
+### POST /hiper/endpoints/upsert
+
+**Request (criar):**
+```json
+{
+  "key": "entidades.detalhes",
+  "method": "GET",
+  "path": "/entidades/{id}",
+  "headers": null,
+  "query_template": null,
+  "body_template": null
+}
+```
+
+**Request (atualizar):**
+```json
+{
+  "id": 3,
+  "key": "entidades.detalhes",
+  "method": "GET",
+  "path": "/entidades/{id}/detalhes",
+  "headers": null,
+  "query_template": null,
+  "body_template": null
+}
+```
 
 ---
 
-### 4. Executar Request no ERP
+### DELETE /hiper/endpoints/{id}
 
+**Response:**
+```json
+{ "ok": true, "deleted": "entidades.detalhes" }
 ```
-POST /api/v1/hiper/execute
-```
+
+---
+
+### POST /hiper/execute — O Playground
+
+Este é o endpoint central do playground. Ele combina uma **conexão** + um **endpoint** e faz o request real no ERP.
 
 **Request:**
 ```json
 {
   "connection_id": 1,
   "endpoint_key": "operacoes.detalhes",
-  "params": { "id": "abc-123-def" },
+  "params": { "id": "1c442bb6-4589-4d34-bf8e-bad62cb2b337" },
   "query": {},
   "body": {}
 }
 ```
 
-| Campo | Tipo | Descrição |
+| Campo | Tipo | Quando usar |
 |---|---|---|
-| `connection_id` | `number` | ID da conexão |
-| `endpoint_key` | `string` | Chave do endpoint cadastrado (ver tabela abaixo) |
-| `params` | `object?` | Substitui `{placeholders}` na URL. Ex: `{id}` |
-| `query` | `object?` | Merge com `query_template` do endpoint (GET/POST) |
-| `body` | `object?` | Merge com `body_template` do endpoint (POST only) |
+| `connection_id` | `number` | Sempre — qual conexão usar |
+| `endpoint_key` | `string` | Sempre — qual endpoint executar |
+| `params` | `object?` | Quando o path tem `{placeholders}`. Ex: `{id}` |
+| `query` | `object?` | Para GET ou POST com querystring. Faz merge com `query_template` |
+| `body` | `object?` | Só para POST. Faz merge com `body_template` do endpoint |
 
-**Response (200):**
+**Response (sucesso):**
 ```json
 {
   "ok": true,
   "status": 200,
-  "url": "https://maiscapinhas.hiper.com.br/operacoes/abc-123-def/detalhes",
+  "url": "https://maiscapinhas.hiper.com.br/operacoes/1c442bb6-.../detalhes",
   "missing_cookies": [],
-  "response": { ... }
+  "response": { "...dados do ERP..." }
 }
 ```
 
-**Response (502) — Erro de conexão com o ERP:**
+**Response (erro de conexão):**
 ```json
 {
   "ok": false,
@@ -178,100 +281,150 @@ POST /api/v1/hiper/execute
 
 ---
 
-## 📋 Endpoints Cadastrados (Catálogo)
+## 🖥️ Sugestão de UI — Página Playground ERP Hiper
 
-| Key | Método | Path | Notas |
-|---|---|---|---|
-| `usuarios.perfis` | GET | `/usuarios/perfis` | Lista perfis de usuários |
-| `entidades.listagem.funcionarios` | GET | `/entidades/listagem` | Query defaults para funcionários |
-| `operacoes.detalhes` | GET | `/operacoes/{id}/detalhes` | Precisa de `params.id` |
-| `operacoes.listar` | POST | `/operacoes/ListarOperacoes` | Body com filtros |
-
----
-
-## 🖥️ Sugestão de UI — Página de Conexão ERP
-
-A página deve ter **duas seções principais**:
-
-### Seção 1: Configuração da Conexão
-
-Formulário com os campos:
-
-| Campo | Tipo | Obrigatório | Valor Padrão |
-|---|---|---|---|
-| Nome | `<input text>` | ✅ | `"Hiper - Maiscapinhas"` |
-| URL Base | `<input url>` | ✅ | `"https://maiscapinhas.hiper.com.br"` |
-| Referer Padrão | `<input text>` | ❌ | `"https://maiscapinhas.hiper.com.br/operacoes"` |
-
-Os `default_headers` normalmente **não precisam ser editados** pelo usuário (usamos os padrões do Chrome). Mas podem ficar num **accordion/collapse** "Headers Avançados" para quem quiser customizar.
-
-**Botão:** `Salvar Conexão` → `POST /hiper/connections/upsert`
-
----
-
-### Seção 2: Importação de Cookies
-
-Esta é a parte que o admin usa **frequentemente** (sempre que os cookies expiram).
+### Layout sugerido: 3 abas
 
 ```
-┌────────────────────────────────────────────────────────────┐
-│  📋 Importar Cookies do DevTools                           │
-│                                                            │
-│  ┌────────────────────────────────────────────────────────┐│
-│  │                                                        ││
-│  │  <textarea> Cole aqui o TSV dos cookies...             ││
-│  │                                                        ││
-│  │  (Copie de: DevTools > Application > Cookies >         ││
-│  │   maiscapinhas.hiper.com.br → Ctrl+A → Ctrl+C)        ││
-│  │                                                        ││
-│  └────────────────────────────────────────────────────────┘│
-│                                                            │
-│  [ 🔄 Importar Cookies ]                                   │
-│                                                            │
-│  Status: ✅ 12 cookies importados de 3 domínios            │
-│  Última importação: 16/02/2026 14:05                       │
-└────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────┐
+│  [ 🔌 Conexões ] [ 📋 Endpoints ] [ 🧪 Playground ] │
+└─────────────────────────────────────────────────────┘
+```
+
+---
+
+### Aba 1: 🔌 Conexões
+
+Formulário de criação/edição + importação de cookies lado a lado.
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  📌 Conexão Ativa: [dropdown: Hiper - Maiscapinhas ▾]       │
+│                                                              │
+│ ┌─ Configuração ─────────────┐ ┌─ Cookies ────────────────┐ │
+│ │ Nome: [___________________]│ │ Status: ✅ 15 cookies     │ │
+│ │ URL Base: [_______________]│ │ Domínios: 3              │ │
+│ │ Referer: [________________]│ │ Última imp: 16/02 14:05  │ │
+│ │                            │ │                          │ │
+│ │ [💾 Salvar Conexão]        │ │ ┌─ Cole o TSV aqui ────┐ │ │
+│ │                            │ │ │  <textarea>           │ │ │
+│ └────────────────────────────┘ │ └───────────────────────┘ │ │
+│                                │ [🔄 Importar Cookies]     │ │
+│                                └──────────────────────────┘ │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 **Fluxo:**
-1. Usuário cola o TSV no textarea
-2. Clica "Importar Cookies"
-3. Frontend chama `POST /hiper/connections/{id}/import-tsv` com `{ tsv: textareaValue }`
-4. Mostra resultado: quantos cookies lidos, domínios encontrados
-
-**Dica de UX:** Mostrar um badge/chip colorido para cada domínio retornado.
+1. `GET /hiper/connections` → popula dropdown
+2. Ao selecionar → `GET /hiper/connections/{id}` → preenche formulário + badge de cookies
+3. `Salvar` → `POST /hiper/connections/upsert`
+4. `Importar Cookies` → `POST /hiper/connections/{id}/import-tsv`
 
 ---
 
-### Seção 3 (Opcional): Teste Rápido
+### Aba 2: 📋 Endpoints (Catálogo)
 
-Um mini-formulário para testar se os cookies estão funcionando:
+Tabela editável com os endpoints cadastrados + formulário para adicionar.
 
 ```
-┌────────────────────────────────────────────────────────────┐
-│  🧪 Teste de Conexão                                       │
-│                                                            │
-│  URL: [ https://maiscapinhas.hiper.com.br/usuarios/perfis ]│
-│                                                            │
-│  [ 🔍 Testar ] [ 📋 Copiar cURL ]                          │
-│                                                            │
-│  Cookie essencial: dominio_hiper=...; TempDataProvider=... │
-│  Faltando: (nenhum)                                        │
-│                                                            │
-│  ── Resultado do cURL ──                                   │
-│  curl --location '...' \                                   │
-│    --header 'Accept: ...' \                                │
-│    --header 'Cookie: ...'                                  │
-└────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│  📋 Endpoints Cadastrados                                    │
+│                                                              │
+│  ┌───────────────────────────────────────────────────────┐   │
+│  │ Key                        │ Método │ Path            │   │
+│  │─────────────────────────────────────────────────────│   │
+│  │ operacoes.detalhes         │  GET   │ /operacoes/{id} │   │
+│  │ operacoes.listar           │  POST  │ /operacoes/List │   │
+│  │ usuarios.perfis            │  GET   │ /usuarios/perfis│   │
+│  │ entidades.listagem.func... │  GET   │ /entidades/list │   │
+│  └───────────────────────────────────────────────────────┘   │
+│                                                              │
+│  ┌─ Novo/Editar Endpoint ────────────────────────────────┐   │
+│  │ Key: [operacoes.novo____]  Método: [GET ▾]            │   │
+│  │ Path: [/operacoes/{id}/items_______________________]  │   │
+│  │                                                       │   │
+│  │ ▸ Headers (JSON)         → textarea colapsável        │   │
+│  │ ▸ Query Template (JSON)  → textarea colapsável        │   │
+│  │ ▸ Body Template (JSON)   → textarea colapsável        │   │
+│  │                                                       │   │
+│  │ [💾 Salvar]  [🗑️ Deletar]                             │   │
+│  └───────────────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-**Fluxo "Testar":**
-1. Chama `GET /hiper/connections/{id}/curl?url=...` para ver o cookie gerado
-2. Opcionalmente, chama `POST /hiper/execute` com `endpoint_key: "usuarios.perfis"` para fazer a chamada real
+**Fluxo:**
+1. `GET /hiper/endpoints` → popula tabela
+2. Clicar numa linha → preenche formulário de edição
+3. `Salvar` → `POST /hiper/endpoints/upsert`
+4. `Deletar` → `DELETE /hiper/endpoints/{id}`
 
-**Fluxo "Copiar cURL":**
-1. Chama `GET /hiper/connections/{id}/curl?url=...`
-2. Copia o campo `curl` para o clipboard
+---
+
+### Aba 3: 🧪 Playground (o principal!)
+
+Onde o admin monta e executa requests no ERP.
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  🧪 Playground ERP                                           │
+│                                                              │
+│  Conexão: [Hiper - Maiscapinhas ▾]                           │
+│  Endpoint: [operacoes.detalhes ▾]                            │
+│                                                              │
+│  ── Detalhes do Endpoint ──                                  │
+│  Método: GET    Path: /operacoes/{id}/detalhes               │
+│  URL Final: https://maiscapinhas.hiper.com.br/operacoes/     │
+│             1c442bb6-.../detalhes                             │
+│                                                              │
+│  ┌─ Params (substitui {placeholders} no path) ────────────┐ │
+│  │ { "id": "1c442bb6-4589-4d34-bf8e-bad62cb2b337" }       │ │
+│  └─────────────────────────────────────────────────────────┘ │
+│                                                              │
+│  ┌─ Query (merge com query_template) ─────────────────────┐ │
+│  │ {}                                                      │ │
+│  └─────────────────────────────────────────────────────────┘ │
+│                                                              │
+│  ┌─ Body (merge com body_template — só POST) ─────────────┐ │
+│  │ { "filtro": { "Lojas": ["abc-123"] } }                  │ │
+│  │              (desabilitado se GET)                       │ │
+│  └─────────────────────────────────────────────────────────┘ │
+│                                                              │
+│  [▶ Executar]   [📋 Copiar cURL]                             │
+│                                                              │
+│  ── Resultado ──                                             │
+│  Status: 200 ✅  |  URL: https://maiscapinhas.hiper...       │
+│  Cookies faltando: (nenhum)                                  │
+│                                                              │
+│  ┌─ Response JSON ────────────────────────────────────────┐ │
+│  │ {                                                      │ │
+│  │   "Id": "1c442bb6-...",                                │ │
+│  │   "Numero": 12345,                                     │ │
+│  │   "Status": "Finalizada",                              │ │
+│  │   ...                                                  │ │
+│  │ }                                                      │ │
+│  └─────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**Fluxo do Playground:**
+
+1. `GET /hiper/connections` → popula dropdown "Conexão"
+2. `GET /hiper/endpoints` → popula dropdown "Endpoint"
+3. Ao selecionar um endpoint:
+   - Mostra método, path, URL preview
+   - Se `path` contém `{...}`, mostra textarea de **Params** pré-populado com `{}`
+   - Se tem `query_template`, mostra textarea **Query** pré-populado com o template
+   - Se método = `POST` e tem `body_template`, mostra textarea **Body** pré-populado com o template
+   - Se método = `GET`, **desabilitar** textarea Body
+4. **Executar** → `POST /hiper/execute` com os dados dos textareas
+5. **Copiar cURL** → `GET /hiper/connections/{id}/curl?url=...`
+6. Mostra resposta em textarea readonly com JSON pretty-printed
+
+**Dicas de implementação:**
+- Parse os `{placeholders}` do path com regex `/\{(\w+)\}/g` para gerar campos de input ou pré-popular o JSON de params
+- Pré-popular os textareas Query/Body com `JSON.stringify(template, null, 2)` quando o endpoint tem templates
+- Mostrar o badge de status colorido: `200-299` = verde, `4xx` = amarelo, `5xx` = vermelho
+- Se `missing_cookies` não estiver vazio, mostrar alert vermelho
 
 ---
 
@@ -284,17 +437,19 @@ interface HiperConnection {
   name: string;
   base_url: string;
   default_referer: string | null;
-  default_headers: Record<string, string>;
-  cookies?: HiperCookiesJson;  // só vem no upsert
+  default_headers?: Record<string, string>;
   is_active: boolean;
   last_used_at: string | null;
   created_at: string;
   updated_at: string;
 }
 
-interface HiperCookiesJson {
-  by_domain: Record<string, Record<string, string>>;
-  last_imported_at: string;
+interface HiperConnectionDetail extends HiperConnection {
+  cookie_summary: {
+    domains: string[];
+    total_cookies: number;
+    last_imported_at: string | null;
+  } | null;
 }
 
 // ============ ENDPOINT ============
@@ -304,8 +459,10 @@ interface HiperEndpoint {
   method: 'GET' | 'POST';
   path: string;
   headers: Record<string, string> | null;
-  query_template: Record<string, string> | null;
+  query_template: Record<string, any> | null;
   body_template: Record<string, any> | null;
+  created_at: string;
+  updated_at: string;
 }
 
 // ============ REQUESTS ============
@@ -321,6 +478,16 @@ interface ImportTsvRequest {
   tsv: string;
 }
 
+interface UpsertEndpointRequest {
+  id?: number | null;
+  key: string;
+  method: 'GET' | 'POST';
+  path: string;
+  headers?: Record<string, string> | null;
+  query_template?: Record<string, any> | null;
+  body_template?: Record<string, any> | null;
+}
+
 interface ExecuteRequest {
   connection_id: number;
   endpoint_key: string;
@@ -330,6 +497,17 @@ interface ExecuteRequest {
 }
 
 // ============ RESPONSES ============
+interface ConnectionsListResponse {
+  ok: boolean;
+  connections: HiperConnection[];
+}
+
+interface ConnectionShowResponse {
+  ok: boolean;
+  connection: HiperConnection;
+  cookie_summary: HiperConnectionDetail['cookie_summary'];
+}
+
 interface UpsertConnectionResponse {
   ok: boolean;
   connection: HiperConnection;
@@ -341,6 +519,16 @@ interface ImportTsvResponse {
   total_cookies: number;
   domains: string[];
   last_imported_at: string;
+}
+
+interface EndpointsListResponse {
+  ok: boolean;
+  endpoints: HiperEndpoint[];
+}
+
+interface UpsertEndpointResponse {
+  ok: boolean;
+  endpoint: HiperEndpoint;
 }
 
 interface CurlResponse {
@@ -357,18 +545,11 @@ interface ExecuteResponse {
   missing_cookies: string[];
   response: any;
 }
-
-interface ExecuteErrorResponse {
-  ok: false;
-  error: string;
-  url: string;
-  missing_cookies: string[];
-}
 ```
 
 ---
 
-## 🔧 Service Sugerido
+## 🔧 Service Completo
 
 ```typescript
 // src/services/hiperErpService.ts
@@ -377,40 +558,70 @@ import api from '@/lib/api';
 const BASE = '/hiper';
 
 export const hiperErpService = {
-  /** Criar ou atualizar conexão */
-  async upsertConnection(data: UpsertConnectionRequest) {
-    const res = await api.post<UpsertConnectionResponse>(
-      `${BASE}/connections/upsert`,
-      data
-    );
-    return res.data;
+  // ── Connections ──
+
+  async listConnections() {
+    const { data } = await api.get<ConnectionsListResponse>(`${BASE}/connections`);
+    return data;
   },
 
-  /** Importar cookies do TSV colado do DevTools */
+  async showConnection(id: number) {
+    const { data } = await api.get<ConnectionShowResponse>(`${BASE}/connections/${id}`);
+    return data;
+  },
+
+  async upsertConnection(req: UpsertConnectionRequest) {
+    const { data } = await api.post<UpsertConnectionResponse>(`${BASE}/connections/upsert`, req);
+    return data;
+  },
+
   async importTsv(connectionId: number, tsv: string) {
-    const res = await api.post<ImportTsvResponse>(
+    const { data } = await api.post<ImportTsvResponse>(
       `${BASE}/connections/${connectionId}/import-tsv`,
       { tsv }
     );
-    return res.data;
+    return data;
   },
 
-  /** Gerar cookie essencial + cURL */
   async getCurl(connectionId: number, url: string) {
-    const res = await api.get<CurlResponse>(
+    const { data } = await api.get<CurlResponse>(
       `${BASE}/connections/${connectionId}/curl`,
       { params: { url } }
     );
-    return res.data;
+    return data;
   },
 
-  /** Executar request no ERP */
-  async execute(data: ExecuteRequest) {
-    const res = await api.post<ExecuteResponse>(
-      `${BASE}/execute`,
-      data
+  // ── Endpoints ──
+
+  async listEndpoints() {
+    const { data } = await api.get<EndpointsListResponse>(`${BASE}/endpoints`);
+    return data;
+  },
+
+  async showEndpoint(id: number) {
+    const { data } = await api.get<{ ok: boolean; endpoint: HiperEndpoint }>(
+      `${BASE}/endpoints/${id}`
     );
-    return res.data;
+    return data;
+  },
+
+  async upsertEndpoint(req: UpsertEndpointRequest) {
+    const { data } = await api.post<UpsertEndpointResponse>(`${BASE}/endpoints/upsert`, req);
+    return data;
+  },
+
+  async deleteEndpoint(id: number) {
+    const { data } = await api.delete<{ ok: boolean; deleted: string }>(
+      `${BASE}/endpoints/${id}`
+    );
+    return data;
+  },
+
+  // ── Execute (Playground) ──
+
+  async execute(req: ExecuteRequest) {
+    const { data } = await api.post<ExecuteResponse>(`${BASE}/execute`, req);
+    return data;
   },
 };
 ```
@@ -438,5 +649,7 @@ Instruções para incluir como **tooltip ou ajuda** na UI:
 1. **Super Admin only** — todos os endpoints requerem `super-admin` middleware
 2. **Cookies expiram** — a página deve facilitar reimportação frequente
 3. **`missing_cookies`** — sempre exibir para o admin quando houver cookies faltando
-4. **O campo `cookies` é criptografado** — o backend cuida disso, o frontend não precisa se preocupar
-5. **O TSV aceita múltiplos domínios** colados juntos — o parser do backend separa automaticamente
+4. **Cookies são criptografados** — o backend cuida disso, o frontend não precisa se preocupar
+5. **TSV aceita múltiplos domínios** — o parser do backend separa automaticamente
+6. **`body` textarea desabilitada para GET** — só endpoints POST usam body
+7. **Templates fazem merge** — o runtime `query`/`body` faz merge com o template salvo, não substitui

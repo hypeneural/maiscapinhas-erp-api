@@ -44,6 +44,7 @@ use App\Http\Controllers\Api\V1\Admin\RoleController as AdminRoleController;
 use App\Http\Controllers\Api\V1\Admin\PermissionController as AdminPermissionController;
 use App\Http\Controllers\Api\V1\PdvMappingController;
 use App\Http\Controllers\Api\V1\HiperConnectionController;
+use App\Http\Controllers\Api\V1\HiperEndpointController;
 use App\Http\Controllers\Api\V1\HiperExecuteController;
 use Illuminate\Support\Facades\Route;
 
@@ -570,11 +571,19 @@ Route::middleware('auth:sanctum')->group(function () {
     // ============================================
     Route::prefix('hiper')->name('hiper.')->middleware('super-admin')->group(function () {
         // Connections
+        Route::get('/connections', [HiperConnectionController::class, 'index'])->name('connections.index');
+        Route::get('/connections/{connection}', [HiperConnectionController::class, 'show'])->name('connections.show');
         Route::post('/connections/upsert', [HiperConnectionController::class, 'upsert'])->name('connections.upsert');
         Route::post('/connections/{connection}/import-tsv', [HiperConnectionController::class, 'importTsv'])->name('connections.import-tsv');
         Route::get('/connections/{connection}/curl', [HiperConnectionController::class, 'curl'])->name('connections.curl');
 
-        // Execute
+        // Endpoints (catalog CRUD)
+        Route::get('/endpoints', [HiperEndpointController::class, 'index'])->name('endpoints.index');
+        Route::get('/endpoints/{endpoint}', [HiperEndpointController::class, 'show'])->name('endpoints.show');
+        Route::post('/endpoints/upsert', [HiperEndpointController::class, 'upsert'])->name('endpoints.upsert');
+        Route::delete('/endpoints/{endpoint}', [HiperEndpointController::class, 'destroy'])->name('endpoints.destroy');
+
+        // Execute (playground)
         Route::post('/execute', [HiperExecuteController::class, 'execute'])->name('execute');
     });
 
