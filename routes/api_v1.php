@@ -43,6 +43,8 @@ use App\Http\Controllers\Api\V1\FabricaPedidoController;
 use App\Http\Controllers\Api\V1\Admin\RoleController as AdminRoleController;
 use App\Http\Controllers\Api\V1\Admin\PermissionController as AdminPermissionController;
 use App\Http\Controllers\Api\V1\PdvMappingController;
+use App\Http\Controllers\Api\V1\HiperConnectionController;
+use App\Http\Controllers\Api\V1\HiperExecuteController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -561,6 +563,19 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('wheel')->name('wheel.')->middleware('permission:wheel.admin')->group(function () {
             require app_path('Modules/Wheel/routes.php');
         });
+    });
+
+    // ============================================
+    // Hiper ERP Connection Module
+    // ============================================
+    Route::prefix('hiper')->name('hiper.')->middleware('super-admin')->group(function () {
+        // Connections
+        Route::post('/connections/upsert', [HiperConnectionController::class, 'upsert'])->name('connections.upsert');
+        Route::post('/connections/{connection}/import-tsv', [HiperConnectionController::class, 'importTsv'])->name('connections.import-tsv');
+        Route::get('/connections/{connection}/curl', [HiperConnectionController::class, 'curl'])->name('connections.curl');
+
+        // Execute
+        Route::post('/execute', [HiperExecuteController::class, 'execute'])->name('execute');
     });
 
     // ============================================
