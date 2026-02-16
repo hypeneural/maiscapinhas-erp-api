@@ -98,10 +98,14 @@ class PdvSaleValidator
         $start = $targetUtc->copy()->subMinutes($minusMin);
         $end = $targetUtc->copy()->addMinutes($plusMin);
 
+        // 6) Preparar assinaturas do ERP (Calculate EARLY so we can use in Golden Match too)
+        $erpItemSig = $this->erpItemsSignature($erp);
+        $erpPaySig = $this->erpPaymentsSignature($erp);
+
         // 5) BUSCA HIERARQUICA (Golden Key -> Fiscal -> Heuristica)
 
-        $matchFn = function ($venda, $source) use ($erpId, $erpTotal) {
-            return $this->buildMatchResult($venda, $source, $erpId, $erpTotal);
+        $matchFn = function ($venda, $source) use ($erpId, $erpTotal, $erpItemSig, $erpPaySig) {
+            return $this->buildMatchResult($venda, $source, $erpId, $erpTotal, $erpItemSig, $erpPaySig);
         };
 
         // --- NÍVEL 1: GOLDEN KEY (UUID da Operação) ---
@@ -164,26 +168,20 @@ class PdvSaleValidator
         }
 
         // 6) Desempate/validação 100% por itens+pagamentos
-        $erpItemSig = $this->erpItemsSignature($erp);
-        $erpPaySig = $this->erpPaymentsSignature($erp);
+        // Assinaturas já calculadas acima
 
         $ranked = [];
         foreach ($candidates as $venda) {
             /** @var PdvVenda $venda */
-            // Load manual dos relacionamentos com chave composta
-            $dbItens = DB::table('pdv_venda_itens')
-                ->where('store_pdv_id', $venda->store_pdv_id)
-                ->where('id_operacao', $venda->id_operacao)
-                ->get();
+            // Load manual dos relacionamentos com chave composta e cálculo de assinaturas DB
+            // (Agora feito dentro de enrichMatchData ou helper, mas aqui precisamos dos sigs para ranking)
 
-            $dbPagtos = DB::table('pdv_venda_pagamentos')
-                ->where('store_pdv_id', $venda->store_pdv_id)
-                ->where('id_operacao', $venda->id_operacao)
-                ->get();
+            // Vamos usar o enrichMatchData para carregar relações se ainda não carregadas?
+            // Não, o enrichMatchData formata para output. Aqui precisamos comparar.
+            // Vou duplicar o load/sig aqui ou encapsular?
+            // Melhor encapsular o Load.
 
-            // Hidratar os relacionamentos no modelo para o assinador usar
-            $venda->setRelation('itens', $dbItens);
-            $venda->setRelation('pagamentos', $dbPagtos);
+            $this->loadRelationsManual($venda);
 
             $dbItemSig = $this->dbItemsSignature($venda);
             $dbPaySig = $this->dbPaymentsSignature($venda);
@@ -222,7 +220,11 @@ class PdvSaleValidator
             $vendaModel = PdvVenda::find($bestCandidate['pdv_venda_id']);
             if ($vendaModel) {
                 // Se foi match 100 heurístico, continua sendo um match válido
+                $this->loadRelationsManual($vendaModel); // Ensure loaded for enrichment
                 $bestCandidate['db_details'] = $this->enrichMatchData($vendaModel);
+
+                // Add comparison flags if not present (heuristic loop adds them, but good to be consistent)
+                // Heuristic matches already have 'items_exact' in $bestCandidate.
             }
         }
 
@@ -246,16 +248,27 @@ class PdvSaleValidator
         return $uuid ? strtolower(trim($uuid)) : null;
     }
 
-    private function buildMatchResult(PdvVenda $venda, string $matchType, $erpId, $erpTotal): array
+    private function buildMatchResult(PdvVenda $venda, string $matchType, $erpId, $erpTotal, $erpItemSig, $erpPaySig): array
     {
-        // Para matches diretos (Gold/Fiscal), assumimos 100% de confiança
-        // mas ainda podemos carregar os dados para detalhamento
+        // Carregar relações para calcular assinaturas DB e enriquecer output
+        $this->loadRelationsManual($venda);
+
+        $dbItemSig = $this->dbItemsSignature($venda);
+        $dbPaySig = $this->dbPaymentsSignature($venda);
+
+        $itemsExact = ($erpItemSig == $dbItemSig);
+        $payExact = ($erpPaySig == $dbPaySig);
+
+        // Para matches diretos (Gold/Fiscal), assumimos 100% de confiança na Identidade
+        // MAS reportamos se o conteúdo diverge (Sync Lag)
+
         $enriched = $this->enrichMatchData($venda);
 
         return [
             'ok' => true,
             'found' => true,
-            'match_100' => true, // Golden/Fiscal são considerados definitivos
+            'match_100' => true, // Identity match is 100%
+            'content_match' => ($itemsExact && $payExact), // New flag for content
             'best_match' => [
                 'pdv_venda_id' => $venda->id,
                 'id_operacao_db' => $venda->id_operacao,
@@ -263,11 +276,33 @@ class PdvSaleValidator
                 'data_hora_utc' => optional($venda->data_hora)->toIso8601String(),
                 'total' => (float) $venda->total,
                 'match_type' => $matchType,
+                'items_exact' => $itemsExact,
+                'payments_exact' => $payExact,
                 'db_details' => $enriched,
             ],
             'all_candidates_count' => 1,
             'search' => ['type' => $matchType]
         ];
+    }
+
+    private function loadRelationsManual(PdvVenda $venda): void
+    {
+        if ($venda->relationLoaded('itens') && $venda->relationLoaded('pagamentos')) {
+            return;
+        }
+
+        $dbItens = DB::table('pdv_venda_itens')
+            ->where('store_pdv_id', $venda->store_pdv_id)
+            ->where('id_operacao', $venda->id_operacao)
+            ->get();
+
+        $dbPagtos = DB::table('pdv_venda_pagamentos')
+            ->where('store_pdv_id', $venda->store_pdv_id)
+            ->where('id_operacao', $venda->id_operacao)
+            ->get();
+
+        $venda->setRelation('itens', $dbItens);
+        $venda->setRelation('pagamentos', $dbPagtos);
     }
 
     private function resolveStorePdvId(array $erp): ?int
@@ -367,6 +402,10 @@ class PdvSaleValidator
         $sig = [];
         // Relacionamento ja foi setado manualmente
 
+        if (!$venda->relationLoaded('itens')) {
+            return [];
+        }
+
         foreach ($venda->itens as $i) {
             $sig[] = [
                 'codigo' => (string) ($i->codigo_barras ?? $i->id_produto ?? ''),
@@ -382,6 +421,9 @@ class PdvSaleValidator
     {
         $sig = [];
         // Relacionamento ja foi setado manualmente
+        if (!$venda->relationLoaded('pagamentos')) {
+            return [];
+        }
 
         foreach ($venda->pagamentos as $p) {
             $sig[] = [
@@ -406,6 +448,28 @@ class PdvSaleValidator
         $loja = $venda->loja;
         $turno = $venda->turno;
 
+        // Ensure relations loaded (just in case)
+        $this->loadRelationsManual($venda);
+
+        // Format Items properly
+        $itemsFormatted = $venda->itens->map(function ($i) {
+            return [
+                'codigo' => $i->codigo_barras ?? $i->id_produto,
+                'nome' => $i->descricao ?? $i->descricao_reduzida ?? '',
+                'qtd' => (float) $i->qtd,
+                'total' => (float) $i->total,
+            ];
+        })->values()->toArray();
+
+        // Format Payments properly
+        $paymentsFormatted = $venda->pagamentos->map(function ($p) {
+            return [
+                'meio' => $p->meio_pagamento,
+                'valor' => (float) $p->valor,
+            ];
+        })->values()->toArray();
+
+
         return [
             'store_db' => [
                 'id' => $loja->id_ponto_venda ?? $venda->store_pdv_id,
@@ -426,7 +490,10 @@ class PdvSaleValidator
                 'id_operacao' => $venda->id_operacao,
                 'id_turno' => $venda->id_turno,
                 'pdv_venda_id' => $venda->id,
-            ]
+            ],
+            'itens' => $itemsFormatted,
+            'pagamentos' => $paymentsFormatted,
         ];
     }
 }
+
