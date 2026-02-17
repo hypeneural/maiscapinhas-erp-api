@@ -10,6 +10,7 @@ use App\Http\Requests\Pdv\PdvReportsRankingVendedoresRequest;
 use App\Http\Requests\Pdv\PdvReportsTurnosRequest;
 use App\Http\Requests\Pdv\PdvReportsVendaDetalheRequest;
 use App\Http\Requests\Pdv\PdvReportsVendasRequest;
+use App\Http\Requests\Pdv\PdvReportsOperacoesRequest;
 use App\Http\Traits\ApiResponse;
 use App\Support\Pdv\PdvStoreResolver;
 use App\Support\Audit\AuditContext;
@@ -1667,6 +1668,343 @@ class PdvReportsController extends Controller
         usort($result, fn($a, $b) => strcasecmp($a['nome'], $b['nome']));
 
         return $this->success($result);
+    }
+
+    /**
+     * Listagem unificada de operacoes do PDV
+     *
+     * Retorna vendas e fechamentos de caixa em uma unica lista paginada,
+     * ordenada cronologicamente, com filtros avancados.
+     *
+     * @authenticated
+     * @queryParam store_id integer ID da loja interna. Example: 1
+     * @queryParam store_pdv_id integer ID da loja no PDV. Example: 13
+     * @queryParam store_alias string Alias da loja PDV. Example: Loja 8
+     * @queryParam from string Data inicial (YYYY-MM-DD). Default: hoje-30d. Example: 2026-02-01
+     * @queryParam to string Data final (YYYY-MM-DD). Default: hoje. Example: 2026-02-17
+     * @queryParam tipo_operacao string Filtrar tipo: `venda` ou `fechamento_caixa`. Example: venda
+     * @queryParam status string Filtrar status (ex: `concluido`, `cancelado`, `FECHADO`, `ABERTO`). Example: concluido
+     * @queryParam vendedor_id integer Filtrar por vendedor/operador PDV ID. Example: 80
+     * @queryParam canal string Canal: `HIPER_CAIXA` ou `HIPER_LOJA`. Example: HIPER_CAIXA
+     * @queryParam turno_seq integer Turno sequencial do dia. Example: 1
+     * @queryParam meio_pagamento string Nome do meio de pagamento. Example: Pix
+     * @queryParam id_finalizador integer ID do finalizador. Example: 5
+     * @queryParam min_total numeric Valor minimo. Example: 10
+     * @queryParam max_total numeric Valor maximo. Example: 500
+     * @queryParam per_page integer Itens por pagina (1-100). Default: 15. Example: 15
+     * @queryParam sort string Ordenacao: `asc` ou `desc`. Default: `desc`. Example: desc
+     */
+    public function operacoes(PdvReportsOperacoesRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+        $timezone = 'America/Sao_Paulo';
+
+        // --- Resolve Store Scope ---
+        $storeId = isset($validated['store_id']) ? (int) $validated['store_id'] : null;
+        $storePdvId = isset($validated['store_pdv_id']) ? (int) $validated['store_pdv_id'] : null;
+        $storeAlias = isset($validated['store_alias']) ? trim((string) $validated['store_alias']) : null;
+        $scope = $this->resolveStoreScope($request, $storeId, $storePdvId, $storeAlias);
+
+        // --- Resolve Date Range ---
+        $from = isset($validated['from'])
+            ? CarbonImmutable::parse((string) $validated['from'], $timezone)->startOfDay()->setTimezone('UTC')
+            : CarbonImmutable::now($timezone)->subDays(30)->startOfDay()->setTimezone('UTC');
+        $to = isset($validated['to'])
+            ? CarbonImmutable::parse((string) $validated['to'], $timezone)->endOfDay()->setTimezone('UTC')
+            : CarbonImmutable::now($timezone)->endOfDay()->setTimezone('UTC');
+
+        if ($to->lt($from)) {
+            throw ValidationException::withMessages([
+                'to' => ['O campo to deve ser maior ou igual ao campo from.'],
+            ]);
+        }
+
+        $tipoOperacao = $validated['tipo_operacao'] ?? null;
+        $sortDirection = (string) ($validated['sort'] ?? 'desc');
+        $perPage = (int) ($validated['per_page'] ?? 15);
+
+        $subQueries = [];
+
+        // ============================================
+        // Subquery 1: Vendas (Sales)
+        // ============================================
+        if ($tipoOperacao === null || $tipoOperacao === 'venda') {
+            // Item aggregate for seller + count
+            $itemAgg = DB::table('pdv_venda_itens as vi')
+                ->select([
+                    'vi.store_pdv_id',
+                    'vi.canal',
+                    'vi.id_operacao',
+                    DB::raw('COUNT(*) as itens_count'),
+                    DB::raw('MIN(vi.vendedor_pdv_id) as vendedor_pdv_id'),
+                    DB::raw('MAX(vi.vendedor_guid) as vendedor_guid'),
+                    DB::raw('MAX(vi.vendedor_nome) as vendedor_nome_pdv'),
+                ])
+                ->groupBy('vi.store_pdv_id', 'vi.canal', 'vi.id_operacao');
+
+            // Dominant payment per sale
+            $payDom = DB::table('pdv_venda_pagamentos as vp')
+                ->select([
+                    'vp.store_pdv_id',
+                    'vp.canal',
+                    'vp.id_operacao',
+                    DB::raw('MAX(vp.meio_pagamento) as meio_pagamento_dominante'),
+                ])
+                ->groupBy('vp.store_pdv_id', 'vp.canal', 'vp.id_operacao');
+
+            $vendasQuery = DB::table('pdv_vendas as v')
+                ->leftJoin('stores as s', 'v.store_id', '=', 's.id')
+                ->leftJoinSub($itemAgg, 'it', function ($join): void {
+                    $join->on('it.store_pdv_id', '=', 'v.store_pdv_id')
+                        ->on('it.canal', '=', 'v.canal')
+                        ->on('it.id_operacao', '=', 'v.id_operacao');
+                })
+                ->leftJoin('users as u_by_guid', 'u_by_guid.guid', '=', 'it.vendedor_guid')
+                ->leftJoin('pdv_user_mappings as pum', function ($join): void {
+                    $join->on('pum.store_pdv_id', '=', 'v.store_pdv_id')
+                        ->on('pum.pdv_user_id', '=', 'it.vendedor_pdv_id');
+                })
+                ->leftJoin('users as u_map', 'pum.user_id', '=', 'u_map.id')
+                ->leftJoinSub($payDom, 'pd', function ($join): void {
+                    $join->on('pd.store_pdv_id', '=', 'v.store_pdv_id')
+                        ->on('pd.canal', '=', 'v.canal')
+                        ->on('pd.id_operacao', '=', 'v.id_operacao');
+                })
+                ->select([
+                    DB::raw("'venda' as tipo_operacao"),
+                    'v.data_hora',
+                    'v.store_id',
+                    's.name as store_name',
+                    'v.store_pdv_id',
+                    DB::raw('COALESCE(v.turno_seq, 0) as turno_seq'),
+                    'v.canal',
+                    DB::raw('v.id_operacao as operacao_id'),
+                    DB::raw("CONCAT('#', v.id_operacao) as operacao_label"),
+                    DB::raw('COALESCE(v.status, \'concluido\') as status'),
+                    DB::raw('COALESCE(it.itens_count, 0) as itens'),
+                    'v.total as valor',
+                    DB::raw('COALESCE(u_by_guid.name, u_map.name, it.vendedor_nome_pdv) as vendedor_nome'),
+                    DB::raw('COALESCE(it.vendedor_pdv_id, 0) as vendedor_pdv_id'),
+                    DB::raw('pd.meio_pagamento_dominante as meio_pagamento'),
+                    'v.id as internal_id',
+                ])
+                ->whereBetween('v.data_hora', [$from->toDateTimeString(), $to->toDateTimeString()]);
+
+            $this->applyStoreScopeToQuery($vendasQuery, $scope, 'v');
+
+            // Apply venda-specific filters
+            if (!empty($validated['canal'])) {
+                $vendasQuery->where('v.canal', (string) $validated['canal']);
+            }
+            if (isset($validated['turno_seq'])) {
+                $vendasQuery->where('v.turno_seq', (int) $validated['turno_seq']);
+            }
+            if (isset($validated['min_total'])) {
+                $vendasQuery->where('v.total', '>=', (float) $validated['min_total']);
+            }
+            if (isset($validated['max_total'])) {
+                $vendasQuery->where('v.total', '<=', (float) $validated['max_total']);
+            }
+            if (!empty($validated['status'])) {
+                $statusFilter = (string) $validated['status'];
+                // Only apply to vendas if it's not a turno-specific status
+                if (!in_array(strtoupper($statusFilter), ['ABERTO', 'FECHADO'], true)) {
+                    $vendasQuery->where(DB::raw('COALESCE(v.status, \'concluido\')'), $statusFilter);
+                } else {
+                    // This status is turno-only; skip vendas entirely
+                    $vendasQuery->whereRaw('1 = 0');
+                }
+            }
+            if (isset($validated['vendedor_id'])) {
+                $vendedorId = (int) $validated['vendedor_id'];
+                $vendasQuery->whereExists(function ($sub) use ($vendedorId): void {
+                    $sub->selectRaw('1')
+                        ->from('pdv_venda_itens as vif')
+                        ->whereColumn('vif.store_pdv_id', 'v.store_pdv_id')
+                        ->whereColumn('vif.canal', 'v.canal')
+                        ->whereColumn('vif.id_operacao', 'v.id_operacao')
+                        ->where('vif.vendedor_pdv_id', $vendedorId);
+                });
+            }
+            if (isset($validated['id_finalizador']) || !empty($validated['meio_pagamento'])) {
+                $idFinalizador = isset($validated['id_finalizador']) ? (int) $validated['id_finalizador'] : null;
+                $meioPagamento = !empty($validated['meio_pagamento']) ? trim((string) $validated['meio_pagamento']) : null;
+
+                $vendasQuery->whereExists(function ($sub) use ($idFinalizador, $meioPagamento): void {
+                    $sub->selectRaw('1')
+                        ->from('pdv_venda_pagamentos as vpf')
+                        ->whereColumn('vpf.store_pdv_id', 'v.store_pdv_id')
+                        ->whereColumn('vpf.canal', 'v.canal')
+                        ->whereColumn('vpf.id_operacao', 'v.id_operacao');
+                    if ($idFinalizador !== null) {
+                        $sub->where('vpf.id_finalizador', $idFinalizador);
+                    }
+                    if ($meioPagamento !== null) {
+                        $sub->where('vpf.meio_pagamento', $meioPagamento);
+                    }
+                });
+            }
+
+            $subQueries[] = $vendasQuery;
+        }
+
+        // ============================================
+        // Subquery 2: Fechamento de Caixa (Turnos)
+        // ============================================
+        if ($tipoOperacao === null || $tipoOperacao === 'fechamento_caixa') {
+            $turnosQuery = DB::table('pdv_turnos as t')
+                ->leftJoin('stores as s2', 't.store_id', '=', 's2.id')
+                ->select([
+                    DB::raw("'fechamento_caixa' as tipo_operacao"),
+                    DB::raw('COALESCE(t.data_hora_termino, t.data_hora_inicio) as data_hora'),
+                    't.store_id',
+                    's2.name as store_name',
+                    't.store_pdv_id',
+                    DB::raw('COALESCE(t.sequencial, 0) as turno_seq'),
+                    't.canal',
+                    DB::raw('0 as operacao_id'),
+                    DB::raw("CONCAT('Turno #', COALESCE(t.sequencial, '?')) as operacao_label"),
+                    DB::raw("IF(t.fechado, 'FECHADO', 'ABERTO') as status"),
+                    DB::raw('COALESCE(t.qtd_vendas, 0) as itens'),
+                    DB::raw('t.total_sistema as valor'),
+                    DB::raw('COALESCE(t.operador_nome, t.responsavel_nome) as vendedor_nome'),
+                    DB::raw('COALESCE(t.operador_pdv_id, t.responsavel_pdv_id, 0) as vendedor_pdv_id'),
+                    DB::raw('NULL as meio_pagamento'),
+                    DB::raw('t.id as internal_id'),
+                ])
+                ->where(function ($q) use ($from, $to) {
+                    $q->whereBetween(DB::raw('COALESCE(t.data_hora_termino, t.data_hora_inicio)'), [$from->toDateTimeString(), $to->toDateTimeString()]);
+                });
+
+            $this->applyStoreScopeToQuery($turnosQuery, $scope, 't');
+
+            // Apply turno-specific filters
+            if (!empty($validated['canal'])) {
+                $turnosQuery->where('t.canal', (string) $validated['canal']);
+            }
+            if (isset($validated['turno_seq'])) {
+                $turnosQuery->where('t.sequencial', (int) $validated['turno_seq']);
+            }
+            if (isset($validated['min_total'])) {
+                $turnosQuery->where('t.total_sistema', '>=', (float) $validated['min_total']);
+            }
+            if (isset($validated['max_total'])) {
+                $turnosQuery->where('t.total_sistema', '<=', (float) $validated['max_total']);
+            }
+            if (!empty($validated['status'])) {
+                $statusFilter = strtoupper((string) $validated['status']);
+                if (in_array($statusFilter, ['ABERTO', 'FECHADO'], true)) {
+                    $turnosQuery->where('t.fechado', $statusFilter === 'FECHADO');
+                } else {
+                    // This status is venda-only; skip turnos entirely
+                    $turnosQuery->whereRaw('1 = 0');
+                }
+            }
+            if (isset($validated['vendedor_id'])) {
+                $vendedorId = (int) $validated['vendedor_id'];
+                $turnosQuery->where(function ($q) use ($vendedorId) {
+                    $q->where('t.operador_pdv_id', $vendedorId)
+                        ->orWhere('t.responsavel_pdv_id', $vendedorId);
+                });
+            }
+            // meio_pagamento / id_finalizador don't apply to turno closures
+            if (isset($validated['id_finalizador']) || !empty($validated['meio_pagamento'])) {
+                // Turno closures don't have individual payment lines at this level;
+                // exclude them from results when filtering by payment
+                $turnosQuery->whereRaw('1 = 0');
+            }
+
+            $subQueries[] = $turnosQuery;
+        }
+
+        // ============================================
+        // UNION ALL + Paginate
+        // ============================================
+        if (empty($subQueries)) {
+            return response()->json([
+                'data' => [],
+                'summary' => ['total_operacoes' => 0, 'total_valor' => 0],
+                'filters' => $this->buildOperacoesFilters($scope, $validated, $from, $to, $sortDirection),
+                'meta' => $this->meta(),
+            ]);
+        }
+
+        // Build UNION
+        $unionQuery = array_shift($subQueries);
+        foreach ($subQueries as $sub) {
+            $unionQuery = $unionQuery->unionAll($sub);
+        }
+
+        // Wrap in outer query for ORDER + PAGINATE
+        $finalQuery = DB::table(DB::raw('(' . $unionQuery->toSql() . ') as operacoes'))
+            ->mergeBindings($unionQuery)
+            ->select('*');
+
+        // Summary from union
+        $summaryQuery = DB::table(DB::raw('(' . $unionQuery->toSql() . ') as op_summary'))
+            ->mergeBindings($unionQuery);
+        $totalOperacoes = (int) (clone $summaryQuery)->count();
+        $totalValor = (float) ((clone $summaryQuery)->sum('valor') ?? 0);
+        $totalVendas = (int) (clone $summaryQuery)->where('tipo_operacao', 'venda')->count();
+        $totalFechamentos = (int) (clone $summaryQuery)->where('tipo_operacao', 'fechamento_caixa')->count();
+
+        $paginator = $finalQuery
+            ->orderBy('data_hora', $sortDirection)
+            ->orderBy('internal_id', $sortDirection)
+            ->paginate($perPage);
+
+        $rows = collect($paginator->items())->map(fn(object $row): array => [
+            'tipo_operacao' => $row->tipo_operacao,
+            'data_hora' => $this->toIso8601($row->data_hora),
+            'store_id' => $row->store_id !== null ? (int) $row->store_id : null,
+            'store_name' => $row->store_name,
+            'store_pdv_id' => (int) $row->store_pdv_id,
+            'turno_seq' => (int) $row->turno_seq ?: null,
+            'canal' => $row->canal ?? 'HIPER_CAIXA',
+            'operacao_id' => (int) $row->operacao_id ?: null,
+            'operacao_label' => $row->operacao_label,
+            'status' => $row->status,
+            'itens' => (int) $row->itens,
+            'valor' => round((float) $row->valor, 2),
+            'vendedor_nome' => $row->vendedor_nome,
+            'meio_pagamento' => $row->meio_pagamento,
+        ])->values()->all();
+
+        return response()->json([
+            'data' => $rows,
+            'summary' => [
+                'total_operacoes' => $totalOperacoes,
+                'total_vendas' => $totalVendas,
+                'total_fechamentos' => $totalFechamentos,
+                'total_valor' => round($totalValor, 2),
+            ],
+            'filters' => $this->buildOperacoesFilters($scope, $validated, $from, $to, $sortDirection),
+            'meta' => $this->meta($paginator),
+        ]);
+    }
+
+    /**
+     * @param array{store_id:int|null,store_pdv_id:int|null,store_alias:string|null} $scope
+     */
+    private function buildOperacoesFilters(array $scope, array $validated, CarbonImmutable $from, CarbonImmutable $to, string $sortDirection): array
+    {
+        return [
+            'store_id' => $scope['store_id'],
+            'store_pdv_id' => $scope['store_pdv_id'],
+            'store_alias' => $scope['store_alias'] ?? null,
+            'from' => $from->toIso8601String(),
+            'to' => $to->toIso8601String(),
+            'tipo_operacao' => $validated['tipo_operacao'] ?? null,
+            'status' => $validated['status'] ?? null,
+            'vendedor_id' => isset($validated['vendedor_id']) ? (int) $validated['vendedor_id'] : null,
+            'canal' => $validated['canal'] ?? null,
+            'turno_seq' => isset($validated['turno_seq']) ? (int) $validated['turno_seq'] : null,
+            'meio_pagamento' => $validated['meio_pagamento'] ?? null,
+            'id_finalizador' => isset($validated['id_finalizador']) ? (int) $validated['id_finalizador'] : null,
+            'min_total' => isset($validated['min_total']) ? (float) $validated['min_total'] : null,
+            'max_total' => isset($validated['max_total']) ? (float) $validated['max_total'] : null,
+            'sort' => $sortDirection,
+        ];
     }
 
     /**
