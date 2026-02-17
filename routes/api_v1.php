@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\AvatarController;
 use App\Http\Controllers\Api\V1\BioController;
 use App\Http\Controllers\Api\V1\BonusRuleController;
 use App\Http\Controllers\Api\V1\CashClosingController;
+use App\Http\Controllers\Api\V1\CashIntegrationController;
 use App\Http\Controllers\Api\V1\CashShiftController;
 use App\Http\Controllers\Api\V1\CommissionRuleController;
 use App\Http\Controllers\Api\V1\DashboardController;
@@ -162,6 +163,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Conferência de Caixa Module
     // ============================================
     Route::prefix('cash')->name('cash.')->group(function () {
+        Route::get('/pdv-closure-data', [CashIntegrationController::class, 'getClosureData'])
+            ->name('pdv-closure-data')
+            ->middleware('permission:caixa.view');
+
         require app_path('Modules/ConferenciaCaixa/routes.php');
     });
 
