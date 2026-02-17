@@ -41,8 +41,10 @@ class PdvSyncIngestRequest extends FormRequest
         }
 
         // 2. Normalize Turnos (PascalCase -> snake_case)
-        if (isset($input['turnos']) && is_array($input['turnos'])) {
-            $input['turnos'] = array_map(function ($t) {
+        $normalizeTurno = function ($originalList) {
+            if (!is_array($originalList))
+                return $originalList;
+            return array_map(function ($t) {
                 if (!is_array($t))
                     return $t;
                 // Direct mappings
@@ -63,9 +65,6 @@ class PdvSyncIngestRequest extends FormRequest
                 if (isset($t['Periodo']))
                     $t['periodo'] = $t['Periodo'];
 
-                // Nested objects need care if accessed by dot notation rules, 
-                // but validation rules 'turnos.*.responsavel.id_usuario' handle plain arrays.
-                // We just need to ensure the KEYS exist in snake_case.
                 if (isset($t['Responsavel']) && is_array($t['Responsavel'])) {
                     $r = $t['Responsavel'];
                     if (isset($r['Id']))
@@ -89,7 +88,18 @@ class PdvSyncIngestRequest extends FormRequest
                     $t['qtd_vendedores'] = $t['QtdVendedores'];
 
                 return $t;
-            }, $input['turnos']);
+            }, $originalList);
+        };
+
+        if (isset($input['turnos']) && is_array($input['turnos'])) {
+            $input['turnos'] = $normalizeTurno($input['turnos']);
+        }
+        // V5 Support
+        if (isset($input['turnos_abertos']) && is_array($input['turnos_abertos'])) {
+            $input['turnos_abertos'] = $normalizeTurno($input['turnos_abertos']);
+        }
+        if (isset($input['turnos_fechados']) && is_array($input['turnos_fechados'])) {
+            $input['turnos_fechados'] = $normalizeTurno($input['turnos_fechados']);
         }
 
         // 3. Normalize Vendas (PascalCase -> snake_case)
@@ -146,9 +156,9 @@ class PdvSyncIngestRequest extends FormRequest
 
     public function rules(): array
     {
-        $supportedSchemaVersions = config('pdv.supported_schema_versions', ['3.0', '3.1']);
+        $supportedSchemaVersions = config('pdv.supported_schema_versions', ['3.0', '3.1', '4.0', '5.0']);
         if (!is_array($supportedSchemaVersions) || $supportedSchemaVersions === []) {
-            $supportedSchemaVersions = ['3.0', '3.1'];
+            $supportedSchemaVersions = ['3.0', '3.1', '4.0', '5.0'];
         }
 
         return [
@@ -189,6 +199,42 @@ class PdvSyncIngestRequest extends FormRequest
             'turnos.*.qtd_vendas' => ['sometimes', 'integer', 'min:0'],
             'turnos.*.total_vendas' => ['sometimes', 'numeric'],
             'turnos.*.qtd_vendedores' => ['sometimes', 'integer', 'min:0'],
+
+            'turnos_abertos' => ['sometimes', 'array'],
+            'turnos_abertos.*.canal' => ['sometimes', 'string', Rule::in(['HIPER_CAIXA', 'HIPER_LOJA'])],
+            'turnos_abertos.*.id_turno' => ['sometimes', 'string', 'max:64'],
+            'turnos_abertos.*.sequencial' => ['sometimes', 'integer', 'min:1'],
+            'turnos_abertos.*.fechado' => ['sometimes', 'boolean'],
+            'turnos_abertos.*.data_hora_inicio' => ['sometimes', 'date'],
+            'turnos_abertos.*.data_hora_termino' => ['nullable', 'date'],
+            'turnos_abertos.*.duracao_minutos' => ['sometimes', 'nullable', 'integer', 'min:0'],
+            'turnos_abertos.*.periodo' => ['sometimes', 'string', 'max:20'],
+            'turnos_abertos.*.responsavel' => ['sometimes', 'nullable', 'array'],
+            'turnos_abertos.*.responsavel.id_usuario' => ['nullable', 'integer', 'min:1'],
+            'turnos_abertos.*.responsavel.nome' => ['nullable', 'string', 'max:200'],
+            'turnos_abertos.*.operador.login' => ['nullable', 'string', 'max:100'],
+            'turnos_abertos.*.responsavel.login' => ['nullable', 'string', 'max:100'],
+            'turnos_abertos.*.qtd_vendas' => ['sometimes', 'integer', 'min:0'],
+            'turnos_abertos.*.total_vendas' => ['sometimes', 'numeric'],
+            'turnos_abertos.*.qtd_vendedores' => ['sometimes', 'integer', 'min:0'],
+
+            'turnos_fechados' => ['sometimes', 'array'],
+            'turnos_fechados.*.canal' => ['sometimes', 'string', Rule::in(['HIPER_CAIXA', 'HIPER_LOJA'])],
+            'turnos_fechados.*.id_turno' => ['sometimes', 'string', 'max:64'],
+            'turnos_fechados.*.sequencial' => ['sometimes', 'integer', 'min:1'],
+            'turnos_fechados.*.fechado' => ['sometimes', 'boolean'],
+            'turnos_fechados.*.data_hora_inicio' => ['sometimes', 'date'],
+            'turnos_fechados.*.data_hora_termino' => ['nullable', 'date'],
+            'turnos_fechados.*.duracao_minutos' => ['sometimes', 'nullable', 'integer', 'min:0'],
+            'turnos_fechados.*.periodo' => ['sometimes', 'string', 'max:20'],
+            'turnos_fechados.*.responsavel' => ['sometimes', 'nullable', 'array'],
+            'turnos_fechados.*.responsavel.id_usuario' => ['nullable', 'integer', 'min:1'],
+            'turnos_fechados.*.responsavel.nome' => ['nullable', 'string', 'max:200'],
+            'turnos_fechados.*.operador.login' => ['nullable', 'string', 'max:100'],
+            'turnos_fechados.*.responsavel.login' => ['nullable', 'string', 'max:100'],
+            'turnos_fechados.*.qtd_vendas' => ['sometimes', 'integer', 'min:0'],
+            'turnos_fechados.*.total_vendas' => ['sometimes', 'numeric'],
+            'turnos_fechados.*.qtd_vendedores' => ['sometimes', 'integer', 'min:0'],
 
             'vendas' => ['sometimes', 'array'],
             'vendas.*.id_operacao' => ['sometimes', 'integer', 'min:1'],

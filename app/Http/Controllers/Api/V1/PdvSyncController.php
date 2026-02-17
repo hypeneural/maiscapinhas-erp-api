@@ -52,7 +52,7 @@ class PdvSyncController extends Controller
      * @header Authorization string Token bearer legado/alternativo (`Bearer {token}`), quando habilitado por config. Example: Bearer abc123
      * @header X-Request-Id string ID de correlacao opcional. Example: req-pdv-001
      *
-     * @bodyParam schema_version string required Versao do schema. Valores aceitos: `3.0` ou `3.1`. Example: 3.1
+     * @bodyParam schema_version string required Versao do schema. Valores aceitos: `3.0`, `3.1`, `4.0`, `5.0`. Example: 5.0
      * @bodyParam event_type string Tipo do evento (`sales`, `turno_closure`, `mixed`). Example: mixed
      * @bodyParam store object required Dados da loja origem.
      * @bodyParam store.id_ponto_venda integer required ID da loja no PDV. Example: 13
@@ -64,10 +64,12 @@ class PdvSyncController extends Controller
      * @bodyParam window.to string required Fim da janela (ISO-8601). Example: 2026-02-12T10:00:00-03:00
      * @bodyParam window.minutes integer Duracao da janela em minutos. Example: 10
      * @bodyParam vendas array Lista de vendas da janela.
-     * @bodyParam turnos array Lista de turnos relacionados.
+     * @bodyParam turnos array Lista de turnos (Legacy/V4) ou `turnos_abertos`/`turnos_fechados` (V5).
      * @bodyParam turnos[].operador.login string Login do operador (contrato atual, enviado em payloads 3.0/3.1). Example: operador.v3
      * @bodyParam turnos[].responsavel.login string Login do responsavel/vendedor principal (contrato atual, enviado em payloads 3.0/3.1). Example: vendedor.lider
-     * @bodyParam snapshot_turnos array Snapshot dos ultimos turnos fechados.
+     * @bodyParam turnos_abertos array (V5) Lista de turnos em aberto.
+     * @bodyParam turnos_fechados array (V5) Lista de turnos fechados recentementes.
+     * @bodyParam snapshot_turnos array Snapshot dos ultimos turnos fechados (Legacy, use turnos_fechados em V5).
      * @bodyParam snapshot_turnos[].operador.login string Login do operador no snapshot (contrato atual, enviado em payloads 3.0/3.1). Example: operador.v3
      * @bodyParam snapshot_turnos[].responsavel.login string Login do responsavel no snapshot (contrato atual, enviado em payloads 3.0/3.1). Example: vendedor.lider
      * @bodyParam snapshot_vendas array Snapshot das ultimas vendas.

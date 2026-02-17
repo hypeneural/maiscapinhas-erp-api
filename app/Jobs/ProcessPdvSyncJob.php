@@ -119,6 +119,18 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                 $turnosCount = is_array(data_get($payload, 'turnos')) ? count((array) data_get($payload, 'turnos')) : 0;
                 $vendasCount = is_array(data_get($payload, 'vendas')) ? count((array) data_get($payload, 'vendas')) : 0;
 
+                $turnosAbertos = data_get($payload, 'turnos_abertos', []);
+                $turnosFechados = data_get($payload, 'turnos_fechados', []);
+                if (!empty($turnosAbertos) || !empty($turnosFechados)) {
+                    $legacyTurnos = data_get($payload, 'turnos', []);
+                    $mergedTurnos = array_merge(
+                        is_array($legacyTurnos) ? $legacyTurnos : [],
+                        is_array($turnosAbertos) ? $turnosAbertos : [],
+                        is_array($turnosFechados) ? $turnosFechados : []
+                    );
+                    $payload['turnos'] = $mergedTurnos;
+                }
+
                 $this->processTurnos(
                     $sync,
                     $context['store_pdv_id'],
@@ -147,6 +159,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                     $sync,
                     $context['store_pdv_id'],
                     $context['store_id'],
+                    $userMappings,
                     $payload
                 );
 
@@ -605,6 +618,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             // V5 Date/Total fallbacks
             $dataHora = $this->asDateTimeString(data_get($venda, 'data_hora') ?? data_get($venda, 'DateTime'));
             $total = $this->asDecimal(data_get($venda, 'total') ?? data_get($venda, 'TotalAmount') ?? data_get($venda, 'Total'), 2);
+            $status = $this->asString(data_get($venda, 'status') ?? data_get($venda, 'Status'));
 
             $vendaRows[] = [
                 'store_pdv_id' => $storePdvId,
@@ -615,6 +629,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                 'turno_seq' => $turnoSeq,
                 'data_hora' => $dataHora,
                 'total' => $total,
+                'status' => $status,
                 'sync_id' => $sync->sync_id,
                 'last_window_to' => $sync->window_to?->toDateTimeString(),
                 'created_at' => $now,
@@ -796,6 +811,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                 'turno_seq',
                 'data_hora',
                 'total',
+                'status',
                 'sync_id',
                 'last_window_to',
                 'updated_at',
@@ -921,6 +937,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
         PdvSync $sync,
         int $storePdvId,
         ?int $storeId,
+        array $userMappings,
         array $payload
     ): int {
         $snapshotVendas = data_get($payload, 'snapshot_vendas', []);
@@ -928,6 +945,30 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             return 0;
         }
 
+        // V5 Detection: If payload contains V5 specific fields (like Status, or keys are PascalCase with Itens), 
+        // OR simply checking if the first item has 'Itens' (V5) vs 'qtd_itens' (summary).
+        // V5 snapshots are full SaleDetail objects.
+        $first = reset($snapshotVendas);
+        $isV5Snapshot = is_array($first) && (
+            isset($first['Itens']) || isset($first['Status']) || isset($first['SaleId'])
+        );
+
+        if ($isV5Snapshot) {
+            // Process as full sales, upserting into pdv_vendas
+            // We reuse processVendas logic by wrapping the snapshot list
+            // Note: We might want to separate this into a dedicated method if logic diverges, 
+            // but for now reusing processVendas is the goal to ensure full data retention.
+            $this->processVendas(
+                $sync,
+                $storePdvId,
+                $storeId,
+                $userMappings,
+                ['vendas' => $snapshotVendas] // Wrap as 'vendas' for the method
+            );
+            return count($snapshotVendas);
+        }
+
+        // Legacy: Process as summary (pdv_vendas_resumo)
         $now = now();
         $hasResumoVendedorLogin = $this->supportsResumoVendedorLoginColumn();
         $rows = [];
