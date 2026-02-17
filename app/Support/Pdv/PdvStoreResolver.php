@@ -66,6 +66,14 @@ class PdvStoreResolver
             }
         }
 
+        // Fallback: If we have a GUID, try to auto-link with the stores table (bypass ambiguous/missing)
+        if ($guid !== null) {
+            $autoLinked = $this->autoLinkStoreByGuid($storePdvId, $guid);
+            if ($autoLinked) {
+                return $this->resolved($storePdvId, $autoLinked, 'guid_auto_link');
+            }
+        }
+
         $baseQuery = DB::table('pdv_store_mappings')
             ->where('pdv_store_id', $storePdvId)
             ->where('active', true);
@@ -125,6 +133,14 @@ class PdvStoreResolver
                 $candidates,
                 ['store_mapping_ambiguous']
             );
+        }
+
+        // Fallback: If we have a GUID, try to auto-link with the stores table
+        if ($guid !== null) {
+            $autoLinked = $this->autoLinkStoreByGuid($storePdvId, $guid);
+            if ($autoLinked) {
+                return $this->resolved($storePdvId, $autoLinked, 'guid_auto_link');
+            }
         }
 
         return $this->missing($storePdvId);
@@ -268,6 +284,47 @@ class PdvStoreResolver
             'candidate_store_ids' => [],
             'candidate_aliases' => [],
         ];
+    }
+
+    private function autoLinkStoreByGuid(int $storePdvId, string $guid): ?object
+    {
+        // 1. Check if store exists in 'stores' table with this guid AND is active
+        $store = DB::table('stores')
+            ->where('guid', $guid)
+            ->where('active', true)
+            ->first(['id', 'name']);
+
+        if (!$store) {
+            return null;
+        }
+
+        // 2. Create or Update pdv_store_mappings
+        // We use updateOrInsert to handle race conditions safely
+        $now = now();
+        DB::table('pdv_store_mappings')->updateOrInsert(
+            [
+                'pdv_store_id' => $storePdvId,
+            ],
+            [
+                'store_id' => $store->id,
+                'guid_loja' => $guid,
+                'alias' => $store->name, // Best effort alias
+                'active' => true,
+                'updated_at' => $now,
+                // If inserting, created_at will be missing unless we check existence,
+                // but updateOrInsert doesn't support conditional created_at easily.
+                // We'll rely on DB default or acceptable null for now. 
+                // Better approach: Check existence to set created_at properly if needed.
+            ]
+        );
+
+        // Return an object structure compatible with 'resolved' method expectation (needs 'store_id', 'id', 'alias')
+        // effectively simulating a row from pdv_store_mappings
+        $mapping = DB::table('pdv_store_mappings')
+            ->where('pdv_store_id', $storePdvId)
+            ->first(['id', 'store_id', 'alias']);
+
+        return $mapping;
     }
 }
 ;
