@@ -67,8 +67,12 @@ class PdvSyncIngestRequest extends FormRequest
 
                 if (isset($t['Responsavel']) && is_array($t['Responsavel'])) {
                     $r = $t['Responsavel'];
-                    if (isset($r['Id']))
+                    // V5: 'Codigo' is the integer ID, 'Id' is the GUID.
+                    if (isset($r['Codigo']))
+                        $t['responsavel']['id_usuario'] = $r['Codigo'];
+                    elseif (isset($r['Id']) && is_numeric($r['Id']))
                         $t['responsavel']['id_usuario'] = $r['Id'];
+
                     if (isset($r['Nome']))
                         $t['responsavel']['nome'] = $r['Nome'];
                     if (isset($r['Login']))
