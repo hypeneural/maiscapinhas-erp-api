@@ -183,7 +183,7 @@ class PdvSyncController extends Controller
             );
         }
 
-        if ($headerSchemaVersion !== '' && $headerSchemaVersion !== $schemaVersion) {
+        if ($headerSchemaVersion !== '' && $headerSchemaVersion !== $schemaVersion && !str_starts_with($schemaVersion, $headerSchemaVersion)) {
             return $this->pdvValidationError(
                 'Schema version header does not match payload.',
                 [
