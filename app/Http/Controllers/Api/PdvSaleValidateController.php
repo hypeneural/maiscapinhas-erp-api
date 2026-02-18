@@ -417,14 +417,19 @@ class PdvSaleValidateController extends Controller
         return [
             'codigo' => $item['CodigoDaOperacao'] ?? null,
             'erp_id' => $item['Id'] ?? null,
+            'erp_loja_uuid' => $lojaId,
             'valor' => $item['ValorTotalLiquidoFormatado'] ?? $item['ValorTotalLiquido'] ?? null,
+            'valor_liquido' => isset($item['ValorTotalLiquido']) ? (float) $item['ValorTotalLiquido'] : null,
             'data' => $formattedDate,
             'turno' => $turnoLabel,
+            'turno_seq' => $sequencial,
             'turno_id' => $item['Turno']['Id'] ?? null,
             'loja_erp_id' => $lojaId,
             'loja_nome' => $storeName,
             'found_in_db' => $storeName !== null,
             'cancelada' => $item['Cancelada'] ?? false,
+            'concluida' => $item['Concluida'] ?? null,
+            'tipo' => $item['TipoDaOperacao'] ?? null,
             'itens' => $item['NumeroDeItens'] ?? null,
         ];
     }

@@ -508,6 +508,15 @@ class PdvSaleValidator
         $turno = $venda->turno;
         $this->loadRelationsManual($venda);
 
+        // ── Store info from stores table ──
+        $storeInfo = null;
+        if ($venda->store_id) {
+            $storeInfo = DB::table('stores')
+                ->where('id', $venda->store_id)
+                ->select(['name', 'cnpj', 'razao_social'])
+                ->first();
+        }
+
         // Resolve seller info from users table (batch by unique guids)
         $sellerGuids = $venda->itens->pluck('vendedor_guid')->filter()->unique()->values()->all();
         $sellerMap = $this->resolveSellersByGuids($sellerGuids);
@@ -515,14 +524,21 @@ class PdvSaleValidator
         $itemsFormatted = $venda->itens->map(function ($i) use ($sellerMap) {
             $guid = strtolower(trim($i->vendedor_guid ?? ''));
             $seller = $sellerMap[$guid] ?? null;
+            $total = (float) $i->total;
+            $desconto = (float) ($i->desconto ?? 0);
+            $qtd = (float) $i->qtd;
             return [
                 'line_no' => (int) ($i->line_no ?? $i->id_item ?? 0),
-                'codigo' => $i->codigo_barras ?? $i->id_produto,
-                'nome' => $i->descricao ?? $i->descricao_reduzida ?? '',
-                'qtd' => (float) $i->qtd,
-                'preco_unit' => (float) ($i->preco_unit ?? $i->total),
-                'total' => (float) $i->total,
-                'desconto' => (float) ($i->desconto ?? 0),
+                'id_produto' => $i->id_produto ?? null,
+                'codigo_barras' => $i->codigo_barras ?? null,
+                'nome_produto' => $i->descricao ?? $i->descricao_reduzida ?? $i->nome_produto ?? '',
+                'qtd' => $qtd,
+                'preco_unit' => (float) ($i->preco_unit ?? $total),
+                'total' => $total,
+                'desconto' => $desconto,
+                'valor_original' => round($total + $desconto, 2),
+                'preco_original' => $qtd > 0 ? round(($total + $desconto) / $qtd, 2) : 0.0,
+                'vendedor_pdv_id' => $i->vendedor_pdv_id ?? null,
                 'vendedor_guid' => $i->vendedor_guid,
                 'vendedor_nome' => $seller['name'] ?? $i->vendedor_nome,
                 'vendedor_login' => $i->vendedor_login ?? null,
@@ -534,44 +550,62 @@ class PdvSaleValidator
         $paymentsFormatted = $venda->pagamentos->map(function ($p) {
             return [
                 'line_no' => (int) ($p->line_no ?? $p->id_pagamento ?? 0),
-                'meio' => $p->meio_pagamento,
+                'id_finalizador' => $p->id_finalizador ?? null,
+                'meio_pagamento' => $p->meio_pagamento,
                 'valor' => (float) $p->valor,
                 'troco' => (float) ($p->troco ?? 0),
                 'parcelas' => (int) ($p->parcelas ?? 1),
             ];
         })->values()->toArray();
 
+        // ── Summary ──
+        $itensCount = count($itemsFormatted);
+        $itensQtdTotal = round(array_sum(array_column($itemsFormatted, 'qtd')), 3);
+        $itensValorTotal = round(array_sum(array_column($itemsFormatted, 'total')), 2);
+        $itensDescontoTotal = round(array_sum(array_column($itemsFormatted, 'desconto')), 2);
+
+        $pagamentosCount = count($paymentsFormatted);
+        $pagamentosValorTotal = round(array_sum(array_column($paymentsFormatted, 'valor')), 2);
+        $pagamentosTrocoTotal = round(array_sum(array_column($paymentsFormatted, 'troco')), 2);
+
         return [
-            'store_db' => [
-                'id' => $loja->id_ponto_venda ?? $venda->store_pdv_id,
-                'nome_hiper' => $loja->nome_hiper ?? null,
-            ],
-            'user_db' => [
-                'nome' => $turno->operador_nome ?? null,
-                'login' => $turno->operador_login ?? null,
-                'user_id' => $turno->operador_user_id ?? null,
-            ],
-            'timestamps' => [
-                'data_venda' => $venda->data_hora?->toIso8601String(),
-                'created_at' => $venda->created_at?->toIso8601String(),
-                'updated_at' => $venda->updated_at?->toIso8601String(),
-                'last_seen' => $venda->last_seen_in_snapshot_at?->toIso8601String(),
-            ],
-            'identifiers' => [
+            'venda' => [
+                'store_id' => $venda->store_id,
+                'store_name' => $storeInfo->name ?? null,
+                'store_pdv_id' => $venda->store_pdv_id,
+                'store_pdv_name' => $loja->nome_padronizado ?? $loja->nome_hiper ?? null,
+                'store_cnpj' => $storeInfo->cnpj ?? null,
+                'store_razao_social' => $storeInfo->razao_social ?? null,
+                'canal' => $venda->canal,
                 'id_operacao' => $venda->id_operacao,
                 'id_turno' => $venda->id_turno,
-                'pdv_venda_id' => $venda->id,
+                'turno_seq' => $venda->turno_seq,
+                'data_hora' => $venda->data_hora?->toIso8601String(),
+                'total' => (float) $venda->total,
                 'erp_operacao_uuid' => $venda->erp_operacao_uuid,
                 'erp_loja_uuid' => $venda->erp_loja_uuid,
-            ],
-            'fiscal' => [
-                'nfce_chave' => $venda->nfce_chave,
-                'nfce_numero' => $venda->nfce_numero,
-                'nfce_serie' => $venda->nfce_serie,
-                'nfce_modelo' => $venda->nfce_modelo,
+                'fiscal' => [
+                    'nfce_chave' => $venda->nfce_chave,
+                    'nfce_numero' => $venda->nfce_numero,
+                    'nfce_serie' => $venda->nfce_serie,
+                    'nfce_modelo' => $venda->nfce_modelo,
+                ],
             ],
             'itens' => $itemsFormatted,
             'pagamentos' => $paymentsFormatted,
+            'summary' => [
+                'itens' => [
+                    'qtd_linhas' => $itensCount,
+                    'qtd_total' => $itensQtdTotal,
+                    'valor_total' => $itensValorTotal,
+                    'desconto_total' => $itensDescontoTotal,
+                ],
+                'pagamentos' => [
+                    'qtd_linhas' => $pagamentosCount,
+                    'valor_total' => $pagamentosValorTotal,
+                    'troco_total' => $pagamentosTrocoTotal,
+                ],
+            ],
         ];
     }
 
@@ -618,14 +652,14 @@ class PdvSaleValidator
         ];
 
         // ── 2. Loja ──
-        $erpLojaUuid = strtolower(trim(data_get($erp, 'LojaId') ?? data_get($erp, 'Loja.Id') ?? ''));
+        $erpLojaUuid = strtolower(trim(data_get($erp, 'LojaId') ?? data_get($erp, 'Loja.Id') ?? data_get($erp, 'Turno.LojaId') ?? ''));
         $dbLojaUuid = strtolower(trim($venda->erp_loja_uuid ?? ''));
         $loja = $venda->loja;
 
         $lojaSection = [
             'erp' => [
-                'uuid' => data_get($erp, 'LojaId') ?? data_get($erp, 'Loja.Id'),
-                'nome' => data_get($erp, 'Loja.Nome'),
+                'uuid' => data_get($erp, 'LojaId') ?? data_get($erp, 'Loja.Id') ?? data_get($erp, 'Turno.LojaId'),
+                'nome' => data_get($erp, 'Loja.Nome') ?? data_get($erp, 'NomeDaLoja'),
             ],
             'db' => [
                 'uuid' => $venda->erp_loja_uuid,
