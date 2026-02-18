@@ -1856,21 +1856,22 @@ class PdvReportsController extends Controller
                 ->leftJoin('stores as s2', 't.store_id', '=', 's2.id')
                 ->select([
                     DB::raw("'fechamento_caixa' as tipo_operacao"),
-                    DB::raw('COALESCE(t.data_hora_termino, t.data_hora_inicio) as data_hora'),
+                    DB::raw('MAX(COALESCE(t.data_hora_termino, t.data_hora_inicio)) as data_hora'),
                     't.store_id',
-                    's2.name as store_name',
+                    DB::raw('MAX(s2.name) as store_name'),
                     't.store_pdv_id',
                     DB::raw('COALESCE(t.sequencial, 0) as turno_seq'),
-                    't.canal',
+                    DB::raw("'UNIFICADO' as canal"), // Force unified canal
                     DB::raw('0 as operacao_id'),
                     DB::raw("CONCAT('Turno #', COALESCE(t.sequencial, '?')) as operacao_label"),
-                    DB::raw("IF(t.fechado, 'FECHADO', 'ABERTO') as status"),
-                    DB::raw('COALESCE(t.qtd_vendas, 0) as itens'),
-                    DB::raw('t.total_sistema as valor'),
-                    DB::raw('COALESCE(t.operador_nome, t.responsavel_nome) as vendedor_nome'),
-                    DB::raw('COALESCE(t.operador_pdv_id, t.responsavel_pdv_id, 0) as vendedor_pdv_id'),
+                    // Status is FECHADO only if all components are closed (using MIN because true=1, false=0)
+                    DB::raw("IF(MIN(t.fechado), 'FECHADO', 'ABERTO') as status"),
+                    DB::raw('SUM(COALESCE(t.qtd_vendas, 0)) as itens'),
+                    DB::raw('SUM(t.total_sistema) as valor'),
+                    DB::raw('MAX(COALESCE(t.operador_nome, t.responsavel_nome)) as vendedor_nome'),
+                    DB::raw('MAX(COALESCE(t.operador_pdv_id, t.responsavel_pdv_id, 0)) as vendedor_pdv_id'),
                     DB::raw('NULL as meio_pagamento'),
-                    DB::raw('t.id as internal_id'),
+                    DB::raw('MAX(t.id) as internal_id'), // Use MAX id for paging stability
                 ])
                 ->where(function ($q) use ($from, $to) {
                     $q->whereBetween(DB::raw('COALESCE(t.data_hora_termino, t.data_hora_inicio)'), [$from->toDateTimeString(), $to->toDateTimeString()]);
@@ -1878,28 +1879,14 @@ class PdvReportsController extends Controller
 
             $this->applyStoreScopeToQuery($turnosQuery, $scope, 't');
 
-            // Apply turno-specific filters
-            if (!empty($validated['canal'])) {
-                $turnosQuery->where('t.canal', (string) $validated['canal']);
-            }
+            // Apply Filters specific to Turnos (aggregated)
+
+            // Note: 'canal' filter is ignored for Unified Closures as they contain all channels.
+
             if (isset($validated['turno_seq'])) {
                 $turnosQuery->where('t.sequencial', (int) $validated['turno_seq']);
             }
-            if (isset($validated['min_total'])) {
-                $turnosQuery->where('t.total_sistema', '>=', (float) $validated['min_total']);
-            }
-            if (isset($validated['max_total'])) {
-                $turnosQuery->where('t.total_sistema', '<=', (float) $validated['max_total']);
-            }
-            if (!empty($validated['status'])) {
-                $statusFilter = strtoupper((string) $validated['status']);
-                if (in_array($statusFilter, ['ABERTO', 'FECHADO'], true)) {
-                    $turnosQuery->where('t.fechado', $statusFilter === 'FECHADO');
-                } else {
-                    // This status is venda-only; skip turnos entirely
-                    $turnosQuery->whereRaw('1 = 0');
-                }
-            }
+
             if (isset($validated['vendedor_id'])) {
                 $vendedorId = (int) $validated['vendedor_id'];
                 $turnosQuery->where(function ($q) use ($vendedorId) {
@@ -1907,10 +1894,39 @@ class PdvReportsController extends Controller
                         ->orWhere('t.responsavel_pdv_id', $vendedorId);
                 });
             }
-            // meio_pagamento / id_finalizador don't apply to turno closures
+
+            // Group By Logic to Unify Rows
+            $turnosQuery->groupBy([
+                't.store_id',
+                't.store_pdv_id',
+                't.sequencial',
+                DB::raw('DATE(t.data_hora_inicio)'),
+                // We don't group by 'canal' to merge them.
+            ]);
+
+            // Having Clause Filters (Must apply AFTER aggregation)
+            if (isset($validated['min_total'])) {
+                $turnosQuery->having('valor', '>=', (float) $validated['min_total']);
+            }
+            if (isset($validated['max_total'])) {
+                $turnosQuery->having('valor', '<=', (float) $validated['max_total']);
+            }
+            if (!empty($validated['status'])) {
+                $statusFilter = strtoupper((string) $validated['status']);
+                if (in_array($statusFilter, ['ABERTO', 'FECHADO'], true)) {
+                    // MIN(fechado) gives 1 if all closed, 0 if any open
+                    $operator = $statusFilter === 'FECHADO' ? '=' : '!=';
+                    // Actually: IF(MIN(fechado), 'FECHADO', 'ABERTO')
+                    // So FECHADO requires MIN(fechado) == 1
+                    // ABERTO requires MIN(fechado) == 0
+                    $turnosQuery->havingRaw("MIN(t.fechado) $operator 1");
+                } else {
+                    $turnosQuery->whereRaw('1 = 0');
+                }
+            }
+
+            // Exclude if filtering by payments (turnos don't have payment info at this level)
             if (isset($validated['id_finalizador']) || !empty($validated['meio_pagamento'])) {
-                // Turno closures don't have individual payment lines at this level;
-                // exclude them from results when filtering by payment
                 $turnosQuery->whereRaw('1 = 0');
             }
 
