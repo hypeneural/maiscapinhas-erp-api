@@ -165,12 +165,22 @@ class CashIntegrationController extends Controller
         if (!$closureUuid) {
             $request->validate([
                 'store_pdv_id' => ['required', 'integer'],
-                'date'         => ['required', 'date'],
-                'sequencial'   => ['required', 'integer'],
+                'date' => ['required', 'date'],
+                'sequencial' => ['required', 'integer'],
             ]);
 
-            $storePdvId = (int) $request->input('store_pdv_id');
-            $date       = $request->input('date');
+            $storePdvId = $request->input('store_pdv_id');
+            $storeGuid = $request->input('store_guid');
+
+            if (!$storePdvId && $storeGuid) {
+                $storeRec = \DB::table('stores')->where('guid', $storeGuid)->first(['store_pdv_id']);
+                if ($storeRec) {
+                    $storePdvId = $storeRec->store_pdv_id;
+                }
+            }
+
+            $storePdvId = (int) $storePdvId;
+            $date = $request->input('date');
             $sequencial = (int) $request->input('sequencial');
 
             // Find the closure_uuid from turnos
@@ -203,13 +213,29 @@ class CashIntegrationController extends Controller
         $turnos = \DB::table('pdv_turnos')
             ->where('closure_uuid', $closureUuid)
             ->get([
-                'id', 'canal', 'id_turno', 'closure_uuid', 'store_pdv_id', 'store_id',
-                'sequencial', 'periodo', 'fechado',
-                'operador_nome', 'operador_guid',
-                'responsavel_nome', 'responsavel_guid',
-                'total_sistema', 'total_declarado', 'total_falta', 'total_sobra',
-                'data_hora_inicio', 'data_hora_termino', 'data_hora_fechamento',
-                'last_sync_id', 'created_at', 'updated_at',
+                'id',
+                'canal',
+                'id_turno',
+                'closure_uuid',
+                'store_pdv_id',
+                'store_id',
+                'sequencial',
+                'periodo',
+                'fechado',
+                'operador_nome',
+                'operador_guid',
+                'responsavel_nome',
+                'responsavel_guid',
+                'total_sistema',
+                'total_declarado',
+                'total_falta',
+                'total_sobra',
+                'data_hora_inicio',
+                'data_hora_termino',
+                'data_hora_fechamento',
+                'last_sync_id',
+                'created_at',
+                'updated_at',
             ]);
 
         // 2. Raw pagamentos data (grouped by turno/canal)
@@ -265,16 +291,16 @@ class CashIntegrationController extends Controller
 
             // Quick summary for validation
             'validation_summary' => $unified ? [
-                'entries_expected'             => $unified['totais']['entries_expected'] ?? null,
-                'sistema_caixa'                => $unified['totais']['sistema_caixa'] ?? null,
-                'loja_total_sistema_raw'       => $unified['totais']['loja_total_sistema_raw'] ?? null,
+                'entries_expected' => $unified['totais']['entries_expected'] ?? null,
+                'sistema_caixa' => $unified['totais']['sistema_caixa'] ?? null,
+                'loja_total_sistema_raw' => $unified['totais']['loja_total_sistema_raw'] ?? null,
                 'loja_cash_contribution_inferred' => $unified['totais']['loja_cash_contribution_inferred'] ?? null,
-                'declarado'                    => $unified['totais']['declarado'] ?? null,
-                'falta'                        => $unified['totais']['falta'] ?? null,
-                'sobra'                        => $unified['totais']['sobra'] ?? null,
-                'has_loja_sales'               => $unified['totais']['has_loja_sales'] ?? null,
-                'declared_consistent'          => $unified['totais']['declared_consistent'] ?? null,
-                'por_meio'                     => $unified['pagamentos']['por_meio'] ?? [],
+                'declarado' => $unified['totais']['declarado'] ?? null,
+                'falta' => $unified['totais']['falta'] ?? null,
+                'sobra' => $unified['totais']['sobra'] ?? null,
+                'has_loja_sales' => $unified['totais']['has_loja_sales'] ?? null,
+                'declared_consistent' => $unified['totais']['declared_consistent'] ?? null,
+                'por_meio' => $unified['pagamentos']['por_meio'] ?? [],
             ] : null,
         ]);
     }
