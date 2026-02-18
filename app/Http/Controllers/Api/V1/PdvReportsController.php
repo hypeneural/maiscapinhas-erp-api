@@ -1871,6 +1871,7 @@ class PdvReportsController extends Controller
                     DB::raw('MAX(COALESCE(t.operador_nome, t.responsavel_nome)) as vendedor_nome'),
                     DB::raw('MAX(COALESCE(t.operador_pdv_id, t.responsavel_pdv_id, 0)) as vendedor_pdv_id'),
                     DB::raw('NULL as meio_pagamento'),
+                    DB::raw('MAX(t.closure_uuid) as closure_uuid'), // Expose UUID for details
                     DB::raw('MAX(t.id) as internal_id'), // Use MAX id for paging stability
                 ])
                 ->where(function ($q) use ($from, $to) {
