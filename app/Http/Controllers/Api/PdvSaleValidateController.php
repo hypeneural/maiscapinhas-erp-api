@@ -97,7 +97,7 @@ class PdvSaleValidateController extends Controller
             ? HiperConnection::findOrFail($data['connection_id'])
             : HiperConnection::where('is_active', true)->firstOrFail();
 
-        $endpointKey = $data['endpoint_key'] ?? 'operacoes.listar';
+        $endpointKey = $data['endpoint_key'] ?? 'operacoes.listar.vendas';
         $endpoint = HiperEndpoint::where('key', $endpointKey)->firstOrFail();
 
         // ── Build URL ──
@@ -108,6 +108,16 @@ class PdvSaleValidateController extends Controller
             $endpoint->body_template ?? [],
             $data['body'] ?? []
         );
+
+        // ── Inject dynamic dates if user didn't override ──
+        // The body_template may have stale dates; always use fresh dates
+        // unless the caller explicitly sent body.filtro.PeriodoInicial/PeriodoFinal
+        if (!isset($data['body']['filtro']['PeriodoInicial'])) {
+            $tz = $data['timezone'] ?? 'America/Sao_Paulo';
+            $now = Carbon::now($tz);
+            $bodyPayload['filtro']['PeriodoInicial'] = $now->copy()->subDays(7)->startOfDay()->format('Y-m-d\\TH:i:sP');
+            $bodyPayload['filtro']['PeriodoFinal'] = $now->copy()->endOfDay()->format('Y-m-d\\TH:i:sP');
+        }
 
         // ── Cookie header ──
         $cookieService = app(HiperCookieService::class);
