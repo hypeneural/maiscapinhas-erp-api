@@ -171,16 +171,7 @@ Route::middleware('auth:sanctum')->group(function () {
             ->name('closure-diagnose');
 
         // TEMPORARY: Backfill route for Gov Celso Ramos validation
-        Route::get('/temp-backfill-gov-celso', function () {
-            $service = app(\App\Services\Pdv\PdvClosureUnifiedService::class);
-            $closureUuid = '49db6e75-75e4-4f72-860b-a561d97db0f4';
-            $closure = $service->upsertClosureFromTurnos($closureUuid);
-            return response()->json([
-                'message' => 'Backfill executed',
-                'closure_id' => $closure ? $closure->id : null,
-                'total_unificado' => $closure ? $closure->total_sistema_unificado : null
-            ]);
-        });
+        Route::get('/temp-backfill-gov-celso', [CashIntegrationController::class, 'tempBackfillGovCelso']);
 
         require app_path('Modules/ConferenciaCaixa/routes.php');
     });
