@@ -1787,6 +1787,8 @@ class PdvReportsController extends Controller
                     DB::raw('COALESCE(it.vendedor_pdv_id, 0) as vendedor_pdv_id'),
                     DB::raw('pd.meio_pagamento_dominante as meio_pagamento'),
                     DB::raw('NULL as closure_uuid'), // Placeholder for union compatibility
+                    DB::raw('NULL as responsavel_nome'),
+                    DB::raw('NULL as responsavel_guid'),
                     'v.id as internal_id',
                 ])
                 ->whereBetween('v.data_hora', [$from->toDateTimeString(), $to->toDateTimeString()]);
@@ -1855,6 +1857,12 @@ class PdvReportsController extends Controller
         if ($tipoOperacao === null || $tipoOperacao === 'fechamento_caixa') {
             $turnosQuery = DB::table('pdv_turnos as t')
                 ->leftJoin('stores as s2', 't.store_id', '=', 's2.id')
+                ->leftJoin('pdv_closures as pc', function ($join) {
+                    $join->on('pc.store_pdv_id', '=', 't.store_pdv_id')
+                        ->on('pc.sequencial', '=', 't.sequencial')
+                        ->on('pc.store_id', '=', 't.store_id')
+                        ->whereColumn('pc.closure_uuid', '=', 't.closure_uuid');
+                })
                 ->select([
                     DB::raw("'fechamento_caixa' as tipo_operacao"),
                     DB::raw('MAX(COALESCE(t.data_hora_termino, t.data_hora_inicio)) as data_hora'),
@@ -1868,11 +1876,14 @@ class PdvReportsController extends Controller
                     // Status is FECHADO only if all components are closed (using MIN because true=1, false=0)
                     DB::raw("IF(MIN(t.fechado), 'FECHADO', 'ABERTO') as status"),
                     DB::raw('SUM(COALESCE(t.qtd_vendas, 0)) as itens'),
-                    DB::raw('SUM(t.total_sistema) as valor'),
+                    // Use pre-computed unified total from pdv_closures; fallback to MAX(total_declarado)
+                    DB::raw('COALESCE(MAX(pc.total_sistema_unificado), MAX(t.total_declarado), 0) as valor'),
                     DB::raw('MAX(COALESCE(t.operador_nome, t.responsavel_nome)) as vendedor_nome'),
                     DB::raw('MAX(COALESCE(t.operador_pdv_id, t.responsavel_pdv_id, 0)) as vendedor_pdv_id'),
                     DB::raw('NULL as meio_pagamento'),
                     DB::raw('MAX(t.closure_uuid) as closure_uuid'), // Expose UUID for details
+                    DB::raw('MAX(t.responsavel_nome) as responsavel_nome'),
+                    DB::raw('MAX(t.responsavel_guid) as responsavel_guid'),
                     DB::raw('MAX(t.id) as internal_id'), // Use MAX id for paging stability
                 ])
                 ->where(function ($q) use ($from, $to) {
@@ -1987,6 +1998,8 @@ class PdvReportsController extends Controller
             'vendedor_nome' => $row->vendedor_nome,
             'meio_pagamento' => $row->meio_pagamento,
             'closure_uuid' => $row->closure_uuid, // Expose UUID for closure details
+            'responsavel_nome' => $row->responsavel_nome,
+            'responsavel_guid' => $row->responsavel_guid,
         ])->values()->all();
 
         return response()->json([
