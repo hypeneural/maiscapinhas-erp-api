@@ -1786,6 +1786,7 @@ class PdvReportsController extends Controller
                     DB::raw('COALESCE(u_by_guid.name, u_map.name, it.vendedor_nome_pdv) as vendedor_nome'),
                     DB::raw('COALESCE(it.vendedor_pdv_id, 0) as vendedor_pdv_id'),
                     DB::raw('pd.meio_pagamento_dominante as meio_pagamento'),
+                    DB::raw('NULL as closure_uuid'), // Placeholder for union compatibility
                     'v.id as internal_id',
                 ])
                 ->whereBetween('v.data_hora', [$from->toDateTimeString(), $to->toDateTimeString()]);
