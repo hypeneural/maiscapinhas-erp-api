@@ -167,6 +167,9 @@ Route::middleware('auth:sanctum')->group(function () {
             ->name('pdv-closure-data')
             ->middleware('permission:caixa.view');
 
+        Route::get('/closure-diagnose', [CashIntegrationController::class, 'diagnoseClosureData'])
+            ->name('closure-diagnose');
+
         require app_path('Modules/ConferenciaCaixa/routes.php');
     });
 
