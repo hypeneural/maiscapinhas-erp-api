@@ -525,7 +525,7 @@ class PdvSaleValidator
                 'desconto' => (float) ($i->desconto ?? 0),
                 'vendedor_guid' => $i->vendedor_guid,
                 'vendedor_nome' => $seller['name'] ?? $i->vendedor_nome,
-                'vendedor_login' => $seller['login'] ?? $i->vendedor_login,
+                'vendedor_login' => $i->vendedor_login ?? null,
                 'vendedor_user_id' => $seller['user_id'] ?? $i->vendedor_user_id,
                 'vendedor_whatsapp' => $seller['whatsapp'] ?? null,
             ];
@@ -651,7 +651,7 @@ class PdvSaleValidator
             'db' => [
                 'guid' => $dbFirstItem->vendedor_guid ?? null,
                 'nome' => $dbSeller['name'] ?? $dbFirstItem->vendedor_nome ?? null,
-                'login' => $dbSeller['login'] ?? $dbFirstItem->vendedor_login ?? null,
+                'login' => $dbFirstItem->vendedor_login ?? null,
                 'user_id' => $dbSeller['user_id'] ?? $dbFirstItem->vendedor_user_id ?? null,
                 'whatsapp' => $dbSeller['whatsapp'] ?? null,
             ],
@@ -794,7 +794,7 @@ class PdvSaleValidator
 
     /**
      * Resolve seller details from users table by their GUIDs.
-     * Returns map: lowercase_guid => ['name', 'login', 'user_id', 'whatsapp']
+     * Returns map: lowercase_guid => ['name', 'user_id', 'whatsapp']
      */
     private function resolveSellersByGuids(array $guids): array
     {
@@ -806,7 +806,7 @@ class PdvSaleValidator
 
         $users = DB::table('users')
             ->whereIn(DB::raw('LOWER(guid)'), $lowerGuids)
-            ->select(['guid', 'name', 'login', 'id', 'whatsapp'])
+            ->select(['guid', 'name', 'id', 'whatsapp'])
             ->get();
 
         $map = [];
@@ -814,7 +814,6 @@ class PdvSaleValidator
             $key = strtolower(trim($u->guid ?? ''));
             $map[$key] = [
                 'name' => $u->name,
-                'login' => $u->login ?? null,
                 'user_id' => $u->id,
                 'whatsapp' => $u->whatsapp ?? null,
             ];
