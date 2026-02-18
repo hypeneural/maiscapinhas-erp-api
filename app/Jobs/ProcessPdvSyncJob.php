@@ -448,7 +448,8 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                     $sync,
                     $now,
                     $hasPagamentoUuid,
-                    null
+                    null,
+                    $declaradoUuid  // closure_uuid = FechamentoDeclarado.Id
                 ),
                 $this->buildTurnoPagamentoRows(
                     $storePdvId,
@@ -460,7 +461,8 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                     $sync,
                     $now,
                     $hasPagamentoUuid,
-                    $declaradoUuid
+                    $declaradoUuid,
+                    $declaradoUuid  // closure_uuid
                 ),
                 $this->buildTurnoPagamentoRows(
                     $storePdvId,
@@ -472,7 +474,8 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                     $sync,
                     $now,
                     $hasPagamentoUuid,
-                    $faltaUuid
+                    $faltaUuid,
+                    $declaradoUuid  // closure_uuid
                 ),
                 $this->buildTurnoPagamentoRows(
                     $storePdvId,
@@ -484,7 +487,8 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                     $sync,
                     $now,
                     $hasPagamentoUuid,
-                    $sobraUuid
+                    $sobraUuid,
+                    $declaradoUuid  // closure_uuid
                 )
             );
         }
@@ -541,6 +545,26 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             ['store_pdv_id', 'canal', 'id_turno', 'tipo', 'id_finalizador'],
             $this->buildPagamentoUpdateColumns($hasPagamentoUuid)
         );
+
+        // ── Upsert pdv_closures (se tabela existir) ──
+        if ($hasClosureUuid && Schema::hasTable('pdv_closures')) {
+            $closureUuids = collect($turnoRows)
+                ->pluck('closure_uuid')
+                ->filter()
+                ->unique()
+                ->values();
+
+            if ($closureUuids->isNotEmpty()) {
+                $service = new \App\Services\Pdv\PdvClosureUnifiedService();
+                foreach ($closureUuids as $cuuid) {
+                    try {
+                        $service->upsertClosureFromTurnos($cuuid, $sync->sync_id);
+                    } catch (\Throwable $e) {
+                        Log::warning("[ProcessPdvSyncJob] upsert pdv_closures failed for {$cuuid}: {$e->getMessage()}");
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -1225,7 +1249,8 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
         PdvSync $sync,
         mixed $now,
         bool $hasPagamentoUuid = false,
-        ?string $operacaoUuid = null
+        ?string $operacaoUuid = null,
+        ?string $closureUuid = null
     ): array {
         if (!is_array($values) || $values === []) {
             return [];
@@ -1242,6 +1267,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                 'store_id' => $storeId,
                 'canal' => $canal,
                 'id_turno' => $idTurno,
+                'closure_uuid' => $closureUuid ?: null,
                 'tipo' => $tipo,
                 'id_finalizador' => max(0, (int) data_get($item, 'id_finalizador', 0)),
                 'meio_pagamento' => $this->asString(data_get($item, 'meio')),

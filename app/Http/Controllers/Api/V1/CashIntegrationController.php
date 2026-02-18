@@ -6,9 +6,9 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
+use App\Services\Pdv\PdvClosureUnifiedService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 /**
  * @group Fechamento de Caixa
@@ -19,29 +19,21 @@ class CashIntegrationController extends Controller
 {
     use ApiResponse;
 
+    public function __construct(
+        private readonly PdvClosureUnifiedService $closureService
+    ) {
+    }
+
     /**
-     * Obter dados de fechamento do PDV
+     * Obter dados de fechamento do PDV (visão unificada)
      *
      * Retorna os totais e detalhamento de pagamentos registrados no PDV
-     * para um determinado Turno/Loja/Data.
+     * para um determinado Turno/Loja/Data, unificando dados dos canais
+     * HIPER_CAIXA e HIPER_LOJA.
      *
      * @queryParam store_id integer required ID da loja. Example: 1
      * @queryParam date string required Data do turno (YYYY-MM-DD). Example: 2026-01-07
      * @queryParam shift_code string required Código do turno (M, T, N). Example: M
-     *
-     * @response 200 {
-     *   "data": {
-     *     "system_total": 1500.50,
-     *     "payments": [
-     *       { "label": "Dinheiro", "value": 500.00 },
-     *       { "label": "Cartão Crédito", "value": 1000.50 }
-     *     ],
-     *     "turnos_found": 1,
-     *     "details": [
-     *       { "id": 123, "periodo": "MATUTINO", "total": 1500.50 }
-     *     ]
-     *   }
-     * }
      */
     public function getClosureData(Request $request): JsonResponse
     {
@@ -58,52 +50,99 @@ class CashIntegrationController extends Controller
         // 1. Map Shift Code to PDV Periods
         $periods = $this->mapShiftCodeToPeriod($shiftCode);
 
-        // 2. Find matching Pdv Turnos
-        // Using DATE(data_hora_inicio) to match the date part
-        $turnos = DB::table('pdv_turnos')
-            ->where('store_id', $storeId)
-            ->whereDate('data_hora_inicio', $date)
-            ->whereIn('periodo', $periods)
-            ->get(['id', 'total_sistema', 'qtd_vendas', 'periodo', 'data_hora_inicio']);
+        // 2. Buscar fechamentos unificados pelo service canônico
+        $closures = $this->closureService->listUnifiedByStoreIdDatePeriod(
+            $storeId,
+            $date,
+            $periods
+        );
 
-        if ($turnos->isEmpty()) {
+        if ($closures->isEmpty()) {
             return $this->success([
                 'system_total' => 0.00,
-                'payments' => [],
-                'turnos_found' => 0,
+                'system_total_caixa' => 0.00,
+                'system_total_loja' => 0.00,
+                'declared_total' => 0.00,
+                'declared_consistent' => true,
+                'canais_presentes' => [],
+                'payments_sistema' => [],
+                'payments_declarado' => [],
+                'closures_found' => 0,
                 'details' => [],
             ]);
         }
 
-        $turnoIds = $turnos->pluck('id')->toArray();
+        // 3. Agregar totais de todos os fechamentos no período
+        $systemTotal = $closures->sum('totais.sistema_unificado');
+        $systemCaixa = $closures->sum('totais.sistema_caixa');
+        $systemLoja = $closures->sum('totais.sistema_loja');
+        $declaredTotal = $closures->sum('totais.declarado');
+        $declaredConsistent = $closures->every('totais.declared_consistent');
 
-        // 3. Aggregate Payments
-        $payments = DB::table('pdv_turno_pagamentos')
-            ->select('meio_pagamento', DB::raw('SUM(total) as total'))
-            ->groupBy('meio_pagamento')
-            ->join('pdv_turnos', function ($join) {
-                $join->on('pdv_turno_pagamentos.store_pdv_id', '=', 'pdv_turnos.store_pdv_id')
-                    ->on('pdv_turno_pagamentos.id_turno', '=', 'pdv_turnos.id_turno')
-                    ->on('pdv_turno_pagamentos.canal', '=', 'pdv_turnos.canal');
+        // Agregar pagamentos sistema (somar por id_finalizador entre closures)
+        $paymentsSistema = $closures
+            ->flatMap(fn($c) => $c['pagamentos']['sistema'])
+            ->groupBy('id_finalizador')
+            ->map(function ($group) {
+                $first = $group->first();
+                return [
+                    'id_finalizador' => $first['id_finalizador'],
+                    'label' => $first['meio_pagamento'],
+                    'value' => (float) $group->sum('total'),
+                    'qtd_vendas' => (int) $group->sum('qtd_vendas'),
+                ];
             })
-            ->whereIn('pdv_turnos.id', $turnoIds)
-            ->get();
+            ->values();
 
-        // 4. Calculate Totals
-        $systemTotal = $turnos->sum('total_sistema');
+        // Agregar pagamentos declarado (somar por id_finalizador entre closures)
+        $paymentsDeclarado = $closures
+            ->flatMap(fn($c) => $c['pagamentos']['declarado'])
+            ->groupBy('id_finalizador')
+            ->map(function ($group) {
+                $first = $group->first();
+                return [
+                    'id_finalizador' => $first['id_finalizador'],
+                    'label' => $first['meio_pagamento'],
+                    'value' => (float) $group->sum('total'),
+                ];
+            })
+            ->values();
+
+        // Todos os canais presentes
+        $canais = $closures
+            ->flatMap(fn($c) => $c['canais_presentes'])
+            ->unique()
+            ->values();
 
         return $this->success([
             'system_total' => (float) $systemTotal,
-            'payments' => $payments->map(fn($p) => [
-                'label' => $p->meio_pagamento,
-                'value' => (float) $p->total,
+            'system_total_caixa' => (float) $systemCaixa,
+            'system_total_loja' => (float) $systemLoja,
+            'declared_total' => (float) $declaredTotal,
+            'declared_consistent' => $declaredConsistent,
+            'has_loja_sales' => $systemLoja > 0,
+            'canais_presentes' => $canais,
+            'payments_sistema' => $paymentsSistema,
+            'payments_declarado' => $paymentsDeclarado,
+            // Backwards-compatible fields
+            'payments' => $paymentsSistema->map(fn($p) => [
+                'label' => $p['label'],
+                'value' => $p['value'],
             ]),
-            'turnos_found' => $turnos->count(),
-            'details' => $turnos->map(fn($t) => [
-                'id' => $t->id,
-                'periodo' => $t->periodo,
-                'total' => (float) $t->total_sistema,
-            ]),
+            'closures_found' => $closures->count(),
+            'details' => $closures->map(fn($c) => [
+                'closure_uuid' => $c['closure_uuid'],
+                'sequencial' => $c['sequencial'],
+                'periodo' => $c['periodo'],
+                'sistema_caixa' => $c['totais']['sistema_caixa'],
+                'sistema_loja' => $c['totais']['sistema_loja'],
+                'sistema_unificado' => $c['totais']['sistema_unificado'],
+                'declarado' => $c['totais']['declarado'],
+                'falta' => $c['totais']['falta'],
+                'sobra' => $c['totais']['sobra'],
+                'operador' => $c['operador_nome'],
+                'canais' => $c['canais_presentes'],
+            ])->values(),
         ]);
     }
 

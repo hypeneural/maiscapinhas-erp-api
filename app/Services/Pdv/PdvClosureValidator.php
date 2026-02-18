@@ -4,6 +4,7 @@ namespace App\Services\Pdv;
 
 use App\Models\PdvTurno;
 use App\Models\Store;
+use App\Services\Pdv\PdvClosureUnifiedService;
 use Illuminate\Support\Facades\DB;
 
 class PdvClosureValidator
@@ -93,11 +94,18 @@ class PdvClosureValidator
             }
         }
 
-        // ── Fallback: only closure_uuid ──
+        // ── Fallback: closure_uuid → visão UNIFICADA ──
         if ($closureUuid) {
+            $service = new PdvClosureUnifiedService();
+            $unified = $service->getUnifiedByClosureUuid($closureUuid);
+            if ($unified) {
+                return $this->buildUnifiedResult($unified, 'closure_uuid', 90, $erpItem, $erpTotal, $storeName, $storeCity);
+            }
+
+            // Fallback individual (se service não encontrar)
             $turno = PdvTurno::where('closure_uuid', $closureUuid)->first();
             if ($turno) {
-                return $this->buildResult($turno, 'closure_uuid', 90, $erpItem, $erpTotal, $storeName, $storeCity);
+                return $this->buildResult($turno, 'closure_uuid_single', 85, $erpItem, $erpTotal, $storeName, $storeCity);
             }
         }
 
@@ -277,6 +285,110 @@ class PdvClosureValidator
             ],
             'total_sobra' => [
                 'db' => $turno->total_sobra !== null ? (float) $turno->total_sobra : null,
+            ],
+        ];
+    }
+
+    /**
+     * Build result from unified closure data (multiple channels aggregated).
+     */
+    private function buildUnifiedResult(
+        array $unified,
+        string $matchType,
+        int $confidence,
+        array $erpItem,
+        float $erpTotal,
+        ?string $storeName,
+        ?string $storeCity
+    ): array {
+        // Comparação
+        $dbTotal = (float) ($unified['totais']['sistema_unificado'] ?? 0);
+        $totalDiff = abs($erpTotal - $dbTotal);
+
+        $erpGuid = strtolower(trim((string) data_get($erpItem, 'Turno.UsuarioId', '')));
+        $dbGuid = strtolower(trim((string) ($unified['operador_guid'] ?? '')));
+        $erpSeq = data_get($erpItem, 'Turno.Sequencial');
+        $dbSeq = $unified['sequencial'] ?? null;
+
+        // Diff por meio de pagamento: comparar ERP MeiosDePagamentos com local
+        $diffPorMeio = [];
+        $erpMeios = data_get($erpItem, 'MeiosDePagamentos', []);
+        $localSistema = collect($unified['pagamentos']['sistema'] ?? [])->keyBy('meio_pagamento');
+        $localDeclarado = collect($unified['pagamentos']['declarado'] ?? [])->keyBy('meio_pagamento');
+
+        foreach ($erpMeios as $meioErp) {
+            $nome = $meioErp['Nome'] ?? '?';
+            $erpEntradas = (float) ($meioErp['EntradasNoSistema'] ?? 0);
+            $erpLancamentos = (float) ($meioErp['LancamentosNoSistema'] ?? 0);
+            $erpValorSistema = (float) ($meioErp['ValorNoSistema'] ?? 0);
+            $erpFalta = (float) ($meioErp['FaltaDeCaixa'] ?? 0);
+            $erpSobra = (float) ($meioErp['SobraDeCaixa'] ?? 0);
+
+            $localSist = $localSistema->get($nome);
+            $localDecl = $localDeclarado->get($nome);
+
+            $diffPorMeio[] = [
+                'meio' => $nome,
+                'erp' => [
+                    'entradas_sistema' => $erpEntradas,
+                    'lancamentos_sistema' => $erpLancamentos,
+                    'valor_sistema' => $erpValorSistema,
+                    'falta' => $erpFalta,
+                    'sobra' => $erpSobra,
+                ],
+                'local' => [
+                    'sistema' => $localSist ? (float) $localSist['total'] : null,
+                    'declarado' => $localDecl ? (float) $localDecl['total'] : null,
+                ],
+            ];
+        }
+
+        return [
+            'ok' => true,
+            'found' => true,
+            'match_type' => $matchType,
+            'match_confidence' => $confidence,
+            'unified' => true,
+            'local_unified' => [
+                'closure_uuid' => $unified['closure_uuid'],
+                'canal_canonico' => $unified['canal_canonico'],
+                'canais_presentes' => $unified['canais_presentes'],
+                'sequencial' => $unified['sequencial'],
+                'operador_nome' => $unified['operador_nome'],
+                'operador_guid' => $unified['operador_guid'],
+                'data_hora_inicio' => $unified['data_hora_inicio'],
+                'data_hora_termino' => $unified['data_hora_termino'],
+                'periodo' => $unified['periodo'],
+                'store_name' => $storeName,
+                'store_city' => $storeCity,
+                'totais' => $unified['totais'],
+            ],
+            'pagamentos' => $unified['pagamentos'],
+            'diff_por_meio' => $diffPorMeio,
+            'comparison' => [
+                'total' => [
+                    'erp' => $erpTotal,
+                    'db_unificado' => $dbTotal,
+                    'match' => $totalDiff <= 0.05,
+                    'diff' => round($totalDiff, 2),
+                ],
+                'operador' => [
+                    'erp_guid' => data_get($erpItem, 'Turno.UsuarioId'),
+                    'db_guid' => $unified['operador_guid'],
+                    'db_nome' => $unified['operador_nome'],
+                    'match' => $erpGuid !== '' && $erpGuid === $dbGuid,
+                ],
+                'sequencial' => [
+                    'erp' => $erpSeq,
+                    'db' => $dbSeq,
+                    'match' => $erpSeq !== null && (int) $erpSeq === (int) $dbSeq,
+                ],
+                'closure_uuid' => [
+                    'erp' => data_get($erpItem, 'Id'),
+                    'db' => $unified['closure_uuid'],
+                    'match' => true,
+                ],
+                'declared_consistent' => $unified['totais']['declared_consistent'],
             ],
         ];
     }
