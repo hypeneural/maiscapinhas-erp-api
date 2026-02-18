@@ -124,8 +124,8 @@ class PdvSaleValidator
 
         // 5) BUSCA HIERARQUICA (Golden Key -> Fiscal -> Heuristica)
 
-        $matchFn = function ($venda, $source) use ($erpId, $erpTotal, $erpItemSig, $erpPaySig, $erpLojaUuid, $erpVendedorUuid) {
-            return $this->buildMatchResult($venda, $source, $erpId, $erpTotal, $erpItemSig, $erpPaySig, $erpLojaUuid, $erpVendedorUuid);
+        $matchFn = function ($venda, $source) use ($erpId, $erpTotal, $erpItemSig, $erpPaySig, $erpLojaUuid, $erpVendedorUuid, $erp) {
+            return $this->buildMatchResult($venda, $source, $erpId, $erpTotal, $erpItemSig, $erpPaySig, $erpLojaUuid, $erpVendedorUuid, $erp);
         };
 
         // --- NÍVEL 1: GOLDEN KEY (UUID da Operação) ---
@@ -236,15 +236,13 @@ class PdvSaleValidator
         $bestCandidate = $best100 ?? $ranked[0];
 
         // Enrich best match
+        $comparison = null;
         if ($bestCandidate) {
             $vendaModel = PdvVenda::find($bestCandidate['pdv_venda_id']);
             if ($vendaModel) {
-                // Se foi match 100 heurístico, continua sendo um match válido
-                $this->loadRelationsManual($vendaModel); // Ensure loaded for enrichment
+                $this->loadRelationsManual($vendaModel);
                 $bestCandidate['db_details'] = $this->enrichMatchData($vendaModel);
-
-                // Add comparison flags if not present (heuristic loop adds them, but good to be consistent)
-                // Heuristic matches already have 'items_exact' in $bestCandidate.
+                $comparison = $this->buildComparison($erp, $vendaModel);
             }
         }
 
@@ -253,6 +251,7 @@ class PdvSaleValidator
             'found' => true,
             'match_100' => (bool) $best100,
             'best_match' => $bestCandidate,
+            'comparison' => $comparison,
             'all_candidates_count' => count($ranked),
             'search' => [
                 'store_pdv_id' => $storePdvId,
@@ -286,7 +285,7 @@ class PdvSaleValidator
         return null;
     }
 
-    private function buildMatchResult(PdvVenda $venda, string $matchType, $erpId, $erpTotal, $erpItemSig, $erpPaySig, $erpLojaUuid, $erpVendedorUuid): array
+    private function buildMatchResult(PdvVenda $venda, string $matchType, $erpId, $erpTotal, $erpItemSig, $erpPaySig, $erpLojaUuid, $erpVendedorUuid, array $erp): array
     {
         // Carregar relações para calcular assinaturas DB e enriquecer output
         $this->loadRelationsManual($venda);
@@ -298,21 +297,16 @@ class PdvSaleValidator
         $payExact = ($erpPaySig == $dbPaySig);
 
         // --- Identity Matches (Store & Seller) ---
-        // Store Match: Comparar UUID da Loja do Payload com UUID da Loja salva na Venda
-        // Nota: $venda->erp_loja_uuid deve existir. Se não, comparamos com base na loja vinculada.
         $dbLojaUuid = strtolower(trim($venda->erp_loja_uuid ?? ''));
         if (!$dbLojaUuid && $venda->loja) {
             $dbLojaUuid = strtolower(trim($venda->loja->guid_loja ?? ''));
         }
         $storeIdentityMatch = $erpLojaUuid && $dbLojaUuid && ($erpLojaUuid === $dbLojaUuid);
 
-        // Seller Match: Comparar UUID do Vendedor do Payload (Item 0) com UUID salvo nos Itens da Venda
-        // Assumimos que a venda pertence a um vendedor principal. Verificamos se ALGUM item tem esse GUID.
         $dbVendedorUuid = null;
         $sellerIdentityMatch = false;
 
         if ($erpVendedorUuid) {
-            // Tenta achar esse GUID nos itens da venda
             foreach ($venda->itens as $item) {
                 $itemGuid = strtolower(trim($item->vendedor_guid ?? ''));
                 if ($itemGuid === $erpVendedorUuid) {
@@ -323,16 +317,15 @@ class PdvSaleValidator
             }
         }
 
-        // Para matches diretos (Gold/Fiscal), assumimos 100% de confiança na Identidade (da Operação)
-        // MAS reportamos se o conteúdo ou os atores (Store/Seller) divergem.
-
         $enriched = $this->enrichMatchData($venda);
+        $comparison = $this->buildComparison($erp, $venda);
 
         return [
             'ok' => true,
             'found' => true,
-            'match_100' => true, // Identity match (Operation UUID) is 100%
+            'match_100' => true,
             'content_match' => ($itemsExact && $payExact),
+            'comparison' => $comparison,
             'best_match' => [
                 'pdv_venda_id' => $venda->id,
                 'id_operacao_db' => $venda->id_operacao,
@@ -511,32 +504,42 @@ class PdvSaleValidator
 
     private function enrichMatchData(PdvVenda $venda): array
     {
-        // Carregar Store e Turno de forma Lazy para garantir que o 'where constraint' do model funcione
-        // (venda->turno depende de venda->store_pdv_id)
         $loja = $venda->loja;
         $turno = $venda->turno;
-
-        // Ensure relations loaded (just in case)
         $this->loadRelationsManual($venda);
 
-        // Format Items properly
-        $itemsFormatted = $venda->itens->map(function ($i) {
+        // Resolve seller info from users table (batch by unique guids)
+        $sellerGuids = $venda->itens->pluck('vendedor_guid')->filter()->unique()->values()->all();
+        $sellerMap = $this->resolveSellersByGuids($sellerGuids);
+
+        $itemsFormatted = $venda->itens->map(function ($i) use ($sellerMap) {
+            $guid = strtolower(trim($i->vendedor_guid ?? ''));
+            $seller = $sellerMap[$guid] ?? null;
             return [
+                'line_no' => (int) ($i->line_no ?? $i->id_item ?? 0),
                 'codigo' => $i->codigo_barras ?? $i->id_produto,
                 'nome' => $i->descricao ?? $i->descricao_reduzida ?? '',
                 'qtd' => (float) $i->qtd,
+                'preco_unit' => (float) ($i->preco_unit ?? $i->total),
                 'total' => (float) $i->total,
+                'desconto' => (float) ($i->desconto ?? 0),
+                'vendedor_guid' => $i->vendedor_guid,
+                'vendedor_nome' => $seller['name'] ?? $i->vendedor_nome,
+                'vendedor_login' => $seller['login'] ?? $i->vendedor_login,
+                'vendedor_user_id' => $seller['user_id'] ?? $i->vendedor_user_id,
+                'vendedor_whatsapp' => $seller['whatsapp'] ?? null,
             ];
         })->values()->toArray();
 
-        // Format Payments properly
         $paymentsFormatted = $venda->pagamentos->map(function ($p) {
             return [
+                'line_no' => (int) ($p->line_no ?? $p->id_pagamento ?? 0),
                 'meio' => $p->meio_pagamento,
                 'valor' => (float) $p->valor,
+                'troco' => (float) ($p->troco ?? 0),
+                'parcelas' => (int) ($p->parcelas ?? 1),
             ];
         })->values()->toArray();
-
 
         return [
             'store_db' => [
@@ -558,10 +561,266 @@ class PdvSaleValidator
                 'id_operacao' => $venda->id_operacao,
                 'id_turno' => $venda->id_turno,
                 'pdv_venda_id' => $venda->id,
+                'erp_operacao_uuid' => $venda->erp_operacao_uuid,
+                'erp_loja_uuid' => $venda->erp_loja_uuid,
+            ],
+            'fiscal' => [
+                'nfce_chave' => $venda->nfce_chave,
+                'nfce_numero' => $venda->nfce_numero,
+                'nfce_serie' => $venda->nfce_serie,
+                'nfce_modelo' => $venda->nfce_modelo,
             ],
             'itens' => $itemsFormatted,
             'pagamentos' => $paymentsFormatted,
         ];
+    }
+
+    /**
+     * Build a structured side-by-side comparison between ERP payload and DB data.
+     */
+    private function buildComparison(array $erp, PdvVenda $venda): array
+    {
+        $this->loadRelationsManual($venda);
+
+        // ── Seller resolution ──
+        $sellerGuids = $venda->itens->pluck('vendedor_guid')->filter()->unique()->values()->all();
+        $sellerMap = $this->resolveSellersByGuids($sellerGuids);
+
+        // ── 1. Operação ──
+        $erpUuid = strtolower(trim(data_get($erp, 'Id') ?? ''));
+        $dbUuid = strtolower(trim($venda->erp_operacao_uuid ?? ''));
+        $erpTotal = (float) (data_get($erp, 'ValorTotalLiquido') ?? 0);
+        $dbTotal = (float) $venda->total;
+
+        $operacao = [
+            'erp' => [
+                'uuid' => data_get($erp, 'Id'),
+                'codigo' => data_get($erp, 'CodigoDaOperacao'),
+                'data' => data_get($erp, 'Data'),
+                'total' => $erpTotal,
+                'tipo' => data_get($erp, 'TipoDaOperacao'),
+                'cancelada' => (bool) data_get($erp, 'Cancelada', false),
+                'concluida' => (bool) data_get($erp, 'Concluida', false),
+            ],
+            'db' => [
+                'uuid' => $venda->erp_operacao_uuid,
+                'id_operacao' => $venda->id_operacao,
+                'data' => $venda->data_hora?->toIso8601String(),
+                'total' => $dbTotal,
+                'canal' => $venda->canal,
+                'turno_seq' => $venda->turno_seq,
+                'status' => $venda->status ?? 'CONCLUIDO',
+            ],
+            'match' => [
+                'uuid' => $erpUuid && $dbUuid && $erpUuid === $dbUuid,
+                'total' => abs($erpTotal - $dbTotal) < 0.05,
+            ],
+        ];
+
+        // ── 2. Loja ──
+        $erpLojaUuid = strtolower(trim(data_get($erp, 'LojaId') ?? data_get($erp, 'Loja.Id') ?? ''));
+        $dbLojaUuid = strtolower(trim($venda->erp_loja_uuid ?? ''));
+        $loja = $venda->loja;
+
+        $lojaSection = [
+            'erp' => [
+                'uuid' => data_get($erp, 'LojaId') ?? data_get($erp, 'Loja.Id'),
+                'nome' => data_get($erp, 'Loja.Nome'),
+            ],
+            'db' => [
+                'uuid' => $venda->erp_loja_uuid,
+                'store_id' => $venda->store_id,
+                'nome' => $loja->nome_hiper ?? null,
+                'store_pdv_id' => $venda->store_pdv_id,
+            ],
+            'match' => $erpLojaUuid && $dbLojaUuid && $erpLojaUuid === $dbLojaUuid,
+        ];
+
+        // ── 3. Vendedor (from first item) ──
+        $erpVendedorGuid = strtolower(trim(data_get($erp, 'Itens.0.VendedorId') ?? ''));
+        $erpVendedorNome = data_get($erp, 'Itens.0.NomeDoVendedor');
+        $dbFirstItem = $venda->itens->first();
+        $dbVendedorGuid = $dbFirstItem ? strtolower(trim($dbFirstItem->vendedor_guid ?? '')) : '';
+        $dbSeller = $dbVendedorGuid ? ($sellerMap[$dbVendedorGuid] ?? null) : null;
+
+        $vendedorSection = [
+            'erp' => [
+                'guid' => data_get($erp, 'Itens.0.VendedorId'),
+                'nome_no_item' => $erpVendedorNome,
+            ],
+            'db' => [
+                'guid' => $dbFirstItem->vendedor_guid ?? null,
+                'nome' => $dbSeller['name'] ?? $dbFirstItem->vendedor_nome ?? null,
+                'login' => $dbSeller['login'] ?? $dbFirstItem->vendedor_login ?? null,
+                'user_id' => $dbSeller['user_id'] ?? $dbFirstItem->vendedor_user_id ?? null,
+                'whatsapp' => $dbSeller['whatsapp'] ?? null,
+            ],
+            'match' => $erpVendedorGuid && $dbVendedorGuid && $erpVendedorGuid === $dbVendedorGuid,
+        ];
+
+        // ── 4. Fiscal ──
+        $erpChave = data_get($erp, 'DocumentosFiscais.0.Chave');
+        $dbChave = $venda->nfce_chave;
+
+        $fiscalSection = [
+            'erp' => [
+                'chave' => $erpChave,
+                'numero' => data_get($erp, 'DocumentosFiscais.0.Numero'),
+                'serie' => data_get($erp, 'DocumentosFiscais.0.SerieFiscal'),
+                'modelo' => data_get($erp, 'DocumentosFiscais.0.ModeloDeDocumentoFiscalId'),
+            ],
+            'db' => [
+                'chave' => $dbChave,
+                'numero' => $venda->nfce_numero,
+                'serie' => $venda->nfce_serie,
+                'modelo' => $venda->nfce_modelo,
+            ],
+            'match' => $erpChave && $dbChave && $erpChave === $dbChave,
+        ];
+
+        // ── 5. Itens (side by side, matched by codigo) ──
+        $erpItems = collect(data_get($erp, 'Itens', []))->sortBy('OrdemDeLancamento')->values();
+        $dbItems = $venda->itens->sortBy(fn($i) => $i->line_no ?? $i->id_item ?? 0)->values();
+
+        $itensSection = [];
+        $maxItems = max($erpItems->count(), $dbItems->count());
+        for ($idx = 0; $idx < $maxItems; $idx++) {
+            $ei = $erpItems->get($idx);
+            $di = $dbItems->get($idx);
+
+            $diGuid = $di ? strtolower(trim($di->vendedor_guid ?? '')) : '';
+            $diSeller = $diGuid ? ($sellerMap[$diGuid] ?? null) : null;
+
+            $erpRow = $ei ? [
+                'codigo' => data_get($ei, 'Codigo'),
+                'nome' => data_get($ei, 'Nome'),
+                'qtd' => (float) data_get($ei, 'Quantidade', 0),
+                'preco_unit' => (float) data_get($ei, 'ValorUnitarioLiquido', 0),
+                'total' => (float) data_get($ei, 'ValorTotalLiquido', 0),
+                'vendedor' => data_get($ei, 'NomeDoVendedor'),
+                'vendedor_guid' => data_get($ei, 'VendedorId'),
+            ] : null;
+
+            $dbRow = $di ? [
+                'codigo' => $di->codigo_barras ?? $di->id_produto,
+                'nome' => $di->descricao ?? $di->descricao_reduzida ?? '',
+                'qtd' => (float) $di->qtd,
+                'preco_unit' => (float) ($di->preco_unit ?? $di->total),
+                'total' => (float) $di->total,
+                'vendedor' => $diSeller['name'] ?? $di->vendedor_nome,
+                'vendedor_guid' => $di->vendedor_guid,
+            ] : null;
+
+            $itemMatch = false;
+            if ($erpRow && $dbRow) {
+                $itemMatch = (string) $erpRow['codigo'] === (string) $dbRow['codigo']
+                    && abs($erpRow['total'] - $dbRow['total']) < 0.01
+                    && (int) $erpRow['qtd'] === (int) $dbRow['qtd'];
+            }
+
+            $itensSection[] = [
+                'erp' => $erpRow,
+                'db' => $dbRow,
+                'match' => $itemMatch,
+            ];
+        }
+
+        // ── 6. Pagamentos ──
+        $erpPayGroups = collect(data_get($erp, 'MeiosDePagamentosAgrupados', []));
+        $erpPays = collect();
+        foreach ($erpPayGroups as $g) {
+            foreach ((array) data_get($g, 'MeiosDePagamentos', []) as $p) {
+                $erpPays->push($p);
+            }
+        }
+        $dbPays = $venda->pagamentos;
+
+        $pagamentosSection = [];
+        $maxPays = max($erpPays->count(), $dbPays->count());
+        for ($idx = 0; $idx < $maxPays; $idx++) {
+            $ep = $erpPays->get($idx);
+            $dp = $dbPays->get($idx);
+
+            $erpPayRow = $ep ? [
+                'meio' => data_get($ep, 'Descricao'),
+                'valor' => (float) data_get($ep, 'Valor', 0),
+                'troco' => (float) data_get($ep, 'Troco', 0),
+                'parcela' => (int) data_get($ep, 'NumeroDaParcela', 1),
+            ] : null;
+
+            $dbPayRow = $dp ? [
+                'meio' => $dp->meio_pagamento,
+                'valor' => (float) $dp->valor,
+                'troco' => (float) ($dp->troco ?? 0),
+                'parcelas' => (int) ($dp->parcelas ?? 1),
+            ] : null;
+
+            $payMatch = false;
+            if ($erpPayRow && $dbPayRow) {
+                $payMatch = strtoupper($erpPayRow['meio']) === strtoupper($dbPayRow['meio'])
+                    && abs($erpPayRow['valor'] - $dbPayRow['valor']) < 0.01;
+            }
+
+            $pagamentosSection[] = [
+                'erp' => $erpPayRow,
+                'db' => $dbPayRow,
+                'match' => $payMatch,
+            ];
+        }
+
+        // ── Summary flags ──
+        $allItemsMatch = collect($itensSection)->every(fn($i) => $i['match']);
+        $allPaysMatch = collect($pagamentosSection)->every(fn($p) => $p['match']);
+
+        return [
+            'operacao' => $operacao,
+            'loja' => $lojaSection,
+            'vendedor' => $vendedorSection,
+            'fiscal' => $fiscalSection,
+            'itens' => $itensSection,
+            'pagamentos' => $pagamentosSection,
+            'match_summary' => [
+                'operacao_uuid' => $operacao['match']['uuid'],
+                'total' => $operacao['match']['total'],
+                'loja' => $lojaSection['match'],
+                'vendedor' => $vendedorSection['match'],
+                'fiscal' => $fiscalSection['match'],
+                'all_itens' => $allItemsMatch,
+                'all_pagamentos' => $allPaysMatch,
+                'perfect' => $operacao['match']['uuid'] && $operacao['match']['total'] && $lojaSection['match'] && $fiscalSection['match'] && $allItemsMatch && $allPaysMatch,
+            ],
+        ];
+    }
+
+    /**
+     * Resolve seller details from users table by their GUIDs.
+     * Returns map: lowercase_guid => ['name', 'login', 'user_id', 'whatsapp']
+     */
+    private function resolveSellersByGuids(array $guids): array
+    {
+        if (empty($guids)) {
+            return [];
+        }
+
+        $lowerGuids = array_map(fn($g) => strtolower(trim($g)), $guids);
+
+        $users = DB::table('users')
+            ->whereIn(DB::raw('LOWER(guid)'), $lowerGuids)
+            ->select(['guid', 'name', 'login', 'id', 'whatsapp'])
+            ->get();
+
+        $map = [];
+        foreach ($users as $u) {
+            $key = strtolower(trim($u->guid ?? ''));
+            $map[$key] = [
+                'name' => $u->name,
+                'login' => $u->login ?? null,
+                'user_id' => $u->id,
+                'whatsapp' => $u->whatsapp ?? null,
+            ];
+        }
+
+        return $map;
     }
 }
 

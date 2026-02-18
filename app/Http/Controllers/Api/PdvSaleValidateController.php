@@ -16,10 +16,21 @@ use Illuminate\Support\Facades\Http;
 class PdvSaleValidateController extends Controller
 {
     /**
-     * Valida uma única venda (Legacy/Stand-alone)
+     * Valida venda(s) — aceita payload manual ou busca do ERP por UUID(s).
+     *
+     * source=payload (default) → recebe JSON da operação no campo payload
+     * source=erp              → recebe operation_ids (UUIDs separados por vírgula)
+     *                           e busca cada um via operacoes.detalhes no Hiper
      */
     public function validateSingle(Request $request)
     {
+        $source = $request->input('source', 'payload');
+
+        if ($source === 'erp') {
+            return $this->validateFromErpDetails($request);
+        }
+
+        // ── Modo payload (legado) ──
         $data = $request->validate([
             'payload' => ['required'], // string JSON ou array
             'canal' => ['nullable', 'string'],
@@ -34,6 +45,136 @@ class PdvSaleValidateController extends Controller
         return response()->json(
             $validator->validateFromErpPayload($data)
         );
+    }
+
+    /**
+     * Modo ERP para validate single — busca operação(ões) pelo UUID via operacoes.detalhes
+     *
+     * Aceita operation_ids com um ou mais UUIDs separados por vírgula.
+     * Para cada UUID, faz GET /operacoes/{id}/detalhes e valida contra o banco local.
+     */
+    private function validateFromErpDetails(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'operation_ids' => ['required', 'string'], // UUIDs separados por vírgula
+            'connection_id' => ['nullable', 'integer', 'exists:hiper_connections,id'],
+            'timezone' => ['nullable', 'string'],
+            'tolerance.total' => ['nullable', 'numeric'],
+            'tolerance.start_minus_minutes' => ['nullable', 'integer'],
+            'tolerance.end_plus_minutes' => ['nullable', 'integer'],
+        ]);
+
+        // ── Parse operation IDs ──
+        $operationIds = array_filter(array_map('trim', explode(',', $data['operation_ids'])));
+
+        if (empty($operationIds)) {
+            return response()->json([
+                'ok' => false,
+                'error' => 'Nenhum operation_id válido informado.',
+            ], 422);
+        }
+
+        // ── Connection ──
+        $connection = isset($data['connection_id'])
+            ? HiperConnection::findOrFail($data['connection_id'])
+            : HiperConnection::where('is_active', true)->firstOrFail();
+
+        // ── Endpoint operacoes.detalhes ──
+        $endpoint = HiperEndpoint::where('key', 'operacoes.detalhes')->firstOrFail();
+
+        // ── Cookie/Headers (shared setup) ──
+        $cookieService = app(HiperCookieService::class);
+        $baseUrl = rtrim($connection->base_url, '/');
+        $host = parse_url($baseUrl, PHP_URL_HOST) ?? '';
+        $cookiesJson = $connection->cookies ?? ['by_domain' => []];
+        $cookieResult = $cookieService->buildEssentialCookieHeader($cookiesJson, $host);
+
+        $headers = array_merge(
+            $connection->default_headers ?? [],
+            $endpoint->headers ?? []
+        );
+        if ($connection->default_referer) {
+            $headers['Referer'] = $connection->default_referer;
+        }
+        $headers['Cookie'] = $cookieResult['cookie'];
+
+        $validator = new PdvSaleValidator();
+        $results = [];
+
+        foreach ($operationIds as $opId) {
+            // ── Build URL replacing {id} ──
+            $path = str_replace('{id}', $opId, $endpoint->path);
+            $url = $baseUrl . '/' . ltrim($path, '/');
+
+            try {
+                $httpClient = Http::withHeaders($headers)
+                    ->timeout(30)
+                    ->withoutVerifying();
+
+                $response = (strtoupper($endpoint->method) === 'POST')
+                    ? $httpClient->post($url, $endpoint->body_template ?? [])
+                    : $httpClient->get($url);
+
+                if (!$response->successful()) {
+                    $results[] = [
+                        'operation_id' => $opId,
+                        'ok' => false,
+                        'error' => 'ERP retornou status ' . $response->status(),
+                        'erp_status' => $response->status(),
+                        'url' => $url,
+                    ];
+                    continue;
+                }
+
+                $erpData = $response->json();
+
+                if (!is_array($erpData) || empty($erpData)) {
+                    $results[] = [
+                        'operation_id' => $opId,
+                        'ok' => false,
+                        'error' => 'ERP retornou payload vazio para esta operação.',
+                        'url' => $url,
+                    ];
+                    continue;
+                }
+
+                // ── Validate against local DB ──
+                $validationResult = $validator->validateFromErpPayload([
+                    'payload' => $erpData,
+                    'timezone' => $data['timezone'] ?? 'America/Sao_Paulo',
+                    'tolerance' => $data['tolerance'] ?? [],
+                ]);
+
+                $results[] = array_merge(
+                    ['operation_id' => $opId, 'url' => $url],
+                    $validationResult
+                );
+            } catch (\Exception $e) {
+                $results[] = [
+                    'operation_id' => $opId,
+                    'ok' => false,
+                    'error' => $e->getMessage(),
+                    'url' => $url,
+                ];
+            }
+        }
+
+        $connection->update(['last_used_at' => now()]);
+
+        // Se for um único ID, retorna flat (retrocompatível)
+        if (count($operationIds) === 1) {
+            return response()->json(array_merge(
+                ['source' => 'erp'],
+                $results[0] ?? ['ok' => false, 'error' => 'Sem resultados.']
+            ));
+        }
+
+        return response()->json([
+            'source' => 'erp',
+            'batch_count' => count($results),
+            'missing_cookies' => $cookieResult['missing'],
+            'results' => $results,
+        ]);
     }
 
     /**
