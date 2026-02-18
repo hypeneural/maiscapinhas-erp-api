@@ -1986,6 +1986,7 @@ class PdvReportsController extends Controller
             'valor' => round((float) $row->valor, 2),
             'vendedor_nome' => $row->vendedor_nome,
             'meio_pagamento' => $row->meio_pagamento,
+            'closure_uuid' => $row->closure_uuid, // Expose UUID for closure details
         ])->values()->all();
 
         return response()->json([
