@@ -222,6 +222,14 @@ class PdvClosureUnifiedService
 
     /**
      * Constrói a visão unificada a partir de uma coleção de turnos (mesmo closure_uuid).
+     *
+     * Fórmulas-chave por meio de pagamento:
+     *   entries_expected      = declarado + falta - sobra
+     *   origin_caixa_system   = TotaisSistema do CAIXA (vendas reais no PDV)
+     *   origin_loja_inferred  = entries_expected - origin_caixa_system
+     *
+     * Não usar LOJA.TotaisSistema como "caixa" — ele inclui orçamentos/pedidos
+     * que NÃO entram no fechamento de caixa (ex: 3000,12 de LOJA → só 250,01 entra).
      */
     private function buildUnified(Collection $turnos): array
     {
@@ -232,7 +240,10 @@ class PdvClosureUnifiedService
         $canalCanonico = in_array('HIPER_CAIXA', $canais) ? 'HIPER_CAIXA' : $canais[0];
         $canonTurno = $turnos->firstWhere('canal', $canalCanonico);
 
-        // ── SISTEMA (op=1): somar ambos canais ──
+        // ── SISTEMA por canal separado ──
+        $pagamentosSistemaCaixa = $this->getPaymentsByChannel($turnos, 'sistema', 'HIPER_CAIXA');
+        $pagamentosSistemaLoja = $this->getPaymentsByChannel($turnos, 'sistema', 'HIPER_LOJA');
+        // Sistema agregado (ambos canais) — para referência, NÃO usar como "caixa"
         $pagamentosSistema = $this->getPaymentsByClosureTurnos($turnos, 'sistema');
 
         // ── DECLARADO/FALTA/SOBRA: apenas canal canônico ──
@@ -240,13 +251,36 @@ class PdvClosureUnifiedService
         $pagamentosFalta = $this->getCanonicalPayments($canonTurno, 'falta');
         $pagamentosSobra = $this->getCanonicalPayments($canonTurno, 'sobra');
 
-        // ── Totais ──
+        // ── Totais brutos ──
         $sistemaCaixa = (float) $turnos->where('canal', 'HIPER_CAIXA')->sum('total_sistema');
         $sistemaLoja = (float) $turnos->where('canal', 'HIPER_LOJA')->sum('total_sistema');
+        $declarado = (float) ($canonTurno->total_declarado ?? 0);
+        $falta = (float) ($canonTurno->total_falta ?? 0);
+        $sobra = (float) ($canonTurno->total_sobra ?? 0);
 
+        // ── ENTRIES EXPECTED: o que deveria estar no sistema (= declarado + falta - sobra) ──
+        $entriesExpected = $declarado + $falta - $sobra;
+
+        // ── CONTRIBUIÇÃO LOJA INFERIDA: entries_expected - sistema_caixa ──
+        $lojaCashContribution = max(0, $entriesExpected - $sistemaCaixa);
+
+        // ── Consistência entre canais ──
         $declMin = (float) ($turnos->whereNotNull('total_declarado')->min('total_declarado') ?? 0);
         $declMax = (float) ($turnos->whereNotNull('total_declarado')->max('total_declarado') ?? 0);
         $declConsistent = $turnos->count() < 2 || abs($declMax - $declMin) <= self::CONSISTENCY_TOLERANCE;
+
+        // ── Enriquecer pagamentos com entries_expected e origens ──
+        $pagamentosEnriquecidos = $this->enrichPayments(
+            $pagamentosDeclarado,
+            $pagamentosFalta,
+            $pagamentosSobra,
+            $pagamentosSistemaCaixa
+        );
+
+        // Safe date extraction (handles both Carbon objects and strings)
+        $dataInicio = $this->safeDate($turnos->min('data_hora_inicio'));
+        $dataTermino = $this->safeDate($turnos->max('data_hora_termino'));
+        $dataFechamento = $this->safeDate($canonTurno->data_hora_fechamento);
 
         return [
             'closure_uuid' => $closureUuid,
@@ -256,32 +290,126 @@ class PdvClosureUnifiedService
             'operador_guid' => $turnos->first(fn($t) => $t->operador_guid)?->operador_guid,
             'operador_nome' => $turnos->first(fn($t) => $t->operador_nome)?->operador_nome,
             'operador_login' => $turnos->first(fn($t) => $t->operador_login)?->operador_login,
-            'data_hora_inicio' => $turnos->min('data_hora_inicio')?->toDateTimeString(),
-            'data_hora_termino' => $turnos->max('data_hora_termino')?->toDateTimeString(),
-            'data_hora_fechamento' => $canonTurno->data_hora_fechamento?->toDateTimeString(),
+            'data_hora_inicio' => $dataInicio,
+            'data_hora_termino' => $dataTermino,
+            'data_hora_fechamento' => $dataFechamento,
             'periodo' => $canonTurno->periodo,
             'canal_canonico' => $canalCanonico,
             'canais_presentes' => $canais,
             'num_canais' => count($canais),
             'totais' => [
+                // Vendas reais no PDV (CAIXA)
                 'sistema_caixa' => $sistemaCaixa,
-                'sistema_loja' => $sistemaLoja,
-                'sistema_unificado' => $sistemaCaixa + $sistemaLoja,
-                'declarado' => (float) ($canonTurno->total_declarado ?? $declMax),
-                'falta' => (float) ($canonTurno->total_falta ?? 0),
-                'sobra' => (float) ($canonTurno->total_sobra ?? 0),
+                // Movimentos registrados na LOJA (orçamentos/pedidos — NÃO é caixa)
+                'loja_total_sistema_raw' => $sistemaLoja,
+                // O que deveria estar no sistema: declarado + falta - sobra
+                'entries_expected' => round($entriesExpected, 2),
+                // Quanto da LOJA efetivamente entrou no caixa (inferido)
+                'loja_cash_contribution_inferred' => round($lojaCashContribution, 2),
+                // Valores declarados pelo operador
+                'declarado' => $declarado,
+                'falta' => $falta,
+                'sobra' => $sobra,
+                // Flags
                 'has_loja_sales' => $sistemaLoja > 0,
                 'declared_consistent' => $declConsistent,
                 'declared_min' => $declMin,
                 'declared_max' => $declMax,
             ],
             'pagamentos' => [
+                // Per-payment enriched view (declarado + entradas esperadas + origens)
+                'por_meio' => $pagamentosEnriquecidos,
+                // Raw breakdown by type
+                'sistema_caixa' => $pagamentosSistemaCaixa,
+                'sistema_loja' => $pagamentosSistemaLoja,
                 'sistema' => $pagamentosSistema,
                 'declarado' => $pagamentosDeclarado,
                 'falta' => $pagamentosFalta,
                 'sobra' => $pagamentosSobra,
             ],
         ];
+    }
+
+    /**
+     * Enriquece pagamentos com entries_expected e origens por meio.
+     *
+     * Para cada id_finalizador:
+     *   entries_expected    = declarado + falta - sobra
+     *   origin_caixa_system = sistema do CAIXA
+     *   origin_loja_inferred = entries_expected - origin_caixa_system
+     */
+    private function enrichPayments(
+        array $declarado,
+        array $falta,
+        array $sobra,
+        array $sistemaCaixa
+    ): array {
+        // Index by id_finalizador
+        $faltaMap = collect($falta)->keyBy('id_finalizador');
+        $sobraMap = collect($sobra)->keyBy('id_finalizador');
+        $caixaMap = collect($sistemaCaixa)->keyBy('id_finalizador');
+
+        return collect($declarado)->map(function ($decl) use ($faltaMap, $sobraMap, $caixaMap) {
+            $finId = $decl['id_finalizador'];
+            $declVal = (float) $decl['total'];
+            $faltaVal = (float) ($faltaMap[$finId]['total'] ?? 0);
+            $sobraVal = (float) ($sobraMap[$finId]['total'] ?? 0);
+            $caixaSysVal = (float) ($caixaMap[$finId]['total'] ?? 0);
+
+            $entriesExpected = $declVal + $faltaVal - $sobraVal;
+            $lojaInferred = max(0, round($entriesExpected - $caixaSysVal, 2));
+
+            return [
+                'id_finalizador' => $finId,
+                'meio_pagamento' => $decl['meio_pagamento'],
+                'entries_expected' => round($entriesExpected, 2),
+                'declarado' => $declVal,
+                'falta' => $faltaVal,
+                'sobra' => $sobraVal,
+                'origin_caixa_system' => $caixaSysVal,
+                'origin_loja_inferred' => $lojaInferred,
+            ];
+        })->values()->toArray();
+    }
+
+    /**
+     * Get sistema payments for a specific channel only.
+     */
+    private function getPaymentsByChannel(Collection $turnos, string $tipo, string $canal): array
+    {
+        $turno = $turnos->firstWhere('canal', $canal);
+        if (!$turno) {
+            return [];
+        }
+
+        return PdvTurnoPagamento::where([
+            'store_pdv_id' => $turno->store_pdv_id,
+            'canal' => $canal,
+            'id_turno' => $turno->id_turno,
+            'tipo' => $tipo,
+        ])->get()->map(fn($p) => [
+                'id_finalizador' => $p->id_finalizador,
+                'meio_pagamento' => $p->meio_pagamento,
+                'total' => (float) $p->total,
+                'qtd_vendas' => (int) $p->qtd_vendas,
+            ])->toArray();
+    }
+
+    /**
+     * Safely extract a date value — handles both Carbon objects and raw strings.
+     */
+    private function safeDate($value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+        if (is_string($value)) {
+            return $value;
+        }
+        if (method_exists($value, 'toDateTimeString')) {
+            return $value->toDateTimeString();
+        }
+        return (string) $value;
     }
 
     /**
@@ -359,16 +487,7 @@ class PdvClosureUnifiedService
             return null;
         }
 
-        $sistemaCaixa = $unified['totais']['sistema_caixa'];
-        $sistemaLoja = $unified['totais']['sistema_loja'];
-        $hasLojaSales = $sistemaLoja > 0;
-
-        // Determine total_cash_recomendado based on store rules
-        $cashRecommended = $this->getCashRecommended(
-            $unified['store_pdv_id'],
-            $sistemaCaixa,
-            $sistemaLoja
-        );
+        $totais = $unified['totais'];
 
         $closure = PdvClosure::updateOrCreate(
             ['closure_uuid' => $closureUuid],
@@ -384,14 +503,14 @@ class PdvClosureUnifiedService
                 'termino_max' => $unified['data_hora_termino'],
                 'canais_presentes' => $unified['canais_presentes'],
                 'canal_canonico' => $unified['canal_canonico'],
-                'total_sistema_caixa' => $sistemaCaixa,
-                'total_sistema_loja' => $sistemaLoja,
-                'total_sistema_unificado' => $sistemaCaixa + $sistemaLoja,
-                'total_declarado' => $unified['totais']['declarado'],
-                'total_falta' => $unified['totais']['falta'],
-                'total_sobra' => $unified['totais']['sobra'],
-                'declared_consistent' => $unified['totais']['declared_consistent'],
-                'has_loja_sales' => $hasLojaSales,
+                'total_sistema_caixa' => $totais['sistema_caixa'],
+                'total_sistema_loja' => $totais['loja_total_sistema_raw'],
+                'total_sistema_unificado' => $totais['entries_expected'],
+                'total_declarado' => $totais['declarado'],
+                'total_falta' => $totais['falta'],
+                'total_sobra' => $totais['sobra'],
+                'declared_consistent' => $totais['declared_consistent'],
+                'has_loja_sales' => $totais['has_loja_sales'],
                 'status' => 'closed_local',
                 'last_sync_id' => $lastSyncId,
             ]
