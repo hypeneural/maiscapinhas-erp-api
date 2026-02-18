@@ -170,8 +170,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/closure-diagnose', [CashIntegrationController::class, 'diagnoseClosureData'])
             ->name('closure-diagnose');
 
-        // TEMPORARY: Backfill route for Gov Celso Ramos validation
-        Route::get('/temp-backfill-gov-celso', [CashIntegrationController::class, 'tempBackfillGovCelso']);
+
 
         require app_path('Modules/ConferenciaCaixa/routes.php');
     });

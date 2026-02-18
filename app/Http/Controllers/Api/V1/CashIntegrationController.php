@@ -279,26 +279,7 @@ class CashIntegrationController extends Controller
         ]);
     }
 
-    public function tempBackfillGovCelso(): JsonResponse
-    {
-        $service = app(\App\Services\Pdv\PdvClosureUnifiedService::class);
-        $closureUuid = '49db6e75-75e4-4f72-860b-a561d97db0f4';
-        
-        // Ensure closure exists first
-        $closure = $service->getUnifiedByClosureUuid($closureUuid);
-        if (!$closure) {
-            return $this->error('Closure UUID not found in turnos.', 404);
-        }
 
-        $pdvClosure = $service->upsertClosureFromTurnos($closureUuid);
-        
-        return response()->json([
-            'message' => 'Backfill executed',
-            'closure_id' => $pdvClosure ? $pdvClosure->id : null,
-            'total_unificado' => $pdvClosure ? $pdvClosure->total_sistema_unificado : null,
-            'created_at' => $pdvClosure ? $pdvClosure->created_at : null,
-        ]);
-    }
 
     /**
      * Maps ERP shift code to PDV periods
