@@ -360,7 +360,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                 continue;
             }
 
-            $idTurno = trim((string) data_get($turno, 'id_turno', ''));
+            $idTurno = trim((string) (data_get($turno, 'id_turno') ?? data_get($turno, 'IdTurno') ?? ''));
             if ($idTurno === '') {
                 Log::warning('Skipping turno without id_turno.', [
                     'pdv_sync_id' => $sync->id,
@@ -370,7 +370,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                 continue;
             }
 
-            $canal = $this->resolveTurnoCanal($sync, $storePdvId, data_get($turno, 'canal'));
+            $canal = $this->resolveTurnoCanal($sync, $storePdvId, data_get($turno, 'canal') ?? data_get($turno, 'Canal'));
             $operadorPdvId = $this->asInt($this->turnoGet($turno, 'operador.id_usuario'));
             $operadorLogin = $this->asString($this->turnoGet($turno, 'operador.login'));
             $responsavelLogin = $this->asString($this->turnoGet($turno, 'responsavel.login'));
@@ -383,21 +383,21 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                 'store_id' => $storeId,
                 'canal' => $canal,
                 'id_turno' => $idTurno,
-                'sequencial' => $this->asInt(data_get($turno, 'sequencial')),
-                'fechado' => (bool) data_get($turno, 'fechado', false),
-                'data_hora_inicio' => $this->asDateTimeString(data_get($turno, 'data_hora_inicio')),
-                'data_hora_termino' => $this->asDateTimeString(data_get($turno, 'data_hora_termino')),
-                'duracao_minutos' => $this->asInt(data_get($turno, 'duracao_minutos')),
-                'periodo' => $this->asString(data_get($turno, 'periodo')),
+                'sequencial' => $this->asInt(data_get($turno, 'sequencial') ?? data_get($turno, 'Sequencial')),
+                'fechado' => (bool) (data_get($turno, 'fechado') ?? data_get($turno, 'Fechado') ?? false),
+                'data_hora_inicio' => $this->asDateTimeString(data_get($turno, 'data_hora_inicio') ?? data_get($turno, 'DataHoraInicio')),
+                'data_hora_termino' => $this->asDateTimeString(data_get($turno, 'data_hora_termino') ?? data_get($turno, 'DataHoraTermino')),
+                'duracao_minutos' => $this->asInt(data_get($turno, 'duracao_minutos') ?? data_get($turno, 'DuracaoMinutos')),
+                'periodo' => $this->asString(data_get($turno, 'periodo') ?? data_get($turno, 'Periodo')),
                 'operador_pdv_id' => $operadorPdvId,
                 'operador_nome' => $this->asString($this->turnoGet($turno, 'operador.nome')),
                 'responsavel_pdv_id' => $this->asInt($this->turnoGet($turno, 'responsavel.id_usuario')),
                 'responsavel_nome' => $this->asString($this->turnoGet($turno, 'responsavel.nome')),
                 'total_sistema' => $this->asDecimal($this->turnoGet($turno, 'totais_sistema.total'), 2),
                 'qtd_vendas_sistema' => max(0, (int) $this->turnoGet($turno, 'totais_sistema.qtd_vendas', 0)),
-                'qtd_vendas' => max(0, (int) data_get($turno, 'qtd_vendas', 0)),
-                'total_vendas' => $this->asDecimal(data_get($turno, 'total_vendas', 0), 2),
-                'qtd_vendedores' => max(0, (int) data_get($turno, 'qtd_vendedores', 0)),
+                'qtd_vendas' => max(0, (int) (data_get($turno, 'qtd_vendas') ?? data_get($turno, 'QtdVendas') ?? 0)),
+                'total_vendas' => $this->asDecimal(data_get($turno, 'total_vendas') ?? data_get($turno, 'TotalVendas') ?? 0, 2),
+                'qtd_vendedores' => max(0, (int) (data_get($turno, 'qtd_vendedores') ?? data_get($turno, 'QtdVendedores') ?? 0)),
                 'total_declarado' => $this->asDecimalNullable($this->turnoGet($turno, 'fechamento_declarado.total'), 2),
                 'total_falta' => $this->asDecimalNullable($this->turnoGet($turno, 'falta_caixa.total'), 2),
                 'last_sync_id' => $sync->sync_id,
