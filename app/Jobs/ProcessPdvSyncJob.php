@@ -371,11 +371,11 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             }
 
             $canal = $this->resolveTurnoCanal($sync, $storePdvId, data_get($turno, 'canal'));
-            $operadorPdvId = $this->asInt(data_get($turno, 'operador.id_usuario'));
-            $operadorLogin = $this->asString(data_get($turno, 'operador.login'));
-            $responsavelLogin = $this->asString(data_get($turno, 'responsavel.login'));
+            $operadorPdvId = $this->asInt($this->turnoGet($turno, 'operador.id_usuario'));
+            $operadorLogin = $this->asString($this->turnoGet($turno, 'operador.login'));
+            $responsavelLogin = $this->asString($this->turnoGet($turno, 'responsavel.login'));
             $operadorUserId = $hasOperadorUserId
-                ? $this->resolveMappedUserId($storePdvId, $operadorPdvId, $operadorLogin, $userMappings, $this->asString(data_get($turno, 'operador.guid')))
+                ? $this->resolveMappedUserId($storePdvId, $operadorPdvId, $operadorLogin, $userMappings, $this->asString($this->turnoGet($turno, 'operador.guid')))
                 : null;
 
             $turnoRows[] = [
@@ -390,16 +390,16 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                 'duracao_minutos' => $this->asInt(data_get($turno, 'duracao_minutos')),
                 'periodo' => $this->asString(data_get($turno, 'periodo')),
                 'operador_pdv_id' => $operadorPdvId,
-                'operador_nome' => $this->asString(data_get($turno, 'operador.nome')),
-                'responsavel_pdv_id' => $this->asInt(data_get($turno, 'responsavel.id_usuario')),
-                'responsavel_nome' => $this->asString(data_get($turno, 'responsavel.nome')),
-                'total_sistema' => $this->asDecimal(data_get($turno, 'totais_sistema.total'), 2),
-                'qtd_vendas_sistema' => max(0, (int) data_get($turno, 'totais_sistema.qtd_vendas', 0)),
+                'operador_nome' => $this->asString($this->turnoGet($turno, 'operador.nome')),
+                'responsavel_pdv_id' => $this->asInt($this->turnoGet($turno, 'responsavel.id_usuario')),
+                'responsavel_nome' => $this->asString($this->turnoGet($turno, 'responsavel.nome')),
+                'total_sistema' => $this->asDecimal($this->turnoGet($turno, 'totais_sistema.total'), 2),
+                'qtd_vendas_sistema' => max(0, (int) $this->turnoGet($turno, 'totais_sistema.qtd_vendas', 0)),
                 'qtd_vendas' => max(0, (int) data_get($turno, 'qtd_vendas', 0)),
                 'total_vendas' => $this->asDecimal(data_get($turno, 'total_vendas', 0), 2),
                 'qtd_vendedores' => max(0, (int) data_get($turno, 'qtd_vendedores', 0)),
-                'total_declarado' => $this->asDecimalNullable(data_get($turno, 'fechamento_declarado.total'), 2),
-                'total_falta' => $this->asDecimalNullable(data_get($turno, 'falta_caixa.total'), 2),
+                'total_declarado' => $this->asDecimalNullable($this->turnoGet($turno, 'fechamento_declarado.total'), 2),
+                'total_falta' => $this->asDecimalNullable($this->turnoGet($turno, 'falta_caixa.total'), 2),
                 'last_sync_id' => $sync->sync_id,
                 'last_window_to' => $sync->window_to?->toDateTimeString(),
                 'created_at' => $now,
@@ -417,24 +417,24 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             }
             if ($hasOperadorGuid) {
                 $lastKey = array_key_last($turnoRows);
-                $turnoRows[$lastKey]['operador_guid'] = $this->asString(data_get($turno, 'operador.guid'));
-                $turnoRows[$lastKey]['operador_hiper_id'] = $this->asInt(data_get($turno, 'operador.id_hiper'));
-                $turnoRows[$lastKey]['responsavel_guid'] = $this->asString(data_get($turno, 'responsavel.guid'));
-                $turnoRows[$lastKey]['responsavel_hiper_id'] = $this->asInt(data_get($turno, 'responsavel.id_hiper'));
+                $turnoRows[$lastKey]['operador_guid'] = $this->asString($this->turnoGet($turno, 'operador.guid'));
+                $turnoRows[$lastKey]['operador_hiper_id'] = $this->asInt($this->turnoGet($turno, 'operador.id_hiper'));
+                $turnoRows[$lastKey]['responsavel_guid'] = $this->asString($this->turnoGet($turno, 'responsavel.guid'));
+                $turnoRows[$lastKey]['responsavel_hiper_id'] = $this->asInt($this->turnoGet($turno, 'responsavel.id_hiper'));
             }
             if ($hasClosureUuid) {
                 $lastKey = array_key_last($turnoRows);
-                $turnoRows[$lastKey]['closure_uuid'] = $this->asString(data_get($turno, 'fechamento_declarado.Id'));
-                $turnoRows[$lastKey]['data_hora_fechamento'] = $this->asDateTimeString(data_get($turno, 'fechamento_declarado.DataHora'));
-                $turnoRows[$lastKey]['falta_uuid'] = $this->asString(data_get($turno, 'falta_caixa.Id'));
-                $turnoRows[$lastKey]['sobra_uuid'] = $this->asString(data_get($turno, 'sobra_caixa.Id'));
-                $turnoRows[$lastKey]['total_sobra'] = $this->asDecimalNullable(data_get($turno, 'sobra_caixa.total'), 2);
-                $turnoRows[$lastKey]['tipo_operacao_fechamento'] = $this->asString(data_get($turno, 'fechamento_declarado.TipoDaOperacao'));
+                $turnoRows[$lastKey]['closure_uuid'] = $this->asString($this->turnoGet($turno, 'fechamento_declarado.Id'));
+                $turnoRows[$lastKey]['data_hora_fechamento'] = $this->asDateTimeString($this->turnoGet($turno, 'fechamento_declarado.DataHora'));
+                $turnoRows[$lastKey]['falta_uuid'] = $this->asString($this->turnoGet($turno, 'falta_caixa.Id'));
+                $turnoRows[$lastKey]['sobra_uuid'] = $this->asString($this->turnoGet($turno, 'sobra_caixa.Id'));
+                $turnoRows[$lastKey]['total_sobra'] = $this->asDecimalNullable($this->turnoGet($turno, 'sobra_caixa.total'), 2);
+                $turnoRows[$lastKey]['tipo_operacao_fechamento'] = $this->asString($this->turnoGet($turno, 'fechamento_declarado.TipoDaOperacao'));
             }
 
-            $declaradoUuid = $this->asString(data_get($turno, 'fechamento_declarado.Id'));
-            $faltaUuid = $this->asString(data_get($turno, 'falta_caixa.Id'));
-            $sobraUuid = $this->asString(data_get($turno, 'sobra_caixa.Id'));
+            $declaradoUuid = $this->asString($this->turnoGet($turno, 'fechamento_declarado.Id'));
+            $faltaUuid = $this->asString($this->turnoGet($turno, 'falta_caixa.Id'));
+            $sobraUuid = $this->asString($this->turnoGet($turno, 'sobra_caixa.Id'));
 
             $pagamentoRows = array_merge(
                 $pagamentoRows,
@@ -444,7 +444,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                     $canal,
                     $idTurno,
                     'sistema',
-                    data_get($turno, 'totais_sistema.por_pagamento', []),
+                    $this->turnoGet($turno, 'totais_sistema.por_pagamento', []),
                     $sync,
                     $now,
                     $hasPagamentoUuid,
@@ -456,7 +456,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                     $canal,
                     $idTurno,
                     'declarado',
-                    data_get($turno, 'fechamento_declarado.por_pagamento', []),
+                    $this->turnoGet($turno, 'fechamento_declarado.por_pagamento', []),
                     $sync,
                     $now,
                     $hasPagamentoUuid,
@@ -468,7 +468,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                     $canal,
                     $idTurno,
                     'falta',
-                    data_get($turno, 'falta_caixa.por_pagamento', []),
+                    $this->turnoGet($turno, 'falta_caixa.por_pagamento', []),
                     $sync,
                     $now,
                     $hasPagamentoUuid,
@@ -480,7 +480,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                     $canal,
                     $idTurno,
                     'sobra',
-                    data_get($turno, 'sobra_caixa.por_pagamento', []),
+                    $this->turnoGet($turno, 'sobra_caixa.por_pagamento', []),
                     $sync,
                     $now,
                     $hasPagamentoUuid,
@@ -1261,6 +1261,74 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
         }
 
         return $rows;
+    }
+
+    /**
+     * Read a turno key trying snake_case first, then PascalCase fallback.
+     *
+     * The RAW payload from the Python agent uses PascalCase aliases
+     * (e.g. TotaisSistema, FechamentoDeclarado) but processTurnos()
+     * expects snake_case keys. This helper resolves both formats.
+     *
+     * @param array<string, mixed> $turno
+     */
+    private function turnoGet(array $turno, string $snakeKey, mixed $default = null): mixed
+    {
+        static $rootMap = [
+        'totais_sistema' => 'TotaisSistema',
+        'fechamento_declarado' => 'FechamentoDeclarado',
+        'falta_caixa' => 'FaltaCaixa',
+        'sobra_caixa' => 'SobraCaixa',
+        'operador' => 'Operador',
+        'responsavel' => 'Responsavel',
+        ];
+
+        // Inner-field aliases: snake_case child key → PascalCase alias
+        static $childMap = [
+        'id_usuario' => 'Codigo',
+        'nome' => 'Nome',
+        'login' => 'Login',
+        'guid' => 'Id',
+        'id_hiper' => 'IdUsuarioHiperOnline',
+        ];
+
+        // 1. Try snake_case (normalized payload)
+        $value = data_get($turno, $snakeKey);
+        if ($value !== null) {
+            return $value;
+        }
+
+        // 2. Try PascalCase root + original child (RAW payload)
+        $parts = explode('.', $snakeKey, 2);
+        $rootKey = $parts[0];
+        $childKey = $parts[1] ?? null;
+
+        if (!isset($rootMap[$rootKey])) {
+            return $default;
+        }
+
+        $pascalRoot = $rootMap[$rootKey];
+
+        if ($childKey === null) {
+            // Entire sub-object requested
+            return data_get($turno, $pascalRoot, $default);
+        }
+
+        // Try PascalCase root + original child key (e.g. TotaisSistema.total)
+        $value = data_get($turno, $pascalRoot . '.' . $childKey);
+        if ($value !== null) {
+            return $value;
+        }
+
+        // Try PascalCase root + PascalCase child (e.g. Operador.Nome)
+        if (isset($childMap[$childKey])) {
+            $value = data_get($turno, $pascalRoot . '.' . $childMap[$childKey]);
+            if ($value !== null) {
+                return $value;
+            }
+        }
+
+        return $default;
     }
 
     /**
