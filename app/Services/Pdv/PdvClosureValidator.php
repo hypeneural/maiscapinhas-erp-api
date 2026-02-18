@@ -64,14 +64,42 @@ class PdvClosureValidator
         }
 
         // ══════════════════════════════════════════
-        // 2) EXACT MATCH — store_id + operador_guid + total_sistema
+        // 2) CLOSURE UUID — visão UNIFICADA (prioridade sobre heuristic)
+        //    O ERP Id é o closure_uuid que agrupa todos os canais.
+        // ══════════════════════════════════════════
+        if ($closureUuid) {
+            $service = new PdvClosureUnifiedService();
+            $unified = $service->getUnifiedByClosureUuid($closureUuid);
+            if ($unified) {
+                return $this->buildUnifiedResult($unified, 'closure_uuid', 100, $erpItem, $erpTotal, $storeName, $storeCity);
+            }
+
+            // Fallback individual (se service não encontrar pdv_closures mas turno tem closure_uuid)
+            $turno = PdvTurno::where('closure_uuid', $closureUuid)->first();
+            if ($turno) {
+                return $this->buildResult($turno, 'closure_uuid_single', 90, $erpItem, $erpTotal, $storeName, $storeCity);
+            }
+        }
+
+        // ══════════════════════════════════════════
+        // 3) EXACT MATCH — store_id + operador_guid + total (sistema ou declarado)
         // ══════════════════════════════════════════
         if ($storeId && $usuarioId) {
             $query = PdvTurno::where('store_id', $storeId)
                 ->where('operador_guid', $usuarioId)
                 ->where('fechado', true);
 
-            // Exact total match (tolerance ±0.05)
+            // First try total_declarado (ERP sends declarado value, not raw sistema)
+            $turno = (clone $query)
+                ->whereBetween('total_declarado', [$erpTotal - 0.05, $erpTotal + 0.05])
+                ->orderByDesc('data_hora_inicio')
+                ->first();
+
+            if ($turno) {
+                return $this->buildResult($turno, 'exact_declarado', 95, $erpItem, $erpTotal, $storeName, $storeCity);
+            }
+
+            // Fallback: try total_sistema (tolerance ±0.05)
             $turno = (clone $query)
                 ->whereBetween('total_sistema', [$erpTotal - 0.05, $erpTotal + 0.05])
                 ->orderByDesc('data_hora_inicio')
@@ -82,7 +110,7 @@ class PdvClosureValidator
             }
 
             // ══════════════════════════════════════════
-            // 3) HEURISTIC — store_id + operador_guid (relaxed total)
+            // 4) HEURISTIC — store_id + operador_guid (relaxed total)
             // ══════════════════════════════════════════
             $turno = (clone $query)
                 ->when($sequencial, fn($q) => $q->where('sequencial', $sequencial))
@@ -91,21 +119,6 @@ class PdvClosureValidator
 
             if ($turno) {
                 return $this->buildResult($turno, 'heuristic', 75, $erpItem, $erpTotal, $storeName, $storeCity);
-            }
-        }
-
-        // ── Fallback: closure_uuid → visão UNIFICADA ──
-        if ($closureUuid) {
-            $service = new PdvClosureUnifiedService();
-            $unified = $service->getUnifiedByClosureUuid($closureUuid);
-            if ($unified) {
-                return $this->buildUnifiedResult($unified, 'closure_uuid', 90, $erpItem, $erpTotal, $storeName, $storeCity);
-            }
-
-            // Fallback individual (se service não encontrar)
-            $turno = PdvTurno::where('closure_uuid', $closureUuid)->first();
-            if ($turno) {
-                return $this->buildResult($turno, 'closure_uuid_single', 85, $erpItem, $erpTotal, $storeName, $storeCity);
             }
         }
 
@@ -302,7 +315,7 @@ class PdvClosureValidator
         ?string $storeCity
     ): array {
         // Comparação
-        $dbTotal = (float) ($unified['totais']['sistema_unificado'] ?? 0);
+        $dbTotal = (float) ($unified['totais']['entries_expected'] ?? 0);
         $totalDiff = abs($erpTotal - $dbTotal);
 
         $erpGuid = strtolower(trim((string) data_get($erpItem, 'Turno.UsuarioId', '')));
