@@ -118,8 +118,8 @@ class PdvSaleValidator
 
         if ($erpOperacaoUuid && $erpLojaUuid) {
             /** @var PdvVenda|null $goldenMatch */
-            $goldenMatch = PdvVenda::where('erp_loja_uuid', $erpLojaUuid)
-                ->where('erp_operacao_uuid', $erpOperacaoUuid)
+            $goldenMatch = PdvVenda::whereRaw('LOWER(erp_loja_uuid) = ?', [strtolower($erpLojaUuid)])
+                ->whereRaw('LOWER(erp_operacao_uuid) = ?', [strtolower($erpOperacaoUuid)])
                 ->first();
 
             if ($goldenMatch) {
@@ -127,12 +127,50 @@ class PdvSaleValidator
             }
         }
 
+        // Fallback robusto: quando erp_loja_uuid local estiver legado/inconsistente,
+        // tenta casar pelo UUID da operacao e desempata por contexto de loja.
+        if ($erpOperacaoUuid) {
+            $uuidCandidates = PdvVenda::query()
+                ->whereRaw('LOWER(erp_operacao_uuid) = ?', [strtolower($erpOperacaoUuid)])
+                ->when($canal, fn($q) => $q->where('canal', $canal))
+                ->limit(10)
+                ->get();
+
+            if ($uuidCandidates->isNotEmpty()) {
+                $resolvedStoreId = $this->resolveStoreIdByErpLojaUuid($erpLojaUuid);
+                $uuidMatch = $this->pickBestOperationUuidCandidate(
+                    $uuidCandidates,
+                    $erpLojaUuid,
+                    $storePdvId,
+                    $resolvedStoreId,
+                    $erpTotal,
+                    $targetUtc
+                );
+
+                if ($uuidMatch) {
+                    return $matchFn($uuidMatch, 'uuid');
+                }
+            }
+        }
+
         // --- NÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂVEL 2: FISCAL KEY (Chave NFC-e) ---
         // $nfeKey jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ extraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­do acima
-        if ($nfeKey && $erpLojaUuid) {
-            $fiscalMatch = PdvVenda::where('erp_loja_uuid', $erpLojaUuid)
-                ->where('nfce_chave', $nfeKey)
-                ->first();
+        if ($nfeKey) {
+            $fiscalMatch = null;
+
+            if ($erpLojaUuid) {
+                $fiscalMatch = PdvVenda::whereRaw('LOWER(erp_loja_uuid) = ?', [strtolower($erpLojaUuid)])
+                    ->where('nfce_chave', $nfeKey)
+                    ->when($canal, fn($q) => $q->where('canal', $canal))
+                    ->first();
+            }
+
+            if (!$fiscalMatch) {
+                $fiscalMatch = PdvVenda::query()
+                    ->where('nfce_chave', $nfeKey)
+                    ->when($canal, fn($q) => $q->where('canal', $canal))
+                    ->first();
+            }
 
             if ($fiscalMatch) {
                 return $matchFn($fiscalMatch, 'fiscal_key_nfce');
@@ -408,28 +446,40 @@ class PdvSaleValidator
             ?? data_get($erp, 'Loja.LojaId')
             ?? data_get($erp, 'Turno.LojaId'); // Adicionado fallback
         if ($guidLoja) {
-            // Check mappings first (most likely place for active stores)
-            $mapping = DB::table('pdv_store_mappings')
-                ->where('guid_loja', $guidLoja)
-                ->where('active', true)
-                ->first();
+            $guidLojaLower = strtolower(trim((string) $guidLoja));
 
-            if ($mapping) {
-                return (int) $mapping->pdv_store_id;
+            // Check mappings first (most likely place for active stores)
+            $mappingIds = DB::table('pdv_store_mappings')
+                ->whereRaw('LOWER(guid_loja) = ?', [$guidLojaLower])
+                ->where('active', true)
+                ->pluck('pdv_store_id')
+                ->map(fn($id) => (int) $id)
+                ->filter(fn($id) => $id > 0)
+                ->values()
+                ->all();
+
+            $preferredFromMappings = $this->pickPreferredStorePdvId($mappingIds);
+            if ($preferredFromMappings !== null) {
+                return $preferredFromMappings;
             }
 
             // Check pdv_lojas direct table
-            $store = DB::table('pdv_lojas')
-                ->where('guid_loja', $guidLoja)
-                ->first();
+            $pdvLojaIds = DB::table('pdv_lojas')
+                ->whereRaw('LOWER(guid_loja) = ?', [$guidLojaLower])
+                ->pluck('id_ponto_venda')
+                ->map(fn($id) => (int) $id)
+                ->filter(fn($id) => $id > 0)
+                ->values()
+                ->all();
 
-            if ($store) {
-                return (int) $store->id_ponto_venda;
+            $preferredFromPdvLojas = $this->pickPreferredStorePdvId($pdvLojaIds);
+            if ($preferredFromPdvLojas !== null) {
+                return $preferredFromPdvLojas;
             }
         }
 
         // 2. Fallback to Name Matching (Legacy/V4)
-        $lojaNome = data_get($erp, 'Loja.Nome');
+        $lojaNome = (string) (data_get($erp, 'Loja.Nome') ?? '');
         if ($lojaNome) {
             $store = DB::table('pdv_lojas')
                 ->where('nome_hiper', $lojaNome)
@@ -447,16 +497,49 @@ class PdvSaleValidator
 
         // Fallback: Hardcoded map for known stores in this analysis context
         // Loja 12 - MC Porto Belo -> id_ponto_venda 13
-        if (str_contains($lojaNome, 'Porto Belo'))
-            return 13;
-        if (str_contains($lojaNome, 'iTuntz'))
-            return 4;
-        if (str_contains($lojaNome, 'Loja 5') || str_contains($lojaNome, 'KomprÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o'))
-            return 7;
-        if (str_contains($lojaNome, 'Loja 7') || str_contains($lojaNome, 'Bombinhas'))
-            return 6;
+        if ($lojaNome !== '') {
+            if (str_contains($lojaNome, 'Porto Belo')) {
+                return 13;
+            }
+            if (str_contains($lojaNome, 'iTuntz')) {
+                return 4;
+            }
+            if (str_contains($lojaNome, 'Loja 5') || str_contains($lojaNome, 'Komprão')) {
+                return 7;
+            }
+            if (str_contains($lojaNome, 'Loja 7') || str_contains($lojaNome, 'Bombinhas')) {
+                return 6;
+            }
+        }
 
         return null;
+    }
+
+    /**
+     * @param array<int, int> $candidateIds
+     */
+    private function pickPreferredStorePdvId(array $candidateIds): ?int
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $candidateIds), fn($id) => $id > 0)));
+        if ($ids === []) {
+            return null;
+        }
+
+        if (count($ids) === 1) {
+            return $ids[0];
+        }
+
+        $recent = DB::table('pdv_vendas')
+            ->whereIn('store_pdv_id', $ids)
+            ->orderByDesc('data_hora')
+            ->value('store_pdv_id');
+
+        if ($recent !== null) {
+            return (int) $recent;
+        }
+
+        sort($ids);
+        return $ids[0];
     }
 
 
@@ -912,6 +995,86 @@ class PdvSaleValidator
         return null;
     }
 
+    private function resolveStoreIdByErpLojaUuid(?string $erpLojaUuid): ?int
+    {
+        if ($erpLojaUuid === null || !$this->isUuidLike($erpLojaUuid)) {
+            return null;
+        }
+
+        $storeId = DB::table('stores')
+            ->whereRaw('LOWER(guid) = ?', [strtolower($erpLojaUuid)])
+            ->value('id');
+
+        return $storeId !== null ? (int) $storeId : null;
+    }
+
+    /**
+     * @param \Illuminate\Support\Collection<int, PdvVenda> $candidates
+     */
+    private function pickBestOperationUuidCandidate($candidates, ?string $erpLojaUuid, ?int $storePdvId, ?int $storeId, float $erpTotal, ?Carbon $targetUtc): ?PdvVenda
+    {
+        if ($candidates->isEmpty()) {
+            return null;
+        }
+
+        if ($candidates->count() === 1) {
+            return $candidates->first();
+        }
+
+        $best = null;
+        $bestScore = -INF;
+        $erpLojaUuidNorm = $erpLojaUuid ? strtolower(trim($erpLojaUuid)) : null;
+
+        foreach ($candidates as $candidate) {
+            if (!$candidate instanceof PdvVenda) {
+                continue;
+            }
+
+            $score = 0.0;
+
+            $dbLojaUuidNorm = strtolower(trim((string) ($candidate->erp_loja_uuid ?? '')));
+            if ($erpLojaUuidNorm && $dbLojaUuidNorm !== '' && $erpLojaUuidNorm === $dbLojaUuidNorm) {
+                $score += 100;
+            }
+
+            if ($storePdvId && (int) $candidate->store_pdv_id === $storePdvId) {
+                $score += 60;
+            }
+
+            if ($storeId && (int) $candidate->store_id === $storeId) {
+                $score += 40;
+            }
+
+            $score -= abs(((float) $candidate->total) - $erpTotal);
+
+            if ($targetUtc && $candidate->data_hora) {
+                try {
+                    $dbUtc = Carbon::parse($candidate->data_hora)->utc();
+                    $minutesDiff = abs($dbUtc->diffInMinutes($targetUtc));
+                    $score += max(0, 20 - min(20, $minutesDiff));
+                } catch (\Throwable $e) {
+                    // Ignore parse issues in tie-break scoring.
+                }
+            }
+
+            if ($score > $bestScore) {
+                $bestScore = $score;
+                $best = $candidate;
+            }
+        }
+
+        return $best;
+    }
+
+    private function isUuidLike(?string $value): bool
+    {
+        if ($value === null) {
+            return false;
+        }
+
+        return (bool) preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', trim($value));
+    }
+
     private function normalizeDbStatus(?string $status): ?string
     {
         if ($status === null) {
@@ -960,4 +1123,5 @@ class PdvSaleValidator
         return $map;
     }
 }
+
 

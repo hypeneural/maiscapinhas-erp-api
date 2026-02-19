@@ -289,7 +289,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
 
         // Self-healing: Update mapping with GUID if resolved by matched_by != guid
         $mappingId = $resolution['mapping_id'] ?? null;
-        $payloadGuid = $this->asString(data_get($payload, 'store.guid'));
+        $payloadGuid = $this->asCanonicalStoreGuid(data_get($payload, 'store.guid') ?? data_get($payload, 'store.LojaId'));
 
         if ($storeId !== null && $mappingId !== null && $payloadGuid !== null && $resolution['matched_by'] !== 'guid') {
             // We resolved by Alias/CNPJ, but we have a GUID in payload. Update the mapping.
@@ -626,7 +626,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
 
             // V5 Data Extraction
             $erpOperacaoUuid = $this->asString(data_get($venda, 'ErpOperacaoUuid'));
-            $erpLojaUuid = $this->asString(data_get($venda, 'ErpLojaUuid') ?? data_get($payload, 'store.LojaId'));
+            $erpLojaUuid = $this->resolveErpLojaUuidForVenda($venda, $payload);
 
             $fiscal = data_get($venda, 'Fiscal', []);
             $nfceChave = $this->asString(data_get($fiscal, 'NfceChave'));
@@ -1499,6 +1499,51 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
     }
 
     /**
+     * Keep UUID-like values in a consistent format (uppercase) while preserving legacy numeric IDs.
+     */
+    private function asCanonicalStoreGuid(mixed $value): ?string
+    {
+        $guid = $this->asString($value);
+        if ($guid === null) {
+            return null;
+        }
+
+        return $this->isUuidLike($guid) ? strtoupper($guid) : $guid;
+    }
+
+    /**
+     * Some legacy payloads send ErpLojaUuid as numeric store_pdv_id ("9"), while the root payload
+     * contains the real LojaId UUID. Prefer UUID whenever available to avoid mismatched identity.
+     *
+     * @param array<string, mixed> $venda
+     * @param array<string, mixed> $payload
+     */
+    private function resolveErpLojaUuidForVenda(array $venda, array $payload): ?string
+    {
+        $vendaErpLoja = $this->asCanonicalStoreGuid(data_get($venda, 'ErpLojaUuid'));
+        $payloadLojaGuid = $this->asCanonicalStoreGuid(data_get($payload, 'store.LojaId') ?? data_get($payload, 'store.guid'));
+
+        if ($vendaErpLoja !== null && $this->isUuidLike($vendaErpLoja)) {
+            return $vendaErpLoja;
+        }
+
+        if ($payloadLojaGuid !== null && $this->isUuidLike($payloadLojaGuid)) {
+            return $payloadLojaGuid;
+        }
+
+        return $vendaErpLoja ?? $payloadLojaGuid;
+    }
+
+    private function isUuidLike(?string $value): bool
+    {
+        if ($value === null) {
+            return false;
+        }
+
+        return (bool) preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', trim($value));
+    }
+
+    /**
      * @param array<string, mixed> $payload
      */
     private function processMasterData(int $storePdvId, array $payload): void
@@ -1509,7 +1554,9 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             $hasPdvLojasGuid = $this->supportsPdvLojasGuid();
             $storeNome = $this->asString(data_get($payload, 'store.nome'));
             $storeAlias = $this->asString(data_get($payload, 'store.alias'));
-            $storeGuid = $hasPdvLojasGuid ? $this->asString(data_get($payload, 'store.guid')) : null;
+            $storeGuid = $hasPdvLojasGuid
+                ? $this->asCanonicalStoreGuid(data_get($payload, 'store.guid') ?? data_get($payload, 'store.LojaId'))
+                : null;
             $storeHiperId = $hasPdvLojasGuid ? $this->asInt(data_get($payload, 'store.id_hiper')) : null;
 
             $existingStore = DB::table('pdv_lojas')
