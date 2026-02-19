@@ -6,6 +6,9 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
+use App\Models\PdvTurno;
+use App\Models\Store;
+use App\Models\User;
 use App\Services\Pdv\PdvClosureUnifiedService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -357,6 +360,95 @@ class CashIntegrationController extends Controller
     }
 
 
+
+
+    /**
+     * Get cascading filters for closure validation (Stores -> Dates -> Shifts -> Sellers)
+     *
+     * @queryParam store_id integer ID of the store (optional)
+     * @queryParam date string Date YYYY-MM-DD (optional)
+     * @queryParam shift_code string Shift code (optional)
+     */
+    public function getClosureFilters(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $storeId = $request->input('store_id');
+        $date = $request->input('date');
+        $shiftCode = $request->input('shift_code');
+
+        // 1. Available Stores (that have any closures in pdv_turnos)
+        $storesQuery = Store::whereHas('pdvTurnos');
+
+        if (!$user->isSuperAdmin()) {
+            $storesQuery->whereIn('id', $user->storeUsers()->pluck('store_id'));
+        }
+
+        $stores = $storesQuery->select('id', 'name')->orderBy('name')->get();
+
+        // 2. Available Dates (for selected store)
+        $dates = [];
+        if ($storeId) {
+            $dates = PdvTurno::where('store_id', (int) $storeId)
+                // We generally only want dates that have at least one CLOSED or synced turno
+                ->selectRaw('DATE(data_abertura) as date')
+                ->distinct()
+                ->orderBy('date', 'desc')
+                ->pluck('date');
+        }
+
+        // 3. Available Shifts (for selected store + date)
+        $shifts = [];
+        if ($storeId && $date) {
+            $shifts = PdvTurno::where('store_id', (int) $storeId)
+                ->whereDate('data_abertura', $date)
+                ->select('turno')
+                ->distinct()
+                ->pluck('turno')
+                ->sort()
+                ->values();
+        }
+
+        // 4. Sellers (for selected store + date + shift)
+        // Default: All active users with GUID
+        $allSellers = User::whereNotNull('guid')
+            ->where('active', true)
+            ->select('id', 'name', 'guid')
+            ->orderBy('name')
+            ->get();
+
+        $suggestedSeller = null;
+
+        if ($storeId && $date && $shiftCode) {
+            // Find the specific turno to get the responsible
+            $turno = PdvTurno::where('store_id', (int) $storeId)
+                ->whereDate('data_abertura', $date)
+                ->where('turno', $shiftCode)
+                ->latest('id') // In case of duplicates, take most recent
+                ->first();
+
+            if ($turno && $turno->responsavel_guid) {
+                // Find user by guid
+                $responsible = User::where('guid', $turno->responsavel_guid)->first();
+                if ($responsible) {
+                    $suggestedSeller = [
+                        'id' => $responsible->id,
+                        'name' => $responsible->name,
+                        'guid' => $responsible->guid
+                    ];
+                }
+            }
+        }
+
+        return $this->success([
+            'stores' => $stores,
+            'dates' => $dates,
+            'shifts' => $shifts,
+            'sellers' => [
+                'suggested' => $suggestedSeller,
+                'all' => $allSellers,
+            ],
+        ]);
+    }
 
     /**
      * Maps ERP shift code to PDV periods
