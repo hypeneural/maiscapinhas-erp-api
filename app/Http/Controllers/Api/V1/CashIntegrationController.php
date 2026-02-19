@@ -390,7 +390,7 @@ class CashIntegrationController extends Controller
         if ($storeId) {
             $dates = PdvTurno::where('store_id', (int) $storeId)
                 // We generally only want dates that have at least one CLOSED or synced turno
-                ->selectRaw('DATE(data_abertura) as date')
+                ->selectRaw('DATE(data_hora_inicio) as date')
                 ->distinct()
                 ->orderBy('date', 'desc')
                 ->pluck('date');
@@ -400,7 +400,7 @@ class CashIntegrationController extends Controller
         $shifts = [];
         if ($storeId && $date) {
             $shifts = PdvTurno::where('store_id', (int) $storeId)
-                ->whereDate('data_abertura', $date)
+                ->whereDate('data_hora_inicio', $date)
                 ->select('turno')
                 ->distinct()
                 ->pluck('turno')
@@ -421,7 +421,7 @@ class CashIntegrationController extends Controller
         if ($storeId && $date && $shiftCode) {
             // Find the specific turno to get the responsible
             $turno = PdvTurno::where('store_id', (int) $storeId)
-                ->whereDate('data_abertura', $date)
+                ->whereDate('data_hora_inicio', $date)
                 ->where('turno', $shiftCode)
                 ->latest('id') // In case of duplicates, take most recent
                 ->first();
