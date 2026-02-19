@@ -25,7 +25,7 @@ class PdvSaleValidator
             if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
                 return [
                     'ok' => false,
-                    'error' => 'JSON inválido no payload (textarea).',
+                    'error' => 'JSON invÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡lido no payload (textarea).',
                     'json_error' => json_last_error_msg(),
                 ];
             }
@@ -37,8 +37,9 @@ class PdvSaleValidator
         // 2) Extrair campos principais do ERP
         $erpTotal = (float) (data_get($erp, 'ValorTotalLiquido') ?? data_get($erp, 'total') ?? 0);
         $erpDate = data_get($erp, 'Data') ?? data_get($erp, 'data_hora'); // ex: 2026-02-14T11:44:11
+        $isCancelled = (bool) data_get($erp, 'Cancelada', false);
 
-        // Extração robusta do ID da Loja (UUID)
+        // ExtraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o robusta do ID da Loja (UUID)
         $lojaId = data_get($erp, 'LojaId')
             ?? data_get($erp, 'Loja.LojaId')
             ?? data_get($erp, 'Turno.LojaId')
@@ -47,21 +48,11 @@ class PdvSaleValidator
         $nfeKey = data_get($erp, 'DocumentosFiscais.0.Chave');
         $erpId = data_get($erp, 'CodigoDaOperacao');
 
-        if (!$erpDate || $erpTotal <= 0) {
-            // Se for cancelada, pode ter total zerado ou nao, mas vamos checar a flag
-            if (data_get($erp, 'Cancelada') === true) {
-                return [
-                    'ok' => true,
-                    'found' => false,
-                    'match_100' => false,
-                    'reason' => 'Venda está CANCELADA no ERP.',
-                    'status_erp' => 'CANCELLED',
-                ];
-            }
+        if ((!$erpDate || $erpTotal <= 0) && !$isCancelled) {
 
             return [
                 'ok' => false,
-                'error' => 'Campos mínimos ausentes: Data e/ou ValorTotalLiquido.',
+                'error' => 'Campos mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­nimos ausentes: Data e/ou ValorTotalLiquido.',
                 'debug' => [
                     'received_total' => $erpTotal,
                     'received_date' => $erpDate,
@@ -70,50 +61,43 @@ class PdvSaleValidator
             ];
         }
 
-        // Checagem explicita de cancelamento mesmo com dados ok
-        if (data_get($erp, 'Cancelada') === true) {
-            return [
-                'ok' => true,
-                'found' => false, // Por padrao consideramos nao 'encontrada' como venda valida
-                'match_100' => false,
-                'reason' => 'Venda está marcada como CANCELADA no JSON do ERP.',
-                'status_erp' => 'CANCELLED',
-                'debug' => ['id_operacao' => $erpId, 'loja_id' => $lojaId]
-            ];
-        }
-
         // 3) Resolver store_pdv_id (Int)
-        // Isso é crucial para busca heurística e performance, mas se tivermos UUIDs, podemos tentar Golden Match antes de falhar.
+        // Isso ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© crucial para busca heurÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­stica e performance, mas se tivermos UUIDs, podemos tentar Golden Match antes de falhar.
         $storePdvId = $this->resolveStorePdvId($erp);
 
         $erpLojaUuid = $this->resolveErpLojaUuid($erp);
         $erpOperacaoUuid = strtolower(trim((string) (data_get($erp, 'ErpOperacaoUuid') ?? data_get($erp, 'Id'))));
 
-        // Se falhar a resolução da loja (ID Interno), só retornamos erro se NÃO tivermos UUIDs para tentar o Golden Match.
-        // Se tiver UUID da Loja e da Operação, vamos tentar achar direto no banco, talvez a loja não esteja mapeada "localmente" (store_pdv_id) mas exista no banco (erp_loja_uuid).
+        // Se falhar a resoluÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o da loja (ID Interno), sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ retornamos erro se NÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢O tivermos UUIDs para tentar o Golden Match.
+        // Se tiver UUID da Loja e da OperaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o, vamos tentar achar direto no banco, talvez a loja nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o esteja mapeada "localmente" (store_pdv_id) mas exista no banco (erp_loja_uuid).
         if (!$storePdvId && !($erpLojaUuid && $erpOperacaoUuid)) {
             return [
                 'ok' => false,
-                'error' => 'Não consegui resolver store_pdv_id. Verifique se a loja está mapeada.',
+                'error' => 'NÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o consegui resolver store_pdv_id. Verifique se a loja estÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ mapeada.',
                 'debug' => ['LojaId' => $lojaId, 'NfeChave' => $nfeKey, 'NomeLoja' => data_get($erp, 'Loja.Nome')],
             ];
         }
 
 
-        // 4) Normalizar tempo: ERP local -> UTC
-        // Tenta parsear com timezone informado
-        try {
-            $targetUtc = Carbon::parse($erpDate, $timezone)->utc();
-        } catch (\Exception $e) {
-            return [
-                'ok' => false,
-                'error' => 'Data inválida ou timezone incorreto.',
-                'debug' => ['Data' => $erpDate, 'Timezone' => $timezone],
-            ];
+        // 4) Normalizar tempo: ERP local -> UTC (quando disponivel)
+        $targetUtc = null;
+        $start = null;
+        $end = null;
+        if (!empty($erpDate)) {
+            try {
+                $targetUtc = Carbon::parse($erpDate, $timezone)->utc();
+                $start = $targetUtc->copy()->subMinutes($minusMin);
+                $end = $targetUtc->copy()->addMinutes($plusMin);
+            } catch (\Exception $e) {
+                if (!$isCancelled) {
+                    return [
+                        'ok' => false,
+                        'error' => 'Data invÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡lida ou timezone incorreto.',
+                        'debug' => ['Data' => $erpDate, 'Timezone' => $timezone],
+                    ];
+                }
+            }
         }
-
-        $start = $targetUtc->copy()->subMinutes($minusMin);
-        $end = $targetUtc->copy()->addMinutes($plusMin);
 
         // 6) Preparar assinaturas do ERP (Calculate EARLY so we can use in Golden Match too)
         $erpItemSig = $this->erpItemsSignature($erp);
@@ -128,7 +112,7 @@ class PdvSaleValidator
             return $this->buildMatchResult($venda, $source, $erpId, $erpTotal, $erpItemSig, $erpPaySig, $erpLojaUuid, $erpVendedorUuid, $erp);
         };
 
-        // --- NÍVEL 1: GOLDEN KEY (UUID da Operação) ---
+        // --- NÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂVEL 1: GOLDEN KEY (UUID da OperaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o) ---
         $erpOperacaoUuid = strtolower(trim((string) (data_get($erp, 'ErpOperacaoUuid') ?? data_get($erp, 'Id'))));
         // $erpLojaUuid resolved above
 
@@ -143,8 +127,8 @@ class PdvSaleValidator
             }
         }
 
-        // --- NÍVEL 2: FISCAL KEY (Chave NFC-e) ---
-        // $nfeKey já extraído acima
+        // --- NÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂVEL 2: FISCAL KEY (Chave NFC-e) ---
+        // $nfeKey jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ extraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­do acima
         if ($nfeKey && $erpLojaUuid) {
             $fiscalMatch = PdvVenda::where('erp_loja_uuid', $erpLojaUuid)
                 ->where('nfce_chave', $nfeKey)
@@ -155,11 +139,39 @@ class PdvSaleValidator
             }
         }
 
-        // --- NÍVEL 3: FISCAL DADOS (Número + Série + Modelo + Data) ---
-        // TODO: Implementar se necessário, mas geralmente Chave cobre tudo.
+        // --- NÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂVEL 3: FISCAL DADOS (NÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºmero + SÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©rie + Modelo + Data) ---
+        // TODO: Implementar se necessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio, mas geralmente Chave cobre tudo.
 
-        // --- NÍVEL 4: HEURÍSTICA (Legacy Fallback) ---
-        // (Continua com a lógica existente de janela de tempo + valor)
+        // --- NÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂVEL 4: HEURÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂSTICA (Legacy Fallback) ---
+        // (Continua com a lÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³gica existente de janela de tempo + valor)
+
+        if (!$storePdvId || $start === null || $end === null || $erpTotal <= 0) {
+            $statusValidation = $this->resolveStatusValidation($erp, null);
+
+            return [
+                'ok' => true,
+                'found' => false,
+                'match_100' => false,
+                'reason' => $isCancelled
+                    ? 'Venda cancelada no ERP, mas sem correspondencia local por UUID/chave fiscal.'
+                    : 'Dados insuficientes para busca heuristica.',
+                'status_erp' => $statusValidation['status_erp'],
+                'status_db' => $statusValidation['status_db'],
+                'expected_status_db' => $statusValidation['expected_status_db'],
+                'status_match' => $statusValidation['status_match'],
+                'search' => [
+                    'store_pdv_id' => $storePdvId,
+                    'erp_id' => $erpId,
+                    'total_target' => $erpTotal,
+                    'window_utc' => $targetUtc ? [$start?->toIso8601String(), $end?->toIso8601String()] : null,
+                    'missing_inputs' => array_values(array_filter([
+                        $storePdvId ? null : 'store_pdv_id',
+                        ($start && $end) ? null : 'data_hora',
+                        $erpTotal > 0 ? null : 'valor_total',
+                    ])),
+                ],
+            ];
+        }
 
         // Buscar candidatos (assinatura: loja + total + janela)
         // Nota: Removido eager loading (with) pois a chave composta (store_pdv_id + id_operacao)
@@ -173,11 +185,19 @@ class PdvSaleValidator
             ->get();
 
         if ($candidates->isEmpty()) {
+            $statusValidation = $this->resolveStatusValidation($erp, null);
+
             return [
-                'ok' => true, // Request ok, mas não achou venda
+                'ok' => true, // Request ok, mas nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o achou venda
                 'found' => false,
                 'match_100' => false,
-                'reason' => 'Nenhuma venda encontrada (Golden Key falhou, Fiscal Key falhou, Heurística vazia).',
+                'reason' => $isCancelled
+                    ? 'Venda cancelada no ERP sem correspondencia no banco (UUID/chave fiscal/heuristica).'
+                    : 'Nenhuma venda encontrada (Golden Key falhou, Fiscal Key falhou, HeurÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­stica vazia).',
+                'status_erp' => $statusValidation['status_erp'],
+                'status_db' => $statusValidation['status_db'],
+                'expected_status_db' => $statusValidation['expected_status_db'],
+                'status_match' => $statusValidation['status_match'],
                 'search' => [
                     'store_pdv_id' => $storePdvId,
                     'erp_id' => $erpId,
@@ -187,17 +207,17 @@ class PdvSaleValidator
             ];
         }
 
-        // 6) Desempate/validação 100% por itens+pagamentos
-        // Assinaturas já calculadas acima
+        // 6) Desempate/validaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o 100% por itens+pagamentos
+        // Assinaturas jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ calculadas acima
 
         $ranked = [];
         foreach ($candidates as $venda) {
             /** @var PdvVenda $venda */
-            // Load manual dos relacionamentos com chave composta e cálculo de assinaturas DB
+            // Load manual dos relacionamentos com chave composta e cÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡lculo de assinaturas DB
             // (Agora feito dentro de enrichMatchData ou helper, mas aqui precisamos dos sigs para ranking)
 
-            // Vamos usar o enrichMatchData para carregar relações se ainda não carregadas?
-            // Não, o enrichMatchData formata para output. Aqui precisamos comparar.
+            // Vamos usar o enrichMatchData para carregar relaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes se ainda nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o carregadas?
+            // NÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o, o enrichMatchData formata para output. Aqui precisamos comparar.
             // Vou duplicar o load/sig aqui ou encapsular?
             // Melhor encapsular o Load.
 
@@ -206,7 +226,7 @@ class PdvSaleValidator
             $dbItemSig = $this->dbItemsSignature($venda);
             $dbPaySig = $this->dbPaymentsSignature($venda);
 
-            // Comparação de arrays ordenados
+            // ComparaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o de arrays ordenados
             $itemsExact = ($erpItemSig == $dbItemSig);
             $payExact = ($erpPaySig == $dbPaySig);
 
@@ -232,7 +252,7 @@ class PdvSaleValidator
         // preferir o primeiro match_100
         $best100 = collect($ranked)->firstWhere('match_100', true);
 
-        // Se não tem match 100, pega o primeiro da lista (que já bateu total e horario)
+        // Se nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o tem match 100, pega o primeiro da lista (que jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ bateu total e horario)
         $bestCandidate = $best100 ?? $ranked[0];
 
         // Enrich best match
@@ -246,10 +266,19 @@ class PdvSaleValidator
             }
         }
 
+        $statusValidation = $this->resolveStatusValidation(
+            $erp,
+            data_get($bestCandidate, 'db_details.venda.status')
+        );
+
         return [
             'ok' => true,
             'found' => true,
             'match_100' => (bool) $best100,
+            'status_erp' => $statusValidation['status_erp'],
+            'status_db' => $statusValidation['status_db'],
+            'expected_status_db' => $statusValidation['expected_status_db'],
+            'status_match' => $statusValidation['status_match'],
             'best_match' => $bestCandidate,
             'comparison' => $comparison,
             'all_candidates_count' => count($ranked),
@@ -279,15 +308,15 @@ class PdvSaleValidator
                 return strtolower(trim($uuid));
         }
 
-        // Tenta pegar de campos de usuário da operação (se existirem com esse nome no futuro)
-        // Por hora, apenas Itens.VendedorId é garantido pelo exemplo do usuário.
+        // Tenta pegar de campos de usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio da operaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o (se existirem com esse nome no futuro)
+        // Por hora, apenas Itens.VendedorId ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© garantido pelo exemplo do usuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio.
 
         return null;
     }
 
     private function buildMatchResult(PdvVenda $venda, string $matchType, $erpId, $erpTotal, $erpItemSig, $erpPaySig, $erpLojaUuid, $erpVendedorUuid, array $erp): array
     {
-        // Carregar relações para calcular assinaturas DB e enriquecer output
+        // Carregar relaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes para calcular assinaturas DB e enriquecer output
         $this->loadRelationsManual($venda);
 
         $dbItemSig = $this->dbItemsSignature($venda);
@@ -319,12 +348,17 @@ class PdvSaleValidator
 
         $enriched = $this->enrichMatchData($venda);
         $comparison = $this->buildComparison($erp, $venda);
+        $statusValidation = $this->resolveStatusValidation($erp, $venda->status ?? null);
 
         return [
             'ok' => true,
             'found' => true,
             'match_100' => true,
             'content_match' => ($itemsExact && $payExact),
+            'status_erp' => $statusValidation['status_erp'],
+            'status_db' => $statusValidation['status_db'],
+            'expected_status_db' => $statusValidation['expected_status_db'],
+            'status_match' => $statusValidation['status_match'],
             'comparison' => $comparison,
             'best_match' => [
                 'pdv_venda_id' => $venda->id,
@@ -337,6 +371,9 @@ class PdvSaleValidator
                 'payments_exact' => $payExact,
                 'store_identity_match' => $storeIdentityMatch,
                 'seller_identity_match' => $sellerIdentityMatch,
+                'status_match' => $statusValidation['status_match'],
+                'expected_status_db' => $statusValidation['expected_status_db'],
+                'status_db' => $statusValidation['status_db'],
                 'db_details' => $enriched,
             ],
             'all_candidates_count' => 1,
@@ -414,7 +451,7 @@ class PdvSaleValidator
             return 13;
         if (str_contains($lojaNome, 'iTuntz'))
             return 4;
-        if (str_contains($lojaNome, 'Loja 5') || str_contains($lojaNome, 'Komprão'))
+        if (str_contains($lojaNome, 'Loja 5') || str_contains($lojaNome, 'KomprÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o'))
             return 7;
         if (str_contains($lojaNome, 'Loja 7') || str_contains($lojaNome, 'Bombinhas'))
             return 6;
@@ -434,7 +471,7 @@ class PdvSaleValidator
                 'total' => round((float) data_get($i, 'ValorTotalLiquido', 0), 2),
             ];
         }
-        // Ordenar para garantir comparação consistente
+        // Ordenar para garantir comparaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o consistente
         usort($sig, fn($a, $b) => $a['codigo'] <=> $b['codigo']);
         return $sig;
     }
@@ -449,7 +486,7 @@ class PdvSaleValidator
                 $sig[] = [
                     'meio' => $this->normalizePaymentName($desc),
                     'valor' => round((float) data_get($p, 'Valor', 0), 2),
-                    // Troco geralmente é 0 no item, mas vamos considerar
+                    // Troco geralmente ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© 0 no item, mas vamos considerar
                     // 'troco' => round((float) data_get($p, 'Troco', 0), 2), 
                 ];
             }
@@ -508,7 +545,7 @@ class PdvSaleValidator
         $turno = $venda->turno;
         $this->loadRelationsManual($venda);
 
-        // ── Store info from stores table ──
+        // ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Store info from stores table ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
         $storeInfo = null;
         if ($venda->store_id) {
             $storeInfo = DB::table('stores')
@@ -558,7 +595,7 @@ class PdvSaleValidator
             ];
         })->values()->toArray();
 
-        // ── Summary ──
+        // ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Summary ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
         $itensCount = count($itemsFormatted);
         $itensQtdTotal = round(array_sum(array_column($itemsFormatted, 'qtd')), 3);
         $itensValorTotal = round(array_sum(array_column($itemsFormatted, 'total')), 2);
@@ -582,6 +619,7 @@ class PdvSaleValidator
                 'turno_seq' => $venda->turno_seq,
                 'data_hora' => $venda->data_hora?->toIso8601String(),
                 'total' => (float) $venda->total,
+                'status' => $venda->status ?? null,
                 'erp_operacao_uuid' => $venda->erp_operacao_uuid,
                 'erp_loja_uuid' => $venda->erp_loja_uuid,
                 'fiscal' => [
@@ -616,11 +654,11 @@ class PdvSaleValidator
     {
         $this->loadRelationsManual($venda);
 
-        // ── Seller resolution ──
+        // ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Seller resolution ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
         $sellerGuids = $venda->itens->pluck('vendedor_guid')->filter()->unique()->values()->all();
         $sellerMap = $this->resolveSellersByGuids($sellerGuids);
 
-        // ── 1. Operação ──
+        // ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ 1. OperaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
         $erpUuid = strtolower(trim(data_get($erp, 'Id') ?? ''));
         $dbUuid = strtolower(trim($venda->erp_operacao_uuid ?? ''));
         $erpTotal = (float) (data_get($erp, 'ValorTotalLiquido') ?? 0);
@@ -651,7 +689,7 @@ class PdvSaleValidator
             ],
         ];
 
-        // ── 2. Loja ──
+        // ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ 2. Loja ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
         $erpLojaUuid = strtolower(trim(data_get($erp, 'LojaId') ?? data_get($erp, 'Loja.Id') ?? data_get($erp, 'Turno.LojaId') ?? ''));
         $dbLojaUuid = strtolower(trim($venda->erp_loja_uuid ?? ''));
         $loja = $venda->loja;
@@ -670,7 +708,7 @@ class PdvSaleValidator
             'match' => $erpLojaUuid && $dbLojaUuid && $erpLojaUuid === $dbLojaUuid,
         ];
 
-        // ── 3. Vendedor (from first item) ──
+        // ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ 3. Vendedor (from first item) ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
         $erpVendedorGuid = strtolower(trim(data_get($erp, 'Itens.0.VendedorId') ?? ''));
         $erpVendedorNome = data_get($erp, 'Itens.0.NomeDoVendedor');
         $dbFirstItem = $venda->itens->first();
@@ -692,7 +730,7 @@ class PdvSaleValidator
             'match' => $erpVendedorGuid && $dbVendedorGuid && $erpVendedorGuid === $dbVendedorGuid,
         ];
 
-        // ── 4. Fiscal ──
+        // ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ 4. Fiscal ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
         $erpChave = data_get($erp, 'DocumentosFiscais.0.Chave');
         $dbChave = $venda->nfce_chave;
 
@@ -712,7 +750,7 @@ class PdvSaleValidator
             'match' => $erpChave && $dbChave && $erpChave === $dbChave,
         ];
 
-        // ── 5. Itens (side by side, matched by codigo) ──
+        // ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ 5. Itens (side by side, matched by codigo) ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
         $erpItems = collect(data_get($erp, 'Itens', []))->sortBy('OrdemDeLancamento')->values();
         $dbItems = $venda->itens->sortBy(fn($i) => $i->line_no ?? $i->id_item ?? 0)->values();
 
@@ -759,7 +797,7 @@ class PdvSaleValidator
             ];
         }
 
-        // ── 6. Pagamentos ──
+        // ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ 6. Pagamentos ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
         $erpPayGroups = collect(data_get($erp, 'MeiosDePagamentosAgrupados', []));
         $erpPays = collect();
         foreach ($erpPayGroups as $g) {
@@ -802,7 +840,7 @@ class PdvSaleValidator
             ];
         }
 
-        // ── Summary flags ──
+        // ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Summary flags ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
         $allItemsMatch = collect($itensSection)->every(fn($i) => $i['match']);
         $allPaysMatch = collect($pagamentosSection)->every(fn($p) => $p['match']);
 
@@ -824,6 +862,72 @@ class PdvSaleValidator
                 'perfect' => $operacao['match']['uuid'] && $operacao['match']['total'] && $lojaSection['match'] && $fiscalSection['match'] && $allItemsMatch && $allPaysMatch,
             ],
         ];
+    }
+
+    /**
+     * @return array{status_erp:string,status_db:string|null,expected_status_db:string|null,status_match:bool|null}
+     */
+    private function resolveStatusValidation(array $erp, ?string $dbStatus): array
+    {
+        $statusErp = $this->resolveErpStatusLabel($erp);
+        $expectedDbStatus = $this->resolveExpectedDbStatus($erp);
+        $normalizedDbStatus = $this->normalizeDbStatus($dbStatus);
+
+        $statusMatch = null;
+        if ($expectedDbStatus !== null && $normalizedDbStatus !== null) {
+            $statusMatch = $expectedDbStatus === $normalizedDbStatus;
+        }
+
+        return [
+            'status_erp' => $statusErp,
+            'status_db' => $normalizedDbStatus,
+            'expected_status_db' => $expectedDbStatus,
+            'status_match' => $statusMatch,
+        ];
+    }
+
+    private function resolveErpStatusLabel(array $erp): string
+    {
+        if ((bool) data_get($erp, 'Cancelada', false)) {
+            return 'CANCELLED';
+        }
+
+        if ((bool) data_get($erp, 'Concluida', false)) {
+            return 'COMPLETED';
+        }
+
+        return 'UNKNOWN';
+    }
+
+    private function resolveExpectedDbStatus(array $erp): ?string
+    {
+        if ((bool) data_get($erp, 'Cancelada', false)) {
+            return 'CANCELADO';
+        }
+
+        if ((bool) data_get($erp, 'Concluida', false)) {
+            return 'CONCLUIDO';
+        }
+
+        return null;
+    }
+
+    private function normalizeDbStatus(?string $status): ?string
+    {
+        if ($status === null) {
+            return null;
+        }
+
+        $normalized = strtoupper(trim($status));
+        if ($normalized === '') {
+            return null;
+        }
+
+        return match ($normalized) {
+            'CANCELADA', 'CANCELADO', 'CANCELLED' => 'CANCELADO',
+            'CONCLUIDA', 'CONCLUIDO', 'COMPLETED' => 'CONCLUIDO',
+            default => $normalized,
+        };
     }
 
     /**

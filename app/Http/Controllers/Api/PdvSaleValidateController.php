@@ -384,7 +384,7 @@ class PdvSaleValidateController extends Controller
 
             $results[] = [
                 'input_id' => $key,
-                'sale_summary' => $this->buildSaleSummary($item, $storeName),
+                'sale_summary' => $this->buildSaleSummary($item, $storeName, $res),
                 'validation' => $res,
             ];
         }
@@ -395,7 +395,7 @@ class PdvSaleValidateController extends Controller
     /**
      * Build a human-readable summary for a single ERP sale item.
      */
-    private function buildSaleSummary(array $item, ?string $storeName): array
+    private function buildSaleSummary(array $item, ?string $storeName, array $validation = []): array
     {
         // Format date: "16/02/2026 às 14:50"
         $formattedDate = null;
@@ -413,6 +413,8 @@ class PdvSaleValidateController extends Controller
         $turnoLabel = $sequencial ? "{$sequencial}º Turno" : null;
 
         $lojaId = $item['Turno']['LojaId'] ?? null;
+        $foundInDb = (bool) data_get($validation, 'found', false)
+            || data_get($validation, 'best_match.pdv_venda_id') !== null;
 
         return [
             'codigo' => $item['CodigoDaOperacao'] ?? null,
@@ -426,7 +428,7 @@ class PdvSaleValidateController extends Controller
             'turno_id' => $item['Turno']['Id'] ?? null,
             'loja_erp_id' => $lojaId,
             'loja_nome' => $storeName,
-            'found_in_db' => $storeName !== null,
+            'found_in_db' => $foundInDb,
             'cancelada' => $item['Cancelada'] ?? false,
             'concluida' => $item['Concluida'] ?? null,
             'tipo' => $item['TipoDaOperacao'] ?? null,
