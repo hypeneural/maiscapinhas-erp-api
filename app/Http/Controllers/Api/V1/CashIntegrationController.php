@@ -63,20 +63,27 @@ class CashIntegrationController extends Controller
                 'system_total_caixa' => 0.00,
                 'system_total_loja' => 0.00,
                 'declared_total' => 0.00,
+                'falta_total' => 0.00,
+                'sobra_total' => 0.00,
+                'entries_expected' => 0.00,
                 'declared_consistent' => true,
                 'canais_presentes' => [],
                 'payments_sistema' => [],
                 'payments_declarado' => [],
+                'payments_falta' => [],
+                'payments_sobra' => [],
                 'closures_found' => 0,
                 'details' => [],
             ]);
         }
 
         // 3. Agregar totais de todos os fechamentos no período
-        $systemTotal = $closures->sum('totais.sistema_unificado');
         $systemCaixa = $closures->sum('totais.sistema_caixa');
-        $systemLoja = $closures->sum('totais.sistema_loja');
+        $systemLoja = $closures->sum('totais.loja_total_sistema_raw');
+        $entriesExpected = $closures->sum('totais.entries_expected');
         $declaredTotal = $closures->sum('totais.declarado');
+        $faltaTotal = $closures->sum('totais.falta');
+        $sobraTotal = $closures->sum('totais.sobra');
         $declaredConsistent = $closures->every('totais.declared_consistent');
 
         // Agregar pagamentos sistema (somar por id_finalizador entre closures)
@@ -108,6 +115,38 @@ class CashIntegrationController extends Controller
             })
             ->values();
 
+        // Agregar pagamentos falta (somar por id_finalizador entre closures)
+        $paymentsFalta = $closures
+            ->flatMap(fn($c) => $c['pagamentos']['falta'])
+            ->groupBy('id_finalizador')
+            ->map(function ($group) {
+                $first = $group->first();
+                return [
+                    'id_finalizador' => $first['id_finalizador'],
+                    'label' => $first['meio_pagamento'],
+                    'value' => (float) $group->sum('total'),
+                ];
+            })
+            ->values()
+            ->filter(fn($p) => $p['value'] > 0)
+            ->values();
+
+        // Agregar pagamentos sobra (somar por id_finalizador entre closures)
+        $paymentsSobra = $closures
+            ->flatMap(fn($c) => $c['pagamentos']['sobra'])
+            ->groupBy('id_finalizador')
+            ->map(function ($group) {
+                $first = $group->first();
+                return [
+                    'id_finalizador' => $first['id_finalizador'],
+                    'label' => $first['meio_pagamento'],
+                    'value' => (float) $group->sum('total'),
+                ];
+            })
+            ->values()
+            ->filter(fn($p) => $p['value'] > 0)
+            ->values();
+
         // Todos os canais presentes
         $canais = $closures
             ->flatMap(fn($c) => $c['canais_presentes'])
@@ -115,15 +154,20 @@ class CashIntegrationController extends Controller
             ->values();
 
         return $this->success([
-            'system_total' => (float) $systemTotal,
+            'system_total' => (float) $entriesExpected,
             'system_total_caixa' => (float) $systemCaixa,
             'system_total_loja' => (float) $systemLoja,
             'declared_total' => (float) $declaredTotal,
+            'falta_total' => (float) $faltaTotal,
+            'sobra_total' => (float) $sobraTotal,
+            'entries_expected' => (float) $entriesExpected,
             'declared_consistent' => $declaredConsistent,
             'has_loja_sales' => $systemLoja > 0,
             'canais_presentes' => $canais,
             'payments_sistema' => $paymentsSistema,
             'payments_declarado' => $paymentsDeclarado,
+            'payments_falta' => $paymentsFalta,
+            'payments_sobra' => $paymentsSobra,
             // Backwards-compatible fields
             'payments' => $paymentsSistema->map(fn($p) => [
                 'label' => $p['label'],
@@ -135,13 +179,20 @@ class CashIntegrationController extends Controller
                 'sequencial' => $c['sequencial'],
                 'periodo' => $c['periodo'],
                 'sistema_caixa' => $c['totais']['sistema_caixa'],
-                'sistema_loja' => $c['totais']['sistema_loja'],
-                'sistema_unificado' => $c['totais']['sistema_unificado'],
+                'sistema_loja' => $c['totais']['loja_total_sistema_raw'],
+                'entries_expected' => $c['totais']['entries_expected'],
                 'declarado' => $c['totais']['declarado'],
                 'falta' => $c['totais']['falta'],
                 'sobra' => $c['totais']['sobra'],
                 'operador' => $c['operador_nome'],
+                'responsavel' => [
+                    'nome' => $c['responsavel_nome'] ?? null,
+                    'guid' => $c['responsavel_guid'] ?? null,
+                    'login' => $c['responsavel_login'] ?? null,
+                ],
                 'canais' => $c['canais_presentes'],
+                'data_hora_inicio' => $c['data_hora_inicio'],
+                'data_hora_termino' => $c['data_hora_termino'],
             ])->values(),
         ]);
     }
