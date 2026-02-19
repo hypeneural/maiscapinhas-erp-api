@@ -73,6 +73,11 @@ class Store extends Model
         return $this->hasMany(CashShift::class);
     }
 
+    public function pdvTurnos(): HasMany
+    {
+        return $this->hasMany(PdvTurno::class, 'store_id');
+    }
+
     public function targetsDaily(): HasMany
     {
         return $this->hasMany(TargetDaily::class);
