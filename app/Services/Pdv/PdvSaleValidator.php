@@ -463,14 +463,46 @@ class PdvSaleValidator
                 return $preferredFromMappings;
             }
 
-            // Check pdv_lojas direct table
-            $pdvLojaIds = DB::table('pdv_lojas')
-                ->whereRaw('LOWER(guid_loja) = ?', [$guidLojaLower])
-                ->pluck('id_ponto_venda')
-                ->map(fn($id) => (int) $id)
-                ->filter(fn($id) => $id > 0)
-                ->values()
-                ->all();
+            // Resolve by stores.guid first, then project to pdv_store_mappings by store_id.
+            $storeIdFromGuid = DB::table('stores')
+                ->whereRaw('LOWER(guid) = ?', [$guidLojaLower])
+                ->value('id');
+
+            if ($storeIdFromGuid !== null) {
+                $mappingIdsByStore = DB::table('pdv_store_mappings')
+                    ->where('store_id', (int) $storeIdFromGuid)
+                    ->where('active', true)
+                    ->pluck('pdv_store_id')
+                    ->map(fn($id) => (int) $id)
+                    ->filter(fn($id) => $id > 0)
+                    ->values()
+                    ->all();
+
+                $preferredFromStoreGuid = $this->pickPreferredStorePdvId($mappingIdsByStore);
+                if ($preferredFromStoreGuid !== null) {
+                    return $preferredFromStoreGuid;
+                }
+            }
+
+            // Check pdv_lojas direct table (support both guid_loja and legacy guid column names).
+            $pdvLojaIds = [];
+            if (\Illuminate\Support\Facades\Schema::hasColumn('pdv_lojas', 'guid_loja')) {
+                $pdvLojaIds = DB::table('pdv_lojas')
+                    ->whereRaw('LOWER(guid_loja) = ?', [$guidLojaLower])
+                    ->pluck('id_ponto_venda')
+                    ->map(fn($id) => (int) $id)
+                    ->filter(fn($id) => $id > 0)
+                    ->values()
+                    ->all();
+            } elseif (\Illuminate\Support\Facades\Schema::hasColumn('pdv_lojas', 'guid')) {
+                $pdvLojaIds = DB::table('pdv_lojas')
+                    ->whereRaw('LOWER(guid) = ?', [$guidLojaLower])
+                    ->pluck('id_ponto_venda')
+                    ->map(fn($id) => (int) $id)
+                    ->filter(fn($id) => $id > 0)
+                    ->values()
+                    ->all();
+            }
 
             $preferredFromPdvLojas = $this->pickPreferredStorePdvId($pdvLojaIds);
             if ($preferredFromPdvLojas !== null) {
@@ -479,7 +511,7 @@ class PdvSaleValidator
         }
 
         // 2. Fallback to Name Matching (Legacy/V4)
-        $lojaNome = (string) (data_get($erp, 'Loja.Nome') ?? '');
+        $lojaNome = (string) (data_get($erp, 'Loja.Nome') ?? data_get($erp, 'NomeDaLoja') ?? '');
         if ($lojaNome) {
             $store = DB::table('pdv_lojas')
                 ->where('nome_hiper', $lojaNome)

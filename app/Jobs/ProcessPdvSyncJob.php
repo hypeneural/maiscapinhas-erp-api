@@ -987,7 +987,13 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
                 $storePdvId,
                 $storeId,
                 $userMappings,
-                ['vendas' => $snapshotVendas] // Wrap as 'vendas' for the method
+                [
+                    // Keep root store context so resolveErpLojaUuidForVenda() can
+                    // recover the canonical LojaId when snapshot entries carry
+                    // legacy numeric ErpLojaUuid (e.g. "9").
+                    'store' => data_get($payload, 'store', []),
+                    'vendas' => $snapshotVendas,
+                ]
             );
             return count($snapshotVendas);
         }
