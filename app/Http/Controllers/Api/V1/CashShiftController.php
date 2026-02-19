@@ -68,7 +68,9 @@ class CashShiftController extends Controller
         $request->validate([
             'store_id' => ['sometimes', 'integer', 'exists:stores,id'],
             'date' => ['sometimes', 'date'],
-            'status' => ['sometimes', 'string', 'in:open,closed,pending'],
+            'status' => ['sometimes', 'string', 'in:open,closed,pending,approved,rejected,submitted'],
+            'seller_id' => ['sometimes', 'integer', 'exists:users,id'],
+            'shift_code' => ['sometimes', 'string', 'in:1,2,3,M,T,N'],
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
         ]);
 
@@ -97,7 +99,21 @@ class CashShiftController extends Controller
         }
 
         if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
+            $status = $request->input('status');
+            // If checking for closing status, we might need to look at relationship
+            if (in_array($status, ['approved', 'rejected', 'submitted', 'draft'])) {
+                $query->whereHas('cashClosing', fn($q) => $q->where('status', $status));
+            } else {
+                $query->where('status', $status);
+            }
+        }
+
+        if ($request->filled('seller_id')) {
+            $query->where('seller_id', $request->input('seller_id'));
+        }
+
+        if ($request->filled('shift_code')) {
+            $query->where('shift_code', $request->input('shift_code'));
         }
 
         $perPage = $request->input('per_page', 25);
