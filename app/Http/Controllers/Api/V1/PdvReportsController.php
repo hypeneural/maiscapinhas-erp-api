@@ -499,7 +499,7 @@ class PdvReportsController extends Controller
     {
         $validated = $request->validated();
 
-        $storeId = isset($validated['store_id']) ? (int) $validated['store_id'] : null;
+        $storeId = $this->resolveStoreIdFilter(data_get($validated, 'store_id'));
         $storePdvId = isset($validated['store_pdv_id']) ? (int) $validated['store_pdv_id'] : null;
         $storeAlias = isset($validated['store_alias']) ? trim((string) $validated['store_alias']) : null;
         $scope = $this->resolveStoreScope($request, $storeId, $storePdvId, $storeAlias);
@@ -811,7 +811,7 @@ class PdvReportsController extends Controller
     {
         $validated = $request->validated();
 
-        $storeId = isset($validated['store_id']) ? (int) $validated['store_id'] : null;
+        $storeId = $this->resolveStoreIdFilter(data_get($validated, 'store_id'));
         $storePdvId = isset($validated['store_pdv_id']) ? (int) $validated['store_pdv_id'] : null;
         $storeAlias = isset($validated['store_alias']) ? trim((string) $validated['store_alias']) : null;
         if ($storeId === null && $storePdvId === null) {
@@ -1384,6 +1384,38 @@ class PdvReportsController extends Controller
         ];
     }
 
+    private function resolveStoreIdFilter(mixed $storeIdInput): ?int
+    {
+        if ($storeIdInput === null) {
+            return null;
+        }
+
+        if (is_int($storeIdInput)) {
+            return $storeIdInput > 0 ? $storeIdInput : null;
+        }
+
+        $normalized = trim((string) $storeIdInput);
+        if ($normalized === '') {
+            return null;
+        }
+
+        if (ctype_digit($normalized)) {
+            return (int) $normalized;
+        }
+
+        $storeId = DB::table('stores')
+            ->whereRaw('LOWER(guid) = ?', [strtolower($normalized)])
+            ->value('id');
+
+        if ($storeId === null) {
+            throw ValidationException::withMessages([
+                'store_id' => ['A loja informada em store_id nao foi encontrada.'],
+            ]);
+        }
+
+        return (int) $storeId;
+    }
+
     /**
      * @param array{store_id:int|null,store_pdv_id:int|null,allowed_store_ids:array<int,int>|null} $scope
      */
@@ -1700,7 +1732,7 @@ class PdvReportsController extends Controller
         $timezone = 'America/Sao_Paulo';
 
         // --- Resolve Store Scope ---
-        $storeId = isset($validated['store_id']) ? (int) $validated['store_id'] : null;
+        $storeId = $this->resolveStoreIdFilter(data_get($validated, 'store_id'));
         $storePdvId = isset($validated['store_pdv_id']) ? (int) $validated['store_pdv_id'] : null;
         $storeAlias = isset($validated['store_alias']) ? trim((string) $validated['store_alias']) : null;
         $scope = $this->resolveStoreScope($request, $storeId, $storePdvId, $storeAlias);

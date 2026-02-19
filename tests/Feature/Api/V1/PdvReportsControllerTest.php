@@ -526,6 +526,51 @@ test('pdv reports vendas applies payment filters id_finalizador and meio_pagamen
         ->assertJsonPath('filters.meio_pagamento', 'pix');
 });
 
+test('pdv reports vendas accepts store uuid in store_id filter', function () {
+    $user = User::factory()->create(['is_super_admin' => false]);
+    $storeGuid = '4dcbc02b-f765-4f2e-9ceb-ef8c14b40f80';
+    $store = Store::factory()->create(['guid' => $storeGuid]);
+    linkUserToStore($user, $store, 'admin');
+    mapPdvStore(13, $store);
+
+    seedPdvVenda([
+        'store_id' => $store->id,
+        'store_pdv_id' => 13,
+        'id_operacao' => 13620,
+        'canal' => 'HIPER_CAIXA',
+        'total' => 110.0,
+        'data_hora' => now()->subMinutes(10)->toDateTimeString(),
+    ]);
+    seedPdvVendaItem([
+        'store_id' => $store->id,
+        'store_pdv_id' => 13,
+        'id_operacao' => 13620,
+        'line_id' => 13620001,
+        'total' => 110.0,
+        'qtd' => 1.0,
+    ]);
+    seedPdvVendaPagamento([
+        'store_id' => $store->id,
+        'store_pdv_id' => 13,
+        'id_operacao' => 13620,
+        'line_id' => 13621001,
+        'valor' => 110.0,
+    ]);
+
+    actingAs($user)
+        ->getJson('/api/v1/pdv/reports/vendas?' . http_build_query([
+            'store_id' => $storeGuid,
+            'from' => now()->subDay()->toDateString(),
+            'to' => now()->toDateString(),
+            'sort' => 'desc',
+        ]))
+        ->assertStatus(200)
+        ->assertJsonPath('summary.total_vendas', 1)
+        ->assertJsonPath('data.0.id_operacao', 13620)
+        ->assertJsonPath('data.0.store_id', $store->id)
+        ->assertJsonPath('filters.store_id', $store->id);
+});
+
 test('pdv reports vendas detalhe returns venda with itens and pagamentos ordered by line_no', function () {
     $user = User::factory()->create(['is_super_admin' => false]);
     $seller = User::factory()->create();
@@ -615,6 +660,52 @@ test('pdv reports vendas detalhe returns venda with itens and pagamentos ordered
         ->assertJsonPath('data.summary.pagamentos.valor_total', 100.0);
 });
 
+test('pdv reports vendas detalhe accepts store uuid in store_id filter', function () {
+    $user = User::factory()->create(['is_super_admin' => false]);
+    $storeGuid = '4dcbc02b-f765-4f2e-9ceb-ef8c14b40f80';
+    $store = Store::factory()->create(['guid' => $storeGuid]);
+    linkUserToStore($user, $store, 'admin');
+    mapPdvStore(13, $store);
+
+    seedPdvVenda([
+        'store_id' => $store->id,
+        'store_pdv_id' => 13,
+        'id_operacao' => 13620,
+        'canal' => 'HIPER_CAIXA',
+        'total' => 90.0,
+        'data_hora' => now()->subMinutes(8)->toDateTimeString(),
+    ]);
+    seedPdvVendaItem([
+        'store_id' => $store->id,
+        'store_pdv_id' => 13,
+        'id_operacao' => 13620,
+        'line_id' => 13622001,
+        'line_no' => 1,
+        'total' => 90.0,
+        'qtd' => 1.0,
+    ]);
+    seedPdvVendaPagamento([
+        'store_id' => $store->id,
+        'store_pdv_id' => 13,
+        'id_operacao' => 13620,
+        'line_id' => 13623001,
+        'line_no' => 1,
+        'valor' => 90.0,
+        'troco' => 0.0,
+    ]);
+
+    actingAs($user)
+        ->getJson('/api/v1/pdv/reports/vendas/detalhe?' . http_build_query([
+            'store_id' => $storeGuid,
+            'canal' => 'HIPER_CAIXA',
+            'id_operacao' => 13620,
+        ]))
+        ->assertStatus(200)
+        ->assertJsonPath('data.venda.store_id', $store->id)
+        ->assertJsonPath('data.venda.id_operacao', 13620)
+        ->assertJsonPath('data.filters.store_id', $store->id);
+});
+
 test('pdv reports vendas detalhe returns 422 when store_pdv_id is ambiguous without store_alias or store_id', function () {
     $user = User::factory()->create(['is_super_admin' => false]);
     $storeA = Store::factory()->create();
@@ -633,6 +724,53 @@ test('pdv reports vendas detalhe returns 422 when store_pdv_id is ambiguous with
         ]))
         ->assertStatus(422)
         ->assertJsonPath('errors.store_pdv_id.0', 'store_pdv_id ambiguo. Informe store_id ou store_alias para desambiguar.');
+});
+
+test('pdv reports operacoes accepts store uuid in store_id filter', function () {
+    $user = User::factory()->create(['is_super_admin' => false]);
+    $storeGuid = '4dcbc02b-f765-4f2e-9ceb-ef8c14b40f80';
+    $store = Store::factory()->create(['guid' => $storeGuid]);
+    linkUserToStore($user, $store, 'admin');
+    mapPdvStore(13, $store);
+
+    seedPdvVenda([
+        'store_id' => $store->id,
+        'store_pdv_id' => 13,
+        'id_operacao' => 13620,
+        'canal' => 'HIPER_CAIXA',
+        'total' => 150.0,
+        'data_hora' => now()->subMinutes(5)->toDateTimeString(),
+    ]);
+    seedPdvVendaItem([
+        'store_id' => $store->id,
+        'store_pdv_id' => 13,
+        'id_operacao' => 13620,
+        'line_id' => 13624001,
+        'total' => 150.0,
+        'qtd' => 1.0,
+    ]);
+    seedPdvVendaPagamento([
+        'store_id' => $store->id,
+        'store_pdv_id' => 13,
+        'id_operacao' => 13620,
+        'line_id' => 13625001,
+        'valor' => 150.0,
+    ]);
+
+    actingAs($user)
+        ->getJson('/api/v1/pdv/reports/operacoes?' . http_build_query([
+            'store_id' => $storeGuid,
+            'tipo_operacao' => 'venda',
+            'from' => now()->subDay()->toDateString(),
+            'to' => now()->toDateString(),
+            'sort' => 'desc',
+        ]))
+        ->assertStatus(200)
+        ->assertJsonPath('summary.total_operacoes', 1)
+        ->assertJsonPath('summary.total_vendas', 1)
+        ->assertJsonPath('data.0.operacao_id', 13620)
+        ->assertJsonPath('data.0.store_id', $store->id)
+        ->assertJsonPath('filters.store_id', $store->id);
 });
 
 test('pdv reports ranking vendedores keeps aggregation consistency and canal filter', function () {
