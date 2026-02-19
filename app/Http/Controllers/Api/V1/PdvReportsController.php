@@ -96,7 +96,7 @@ class PdvReportsController extends Controller
     {
         $validated = $request->validated();
 
-        $storeId = isset($validated['store_id']) ? (int) $validated['store_id'] : null;
+        $storeId = $this->resolveStoreIdFilter(data_get($validated, 'store_id'));
         $storePdvId = isset($validated['store_pdv_id']) ? (int) $validated['store_pdv_id'] : null;
         $storeAlias = isset($validated['store_alias']) ? trim((string) $validated['store_alias']) : null;
         if ($storeId === null && $storePdvId === null) {
@@ -266,7 +266,7 @@ class PdvReportsController extends Controller
         $date = CarbonImmutable::parse((string) $validated['date'])->toDateString();
 
         // Reuse scope logic (validated in previous method, but we need to re-validate basic inputs)
-        $storeId = isset($validated['store_id']) ? (int) $validated['store_id'] : null;
+        $storeId = $this->resolveStoreIdFilter(data_get($validated, 'store_id'));
         $storePdvId = isset($validated['store_pdv_id']) ? (int) $validated['store_pdv_id'] : null;
         $storeAlias = isset($validated['store_alias']) ? trim((string) $validated['store_alias']) : null;
         if ($storeId === null && $storePdvId === null) {
@@ -1572,15 +1572,15 @@ class PdvReportsController extends Controller
     public function vendedores(Request $request): JsonResponse
     {
         $request->validate([
-            'store_id' => ['nullable', 'integer'],
+            'store_id' => ['nullable', 'string'],
         ]);
 
         $user = $request->user();
         $targetStoreIds = [];
 
         // 1. Determine Scope (Specific Store or All Allowed)
-        if ($request->has('store_id') && $request->input('store_id') !== null) {
-            $storeId = (int) $request->input('store_id');
+        if ($request->filled('store_id')) {
+            $storeId = $this->resolveStoreIdFilter($request->input('store_id'));
             if (!$user->isSuperAdmin() && !$user->hasAccessToStore($storeId)) {
                 return $this->success([]); // Or 403, but empty list is safer for dropdowns
             }
@@ -2077,10 +2077,13 @@ class PdvReportsController extends Controller
     public function meiosPagamento(Request $request): JsonResponse
     {
         $request->validate([
-            'store_id' => ['required', 'integer'],
+            'store_id' => ['required', 'string'],
         ]);
 
-        $storeId = (int) $request->input('store_id');
+        $storeId = $this->resolveStoreIdFilter($request->input('store_id'));
+        if ($storeId === null) {
+            return $this->success([]);
+        }
 
         // Resolver pdv_store_id via tabela de mappings
         $mapping = DB::table('pdv_store_mappings')

@@ -53,6 +53,7 @@ class StoreController extends Controller
         $stores = $query->get()
             ->map(fn(Store $store) => [
                 'id' => $store->id,
+                'guid' => $store->guid,
                 'name' => $store->name,
                 'city' => $store->city,
                 'role' => $user->isSuperAdmin() ? 'admin' : $user->roleInStore($store->id),
@@ -101,6 +102,7 @@ class StoreController extends Controller
 
         return $this->paginated($stores->through(fn(Store $store) => [
             'id' => $store->id,
+            'guid' => $store->guid,
             'name' => $store->name,
             'city' => $store->city,
         ]));
@@ -148,6 +150,7 @@ class StoreController extends Controller
 
         return $this->success([
             'id' => $store->id,
+            'guid' => $store->guid,
             'name' => $store->name,
             'codigo' => $store->codigo,
             'city' => $store->city,
@@ -411,5 +414,4 @@ class StoreController extends Controller
         return null;
     }
 }
-
 
