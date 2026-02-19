@@ -407,6 +407,6 @@ class CashClosingController extends Controller
             return $this->notFound('No closing found for this shift.');
         }
 
-        return $this->success($closing->load(['lines', 'cashShift.store', 'cashShift.seller', 'closedByUser']));
+        return $this->success($closing->load(['lines', 'cashShift.store', 'cashShift.seller', 'closedByUser', 'activities.causer']));
     }
 }
