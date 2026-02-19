@@ -7,8 +7,11 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
 use App\Models\CashShift;
+use App\Models\Store;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @group Turnos de Caixa
@@ -242,7 +245,7 @@ class CashShiftController extends Controller
     {
         $user = $request->user();
 
-        // Super admin sees all stores
+        // Permission & Store Filter Logic
         if ($user->isSuperAdmin()) {
             $userStoreIds = \App\Models\Store::where('active', true)->pluck('id')->toArray();
         } else {
@@ -265,31 +268,71 @@ class CashShiftController extends Controller
             return $this->forbidden('Você não tem acesso a esta loja.');
         }
 
-        $query = CashShift::with(['store:id,name', 'seller:id,name'])
-            ->whereIn('store_id', $storeId ? [$storeId] : $userStoreIds)
+        $targetStoreIds = $storeId ? [$storeId] : $userStoreIds;
+
+        // Query PdvTurno (fechado=1) LEFT JOIN CashShift
+        // This ensures we get ALL closed PDV shifts, even if they don't have a CashShift record yet.
+        $shifts = \Illuminate\Support\Facades\DB::table('pdv_turnos as pt')
+            ->select([
+                'pt.id as pdv_turno_id',
+                'pt.store_id',
+                's.name as store_name',
+                \Illuminate\Support\Facades\DB::raw('DATE(pt.data_hora_inicio) as date'),
+                'pt.sequencial',
+                'pt.responsavel_nome as pdv_seller_name',
+                'cs.id as cash_shift_id',
+                'cs.store_id as cs_store_id',
+                'cs.seller_id as cs_seller_id',
+                'u.name as cs_seller_name',
+                'cs.status as cash_shift_status',
+                'cc.status as closing_status'
+            ])
+            ->join('stores as s', 'pt.store_id', '=', 's.id')
+            ->leftJoin('cash_shifts as cs', function ($join) {
+                $join->on('pt.store_id', '=', 'cs.store_id')
+                    ->on(\Illuminate\Support\Facades\DB::raw('DATE(pt.data_hora_inicio)'), '=', 'cs.date')
+                    ->on(\Illuminate\Support\Facades\DB::raw('CAST(pt.sequencial AS CHAR)'), '=', 'cs.shift_code');
+            })
+            ->leftJoin('cash_closings as cc', 'cs.id', '=', 'cc.cash_shift_id')
+            ->leftJoin('users as u', 'cs.seller_id', '=', 'u.id')
+            ->where('pt.fechado', 1)
+            ->whereIn('pt.store_id', $targetStoreIds)
             ->where(function ($q) {
-                $q->whereDoesntHave('cashClosing')
-                    ->orWhereHas('cashClosing', fn($c) => $c->whereIn('status', ['draft', 'submitted']));
+                // Pending if:
+                // 1. Never started (cash_shift_id IS NULL)
+                // 2. OR Started but not fully closed/approved (cash_shift_status != closed)
+                $q->whereNull('cs.id')
+                    ->orWhere('cs.status', '!=', 'closed');
             })
             ->orderBy('date')
-            ->orderBy('shift_code');
-
-        $shifts = $query->get();
+            ->orderBy('pt.sequencial')
+            ->get();
 
         $today = now()->startOfDay();
-        $result = $shifts->map(function ($shift) use ($today) {
-            $shiftDate = \Carbon\Carbon::parse($shift->date);
+
+        $result = $shifts->map(function ($row) use ($today) {
+            $shiftDate = \Carbon\Carbon::parse($row->date);
             $daysPending = $shiftDate->diffInDays($today);
+            $sellerName = $row->cs_seller_name ?? $row->pdv_seller_name ?? 'N/A';
+            $status = $row->closing_status ?? 'not_started';
+
+            // Interpret status for UI
+            if ($status === 'draft')
+                $status = 'in_progress';
+            if (!$row->cash_shift_id)
+                $status = 'not_started';
 
             return [
-                'id' => $shift->id,
-                'date' => $shift->date,
-                'shift_code' => $shift->shift_code,
+                'id' => $row->cash_shift_id, // Null if not started
+                'pdv_turno_id' => $row->pdv_turno_id,
+                'date' => $row->date,
+                'shift_code' => (string) $row->sequencial,
                 'days_pending' => $daysPending,
                 'priority' => $daysPending > 2 ? 'high' : ($daysPending > 0 ? 'medium' : 'low'),
-                'store_name' => $shift->store->name,
-                'seller_name' => $shift->seller->name,
-                'status' => $shift->cashClosing?->status ?? 'not_started',
+                'store_name' => $row->store_name,
+                'seller_name' => $sellerName,
+                'status' => $status,
+                'action' => $row->cash_shift_id ? 'continue' : 'start',
             ];
         });
 
@@ -357,7 +400,11 @@ class CashShiftController extends Controller
 
         $shifts = CashShift::with(['store:id,name', 'seller:id,name', 'cashClosing.lines'])
             ->whereIn('store_id', $storeId ? [$storeId] : $userStoreIds)
-            ->whereHas('cashClosing.lines', fn($q) => $q->where('diff_value', '!=', 0))
+            // Only list shifts that are waiting for approval (SUBMITTED)
+            ->whereHas('cashClosing', function ($q) {
+                $q->where('status', \App\Models\CashClosing::STATUS_SUBMITTED)
+                    ->whereHas('lines', fn($l) => $l->where('diff_value', '!=', 0));
+            })
             ->orderByDesc('date')
             ->get();
 

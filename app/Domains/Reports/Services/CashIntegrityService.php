@@ -93,9 +93,14 @@ class CashIntegrityService
             ->where('status', CashClosing::STATUS_SUBMITTED)
             ->count();
 
-        // Total de turnos no período
-        $totalShifts = CashShift::where('store_id', $storeId)
-            ->whereBetween('date', [$startOfMonth->format('Y-m-d'), $endOfMonth->format('Y-m-d')])
+        // Total de turnos no período (Baseado na realidade do PDV e não apenas no que foi iniciado)
+        $totalShifts = DB::table('pdv_turnos')
+            ->where('store_id', $storeId)
+            ->where('fechado', 1)
+            ->whereBetween('data_hora_inicio', [
+                $startOfMonth->format('Y-m-d 00:00:00'),
+                $endOfMonth->format('Y-m-d 23:59:59')
+            ])
             ->count();
 
         // Fechamentos concluídos

@@ -36,11 +36,31 @@ class CashClosingService
 
             // Recalculate diff values
             $this->recalculateDiffs($closing);
+            $totalDiff = $closing->getTotalDifference();
 
-            // Note: Justification is now optional at shift level
-            // The 'justified' flag is used for bonus calculation
+            // CENÁRIO A: Auto-Aprovação (Diferença Zero)
+            if (abs($totalDiff) < 0.01) {
+                // Se não houver divergência, aprovamos automaticamente
+                // O status de 'justified' é irrelevante aqui, mas podemos marcar como true por consistência
+                $closing->justified = true;
+                $closing->save();
 
-            // Update status
+                return $this->approve($closing, $submittedBy);
+            }
+
+            // CENÁRIO B/C: Divergência
+            // Exige justificativa obrigatória
+            if (!$closing->justification_text && !$closing->areDivergentLinesJustified()) {
+                // Fallback check: ensure strictly one form of justification exists
+                // Note: hasJustifiedLines() must be implemented or verified. 
+                // Assuming checking justification_text first.
+                // If the logic requires justification text on the closing header for ANY divergence:
+                throw ValidationException::withMessages([
+                    'justification_text' => ['A justificativa é obrigatória quando há divergência de valores.']
+                ]);
+            }
+
+            // Update status to SUBMITTED (Awaiting Manager)
             $beforeStatus = $closing->status;
             $closing->status = CashClosing::STATUS_SUBMITTED;
             $closing->version++;
@@ -55,6 +75,7 @@ class CashClosingService
                 'version' => $closing->version,
                 'submitted_by' => $submittedBy->id,
                 'previous_status' => $beforeStatus,
+                'total_diff' => $totalDiff
             ]);
 
             return $closing->fresh(['lines']);

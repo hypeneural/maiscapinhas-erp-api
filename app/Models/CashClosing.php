@@ -146,6 +146,27 @@ class CashClosing extends Model
         return $this->hasDivergence() && !$this->justified;
     }
 
+    /**
+     * Check if all divergent lines have justification text.
+     */
+    public function areDivergentLinesJustified(): bool
+    {
+        // If there are no lines, technically true (no divergence to justify)
+        if ($this->lines->isEmpty()) {
+            return true;
+        }
+
+        // Check if ANY line has divergence but NO justification
+        $hasUnjustifiedLine = $this->lines
+            ->where(function ($line) {
+                // Must have divergence AND (empty text)
+                return $line->hasDivergence() && !$line->isJustified();
+            })
+            ->isNotEmpty();
+
+        return !$hasUnjustifiedLine;
+    }
+
     public function getTotalDifference(): float
     {
         return (float) $this->lines()->sum('diff_value');
