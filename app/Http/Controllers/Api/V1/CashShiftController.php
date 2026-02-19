@@ -416,9 +416,10 @@ class CashShiftController extends Controller
             $totalDivergence += $divergence;
             $daysPending = \Carbon\Carbon::parse($shift->date)->diffInDays($today);
 
-            $hasJustification = $shift->cashClosing?->lines
-                ->where('diff_value', '!=', 0)
-                ->every(fn($line) => !empty($line->justification_text));
+            $hasJustification = !empty($shift->cashClosing->justification_text) ||
+                $shift->cashClosing?->lines
+                    ->where('diff_value', '!=', 0)
+                    ->every(fn($line) => !empty($line->justification_text));
 
             return [
                 'id' => $shift->id,
