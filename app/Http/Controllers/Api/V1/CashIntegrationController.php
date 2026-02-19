@@ -401,9 +401,10 @@ class CashIntegrationController extends Controller
         if ($storeId && $date) {
             $shifts = PdvTurno::where('store_id', (int) $storeId)
                 ->whereDate('data_hora_inicio', $date)
-                ->select('periodo')
+                ->whereNotNull('sequencial')
+                ->select('sequencial')
                 ->distinct()
-                ->pluck('periodo')
+                ->pluck('sequencial')
                 ->sort()
                 ->values();
         }
@@ -422,7 +423,7 @@ class CashIntegrationController extends Controller
             // Find the specific turno to get the responsible
             $turno = PdvTurno::where('store_id', (int) $storeId)
                 ->whereDate('data_hora_inicio', $date)
-                ->where('periodo', $shiftCode)
+                ->where('sequencial', $shiftCode)
                 ->latest('id') // In case of duplicates, take most recent
                 ->first();
 

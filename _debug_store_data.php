@@ -20,6 +20,8 @@ if (!$storePdvId) {
     exit;
 }
 
+
+
 $count = DB::table('pdv_venda_itens')->where('store_pdv_id', $storePdvId)->count();
 echo "Itens de venda encontrados para store_pdv_id {$storePdvId}: {$count}\n";
 
