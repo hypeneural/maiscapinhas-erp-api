@@ -6,12 +6,14 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
+use App\Models\CashShift;
 use App\Models\PdvTurno;
 use App\Models\Store;
 use App\Models\User;
 use App\Services\Pdv\PdvClosureUnifiedService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @group Fechamento de Caixa
@@ -376,8 +378,21 @@ class CashIntegrationController extends Controller
         $date = $request->input('date');
         $shiftCode = $request->input('shift_code');
 
-        // 1. Available Stores (that have any closures in pdv_turnos)
-        $storesQuery = Store::whereHas('pdvTurnos');
+        // Logic to filter ONLY PdvTurnos that do NOT have a corresponding CashShift
+        // This ensures cascading filters only show "Available/Pending" options.
+        $pendingFilter = function ($query) {
+            $query->where('fechado', 1)
+                ->whereNotExists(function ($q) {
+                    $q->select(\Illuminate\Support\Facades\DB::raw(1))
+                        ->from('cash_shifts')
+                        ->whereColumn('cash_shifts.store_id', 'pdv_turnos.store_id')
+                        ->whereRaw('cash_shifts.date = DATE(pdv_turnos.data_hora_inicio)')
+                        ->whereRaw('cash_shifts.shift_code = CAST(pdv_turnos.sequencial as CHAR)');
+                });
+        };
+
+        // 1. Available Stores (that have any PENDING closures in pdv_turnos)
+        $storesQuery = Store::whereHas('pdvTurnos', $pendingFilter);
 
         if (!$user->isSuperAdmin()) {
             $storesQuery->whereIn('id', $user->storeUsers()->pluck('store_id'));
@@ -389,7 +404,7 @@ class CashIntegrationController extends Controller
         $dates = [];
         if ($storeId) {
             $dates = PdvTurno::where('store_id', (int) $storeId)
-                // We generally only want dates that have at least one CLOSED or synced turno
+                ->where($pendingFilter)
                 ->selectRaw('DATE(data_hora_inicio) as date')
                 ->distinct()
                 ->orderBy('date', 'desc')
@@ -402,6 +417,7 @@ class CashIntegrationController extends Controller
             $shifts = PdvTurno::where('store_id', (int) $storeId)
                 ->whereDate('data_hora_inicio', $date)
                 ->whereNotNull('sequencial')
+                ->where($pendingFilter)
                 ->select('sequencial')
                 ->distinct()
                 ->pluck('sequencial')
