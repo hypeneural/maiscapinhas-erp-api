@@ -66,6 +66,14 @@ class HiperEndpointSeeder extends Seeder
                     ],
                 ],
             ],
+            [
+                'key' => 'operacoes.detalhes.fechamento',
+                'method' => 'GET',
+                'path' => '/operacoes/fechamento-de-caixa/api/caixa/{id}',
+                'headers' => null,
+                'query_template' => null,
+                'body_template' => null,
+            ],
         ];
 
         foreach ($endpoints as $ep) {

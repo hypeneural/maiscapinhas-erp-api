@@ -263,6 +263,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/sales/validate', [\App\Http\Controllers\Api\PdvSaleValidateController::class, 'validateSingle'])->name('sales.validate');
         Route::post('/sales/validate-batch', [\App\Http\Controllers\Api\PdvSaleValidateController::class, 'validateBatch'])->name('sales.validate-batch');
         Route::post('/closures/validate-batch', [\App\Http\Controllers\Api\PdvClosureValidateController::class, 'validateBatch'])->name('closures.validate-batch');
+        Route::post('/closures/compare-detail', [\App\Http\Controllers\Api\PdvClosureValidateController::class, 'compareDetail'])->name('closures.compare-detail');
     });
 
     // ============================================

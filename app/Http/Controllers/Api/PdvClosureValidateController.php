@@ -13,8 +13,326 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 
+use App\Services\Pdv\PdvClosureUnifiedService;
+
 class PdvClosureValidateController extends Controller
 {
+    public function __construct(
+        private readonly PdvClosureUnifiedService $closureService,
+    ) {
+    }
+
+    /**
+     * Comparação detalhada: ERP Online × Banco Local
+     *
+     * Busca os dados detalhados de um fechamento de caixa no Hiper ERP (via
+     * operacoes.detalhes.fechamento) e compara lado a lado com os dados
+     * unificados locais (via PdvClosureUnifiedService).
+     *
+     * POST /api/v1/pdv/closures/compare-detail
+     */
+    public function compareDetail(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'connection_id' => ['nullable', 'integer', 'exists:hiper_connections,id'],
+            'turno_id' => ['required', 'string'],   // UUID do fechamento no ERP
+            'closure_uuid' => ['required', 'string'],   // UUID do closure no banco local
+        ]);
+
+        // ── 1. Fetch ERP data ──
+        $erpResult = $this->fetchErpClosureDetail($data);
+        if (!$erpResult['ok']) {
+            return response()->json($erpResult, $erpResult['status'] ?? 502);
+        }
+        $erpData = $erpResult['data'];
+
+        // ── 2. Fetch local unified data ──
+        $closureUuid = $data['closure_uuid'];
+        $unified = $this->closureService->getUnifiedByClosureUuid($closureUuid);
+
+        if (!$unified) {
+            return response()->json([
+                'ok' => false,
+                'error' => "closure_uuid '{$closureUuid}' não encontrado no banco local.",
+            ], 404);
+        }
+
+        // ── 3. Store info ──
+        $storeInfo = null;
+        $storeId = $unified['store_id'] ?? null;
+        if ($storeId) {
+            $storeRec = \DB::table('stores')->where('id', $storeId)->first(['id', 'name', 'guid']);
+            if ($storeRec) {
+                $storeInfo = ['id' => $storeRec->id, 'name' => $storeRec->name, 'guid' => $storeRec->guid];
+            }
+        }
+
+        // ── 4. Normalize ERP data ──
+        $erpNormalized = $this->normalizeErpData($erpData);
+
+        // ── 5. Normalize local data ──
+        $localNormalized = $this->normalizeLocalData($unified, $storeInfo);
+
+        // ── 6. Build comparison ──
+        $comparison = $this->buildDetailedComparison($erpNormalized, $localNormalized);
+
+        return response()->json([
+            'ok' => true,
+            'erp' => $erpNormalized,
+            'local' => $localNormalized,
+            'comparison' => $comparison,
+        ]);
+    }
+
+    /**
+     * Fetch closure details from Hiper ERP via saved connection.
+     */
+    private function fetchErpClosureDetail(array $data): array
+    {
+        $connection = isset($data['connection_id'])
+            ? HiperConnection::findOrFail($data['connection_id'])
+            : HiperConnection::where('is_active', true)->firstOrFail();
+
+        $endpoint = HiperEndpoint::where('key', 'operacoes.detalhes.fechamento')->first();
+        if (!$endpoint) {
+            return ['ok' => false, 'error' => "Endpoint 'operacoes.detalhes.fechamento' não cadastrado. Execute o seeder.", 'status' => 422];
+        }
+
+        // Resolve {id} in path
+        $path = str_replace('{id}', $data['turno_id'], $endpoint->path);
+        $url = rtrim($connection->base_url, '/') . '/' . ltrim($path, '/');
+
+        // Cookie header
+        $cookieService = app(HiperCookieService::class);
+        $host = parse_url($url, PHP_URL_HOST) ?? '';
+        $cookiesJson = $connection->cookies ?? ['by_domain' => []];
+        $cookieResult = $cookieService->buildEssentialCookieHeader($cookiesJson, $host);
+
+        // Headers
+        $headers = array_merge(
+            $connection->default_headers ?? [],
+            $endpoint->headers ?? []
+        );
+        if ($connection->default_referer) {
+            $headers['Referer'] = $connection->default_referer;
+        }
+        $headers['Cookie'] = $cookieResult['cookie'];
+
+        try {
+            $response = Http::withHeaders($headers)
+                ->timeout(30)
+                ->withoutVerifying()
+                ->get($url);
+
+            $connection->update(['last_used_at' => now()]);
+
+            if (!$response->successful()) {
+                return [
+                    'ok' => false,
+                    'error' => 'ERP retornou status ' . $response->status(),
+                    'status' => 502,
+                    'url' => $url,
+                    'missing_cookies' => $cookieResult['missing'],
+                    'erp_body' => $response->json() ?? $response->body(),
+                ];
+            }
+
+            return ['ok' => true, 'data' => $response->json(), 'url' => $url, 'missing_cookies' => $cookieResult['missing']];
+        } catch (\Exception $e) {
+            return ['ok' => false, 'error' => $e->getMessage(), 'status' => 502, 'url' => $url, 'missing_cookies' => $cookieResult['missing']];
+        }
+    }
+
+    /**
+     * Normalize raw ERP response into a flat structure for comparison.
+     */
+    private function normalizeErpData(array $erp): array
+    {
+        $meios = [];
+        foreach ($erp['MeiosDePagamentos'] ?? [] as $meio) {
+            $origens = [];
+            foreach ($meio['Origens'] ?? [] as $o) {
+                $origens[] = [
+                    'origem' => $o['Origem'] ?? null,
+                    'entradas_sistema' => (float) ($o['EntradasNoSistema'] ?? 0),
+                    'lancamentos_sistema' => (float) ($o['LancamentosNoSistema'] ?? 0),
+                    'valor_sistema' => (float) ($o['ValorNoSistema'] ?? 0),
+                    'falta' => (float) ($o['FaltaDeCaixa'] ?? 0),
+                    'sobra' => (float) ($o['SobraDeCaixa'] ?? 0),
+                ];
+            }
+            $meios[] = [
+                'nome' => $meio['Nome'] ?? '?',
+                'id_tipo' => $meio['TipoDeMeioDePagamentoId'] ?? null,
+                'entradas_sistema' => (float) ($meio['EntradasNoSistema'] ?? 0),
+                'lancamentos_sistema' => (float) ($meio['LancamentosNoSistema'] ?? 0),
+                'valor_sistema' => (float) ($meio['ValorNoSistema'] ?? 0),
+                'falta' => (float) ($meio['FaltaDeCaixa'] ?? 0),
+                'sobra' => (float) ($meio['SobraDeCaixa'] ?? 0),
+                'valor_gaveta' => (float) ($meio['ValorNaGaveta'] ?? 0),
+                'origens' => $origens,
+            ];
+        }
+
+        return [
+            'turno_id' => data_get($erp, 'Turno.Id'),
+            'fechado' => (bool) ($erp['CaixaFechado'] ?? false),
+            'total_entradas_sistema' => (float) ($erp['TotalDeEntradasNoSistema'] ?? 0),
+            'total_lancamentos_sistema' => (float) ($erp['TotalDeLancamentosNoSistema'] ?? 0),
+            'total_na_gaveta' => (float) ($erp['TotalNaGaveta'] ?? 0),
+            'total_no_sistema' => (float) ($erp['TotalNoSistema'] ?? 0),
+            'turno' => [
+                'sequencial' => data_get($erp, 'Turno.Sequencial'),
+                'loja_id' => data_get($erp, 'Turno.LojaId'),
+                'usuario_id' => data_get($erp, 'Turno.UsuarioId'),
+                'data' => data_get($erp, 'Turno.Data'),
+                'inicio' => data_get($erp, 'Turno.DataEHoraDeInicio'),
+                'termino' => data_get($erp, 'Turno.DataEHoraDeTermino'),
+                'fechado' => data_get($erp, 'Turno.Fechado'),
+            ],
+            'meios_pagamento' => $meios,
+        ];
+    }
+
+    /**
+     * Normalize local unified data into a flat structure for comparison.
+     */
+    private function normalizeLocalData(array $unified, ?array $storeInfo): array
+    {
+        $porMeio = $unified['pagamentos']['por_meio'] ?? [];
+
+        return [
+            'closure_uuid' => $unified['closure_uuid'],
+            'store' => $storeInfo,
+            'canais_presentes' => $unified['canais_presentes'] ?? [],
+            'canal_canonico' => $unified['canal_canonico'] ?? null,
+            'sequencial' => $unified['sequencial'] ?? null,
+            'operador_guid' => $unified['operador_guid'] ?? null,
+            'operador_nome' => $unified['operador_nome'] ?? null,
+            'periodo' => $unified['periodo'] ?? null,
+            'data_hora_inicio' => $unified['data_hora_inicio'] ?? null,
+            'data_hora_termino' => $unified['data_hora_termino'] ?? null,
+            'totais' => [
+                'entries_expected' => $unified['totais']['entries_expected'] ?? 0,
+                'declarado' => $unified['totais']['declarado'] ?? 0,
+                'falta' => $unified['totais']['falta'] ?? 0,
+                'sobra' => $unified['totais']['sobra'] ?? 0,
+                'sistema_caixa' => $unified['totais']['sistema_caixa'] ?? 0,
+                'loja_total_sistema_raw' => $unified['totais']['loja_total_sistema_raw'] ?? 0,
+                'declared_consistent' => $unified['totais']['declared_consistent'] ?? true,
+            ],
+            'meios_pagamento' => $porMeio,
+        ];
+    }
+
+    /**
+     * Build the detailed comparison between ERP and local data.
+     */
+    private function buildDetailedComparison(array $erp, array $local): array
+    {
+        $erpTotal = $erp['total_entradas_sistema'];
+        $localTotal = $local['totais']['entries_expected'];
+        $totalDiff = abs($erpTotal - $localTotal);
+
+        // --- Per payment method comparison ---
+        $erpMeiosByName = collect($erp['meios_pagamento'])->keyBy('nome');
+        $localMeiosByName = collect($local['meios_pagamento'])->keyBy('meio_pagamento');
+
+        // Collect all payment method names
+        $allMeios = $erpMeiosByName->keys()->merge($localMeiosByName->keys())->unique();
+
+        $porMeio = [];
+        $totalErpFalta = 0;
+        $totalErpSobra = 0;
+        $totalLocalFalta = 0;
+        $totalLocalSobra = 0;
+
+        foreach ($allMeios as $nome) {
+            $e = $erpMeiosByName->get($nome);
+            $l = $localMeiosByName->get($nome);
+
+            $erpEntradas = $e ? (float) $e['entradas_sistema'] : null;
+            $erpFalta = $e ? (float) $e['falta'] : null;
+            $erpSobra = $e ? (float) $e['sobra'] : null;
+            $localExpected = $l ? (float) $l['entries_expected'] : null;
+            $localDeclarado = $l ? (float) $l['declarado'] : null;
+            $localFalta = $l ? (float) $l['falta'] : null;
+            $localSobra = $l ? (float) $l['sobra'] : null;
+
+            if ($erpFalta !== null)
+                $totalErpFalta += $erpFalta;
+            if ($erpSobra !== null)
+                $totalErpSobra += $erpSobra;
+            if ($localFalta !== null)
+                $totalLocalFalta += $localFalta;
+            if ($localSobra !== null)
+                $totalLocalSobra += $localSobra;
+
+            $porMeio[] = [
+                'meio' => $nome,
+                'erp_entradas' => $erpEntradas,
+                'local_expected' => $localExpected,
+                'local_declarado' => $localDeclarado,
+                'erp_falta' => $erpFalta,
+                'local_falta' => $localFalta,
+                'erp_sobra' => $erpSobra,
+                'local_sobra' => $localSobra,
+                'match_entradas' => $erpEntradas !== null && $localExpected !== null && abs($erpEntradas - $localExpected) <= 0.05,
+                'match_declarado' => $erpEntradas !== null && $localDeclarado !== null && abs($erpEntradas - $localDeclarado) <= 0.05,
+                'match_falta' => $erpFalta !== null && $localFalta !== null && abs($erpFalta - $localFalta) <= 0.05,
+                'match_sobra' => $erpSobra !== null && $localSobra !== null && abs($erpSobra - $localSobra) <= 0.05,
+                'only_erp' => $e !== null && $l === null,
+                'only_local' => $e === null && $l !== null,
+            ];
+        }
+
+        // --- Operator comparison ---
+        $erpGuid = strtolower(trim((string) ($erp['turno']['usuario_id'] ?? '')));
+        $localGuid = strtolower(trim((string) ($local['operador_guid'] ?? '')));
+
+        // --- Sequencial comparison ---
+        $erpSeq = $erp['turno']['sequencial'] ?? null;
+        $localSeq = $local['sequencial'] ?? null;
+
+        return [
+            'totais' => [
+                'erp_total' => $erpTotal,
+                'local_total' => $localTotal,
+                'match' => $totalDiff <= 0.05,
+                'diff' => round($totalDiff, 2),
+            ],
+            'falta' => [
+                'erp' => round($totalErpFalta, 2),
+                'local' => round($totalLocalFalta, 2),
+                'match' => abs($totalErpFalta - $totalLocalFalta) <= 0.05,
+                'diff' => round(abs($totalErpFalta - $totalLocalFalta), 2),
+            ],
+            'sobra' => [
+                'erp' => round($totalErpSobra, 2),
+                'local' => round($totalLocalSobra, 2),
+                'match' => abs($totalErpSobra - $totalLocalSobra) <= 0.05,
+                'diff' => round(abs($totalErpSobra - $totalLocalSobra), 2),
+            ],
+            'por_meio' => $porMeio,
+            'operador' => [
+                'erp_guid' => $erp['turno']['usuario_id'] ?? null,
+                'local_guid' => $local['operador_guid'] ?? null,
+                'local_nome' => $local['operador_nome'] ?? null,
+                'match' => $erpGuid !== '' && $erpGuid === $localGuid,
+            ],
+            'sequencial' => [
+                'erp' => $erpSeq,
+                'local' => $localSeq,
+                'match' => $erpSeq !== null && $localSeq !== null && (int) $erpSeq === (int) $localSeq,
+            ],
+            'fechado' => [
+                'erp' => $erp['fechado'] ?? false,
+                'local' => true, // unified always comes from closed turnos
+                'match' => ($erp['fechado'] ?? false) === true,
+            ],
+        ];
+    }
+
     /**
      * Valida um lote de fechamentos de caixa (Batch)
      *
