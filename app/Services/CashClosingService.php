@@ -41,8 +41,8 @@ class CashClosingService
             // CENÁRIO A: Auto-Aprovação (Diferença Zero)
             if (abs($totalDiff) < 0.01) {
                 // Se não houver divergência, aprovamos automaticamente
-                // O status de 'justified' é irrelevante aqui, mas podemos marcar como true por consistência
                 $closing->justified = true;
+                $closing->status = CashClosing::STATUS_SUBMITTED; // Fix: Must be submitted to be approved
                 $closing->save();
 
                 return $this->approve($closing, $submittedBy);
