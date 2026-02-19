@@ -23,16 +23,96 @@ beforeEach(function () {
     DB::setDefaultConnection('sqlite');
     DB::reconnect('sqlite');
 
+    Schema::create('stores', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        $table->string('guid', 36)->nullable()->index();
+        $table->boolean('active')->default(true);
+        $table->dateTime('created_at')->nullable();
+        $table->dateTime('updated_at')->nullable();
+    });
+
     Schema::create('pdv_store_mappings', function (Blueprint $table) {
         $table->id();
         $table->unsignedBigInteger('pdv_store_id');
         $table->string('alias', 120)->nullable();
         $table->string('cnpj', 18)->nullable();
+        $table->string('guid_loja', 36)->nullable();
         $table->unsignedBigInteger('store_id');
         $table->boolean('active')->default(true);
         $table->dateTime('created_at')->nullable();
         $table->dateTime('updated_at')->nullable();
     });
+});
+
+test('resolves store directly by GUID from stores table', function () {
+    DB::table('stores')->insert([
+        'id' => 2,
+        'name' => 'MC Morretes',
+        'guid' => '4dcbc02b-f765-4f2e-9ceb-ef8c14b40f80',
+        'active' => true,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+    // No pdv_store_mappings entry!
+
+    $resolver = app(PdvStoreResolver::class);
+    $result = $resolver->resolve(9, null, null, null, '4dcbc02b-f765-4f2e-9ceb-ef8c14b40f80');
+
+    expect($result['status'])->toBe('resolved');
+    expect($result['store_id'])->toBe(2);
+    expect($result['matched_by'])->toBe('guid_direct');
+    expect($result['risk_flags'])->toBe([]);
+});
+
+test('GUID takes priority over incorrect pdv_store_mappings', function () {
+    DB::table('stores')->insert([
+        'id' => 2,
+        'name' => 'MC Morretes',
+        'guid' => '4dcbc02b-f765-4f2e-9ceb-ef8c14b40f80',
+        'active' => true,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+    // Wrong mapping exists!
+    DB::table('pdv_store_mappings')->insert([
+        'pdv_store_id' => 9,
+        'alias' => 'wrong-mapping',
+        'store_id' => 9,
+        'active' => true,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $resolver = app(PdvStoreResolver::class);
+    $result = $resolver->resolve(9, null, null, null, '4dcbc02b-f765-4f2e-9ceb-ef8c14b40f80');
+
+    expect($result['store_id'])->toBe(2); // GUID wins over wrong mapping
+    expect($result['matched_by'])->toBe('guid_direct');
+});
+
+test('GUID resolution self-heals pdv_store_mappings', function () {
+    DB::table('stores')->insert([
+        'id' => 2,
+        'name' => 'MC Morretes',
+        'guid' => '4dcbc02b-f765-4f2e-9ceb-ef8c14b40f80',
+        'active' => true,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $resolver = app(PdvStoreResolver::class);
+    $resolver->resolve(9, null, null, null, '4dcbc02b-f765-4f2e-9ceb-ef8c14b40f80');
+
+    // Verify self-healing: a mapping should have been created
+    $mapping = DB::table('pdv_store_mappings')
+        ->where('pdv_store_id', 9)
+        ->first();
+
+    expect($mapping)->not->toBeNull();
+    expect((int) $mapping->store_id)->toBe(2);
+    expect($mapping->guid_loja)->toBe('4dcbc02b-f765-4f2e-9ceb-ef8c14b40f80');
+    expect($mapping->alias)->toBe('MC Morretes');
 });
 
 test('resolves by cnpj before alias when both are present', function () {

@@ -50,6 +50,21 @@ class PdvStoreResolver
      */
     public function resolve(int $storePdvId, ?string $storeAlias = null, ?string $storeName = null, ?string $cnpj = null, ?string $guid = null): array
     {
+        // 1. GUID-first: resolve directly from stores.guid (universal key)
+        if ($guid !== null && Schema::hasColumn('stores', 'guid')) {
+            $store = DB::table('stores')
+                ->whereRaw('LOWER(guid) = ?', [strtolower($guid)])
+                ->where('active', true)
+                ->first(['id', 'name']);
+
+            if ($store) {
+                $this->ensureMapping($storePdvId, (int) $store->id, $guid, $store->name);
+
+                return $this->resolvedDirect($storePdvId, (int) $store->id, $store->name, 'guid_direct');
+            }
+        }
+
+        // 2. Fallback: pdv_store_mappings (legacy)
         if ($storePdvId <= 0 || !Schema::hasTable('pdv_store_mappings')) {
             return $this->missing($storePdvId);
         }
@@ -63,14 +78,6 @@ class PdvStoreResolver
 
             if ($guidMatch) {
                 return $this->resolved($storePdvId, $guidMatch, 'guid');
-            }
-        }
-
-        // Fallback: If we have a GUID, try to auto-link with the stores table (bypass ambiguous/missing)
-        if ($guid !== null) {
-            $autoLinked = $this->autoLinkStoreByGuid($storePdvId, $guid);
-            if ($autoLinked) {
-                return $this->resolved($storePdvId, $autoLinked, 'guid_auto_link');
             }
         }
 
@@ -133,14 +140,6 @@ class PdvStoreResolver
                 $candidates,
                 ['store_mapping_ambiguous']
             );
-        }
-
-        // Fallback: If we have a GUID, try to auto-link with the stores table
-        if ($guid !== null) {
-            $autoLinked = $this->autoLinkStoreByGuid($storePdvId, $guid);
-            if ($autoLinked) {
-                return $this->resolved($storePdvId, $autoLinked, 'guid_auto_link');
-            }
         }
 
         return $this->missing($storePdvId);
@@ -286,45 +285,64 @@ class PdvStoreResolver
         ];
     }
 
-    private function autoLinkStoreByGuid(int $storePdvId, string $guid): ?object
+    /**
+     * Resolve store_id directly from stores.guid, bypassing pdv_store_mappings.
+     *
+     * @param array<int, string> $riskFlags
+     * @return array{
+     *   status:string,
+     *   store_pdv_id:int,
+     *   store_id:int|null,
+     *   mapping_id:int|null,
+     *   mapped_alias:string|null,
+     *   matched_by:string|null,
+     *   risk_flags:array<int,string>,
+     *   candidate_store_ids:array<int,int>,
+     *   candidate_aliases:array<int,string>
+     * }
+     */
+    private function resolvedDirect(int $storePdvId, int $storeId, ?string $storeName, string $matchedBy, array $riskFlags = []): array
     {
-        // 1. Check if store exists in 'stores' table with this guid AND is active
-        $store = DB::table('stores')
-            ->where('guid', $guid)
-            ->where('active', true)
-            ->first(['id', 'name']);
+        return [
+            'status' => 'resolved',
+            'store_pdv_id' => $storePdvId,
+            'store_id' => $storeId,
+            'mapping_id' => null,
+            'mapped_alias' => $storeName,
+            'matched_by' => $matchedBy,
+            'risk_flags' => array_values(array_unique($riskFlags)),
+            'candidate_store_ids' => [],
+            'candidate_aliases' => [],
+        ];
+    }
 
-        if (!$store) {
-            return null;
+    /**
+     * Self-healing: ensure pdv_store_mappings has a correct entry for this GUID.
+     */
+    private function ensureMapping(int $storePdvId, int $storeId, string $guid, ?string $alias): void
+    {
+        if ($storePdvId <= 0 || !Schema::hasTable('pdv_store_mappings')) {
+            return;
         }
 
-        // 2. Create or Update pdv_store_mappings
-        // We use updateOrInsert to handle race conditions safely
-        $now = now();
-        DB::table('pdv_store_mappings')->updateOrInsert(
-            [
-                'pdv_store_id' => $storePdvId,
-            ],
-            [
-                'store_id' => $store->id,
-                'guid_loja' => $guid,
-                'alias' => $store->name, // Best effort alias
-                'active' => true,
-                'updated_at' => $now,
-                // If inserting, created_at will be missing unless we check existence,
-                // but updateOrInsert doesn't support conditional created_at easily.
-                // We'll rely on DB default or acceptable null for now. 
-                // Better approach: Check existence to set created_at properly if needed.
-            ]
-        );
+        $hasGuidColumn = Schema::hasColumn('pdv_store_mappings', 'guid_loja');
 
-        // Return an object structure compatible with 'resolved' method expectation (needs 'store_id', 'id', 'alias')
-        // effectively simulating a row from pdv_store_mappings
-        $mapping = DB::table('pdv_store_mappings')
-            ->where('pdv_store_id', $storePdvId)
-            ->first(['id', 'store_id', 'alias']);
+        $matchKey = $hasGuidColumn
+            ? ['pdv_store_id' => $storePdvId, 'guid_loja' => strtolower($guid)]
+            : ['pdv_store_id' => $storePdvId];
 
-        return $mapping;
+        $updateData = [
+            'store_id' => $storeId,
+            'alias' => $alias,
+            'active' => true,
+            'updated_at' => now(),
+        ];
+
+        if ($hasGuidColumn) {
+            $updateData['guid_loja'] = strtolower($guid);
+        }
+
+        DB::table('pdv_store_mappings')->updateOrInsert($matchKey, $updateData);
     }
 }
 ;

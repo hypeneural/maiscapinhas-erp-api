@@ -283,7 +283,7 @@ class ProcessPdvSyncJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
             $this->asNormalizedLowerText(data_get($payload, 'store.alias')),
             $this->asNormalizedLowerText(data_get($payload, 'store.nome')),
             $this->normalizeCnpj(data_get($payload, 'store.cnpj')),
-            $this->asString(data_get($payload, 'store.guid'))
+            $this->asString(data_get($payload, 'store.guid') ?? data_get($payload, 'store.LojaId'))
         );
         $storeId = $resolution['store_id'] !== null ? (int) $resolution['store_id'] : null;
 

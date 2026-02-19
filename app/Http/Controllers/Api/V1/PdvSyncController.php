@@ -263,11 +263,13 @@ class PdvSyncController extends Controller
         $storeAlias = $this->normalizeAlias(data_get($payload, 'store.alias'));
         $storeName = $this->normalizeAlias(data_get($payload, 'store.nome'));
         $storeCnpj = $this->normalizeCnpj(data_get($payload, 'store.cnpj'));
+        $storeGuid = $this->normalizeAlias(data_get($payload, 'store.guid') ?? data_get($payload, 'store.LojaId'));
         $storeResolution = app(PdvStoreResolver::class)->resolve(
             $storePdvId,
             $storeAlias,
             $storeName,
-            $storeCnpj
+            $storeCnpj,
+            $storeGuid
         );
         $storeId = $storeResolution['store_id'];
         $mappedAlias = $this->normalizeAlias($storeResolution['mapped_alias'] ?? null);
