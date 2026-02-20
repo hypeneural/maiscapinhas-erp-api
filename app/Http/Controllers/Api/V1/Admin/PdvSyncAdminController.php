@@ -7,9 +7,12 @@ namespace App\Http\Controllers\Api\V1\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Pdv\PdvSyncAdminIndexRequest;
 use App\Http\Requests\Pdv\PdvSyncAdminMetricsRequest;
+use App\Http\Requests\Pdv\PdvSyncDebugIndexRequest;
+use App\Http\Requests\Pdv\PdvSyncDebugShowRequest;
 use App\Http\Traits\ApiResponse;
 use App\Models\PdvSync;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -612,6 +615,351 @@ class PdvSyncAdminController extends Controller
                 'stale' => $staleStores->all(),
             ],
         ]);
+    }
+
+    /**
+     * Listagem detalhada para debug do webhook PDV
+     *
+     * Endpoint voltado para investigacao tecnica dos payloads brutos recebidos
+     * no webhook `/api/v1/pdv/sync`.
+     *
+     * @authenticated
+     */
+    public function debugIndex(PdvSyncDebugIndexRequest $request): JsonResponse
+    {
+        $this->authorizeAdmin($request);
+
+        $validated = $request->validated();
+        $query = PdvSync::query()
+            ->with([
+                'store:id,name,guid',
+                'payload:id,pdv_sync_id,compression,created_at',
+            ]);
+
+        $this->applyDebugFilters($query, $validated);
+
+        $payloadContains = trim((string) ($validated['payload_contains'] ?? ''));
+        if ($payloadContains !== '') {
+            $escapedNeedle = $this->escapeLike($payloadContains);
+            $query->whereHas('payload', function (Builder $payloadQuery) use ($escapedNeedle): void {
+                $payloadQuery->where('payload', 'like', '%' . $escapedNeedle . '%');
+            });
+        }
+
+        if (array_key_exists('has_error', $validated)) {
+            if ((bool) $validated['has_error']) {
+                $query->whereNotNull('last_error');
+            } else {
+                $query->whereNull('last_error');
+            }
+        }
+
+        $sort = (string) ($validated['sort'] ?? 'desc');
+        $perPage = (int) ($validated['per_page'] ?? 20);
+
+        $syncs = $query
+            ->orderBy('received_at', $sort)
+            ->orderBy('id', $sort)
+            ->paginate($perPage);
+
+        $rows = collect($syncs->items())
+            ->map(fn(PdvSync $sync): array => $this->mapDebugRow($sync))
+            ->values();
+
+        return response()->json([
+            'data' => $rows,
+            'meta' => [
+                'request_id' => app(\App\Support\Audit\AuditContext::class)->getRequestId(),
+                'timestamp' => now()->toIso8601String(),
+                'pagination' => [
+                    'total' => $syncs->total(),
+                    'per_page' => $syncs->perPage(),
+                    'current_page' => $syncs->currentPage(),
+                    'last_page' => $syncs->lastPage(),
+                    'from' => $syncs->firstItem(),
+                    'to' => $syncs->lastItem(),
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * Detalhe de payload bruto para debug
+     *
+     * @authenticated
+     */
+    public function debugShow(PdvSyncDebugShowRequest $request, PdvSync $sync): JsonResponse
+    {
+        $this->authorizeAdmin($request);
+
+        $validated = $request->validated();
+        $includeRaw = array_key_exists('include_raw', $validated) ? (bool) $validated['include_raw'] : true;
+        $includeDecoded = array_key_exists('include_decoded', $validated) ? (bool) $validated['include_decoded'] : true;
+
+        $sync->loadMissing([
+            'store:id,name,guid',
+            'payload:id,pdv_sync_id,payload,compression,created_at,updated_at',
+        ]);
+
+        $payload = $sync->payload;
+        $rawPayload = $payload?->payload;
+
+        $decodedPayload = null;
+        $parseError = null;
+        if ($includeDecoded && is_string($rawPayload)) {
+            $decodedPayload = json_decode($rawPayload, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $parseError = json_last_error_msg();
+                $decodedPayload = null;
+            }
+        }
+
+        return $this->success([
+            'sync' => $this->mapDebugRow($sync),
+            'payload' => [
+                'available' => $payload !== null,
+                'compression' => $payload?->compression,
+                'bytes' => (int) $sync->payload_bytes,
+                'sha256' => $sync->payload_sha256,
+                'created_at' => $payload?->created_at?->toIso8601String(),
+                'updated_at' => $payload?->updated_at?->toIso8601String(),
+                'raw' => $includeRaw ? $rawPayload : null,
+                'decoded' => $includeDecoded ? $decodedPayload : null,
+                'parse_error' => $parseError,
+            ],
+        ]);
+    }
+
+    /**
+     * Opcoes de filtros para tela Debug PDV
+     *
+     * @authenticated
+     */
+    public function debugFilters(Request $request): JsonResponse
+    {
+        $this->authorizeAdmin($request);
+
+        $from = $request->query('from');
+        $to = $request->query('to');
+        $fromAt = $from ? CarbonImmutable::parse((string) $from)->startOfDay() : null;
+        $toAt = $to ? CarbonImmutable::parse((string) $to)->endOfDay() : null;
+
+        $storesQuery = DB::table('pdv_syncs as ps')
+            ->leftJoin('stores as s', 's.id', '=', 'ps.store_id');
+
+        if ($fromAt) {
+            $storesQuery->where('ps.received_at', '>=', $fromAt);
+        }
+        if ($toAt) {
+            $storesQuery->where('ps.received_at', '<=', $toAt);
+        }
+
+        $stores = $storesQuery
+            ->selectRaw('
+                ps.store_pdv_id,
+                ps.store_id,
+                ps.store_id_filial,
+                MAX(ps.store_alias) as store_alias,
+                MAX(s.name) as store_name,
+                MAX(s.guid) as store_guid,
+                COUNT(*) as syncs_count,
+                MAX(ps.received_at) as last_received_at
+            ')
+            ->groupBy('ps.store_pdv_id', 'ps.store_id', 'ps.store_id_filial')
+            ->orderBy('store_name')
+            ->orderBy('ps.store_pdv_id')
+            ->get()
+            ->map(function (object $row): array {
+                $lastReceivedAt = $row->last_received_at
+                    ? CarbonImmutable::parse((string) $row->last_received_at)->toIso8601String()
+                    : null;
+
+                return [
+                    'store_pdv_id' => (int) $row->store_pdv_id,
+                    'store_id' => $row->store_id !== null ? (int) $row->store_id : null,
+                    'store_id_filial' => $row->store_id_filial !== null ? (int) $row->store_id_filial : null,
+                    'store_name' => $row->store_name,
+                    'store_guid' => $row->store_guid,
+                    'store_alias' => $row->store_alias,
+                    'syncs_count' => (int) $row->syncs_count,
+                    'last_received_at' => $lastReceivedAt,
+                ];
+            })
+            ->values();
+
+        $schemaVersions = PdvSync::query()
+            ->whereNotNull('schema_version')
+            ->select('schema_version')
+            ->distinct()
+            ->orderByDesc('schema_version')
+            ->pluck('schema_version')
+            ->values()
+            ->all();
+
+        $rangeQuery = PdvSync::query();
+        if ($fromAt) {
+            $rangeQuery->where('received_at', '>=', $fromAt);
+        }
+        if ($toAt) {
+            $rangeQuery->where('received_at', '<=', $toAt);
+        }
+
+        $range = $rangeQuery
+            ->selectRaw('MIN(received_at) as min_received_at, MAX(received_at) as max_received_at')
+            ->first();
+
+        return $this->success([
+            'statuses' => [
+                PdvSync::STATUS_QUEUED,
+                PdvSync::STATUS_PROCESSING,
+                PdvSync::STATUS_PROCESSED,
+                PdvSync::STATUS_FAILED,
+                PdvSync::STATUS_BLOCKED,
+            ],
+            'event_types' => [
+                PdvSync::EVENT_TYPE_SALES,
+                PdvSync::EVENT_TYPE_TURNO_CLOSURE,
+                PdvSync::EVENT_TYPE_MIXED,
+            ],
+            'schema_versions' => $schemaVersions,
+            'stores' => $stores,
+            'range' => [
+                'min_received_at' => $range?->min_received_at
+                    ? CarbonImmutable::parse((string) $range->min_received_at)->toIso8601String()
+                    : null,
+                'max_received_at' => $range?->max_received_at
+                    ? CarbonImmutable::parse((string) $range->max_received_at)->toIso8601String()
+                    : null,
+            ],
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed> $validated
+     */
+    private function applyDebugFilters(Builder $query, array $validated): void
+    {
+        if (!empty($validated['status'])) {
+            $query->where('status', (string) $validated['status']);
+        }
+
+        if (!empty($validated['event_type'])) {
+            $query->where('event_type', (string) $validated['event_type']);
+        }
+
+        if (!empty($validated['sync_id'])) {
+            $query->where('sync_id', 'like', '%' . $this->escapeLike((string) $validated['sync_id']) . '%');
+        }
+
+        if (!empty($validated['schema_version'])) {
+            $query->where('schema_version', (string) $validated['schema_version']);
+        }
+
+        if (!empty($validated['request_id'])) {
+            $query->where('request_id', 'like', '%' . $this->escapeLike((string) $validated['request_id']) . '%');
+        }
+
+        if (!empty($validated['risk_flag'])) {
+            $query->whereJsonContains('risk_flags', (string) $validated['risk_flag']);
+        }
+
+        if (!empty($validated['store_pdv_id'])) {
+            $query->where('store_pdv_id', (int) $validated['store_pdv_id']);
+        }
+
+        if (!empty($validated['store_id'])) {
+            $query->where('store_id', (int) $validated['store_id']);
+        }
+
+        if (!empty($validated['store_id_filial'])) {
+            $query->where('store_id_filial', (int) $validated['store_id_filial']);
+        }
+
+        if (!empty($validated['from'])) {
+            $query->where('received_at', '>=', CarbonImmutable::parse((string) $validated['from'])->startOfDay());
+        }
+
+        if (!empty($validated['to'])) {
+            $query->where('received_at', '<=', CarbonImmutable::parse((string) $validated['to'])->endOfDay());
+        }
+    }
+
+    private function mapDebugRow(PdvSync $sync): array
+    {
+        $timeline = $this->buildTimeline($sync);
+        $payload = $sync->payload;
+
+        return [
+            'id' => (int) $sync->id,
+            'sync_id' => $sync->sync_id,
+            'request_id' => $sync->request_id,
+            'schema_version' => $sync->schema_version,
+            'event_type' => $sync->event_type ?? PdvSync::EVENT_TYPE_SALES,
+            'status' => $sync->status,
+            'store' => [
+                'pdv_id' => (int) $sync->store_pdv_id,
+                'id' => $sync->store_id !== null ? (int) $sync->store_id : null,
+                'id_filial' => $sync->store_id_filial !== null ? (int) $sync->store_id_filial : null,
+                'name' => $sync->store?->name,
+                'guid' => $sync->store?->guid,
+                'alias' => $sync->store_alias,
+            ],
+            'ops_count' => (int) $sync->ops_count,
+            'ops_loja_count' => (int) ($sync->ops_loja_count ?? 0),
+            'snapshot_turnos_count' => (int) ($sync->snapshot_turnos_count ?? 0),
+            'snapshot_vendas_count' => (int) ($sync->snapshot_vendas_count ?? 0),
+            'attempts' => (int) $sync->attempts,
+            'risk_flags' => is_array($sync->risk_flags) ? $sync->risk_flags : [],
+            'last_error' => $sync->last_error,
+            'timeline' => $timeline,
+            'payload' => [
+                'available' => $payload !== null,
+                'bytes' => (int) $sync->payload_bytes,
+                'compression' => $payload?->compression,
+                'sha256' => $sync->payload_sha256,
+                'created_at' => $payload?->created_at?->toIso8601String(),
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, int|string|null>
+     */
+    private function buildTimeline(PdvSync $sync): array
+    {
+        $queueDelayMs = null;
+        if ($sync->received_at && $sync->processing_started_at) {
+            $queueDelayMs = (int) $sync->processing_started_at->diffInMilliseconds($sync->received_at);
+        }
+
+        $processingMs = null;
+        if ($sync->processing_started_at && $sync->processed_at) {
+            $processingMs = (int) $sync->processed_at->diffInMilliseconds($sync->processing_started_at);
+        }
+
+        $endToEndMs = null;
+        if ($sync->received_at && $sync->processed_at) {
+            $endToEndMs = (int) $sync->processed_at->diffInMilliseconds($sync->received_at);
+        }
+
+        return [
+            'received_at' => $sync->received_at?->toIso8601String(),
+            'queued_at' => $sync->queued_at?->toIso8601String(),
+            'processing_started_at' => $sync->processing_started_at?->toIso8601String(),
+            'processed_at' => $sync->processed_at?->toIso8601String(),
+            'queue_delay_ms' => $queueDelayMs,
+            'processing_ms' => $processingMs,
+            'end_to_end_ms' => $endToEndMs,
+        ];
+    }
+
+    private function escapeLike(string $value): string
+    {
+        return str_replace(
+            ['\\', '%', '_'],
+            ['\\\\', '\\%', '\\_'],
+            $value
+        );
     }
 
     private function authorizeAdmin(Request $request): void

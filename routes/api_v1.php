@@ -351,6 +351,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('pdv')->name('pdv.')->group(function () {
             Route::get('/syncs', [PdvSyncAdminController::class, 'index'])->name('syncs.index');
             Route::get('/syncs/metrics', [PdvSyncAdminController::class, 'metrics'])->name('syncs.metrics');
+            Route::get('/syncs/debug', [PdvSyncAdminController::class, 'debugIndex'])->name('syncs.debug.index');
+            Route::get('/syncs/debug/filters', [PdvSyncAdminController::class, 'debugFilters'])->name('syncs.debug.filters');
+            Route::get('/syncs/{sync}/debug', [PdvSyncAdminController::class, 'debugShow'])->name('syncs.debug.show');
 
             // Mappings (Store & User)
             Route::prefix('mappings')->name('mappings.')->middleware('super-admin')->group(function () {

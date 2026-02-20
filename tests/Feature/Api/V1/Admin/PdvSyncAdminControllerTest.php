@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\PdvSync;
+use App\Models\PdvSyncPayload;
 use App\Models\Store;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -201,4 +202,160 @@ test('super admin can view pdv sync metrics including stale store tracking', fun
     assertDatabaseHas('pdv_store_mappings', [
         'pdv_store_id' => 11,
     ]);
+});
+
+test('super admin can list debug syncs filtered by payload content', function () {
+    $user = User::factory()->create([
+        'is_super_admin' => true,
+    ]);
+
+    $store = Store::factory()->create([
+        'name' => 'Loja Debug Teste',
+    ]);
+
+    $targetGuid = 'CBFA4E39-C3DB-45CF-8B9B-A9A6B6574227';
+
+    $syncMatch = PdvSync::query()->create([
+        'sync_id' => 'sync-debug-match-001',
+        'schema_version' => '3.0',
+        'event_type' => 'sales',
+        'request_id' => 'req-debug-match-001',
+        'store_pdv_id' => 77,
+        'store_id' => $store->id,
+        'window_from' => now()->subMinutes(10),
+        'window_to' => now(),
+        'status' => PdvSync::STATUS_PROCESSED,
+        'payload_sha256' => str_repeat('1', 64),
+        'payload_bytes' => 2048,
+        'received_at' => now()->subMinute(),
+        'processing_started_at' => now()->subSeconds(40),
+        'processed_at' => now()->subSeconds(20),
+    ]);
+
+    PdvSyncPayload::query()->create([
+        'pdv_sync_id' => $syncMatch->id,
+        'payload' => json_encode([
+            'store' => ['LojaId' => $targetGuid],
+            'integrity' => ['sync_id' => 'sync-debug-match-001'],
+        ], JSON_THROW_ON_ERROR),
+        'compression' => 'none',
+    ]);
+
+    $syncOther = PdvSync::query()->create([
+        'sync_id' => 'sync-debug-other-001',
+        'schema_version' => '3.0',
+        'event_type' => 'sales',
+        'request_id' => 'req-debug-other-001',
+        'store_pdv_id' => 88,
+        'store_id' => $store->id,
+        'window_from' => now()->subMinutes(20),
+        'window_to' => now()->subMinutes(15),
+        'status' => PdvSync::STATUS_PROCESSED,
+        'payload_sha256' => str_repeat('2', 64),
+        'payload_bytes' => 512,
+        'received_at' => now()->subMinutes(15),
+    ]);
+
+    PdvSyncPayload::query()->create([
+        'pdv_sync_id' => $syncOther->id,
+        'payload' => json_encode([
+            'store' => ['LojaId' => 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF'],
+        ], JSON_THROW_ON_ERROR),
+        'compression' => 'none',
+    ]);
+
+    actingAs($user)
+        ->getJson('/api/v1/admin/pdv/syncs/debug?payload_contains=' . $targetGuid)
+        ->assertStatus(200)
+        ->assertJsonPath('meta.pagination.total', 1)
+        ->assertJsonPath('data.0.sync_id', 'sync-debug-match-001')
+        ->assertJsonPath('data.0.store.pdv_id', 77)
+        ->assertJsonPath('data.0.payload.available', true)
+        ->assertJsonPath('data.0.payload.compression', 'none');
+});
+
+test('super admin can view debug payload detail', function () {
+    $user = User::factory()->create([
+        'is_super_admin' => true,
+    ]);
+
+    $store = Store::factory()->create();
+
+    $sync = PdvSync::query()->create([
+        'sync_id' => 'sync-debug-detail-001',
+        'schema_version' => '3.0',
+        'event_type' => 'mixed',
+        'request_id' => 'req-debug-detail-001',
+        'store_pdv_id' => 90,
+        'store_id' => $store->id,
+        'window_from' => now()->subMinutes(20),
+        'window_to' => now()->subMinutes(10),
+        'status' => PdvSync::STATUS_PROCESSED,
+        'payload_sha256' => str_repeat('3', 64),
+        'payload_bytes' => 1024,
+        'received_at' => now()->subMinutes(9),
+        'processing_started_at' => now()->subMinutes(8),
+        'processed_at' => now()->subMinutes(7),
+    ]);
+
+    $rawPayload = json_encode([
+        'store' => ['LojaId' => 'ABC-123'],
+        'integrity' => ['sync_id' => 'sync-debug-detail-001'],
+    ], JSON_THROW_ON_ERROR);
+
+    PdvSyncPayload::query()->create([
+        'pdv_sync_id' => $sync->id,
+        'payload' => $rawPayload,
+        'compression' => 'none',
+    ]);
+
+    actingAs($user)
+        ->getJson("/api/v1/admin/pdv/syncs/{$sync->id}/debug")
+        ->assertStatus(200)
+        ->assertJsonPath('data.sync.sync_id', 'sync-debug-detail-001')
+        ->assertJsonPath('data.payload.available', true)
+        ->assertJsonPath('data.payload.raw', $rawPayload)
+        ->assertJsonPath('data.payload.decoded.store.LojaId', 'ABC-123')
+        ->assertJsonPath('data.payload.parse_error', null);
+});
+
+test('super admin can list debug filter options', function () {
+    $user = User::factory()->create([
+        'is_super_admin' => true,
+    ]);
+
+    $store = Store::factory()->create([
+        'name' => 'Loja Filtros Debug',
+    ]);
+
+    $sync = PdvSync::query()->create([
+        'sync_id' => 'sync-debug-filters-001',
+        'schema_version' => '3.1',
+        'event_type' => 'turno_closure',
+        'request_id' => 'req-debug-filters-001',
+        'store_pdv_id' => 155,
+        'store_id' => $store->id,
+        'window_from' => now()->subHours(2),
+        'window_to' => now()->subHour(),
+        'status' => PdvSync::STATUS_FAILED,
+        'payload_sha256' => str_repeat('4', 64),
+        'payload_bytes' => 3000,
+        'received_at' => now()->subHour(),
+    ]);
+
+    PdvSyncPayload::query()->create([
+        'pdv_sync_id' => $sync->id,
+        'payload' => '{"debug":true}',
+        'compression' => 'none',
+    ]);
+
+    $data = actingAs($user)
+        ->getJson('/api/v1/admin/pdv/syncs/debug/filters')
+        ->assertStatus(200)
+        ->json('data');
+
+    expect($data['statuses'])->toContain(PdvSync::STATUS_FAILED);
+    expect($data['event_types'])->toContain(PdvSync::EVENT_TYPE_TURNO_CLOSURE);
+    expect($data['schema_versions'])->toContain('3.1');
+    expect(collect($data['stores'])->pluck('store_pdv_id')->all())->toContain(155);
 });
