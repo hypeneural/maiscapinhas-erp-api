@@ -109,6 +109,56 @@ class PdvClosureUnifiedService
     }
 
     /**
+     * Lista fechamentos unificados por store_id + data + sequencial do turno.
+     *
+     * A conferência usa turno sequencial (1/2/3), não período textual (MATUTINO/VESPERTINO/NOTURNO).
+     * Isso evita inconsistência quando o período registrado no PDV não segue o mapeamento fixo.
+     *
+     * @return Collection<int, array>
+     */
+    public function listUnifiedByStoreIdDateShiftCode(
+        int $storeId,
+        string $date,
+        string $shiftCode
+    ): Collection {
+        $normalizedShiftCode = strtoupper(trim($shiftCode));
+        $sequencial = match ($normalizedShiftCode) {
+            'M', '1' => 1,
+            'T', '2' => 2,
+            'N', '3' => 3,
+            default => (int) $normalizedShiftCode,
+        };
+
+        if ($sequencial <= 0) {
+            return collect();
+        }
+
+        $closureUuids = PdvTurno::where('store_id', $storeId)
+            ->whereNotNull('closure_uuid')
+            ->where('fechado', true)
+            ->whereDate('data_hora_inicio', $date)
+            ->where('sequencial', $sequencial)
+            ->select('closure_uuid')
+            ->distinct()
+            ->pluck('closure_uuid');
+
+        if ($closureUuids->isEmpty()) {
+            return collect();
+        }
+
+        $allTurnos = PdvTurno::whereIn('closure_uuid', $closureUuids)->get();
+
+        return $closureUuids->map(function (string $uuid) use ($allTurnos) {
+            $turnosForUuid = $allTurnos->where('closure_uuid', $uuid);
+            return $this->buildUnified($turnosForUuid);
+        })->sortByDesc(function (array $row) {
+            return $row['data_hora_fechamento']
+                ?? $row['data_hora_termino']
+                ?? $row['data_hora_inicio'];
+        })->values();
+    }
+
+    /**
      * Valida consistência dos dados entre canais para um closure_uuid.
      *
      * Checa se os valores declarados/falta/sobra são iguais nos 2 canais.

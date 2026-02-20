@@ -52,14 +52,14 @@ class CashIntegrationController extends Controller
         $date = $request->input('date');
         $shiftCode = $request->input('shift_code');
 
-        // 1. Map Shift Code to PDV Periods
-        $periods = $this->mapShiftCodeToPeriod($shiftCode);
+        // 1. Conferencia usa turno sequencial (1/2/3), nao periodo textual.
+        $normalizedShiftCode = $this->normalizeShiftCode((string) $shiftCode);
 
         // 2. Buscar fechamentos unificados pelo service canônico
-        $closures = $this->closureService->listUnifiedByStoreIdDatePeriod(
+        $closures = $this->closureService->listUnifiedByStoreIdDateShiftCode(
             $storeId,
             $date,
-            $periods
+            $normalizedShiftCode
         );
 
         if ($closures->isEmpty()) {
@@ -676,16 +676,4 @@ class CashIntegrationController extends Controller
         };
     }
 
-    /**
-     * Maps ERP shift code to PDV periods
-     */
-    private function mapShiftCodeToPeriod(string $code): array
-    {
-        return match (strtoupper($code)) {
-            'M', '1' => ['MATUTINO', '1', 'Turno 1'],
-            'T', '2' => ['VESPERTINO', '2', 'Turno 2'],
-            'N', '3' => ['NOTURNO', '3', 'Turno 3'],
-            default => [$code] // Fallback attempt
-        };
-    }
 }
