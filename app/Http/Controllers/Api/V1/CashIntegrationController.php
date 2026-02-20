@@ -10,7 +10,7 @@ use App\Models\PdvTurno;
 use App\Models\Store;
 use App\Models\User;
 use App\Services\Pdv\PdvClosureUnifiedService;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -396,51 +396,40 @@ class CashIntegrationController extends Controller
         }
 
         $basePendingQuery = $this->pendingConferenceTurnosQuery($allowedStoreIds)
-            ->join('stores as s', 's.id', '=', 'pt.store_id')
-            ->leftJoin('pdv_closures as pc', 'pc.closure_uuid', '=', 'pt.closure_uuid');
+            ->join('stores as s', 's.id', '=', 'pending.store_id');
 
         if ($storeId) {
-            $basePendingQuery->where('pt.store_id', (int) $storeId);
+            $basePendingQuery->where('pending.store_id', (int) $storeId);
         }
 
         if ($date) {
-            $basePendingQuery->whereDate('pt.data_hora_inicio', $date);
+            $basePendingQuery->where('pending.date_key', $date);
         }
 
         if ($shiftCode) {
-            $basePendingQuery->where('pt.sequencial', (int) $shiftCode);
+            $basePendingQuery->where('pending.shift_code_raw', (string) ((int) $shiftCode));
         }
 
-        $totalPending = (clone $basePendingQuery)
-            ->distinct('pt.closure_uuid')
-            ->count('pt.closure_uuid');
+        $totalPending = (clone $basePendingQuery)->count('pending.closure_uuid');
 
         $turns = (clone $basePendingQuery)
-            ->selectRaw('
-                pt.closure_uuid,
-                pt.store_id,
-                s.name as store_name,
-                s.guid as store_guid,
-                DATE(pt.data_hora_inicio) as date_key,
-                CAST(pt.sequencial AS CHAR) as shift_code_raw,
-                MAX(COALESCE(pt.data_hora_fechamento, pt.data_hora_termino, pt.data_hora_inicio)) as reference_datetime,
-                MAX(pt.data_hora_inicio) as started_at,
-                MAX(pt.data_hora_termino) as ended_at,
-                MAX(pt.responsavel_nome) as responsavel_nome,
-                MAX(pt.responsavel_guid) as responsavel_guid,
-                MAX(pt.operador_nome) as operador_nome,
-                COALESCE(MAX(pc.total_sistema_unificado), 0) as total_value
-            ')
-            ->groupBy(
-                'pt.closure_uuid',
-                'pt.store_id',
-                's.name',
-                's.guid',
-                DB::raw('DATE(pt.data_hora_inicio)'),
-                DB::raw('CAST(pt.sequencial AS CHAR)')
-            )
-            ->orderByRaw('DATE(pt.data_hora_inicio) DESC')
-            ->orderByRaw('MAX(COALESCE(pt.data_hora_fechamento, pt.data_hora_termino, pt.data_hora_inicio)) DESC')
+            ->select([
+                'pending.closure_uuid',
+                'pending.store_id',
+                's.name as store_name',
+                's.guid as store_guid',
+                'pending.date_key',
+                'pending.shift_code_raw',
+                'pending.reference_datetime',
+                'pending.started_at',
+                'pending.ended_at',
+                'pending.responsavel_nome',
+                'pending.responsavel_guid',
+                'pending.operador_nome',
+                'pending.total_value',
+            ])
+            ->orderByDesc('pending.date_key')
+            ->orderByDesc('pending.reference_datetime')
             ->limit($limit)
             ->get()
             ->map(function ($row) {
@@ -506,9 +495,9 @@ class CashIntegrationController extends Controller
 
         // 1. Stores
         $storeIds = (clone $pendingBaseQuery)
-            ->select('pt.store_id')
+            ->select('pending.store_id')
             ->distinct()
-            ->pluck('pt.store_id');
+            ->pluck('pending.store_id');
 
         $stores = Store::query()
             ->whereIn('id', $storeIds)
@@ -520,10 +509,10 @@ class CashIntegrationController extends Controller
         $dates = collect();
         if ($storeId) {
             $dates = (clone $pendingBaseQuery)
-                ->where('pt.store_id', (int) $storeId)
-                ->selectRaw('DATE(pt.data_hora_inicio) as date_key')
+                ->where('pending.store_id', (int) $storeId)
+                ->select('pending.date_key')
                 ->distinct()
-                ->orderBy('date_key', 'desc')
+                ->orderBy('pending.date_key', 'desc')
                 ->pluck('date_key')
                 ->values();
         }
@@ -532,9 +521,9 @@ class CashIntegrationController extends Controller
         $shifts = collect();
         if ($storeId && $date) {
             $shifts = (clone $pendingBaseQuery)
-                ->where('pt.store_id', (int) $storeId)
-                ->whereDate('pt.data_hora_inicio', $date)
-                ->pluck('pt.sequencial')
+                ->where('pending.store_id', (int) $storeId)
+                ->where('pending.date_key', $date)
+                ->pluck('pending.shift_code_raw')
                 ->map(fn($code) => $this->normalizeShiftCode((string) $code))
                 ->filter()
                 ->unique()
@@ -555,11 +544,10 @@ class CashIntegrationController extends Controller
         if ($storeId && $date && $shiftCode) {
             // Find canonical PDV responsible for this closed shift.
             $turno = (clone $pendingBaseQuery)
-                ->where('pt.store_id', (int) $storeId)
-                ->whereDate('pt.data_hora_inicio', $date)
-                ->where('pt.sequencial', (int) $shiftCode)
-                ->orderByDesc('pt.data_hora_fechamento')
-                ->orderByDesc('pt.id')
+                ->where('pending.store_id', (int) $storeId)
+                ->where('pending.date_key', $date)
+                ->where('pending.shift_code_raw', (string) ((int) $shiftCode))
+                ->orderByDesc('pending.reference_datetime')
                 ->first();
 
             if ($turno && $turno->responsavel_guid) {
@@ -615,35 +603,60 @@ class CashIntegrationController extends Controller
 
     /**
      * Base query for pending conference turns:
-     * - PDV turno fechado + unificado
+     * - Fechamento unificado com todos os canais fechados (status FECHADO)
      * - Sem qualquer cash_closing associado para a combinacao loja/data/turno
      */
     private function pendingConferenceTurnosQuery(array $allowedStoreIds): Builder
     {
-        return PdvTurno::query()
+        $closedUnifiedTurns = PdvTurno::query()
             ->from('pdv_turnos as pt')
+            ->leftJoin('pdv_closures as pc', 'pc.closure_uuid', '=', 'pt.closure_uuid')
             ->whereIn('pt.store_id', $allowedStoreIds)
-            ->where('pt.fechado', 1)
+            ->whereNotNull('pt.store_id')
+            ->whereNotNull('pt.sequencial')
             ->whereNotNull('pt.closure_uuid')
+            ->groupBy(
+                'pt.closure_uuid',
+                'pt.store_id',
+                DB::raw('CAST(pt.sequencial AS CHAR)')
+            )
+            ->havingRaw('MIN(CASE WHEN pt.fechado = 1 THEN 1 ELSE 0 END) = 1')
+            ->havingRaw('MAX(CASE WHEN pt.data_hora_fechamento IS NOT NULL THEN 1 ELSE 0 END) = 1')
+            ->selectRaw('
+                pt.closure_uuid,
+                pt.store_id,
+                DATE(MIN(pt.data_hora_inicio)) as date_key,
+                CAST(pt.sequencial AS CHAR) as shift_code_raw,
+                MAX(COALESCE(pt.data_hora_fechamento, pt.data_hora_termino, pt.data_hora_inicio)) as reference_datetime,
+                MIN(pt.data_hora_inicio) as started_at,
+                MAX(pt.data_hora_termino) as ended_at,
+                MAX(pt.responsavel_nome) as responsavel_nome,
+                MAX(pt.responsavel_guid) as responsavel_guid,
+                MAX(pt.operador_nome) as operador_nome,
+                COALESCE(MAX(pc.total_sistema_unificado), MAX(pt.total_declarado), 0) as total_value
+            ');
+
+        return DB::query()
+            ->fromSub($closedUnifiedTurns, 'pending')
             ->whereNotExists(function ($sub) {
                 $sub->selectRaw('1')
                     ->from('cash_shifts as cs')
                     ->join('cash_closings as cc', 'cc.cash_shift_id', '=', 'cs.id')
-                    ->whereColumn('cs.store_id', 'pt.store_id')
-                    ->whereRaw('cs.date = DATE(pt.data_hora_inicio)')
+                    ->whereColumn('cs.store_id', 'pending.store_id')
+                    ->whereRaw('cs.date = pending.date_key')
                     ->where(function ($shiftMatch) {
                         $shiftMatch
-                            ->whereRaw('CAST(cs.shift_code AS CHAR) = CAST(pt.sequencial AS CHAR)')
+                            ->whereRaw('CAST(cs.shift_code AS CHAR) = pending.shift_code_raw')
                             ->orWhere(function ($alias) {
-                                $alias->whereRaw('pt.sequencial = 1')
+                                $alias->whereRaw("pending.shift_code_raw = '1'")
                                     ->whereRaw("UPPER(cs.shift_code) = 'M'");
                             })
                             ->orWhere(function ($alias) {
-                                $alias->whereRaw('pt.sequencial = 2')
+                                $alias->whereRaw("pending.shift_code_raw = '2'")
                                     ->whereRaw("UPPER(cs.shift_code) = 'T'");
                             })
                             ->orWhere(function ($alias) {
-                                $alias->whereRaw('pt.sequencial = 3')
+                                $alias->whereRaw("pending.shift_code_raw = '3'")
                                     ->whereRaw("UPPER(cs.shift_code) = 'N'");
                             });
                     });
