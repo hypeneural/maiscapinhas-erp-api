@@ -556,9 +556,9 @@ class CashIntegrationController extends Controller
     private function shiftCodeAliases(string $code): array
     {
         return match ($this->normalizeShiftCode($code)) {
-            '1' => ['1', 'M'],
-            '2' => ['2', 'T'],
-            '3' => ['3', 'N'],
+            '1' => ['1', 'M', 'm'],
+            '2' => ['2', 'T', 't'],
+            '3' => ['3', 'N', 'n'],
             default => [$code],
         };
     }
