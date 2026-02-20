@@ -214,6 +214,10 @@ class StoreContext
      */
     public static function getUserStoreIds(User $user): array
     {
+        if ($user->isSuperAdmin()) {
+            return Store::query()->pluck('id')->toArray();
+        }
+
         return $user->storeUsers()->pluck('store_id')->toArray();
     }
 }

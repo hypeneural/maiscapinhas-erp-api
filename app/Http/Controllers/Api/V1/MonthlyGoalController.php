@@ -38,11 +38,17 @@ class MonthlyGoalController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        $storeIds = $user->storeUsers()->pluck('store_id')->toArray();
+        $storeIds = StoreContext::getUserStoreIds($user);
 
         $query = StoreMonthlyGoal::with(['store:id,name', 'splits.user:id,name'])
-            ->whereIn('store_id', $storeIds)
             ->orderByDesc('month');
+
+        if (!empty($storeIds)) {
+            $query->whereIn('store_id', $storeIds);
+        } else {
+            // User without store access should receive an empty list.
+            $query->whereRaw('1 = 0');
+        }
 
         if ($request->filled('store_id')) {
             $storeId = (int) $request->input('store_id');
