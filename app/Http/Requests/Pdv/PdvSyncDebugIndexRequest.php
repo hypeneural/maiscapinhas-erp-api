@@ -62,6 +62,7 @@ class PdvSyncDebugIndexRequest extends FormRequest
 
         if (is_string($value)) {
             $normalized = strtolower(trim($value));
+            $normalized = trim($normalized, "\"'");
             if (in_array($normalized, ['1', 'true', 'yes', 'on'], true)) {
                 return true;
             }
