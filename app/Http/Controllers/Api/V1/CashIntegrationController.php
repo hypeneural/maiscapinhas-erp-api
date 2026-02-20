@@ -6,15 +6,12 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
-use App\Models\CashShift;
 use App\Models\PdvTurno;
 use App\Models\Store;
 use App\Models\User;
 use App\Services\Pdv\PdvClosureUnifiedService;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 /**
  * @group Fechamento de Caixa
@@ -391,17 +388,26 @@ class CashIntegrationController extends Controller
             ? Store::query()->where('active', true)->pluck('id')->toArray()
             : $user->storeUsers()->pluck('store_id')->toArray();
 
+        if (empty($allowedStoreIds)) {
+            // Conferentes sem vínculo explícito em store_users ainda precisam consultar fechamentos.
+            $allowedStoreIds = Store::query()
+                ->where('active', true)
+                ->pluck('id')
+                ->toArray();
+        }
+
         if ($storeId && !$user->isSuperAdmin() && !in_array((int) $storeId, $allowedStoreIds, true)) {
             return $this->forbidden('You do not have access to this store.');
         }
 
-        // A conferência deve trabalhar apenas com turnos fechados (unificados) e já lançados.
-        $baseQuery = CashShift::query()
-            ->whereIn('store_id', $allowedStoreIds);
-        $this->applyConferenceEligibleScope($baseQuery);
+        // A conferência deve trabalhar apenas com turnos fechados e unificados do PDV.
+        $pdvBaseQuery = PdvTurno::query()
+            ->whereIn('store_id', $allowedStoreIds)
+            ->where('fechado', 1)
+            ->whereNotNull('closure_uuid');
 
         // 1. Stores
-        $storeIds = (clone $baseQuery)
+        $storeIds = (clone $pdvBaseQuery)
             ->select('store_id')
             ->distinct()
             ->pluck('store_id');
@@ -415,9 +421,9 @@ class CashIntegrationController extends Controller
         // 2. Dates (store-scoped)
         $dates = collect();
         if ($storeId) {
-            $dates = (clone $baseQuery)
+            $dates = (clone $pdvBaseQuery)
                 ->where('store_id', (int) $storeId)
-                ->selectRaw('DATE(date) as date_key')
+                ->selectRaw('DATE(data_hora_inicio) as date_key')
                 ->distinct()
                 ->orderBy('date_key', 'desc')
                 ->pluck('date_key')
@@ -427,10 +433,10 @@ class CashIntegrationController extends Controller
         // 3. Shifts (store + date scoped)
         $shifts = collect();
         if ($storeId && $date) {
-            $shifts = (clone $baseQuery)
+            $shifts = (clone $pdvBaseQuery)
                 ->where('store_id', (int) $storeId)
-                ->whereDate('date', $date)
-                ->pluck('shift_code')
+                ->whereDate('data_hora_inicio', $date)
+                ->pluck('sequencial')
                 ->map(fn($code) => $this->normalizeShiftCode((string) $code))
                 ->filter()
                 ->unique()
@@ -438,26 +444,8 @@ class CashIntegrationController extends Controller
                 ->values();
         }
 
-        // 4. Sellers (scoped by selected filters)
-        $sellerQuery = clone $baseQuery;
-        if ($storeId) {
-            $sellerQuery->where('store_id', (int) $storeId);
-        }
-        if ($date) {
-            $sellerQuery->whereDate('date', $date);
-        }
-        if ($shiftCode) {
-            $sellerQuery->whereIn('shift_code', $this->shiftCodeAliases($shiftCode));
-        }
-
-        $sellerIds = $sellerQuery
-            ->whereNotNull('seller_id')
-            ->select('seller_id')
-            ->distinct()
-            ->pluck('seller_id');
-
+        // 4. Sellers (lista completa para permitir vincular qualquer responsavel)
         $allSellers = User::query()
-            ->whereIn('id', $sellerIds)
             ->whereNotNull('guid')
             ->where('active', true)
             ->select('id', 'name', 'guid')
@@ -468,17 +456,19 @@ class CashIntegrationController extends Controller
 
         if ($storeId && $date && $shiftCode) {
             // Find canonical PDV responsible for this closed shift.
-            $turno = PdvTurno::query()
+            $turno = (clone $pdvBaseQuery)
                 ->where('store_id', (int) $storeId)
                 ->whereDate('data_hora_inicio', $date)
                 ->where('sequencial', (int) $shiftCode)
-                ->where('fechado', 1)
-                ->whereNotNull('closure_uuid')
-                ->latest('id')
+                ->orderByDesc('data_hora_fechamento')
+                ->orderByDesc('id')
                 ->first();
 
             if ($turno && $turno->responsavel_guid) {
-                $responsible = $allSellers->firstWhere('guid', $turno->responsavel_guid);
+                $responsibleGuid = strtolower(trim((string) $turno->responsavel_guid));
+                $responsible = $allSellers->first(function ($seller) use ($responsibleGuid) {
+                    return strtolower(trim((string) $seller->guid)) === $responsibleGuid;
+                });
                 if ($responsible) {
                     $suggestedSeller = [
                         'id' => $responsible->id,
@@ -501,46 +491,6 @@ class CashIntegrationController extends Controller
     }
 
     /**
-     * Apply scope: only closed unified shifts pending conference.
-     *
-     * Pending conference = cash closing exists in internal draft status.
-     */
-    private function applyConferenceEligibleScope(Builder $query): void
-    {
-        $query->where('cash_shifts.status', CashShift::STATUS_CLOSED)
-            ->whereExists(function ($q) {
-                $q->select(DB::raw(1))
-                    ->from('pdv_turnos as pt')
-                    ->whereColumn('pt.store_id', 'cash_shifts.store_id')
-                    ->whereRaw('DATE(pt.data_hora_inicio) = cash_shifts.date')
-                    ->where('pt.fechado', 1)
-                    ->whereNotNull('pt.closure_uuid')
-                    ->where(function ($shiftMatch) {
-                        $shiftMatch
-                            ->whereRaw('CAST(pt.sequencial AS CHAR) = cash_shifts.shift_code')
-                            ->orWhere(function ($alias) {
-                                $alias->where('pt.sequencial', 1)
-                                    ->whereRaw("UPPER(cash_shifts.shift_code) = 'M'");
-                            })
-                            ->orWhere(function ($alias) {
-                                $alias->where('pt.sequencial', 2)
-                                    ->whereRaw("UPPER(cash_shifts.shift_code) = 'T'");
-                            })
-                            ->orWhere(function ($alias) {
-                                $alias->where('pt.sequencial', 3)
-                                    ->whereRaw("UPPER(cash_shifts.shift_code) = 'N'");
-                            });
-                    });
-            })
-            ->whereExists(function ($q) {
-                $q->select(DB::raw(1))
-                    ->from('cash_closings as cc')
-                    ->whereColumn('cc.cash_shift_id', 'cash_shifts.id')
-                    ->where('cc.status', 'draft');
-            });
-    }
-
-    /**
      * Normalize shift code to canonical numeric string.
      */
     private function normalizeShiftCode(string $code): string
@@ -550,21 +500,6 @@ class CashIntegrationController extends Controller
             'T', '2' => '2',
             'N', '3' => '3',
             default => trim($code),
-        };
-    }
-
-    /**
-     * Accept both canonical and legacy aliases for shift code.
-     *
-     * @return array<int, string>
-     */
-    private function shiftCodeAliases(string $code): array
-    {
-        return match ($this->normalizeShiftCode($code)) {
-            '1' => ['1', 'M', 'm'],
-            '2' => ['2', 'T', 't'],
-            '3' => ['3', 'N', 'n'],
-            default => [$code],
         };
     }
 
