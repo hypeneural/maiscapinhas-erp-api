@@ -28,11 +28,11 @@ class GoalsService
                 'active' => $data['active'] ?? true,
             ]);
 
-            AuditLog::log($actor, 'goal.created', $goal, null, [
+            AuditLog::log('goal.created', $goal, null, [
                 'store_id' => $goal->store_id,
                 'month' => $goal->month,
                 'goal_amount' => $goal->goal_amount,
-            ]);
+            ], $actor->id);
 
             return $goal;
         });
@@ -51,7 +51,7 @@ class GoalsService
                 'active' => $data['active'] ?? $goal->active,
             ]);
 
-            AuditLog::log($actor, 'goal.updated', $goal, $before, $goal->toArray());
+            AuditLog::log('goal.updated', $goal, $before, $goal->toArray(), $actor->id);
 
             return $goal->fresh();
         });
@@ -83,11 +83,11 @@ class GoalsService
 
             $after = $goal->fresh()->splits()->get()->toArray();
 
-            AuditLog::log($actor, 'goal.splits_updated', $goal, [
+            AuditLog::log('goal.splits_updated', $goal, [
                 'splits' => $before,
             ], [
                 'splits' => $after,
-            ]);
+            ], $actor->id);
 
             return $goal->fresh(['splits.user']);
         });

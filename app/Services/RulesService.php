@@ -28,11 +28,11 @@ class RulesService
                 'version' => $version,
             ]);
 
-            AuditLog::log($actor, 'bonus_rule.created', $rule, null, [
+            AuditLog::log('bonus_rule.created', $rule, null, [
                 'store_id' => $rule->store_id,
                 'effective_from' => $rule->effective_from,
                 'version' => $version,
-            ]);
+            ], $actor->id);
 
             return $rule;
         });
@@ -55,7 +55,7 @@ class RulesService
                 'version' => $version,
             ]);
 
-            AuditLog::log($actor, 'bonus_rule.updated', $rule, $before, $rule->toArray());
+            AuditLog::log('bonus_rule.updated', $rule, $before, $rule->toArray(), $actor->id);
 
             return $rule->fresh();
         });
@@ -76,11 +76,11 @@ class RulesService
                 'version' => $version,
             ]);
 
-            AuditLog::log($actor, 'commission_rule.created', $rule, null, [
+            AuditLog::log('commission_rule.created', $rule, null, [
                 'store_id' => $rule->store_id,
                 'effective_from' => $rule->effective_from,
                 'version' => $version,
-            ]);
+            ], $actor->id);
 
             return $rule;
         });
@@ -103,7 +103,7 @@ class RulesService
                 'version' => $version,
             ]);
 
-            AuditLog::log($actor, 'commission_rule.updated', $rule, $before, $rule->toArray());
+            AuditLog::log('commission_rule.updated', $rule, $before, $rule->toArray(), $actor->id);
 
             return $rule->fresh();
         });
