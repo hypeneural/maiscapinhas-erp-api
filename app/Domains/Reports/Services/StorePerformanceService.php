@@ -4,26 +4,17 @@ declare(strict_types=1);
 
 namespace App\Domains\Reports\Services;
 
-use App\Models\CashClosing;
-use App\Models\CashClosingLine;
-use App\Models\CashShift;
-use App\Models\Sale;
 use App\Models\StoreMonthlyGoal;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Service para relatórios de performance da loja.
- *
- * Fornece métricas gerenciais como:
- * - Atingimento de meta
- * - Crescimento YoY
- * - Projeções de fechamento
+ * Service para relatorios de performance da loja.
  */
 class StorePerformanceService
 {
     /**
-     * Gera relatório de performance da loja.
+     * Gera relatorio de performance da loja.
      */
     public function getPerformance(int $storeId, string $month, ?string $storeName = null): array
     {
@@ -31,7 +22,7 @@ class StorePerformanceService
         $endOfMonth = Carbon::parse($month . '-01')->endOfMonth();
         $today = Carbon::today();
 
-        // Dias corridos (até hoje ou fim do mês se for mês passado)
+        // Dias corridos (ate hoje ou fim do mes se for mes passado)
         $effectiveEndDate = $today->lt($endOfMonth) ? $today : $endOfMonth;
         $daysElapsed = $startOfMonth->diffInDays($effectiveEndDate) + 1;
         $daysTotal = $endOfMonth->day;
@@ -41,11 +32,12 @@ class StorePerformanceService
             $storeName = \App\Models\Store::find($storeId)?->name;
         }
 
-        // Vendas do mês atual (PDV Data Source)
-        $currentSales = (float) DB::table('pdv_vendas')
-            ->where('store_id', $storeId)
-            ->whereBetween('data_hora', [$startOfMonth, $effectiveEndDate->endOfDay()])
-            ->sum('total');
+        // Vendas do mes atual (PDV Data Source)
+        $currentSales = $this->sumSalesForStore(
+            $storeId,
+            $startOfMonth,
+            $effectiveEndDate->copy()->endOfDay()
+        );
 
         // Meta da loja
         $goal = StoreMonthlyGoal::forStore($storeId)->forMonth($month)->first();
@@ -57,66 +49,69 @@ class StorePerformanceService
             : 0;
         $remainingToGoal = max(0, $goalAmount - $currentSales);
 
-        // ========== Comparação YoY ==========
+        // ========== Comparacao YoY ==========
         $lastYearMonth = Carbon::parse($month . '-01')->subYear()->format('Y-m');
         $lastYearStart = Carbon::parse($lastYearMonth . '-01')->startOfMonth();
         $lastYearEnd = Carbon::parse($lastYearMonth . '-01')->endOfMonth();
 
-        // Mesmo período do ano passado (até o mesmo dia)
+        // Mesmo periodo do ano passado (ate o mesmo dia)
         $lastYearSameDay = min($daysElapsed, $lastYearEnd->day);
         $lastYearSamePeriodEnd = $lastYearStart->copy()->addDays($lastYearSameDay - 1);
 
-        $samePeriodLastYear = (float) DB::table('pdv_vendas')
-            ->where('store_id', $storeId)
-            ->whereBetween('data_hora', [$lastYearStart, $lastYearSamePeriodEnd->endOfDay()])
-            ->sum('total');
+        $samePeriodLastYear = $this->sumSalesForStore(
+            $storeId,
+            $lastYearStart,
+            $lastYearSamePeriodEnd->copy()->endOfDay()
+        );
 
-        $totalLastYear = (float) DB::table('pdv_vendas')
-            ->where('store_id', $storeId)
-            ->whereBetween('data_hora', [$lastYearStart, $lastYearEnd->endOfDay()])
-            ->sum('total');
+        $totalLastYear = $this->sumSalesForStore(
+            $storeId,
+            $lastYearStart,
+            $lastYearEnd->copy()->endOfDay()
+        );
 
         // Crescimento YoY
         $yoyGrowth = $samePeriodLastYear > 0
             ? round((($currentSales / $samePeriodLastYear) - 1) * 100, 2)
             : ($currentSales > 0 ? 100 : 0);
 
-        // ========== Comparação MoM (Mês anterior) ==========
+        // ========== Comparacao MoM (Mes anterior) ==========
         $lastMonthDate = Carbon::parse($month . '-01')->subMonth();
         $lastMonthStart = $lastMonthDate->copy()->startOfMonth();
         $lastMonthEnd = $lastMonthDate->copy()->endOfMonth();
 
-        // Mesmo período do mês passado (até o mesmo dia)
+        // Mesmo periodo do mes passado (ate o mesmo dia)
         $lastMonthSameDay = min($daysElapsed, $lastMonthEnd->day);
         $lastMonthSamePeriodEnd = $lastMonthStart->copy()->addDays($lastMonthSameDay - 1);
 
-        $samePeriodLastMonth = (float) DB::table('pdv_vendas')
-            ->where('store_id', $storeId)
-            ->whereBetween('data_hora', [$lastMonthStart, $lastMonthSamePeriodEnd->endOfDay()])
-            ->sum('total');
+        $samePeriodLastMonth = $this->sumSalesForStore(
+            $storeId,
+            $lastMonthStart,
+            $lastMonthSamePeriodEnd->copy()->endOfDay()
+        );
 
-        $totalLastMonth = (float) DB::table('pdv_vendas')
-            ->where('store_id', $storeId)
-            ->whereBetween('data_hora', [$lastMonthStart, $lastMonthEnd->endOfDay()])
-            ->sum('total');
+        $totalLastMonth = $this->sumSalesForStore(
+            $storeId,
+            $lastMonthStart,
+            $lastMonthEnd->copy()->endOfDay()
+        );
 
         // Crescimento MoM
         $momGrowth = $samePeriodLastMonth > 0
             ? round((($currentSales / $samePeriodLastMonth) - 1) * 100, 2)
             : ($currentSales > 0 ? 100 : 0);
 
-
-        // ========== Projeções ==========
-        // 1. Projeção Linear (Run Rate)
+        // ========== Projecoes ==========
+        // 1. Projecao linear (run rate)
         $linearProjection = $daysElapsed > 0
             ? round(($currentSales / $daysElapsed) * $daysTotal, 2)
             : 0;
 
-        // 2. Projeção por Tendência (baseada no YoY)
+        // 2. Projecao por tendencia (baseada no YoY)
         $trendMultiplier = 1 + ($yoyGrowth / 100);
         $trendProjection = round($totalLastYear * $trendMultiplier, 2);
 
-        // Status da projeção vs meta
+        // Status da projecao vs meta
         $projectionStatus = 'ON_TRACK';
         if ($goalAmount > 0) {
             $bestProjection = max($linearProjection, $trendProjection);
@@ -153,7 +148,6 @@ class StorePerformanceService
                 'mom_growth' => $momGrowth,
             ],
 
-
             'forecast' => [
                 'linear_projection' => $linearProjection,
                 'trend_projection' => $trendProjection,
@@ -163,7 +157,7 @@ class StorePerformanceService
     }
 
     /**
-     * Gera relatório consolidado de múltiplas lojas.
+     * Gera relatorio consolidado de multiplas lojas.
      */
     public function getMultiStorePerformance(array $storeIds, string $month): array
     {
@@ -193,5 +187,31 @@ class StorePerformanceService
                 'total_linear_projection' => $totalLinearProjection,
             ],
         ];
+    }
+
+    private function sumSalesForStore(int $storeId, Carbon $from, Carbon $to): float
+    {
+        $storeMapUnique = DB::table('pdv_store_mappings as psm')
+            ->selectRaw('psm.pdv_store_id, MIN(psm.store_id) as store_id')
+            ->where('psm.active', true)
+            ->groupBy('psm.pdv_store_id')
+            ->havingRaw('COUNT(DISTINCT psm.store_id) = 1');
+
+        $resolvedStoreIdExpr = 'COALESCE(v.store_id, s_guid.id, s_pl_guid.id, smu.store_id)';
+
+        return (float) DB::table('pdv_vendas as v')
+            ->leftJoin('stores as s_guid', function ($join) {
+                $join->on(DB::raw('LOWER(s_guid.guid)'), '=', DB::raw('LOWER(v.erp_loja_uuid)'));
+            })
+            ->leftJoin('pdv_lojas as pl', 'pl.id_ponto_venda', '=', 'v.store_pdv_id')
+            ->leftJoin('stores as s_pl_guid', function ($join) {
+                $join->on(DB::raw('LOWER(s_pl_guid.guid)'), '=', DB::raw('LOWER(pl.guid_loja)'));
+            })
+            ->leftJoinSub($storeMapUnique, 'smu', function ($join): void {
+                $join->on('smu.pdv_store_id', '=', 'v.store_pdv_id');
+            })
+            ->whereBetween('v.data_hora', [$from, $to])
+            ->whereRaw("$resolvedStoreIdExpr = ?", [$storeId])
+            ->sum('v.total');
     }
 }

@@ -34,6 +34,14 @@ class RankingService
         $startOfMonth = Carbon::parse($month . '-01')->startOfMonth();
         $endOfMonth = Carbon::parse($month . '-01')->endOfMonth();
 
+        $storeMapUnique = DB::table('pdv_store_mappings as psm')
+            ->selectRaw('psm.pdv_store_id, MIN(psm.store_id) as store_id')
+            ->where('psm.active', true)
+            ->groupBy('psm.pdv_store_id')
+            ->havingRaw('COUNT(DISTINCT psm.store_id) = 1');
+
+        $resolvedStoreIdExpr = 'COALESCE(v.store_id, s_guid.id, s_pl_guid.id, smu.store_id)';
+
         // Query de vendas agrupadas por vendedor (PDV Data Source)
         $salesQuery = DB::table('pdv_venda_itens as vi')
             ->join('pdv_vendas as v', function ($join) {
@@ -41,18 +49,36 @@ class RankingService
                     ->on('v.canal', '=', 'vi.canal')
                     ->on('v.id_operacao', '=', 'vi.id_operacao');
             })
-            ->join('pdv_user_mappings as pum', function ($join) {
-                $join->on('pum.store_pdv_id', '=', 'vi.store_pdv_id')
-                    ->on('pum.pdv_user_id', '=', 'vi.vendedor_pdv_id');
+            ->leftJoin('stores as s_guid', function ($join) {
+                $join->on(DB::raw('LOWER(s_guid.guid)'), '=', DB::raw('LOWER(v.erp_loja_uuid)'));
             })
-            ->where('pum.active', true)
+            ->leftJoin('pdv_lojas as pl', 'pl.id_ponto_venda', '=', 'v.store_pdv_id')
+            ->leftJoin('stores as s_pl_guid', function ($join) {
+                $join->on(DB::raw('LOWER(s_pl_guid.guid)'), '=', DB::raw('LOWER(pl.guid_loja)'));
+            })
+            ->leftJoinSub($storeMapUnique, 'smu', function ($join): void {
+                $join->on('smu.pdv_store_id', '=', 'v.store_pdv_id');
+            })
+            ->leftJoin('pdv_user_mappings as pum', function ($join) {
+                $join->on('pum.store_pdv_id', '=', 'vi.store_pdv_id')
+                    ->on('pum.pdv_user_id', '=', 'vi.vendedor_pdv_id')
+                    ->where('pum.active', true);
+            })
+            ->leftJoin('users as u_map', 'u_map.id', '=', 'pum.user_id')
+            ->leftJoin('users as u_guid', function ($join) {
+                $join->on(DB::raw('LOWER(u_guid.guid)'), '=', DB::raw('LOWER(vi.vendedor_guid)'));
+            })
             ->whereBetween('v.data_hora', [$startOfMonth, $endOfMonth->endOfDay()])
+            ->where(function ($q) {
+                $q->whereNotNull('u_guid.id')
+                    ->orWhereNotNull('u_map.id');
+            })
             ->select([
-                'pum.user_id as seller_id',
+                DB::raw('COALESCE(u_guid.id, u_map.id) as seller_id'),
                 DB::raw('SUM(vi.total) as total_sold'),
                 DB::raw('COUNT(DISTINCT v.id) as sale_count'),
             ])
-            ->groupBy('pum.user_id');
+            ->groupBy(DB::raw('COALESCE(u_guid.id, u_map.id)'));
 
         // Ordenação: desc para melhores, asc para piores
         if ($order === 'asc') {
@@ -62,7 +88,7 @@ class RankingService
         }
 
         if ($storeId) {
-            $salesQuery->where('v.store_id', $storeId);
+            $salesQuery->whereRaw("$resolvedStoreIdExpr = ?", [$storeId]);
         }
 
         // Calculate total stats before limiting

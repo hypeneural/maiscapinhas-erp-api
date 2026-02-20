@@ -374,23 +374,47 @@ class DashboardController extends Controller
         $startOfMonth = Carbon::parse($month . '-01')->startOfMonth();
         $endOfMonth = Carbon::parse($month . '-01')->endOfMonth();
 
-        $salesByStore = DB::table('pdv_vendas as v')
-            ->join('stores as s', 's.id', '=', 'v.store_id')
-            ->whereIn('v.store_id', $userStoreIds)
+        // Resolve store identity for rows that may arrive without store_id:
+        // store_id -> erp_loja_uuid -> pdv_lojas.guid_loja -> unique pdv_store_mapping.
+        $storeMapUnique = DB::table('pdv_store_mappings as psm')
+            ->selectRaw('psm.pdv_store_id, MIN(psm.store_id) as store_id')
+            ->where('psm.active', true)
+            ->groupBy('psm.pdv_store_id')
+            ->havingRaw('COUNT(DISTINCT psm.store_id) = 1');
+
+        $resolvedStoreIdExpr = 'COALESCE(v.store_id, s_guid.id, s_pl_guid.id, smu.store_id)';
+        $resolvedStoreNameExpr = "COALESCE(s.name, s_guid.name, s_pl_guid.name, s_map.name, pl.nome_padronizado, pl.nome_hiper, CONCAT('Loja PDV ', v.store_pdv_id))";
+
+        $salesBase = DB::table('pdv_vendas as v')
+            ->leftJoin('stores as s', 's.id', '=', 'v.store_id')
+            ->leftJoin('stores as s_guid', function ($join) {
+                $join->on(DB::raw('LOWER(s_guid.guid)'), '=', DB::raw('LOWER(v.erp_loja_uuid)'));
+            })
+            ->leftJoin('pdv_lojas as pl', 'pl.id_ponto_venda', '=', 'v.store_pdv_id')
+            ->leftJoin('stores as s_pl_guid', function ($join) {
+                $join->on(DB::raw('LOWER(s_pl_guid.guid)'), '=', DB::raw('LOWER(pl.guid_loja)'));
+            })
+            ->leftJoinSub($storeMapUnique, 'smu', function ($join): void {
+                $join->on('smu.pdv_store_id', '=', 'v.store_pdv_id');
+            })
+            ->leftJoin('stores as s_map', 's_map.id', '=', 'smu.store_id')
             ->whereBetween('v.data_hora', [$startOfMonth, $endOfMonth])
-            ->selectRaw('v.store_id, s.name as store_name, COUNT(*) as count, COALESCE(SUM(v.total), 0) as total')
-            ->groupBy('v.store_id', 's.name')
+            ->whereIn(DB::raw($resolvedStoreIdExpr), $userStoreIds);
+
+        $salesByStore = (clone $salesBase)
+            ->selectRaw("$resolvedStoreIdExpr as store_id")
+            ->selectRaw("MAX($resolvedStoreNameExpr) as store_name")
+            ->selectRaw('COUNT(*) as count, COALESCE(SUM(v.total), 0) as total')
+            ->groupBy(DB::raw($resolvedStoreIdExpr))
             ->get()
             ->map(fn($s) => [
-                'store_id' => $s->store_id,
-                'store_name' => $s->store_name,
+                'store_id' => (int) $s->store_id,
+                'store_name' => (string) $s->store_name,
                 'count' => (int) $s->count,
                 'total' => (float) $s->total,
             ]);
 
-        $totalSales = DB::table('pdv_vendas as v')
-            ->whereIn('v.store_id', $userStoreIds)
-            ->whereBetween('v.data_hora', [$startOfMonth, $endOfMonth])
+        $totalSales = (clone $salesBase)
             ->selectRaw('COUNT(*) as count, COALESCE(SUM(v.total), 0) as total')
             ->first();
 
@@ -408,22 +432,41 @@ class DashboardController extends Controller
                     ->on('v.canal', '=', 'vi.canal')
                     ->on('v.id_operacao', '=', 'vi.id_operacao');
             })
-            ->join('pdv_user_mappings as pum', function ($join) {
-                $join->on('pum.store_pdv_id', '=', 'vi.store_pdv_id')
-                    ->on('pum.pdv_user_id', '=', 'vi.vendedor_pdv_id');
+            ->leftJoin('stores as s_guid', function ($join) {
+                $join->on(DB::raw('LOWER(s_guid.guid)'), '=', DB::raw('LOWER(v.erp_loja_uuid)'));
             })
-            ->join('users', 'users.id', '=', 'pum.user_id')
-            ->whereIn('v.store_id', $userStoreIds)
-            ->where('pum.active', true)
+            ->leftJoin('pdv_lojas as pl', 'pl.id_ponto_venda', '=', 'v.store_pdv_id')
+            ->leftJoin('stores as s_pl_guid', function ($join) {
+                $join->on(DB::raw('LOWER(s_pl_guid.guid)'), '=', DB::raw('LOWER(pl.guid_loja)'));
+            })
+            ->leftJoinSub($storeMapUnique, 'smu', function ($join): void {
+                $join->on('smu.pdv_store_id', '=', 'v.store_pdv_id');
+            })
+            ->leftJoin('pdv_user_mappings as pum', function ($join) {
+                $join->on('pum.store_pdv_id', '=', 'vi.store_pdv_id')
+                    ->on('pum.pdv_user_id', '=', 'vi.vendedor_pdv_id')
+                    ->where('pum.active', true);
+            })
+            ->leftJoin('users as u_map', 'u_map.id', '=', 'pum.user_id')
+            ->leftJoin('users as u_guid', function ($join) {
+                $join->on(DB::raw('LOWER(u_guid.guid)'), '=', DB::raw('LOWER(vi.vendedor_guid)'));
+            })
+            ->whereIn(DB::raw($resolvedStoreIdExpr), $userStoreIds)
             ->whereBetween('v.data_hora', [$startOfMonth, $endOfMonth])
-            ->selectRaw('pum.user_id as seller_id, users.name, SUM(vi.total) as total, COUNT(DISTINCT v.id) as count')
-            ->groupBy('pum.user_id', 'users.name')
+            ->where(function ($q) {
+                $q->whereNotNull('u_guid.id')
+                    ->orWhereNotNull('u_map.id');
+            })
+            ->selectRaw('COALESCE(u_guid.id, u_map.id) as seller_id')
+            ->selectRaw('MAX(COALESCE(u_guid.name, u_map.name, vi.vendedor_nome)) as name')
+            ->selectRaw('SUM(vi.total) as total, COUNT(DISTINCT v.id) as count')
+            ->groupBy(DB::raw('COALESCE(u_guid.id, u_map.id)'))
             ->orderByDesc('total')
             ->limit(10)
             ->get()
             ->map(fn($s) => [
-                'seller_id' => $s->seller_id,
-                'name' => $s->name,
+                'seller_id' => (int) $s->seller_id,
+                'name' => (string) $s->name,
                 'total' => (float) $s->total,
                 'count' => (int) $s->count,
             ]);

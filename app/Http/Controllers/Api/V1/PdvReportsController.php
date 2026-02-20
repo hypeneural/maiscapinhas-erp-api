@@ -1419,12 +1419,21 @@ class PdvReportsController extends Controller
     /**
      * @param array{store_id:int|null,store_pdv_id:int|null,allowed_store_ids:array<int,int>|null} $scope
      */
-    private function applyStoreScopeToQuery(QueryBuilder $query, array $scope, string $alias): void
+    private function applyStoreScopeToQuery(
+        QueryBuilder $query,
+        array $scope,
+        string $alias,
+        ?string $storeIdExpression = null
+    ): void
     {
         $prefix = $alias !== '' ? $alias . '.' : '';
 
         if ($scope['store_id'] !== null) {
-            $query->where($prefix . 'store_id', $scope['store_id']);
+            if ($storeIdExpression !== null) {
+                $query->whereRaw("$storeIdExpression = ?", [(int) $scope['store_id']]);
+            } else {
+                $query->where($prefix . 'store_id', $scope['store_id']);
+            }
         }
         if ($scope['store_pdv_id'] !== null) {
             $query->where($prefix . 'store_pdv_id', $scope['store_pdv_id']);
@@ -1435,7 +1444,11 @@ class PdvReportsController extends Controller
             && $scope['store_pdv_id'] === null
             && is_array($scope['allowed_store_ids'])
         ) {
-            $query->whereIn($prefix . 'store_id', $scope['allowed_store_ids']);
+            if ($storeIdExpression !== null) {
+                $query->whereIn(DB::raw($storeIdExpression), $scope['allowed_store_ids']);
+            } else {
+                $query->whereIn($prefix . 'store_id', $scope['allowed_store_ids']);
+            }
         }
     }
 
@@ -1718,6 +1731,7 @@ class PdvReportsController extends Controller
         $tipoOperacao = $validated['tipo_operacao'] ?? null;
         $sortDirection = (string) ($validated['sort'] ?? 'desc');
         $perPage = (int) ($validated['per_page'] ?? 15);
+        $storeMapUnique = $this->uniqueActiveStoreMappingSubquery();
 
         $subQueries = [];
 
@@ -1748,8 +1762,22 @@ class PdvReportsController extends Controller
                 ])
                 ->groupBy('vp.store_pdv_id', 'vp.canal', 'vp.id_operacao');
 
+            $vendaResolvedStoreIdExpr = 'COALESCE(v.store_id, s_guid.id, s_pl_guid.id, smu.store_id)';
+            $vendaResolvedStoreNameExpr = "COALESCE(s.name, s_guid.name, s_pl_guid.name, s_map.name, pl.nome_padronizado, pl.nome_hiper, CONCAT('Loja PDV ', v.store_pdv_id))";
+
             $vendasQuery = DB::table('pdv_vendas as v')
                 ->leftJoin('stores as s', 'v.store_id', '=', 's.id')
+                ->leftJoin('stores as s_guid', function ($join) {
+                    $join->on(DB::raw('LOWER(s_guid.guid)'), '=', DB::raw('LOWER(v.erp_loja_uuid)'));
+                })
+                ->leftJoin('pdv_lojas as pl', 'pl.id_ponto_venda', '=', 'v.store_pdv_id')
+                ->leftJoin('stores as s_pl_guid', function ($join) {
+                    $join->on(DB::raw('LOWER(s_pl_guid.guid)'), '=', DB::raw('LOWER(pl.guid_loja)'));
+                })
+                ->leftJoinSub($storeMapUnique, 'smu', function ($join): void {
+                    $join->on('smu.pdv_store_id', '=', 'v.store_pdv_id');
+                })
+                ->leftJoin('stores as s_map', 's_map.id', '=', 'smu.store_id')
                 ->leftJoinSub($itemAgg, 'it', function ($join): void {
                     $join->on('it.store_pdv_id', '=', 'v.store_pdv_id')
                         ->on('it.canal', '=', 'v.canal')
@@ -1769,8 +1797,8 @@ class PdvReportsController extends Controller
                 ->select([
                     DB::raw("'venda' as tipo_operacao"),
                     'v.data_hora',
-                    'v.store_id',
-                    's.name as store_name',
+                    DB::raw("$vendaResolvedStoreIdExpr as store_id"),
+                    DB::raw("$vendaResolvedStoreNameExpr as store_name"),
                     'v.store_pdv_id',
                     DB::raw('COALESCE(v.turno_seq, 0) as turno_seq'),
                     'v.canal',
@@ -1789,7 +1817,7 @@ class PdvReportsController extends Controller
                 ])
                 ->whereBetween('v.data_hora', [$from->toDateTimeString(), $to->toDateTimeString()]);
 
-            $this->applyStoreScopeToQuery($vendasQuery, $scope, 'v');
+            $this->applyStoreScopeToQuery($vendasQuery, $scope, 'v', $vendaResolvedStoreIdExpr);
 
             // Apply venda-specific filters
             if (!empty($validated['canal'])) {
@@ -1856,20 +1884,33 @@ class PdvReportsController extends Controller
             $turnoDateExpr = 'COALESCE(t.data_hora_fechamento, t.data_hora_termino, t.data_hora_inicio)';
             // Group closures by closure_uuid when available; fallback keeps legacy/open rows grouped.
             $turnoGroupExpr = "COALESCE(t.closure_uuid, DATE($turnoDateExpr))";
+            $turnoResolvedStoreIdExpr = 'COALESCE(t.store_id, pc.store_id, s2_guid.id, smu2.store_id)';
+            $turnoResolvedStoreNameExpr = "COALESCE(s2.name, s2_guid.name, s2_map.name, pl2.nome_padronizado, pl2.nome_hiper, CONCAT('Loja PDV ', t.store_pdv_id))";
 
             $turnosQuery = DB::table('pdv_turnos as t')
                 ->leftJoin('stores as s2', 't.store_id', '=', 's2.id')
                 ->leftJoin('pdv_closures as pc', function ($join) {
                     $join->on('pc.store_pdv_id', '=', 't.store_pdv_id')
                         ->on('pc.sequencial', '=', 't.sequencial')
-                        ->on('pc.store_id', '=', 't.store_id')
                         ->whereColumn('pc.closure_uuid', '=', 't.closure_uuid');
                 })
+                ->leftJoin('pdv_lojas as pl2', 'pl2.id_ponto_venda', '=', 't.store_pdv_id')
+                ->leftJoin('stores as s2_guid', function ($join) {
+                    $join->on(
+                        DB::raw('LOWER(s2_guid.guid)'),
+                        '=',
+                        DB::raw('LOWER(COALESCE(pc.store_loja_guid, pl2.guid_loja))')
+                    );
+                })
+                ->leftJoinSub($storeMapUnique, 'smu2', function ($join): void {
+                    $join->on('smu2.pdv_store_id', '=', 't.store_pdv_id');
+                })
+                ->leftJoin('stores as s2_map', 's2_map.id', '=', 'smu2.store_id')
                 ->select([
                     DB::raw("'fechamento_caixa' as tipo_operacao"),
                     DB::raw("MAX($turnoDateExpr) as data_hora"),
-                    't.store_id',
-                    DB::raw('MAX(s2.name) as store_name'),
+                    DB::raw("$turnoResolvedStoreIdExpr as store_id"),
+                    DB::raw("MAX($turnoResolvedStoreNameExpr) as store_name"),
                     't.store_pdv_id',
                     DB::raw('COALESCE(t.sequencial, 0) as turno_seq'),
                     DB::raw("'UNIFICADO' as canal"), // Force unified canal
@@ -1895,7 +1936,7 @@ class PdvReportsController extends Controller
                     );
                 });
 
-            $this->applyStoreScopeToQuery($turnosQuery, $scope, 't');
+            $this->applyStoreScopeToQuery($turnosQuery, $scope, 't', $turnoResolvedStoreIdExpr);
 
             // Apply Filters specific to Turnos (aggregated)
 
@@ -1915,7 +1956,7 @@ class PdvReportsController extends Controller
 
             // Group By Logic to Unify Rows
             $turnosQuery->groupBy([
-                't.store_id',
+                DB::raw($turnoResolvedStoreIdExpr),
                 't.store_pdv_id',
                 't.sequencial',
                 DB::raw($turnoGroupExpr),
@@ -1977,10 +2018,17 @@ class PdvReportsController extends Controller
         // Summary from union
         $summaryQuery = DB::table(DB::raw('(' . $unionQuery->toSql() . ') as op_summary'))
             ->mergeBindings($unionQuery);
-        $totalOperacoes = (int) (clone $summaryQuery)->count();
-        $totalValor = (float) ((clone $summaryQuery)->sum('valor') ?? 0);
-        $totalVendas = (int) (clone $summaryQuery)->where('tipo_operacao', 'venda')->count();
-        $totalFechamentos = (int) (clone $summaryQuery)->where('tipo_operacao', 'fechamento_caixa')->count();
+        $summary = (clone $summaryQuery)
+            ->selectRaw('COUNT(*) as total_operacoes')
+            ->selectRaw("SUM(CASE WHEN TRIM(tipo_operacao) = 'venda' THEN 1 ELSE 0 END) as total_vendas")
+            ->selectRaw("SUM(CASE WHEN TRIM(tipo_operacao) = 'fechamento_caixa' THEN 1 ELSE 0 END) as total_fechamentos")
+            ->selectRaw('COALESCE(SUM(valor), 0) as total_valor')
+            ->first();
+
+        $totalOperacoes = (int) ($summary->total_operacoes ?? 0);
+        $totalValor = (float) ($summary->total_valor ?? 0);
+        $totalVendas = (int) ($summary->total_vendas ?? 0);
+        $totalFechamentos = (int) ($summary->total_fechamentos ?? 0);
 
         $paginator = $finalQuery
             ->orderBy('data_hora', $sortDirection)
@@ -2042,6 +2090,15 @@ class PdvReportsController extends Controller
             'max_total' => isset($validated['max_total']) ? (float) $validated['max_total'] : null,
             'sort' => $sortDirection,
         ];
+    }
+
+    private function uniqueActiveStoreMappingSubquery(): QueryBuilder
+    {
+        return DB::table('pdv_store_mappings as psm')
+            ->selectRaw('psm.pdv_store_id, MIN(psm.store_id) as store_id')
+            ->where('psm.active', true)
+            ->groupBy('psm.pdv_store_id')
+            ->havingRaw('COUNT(DISTINCT psm.store_id) = 1');
     }
 
     /**
