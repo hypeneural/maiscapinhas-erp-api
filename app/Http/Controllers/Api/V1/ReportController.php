@@ -6,8 +6,10 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Domains\Reports\Services\CashIntegrityService;
 use App\Domains\Reports\Services\StorePerformanceService;
+use App\Http\Controllers\Api\V1\Concerns\ResolvesReportFilters;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
+use App\Models\Store;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -31,6 +33,7 @@ use Illuminate\Http\Request;
 class ReportController extends Controller
 {
     use ApiResponse;
+    use ResolvesReportFilters;
 
     public function __construct(
         private StorePerformanceService $performanceService,
@@ -146,16 +149,22 @@ class ReportController extends Controller
      */
     public function consolidatedPerformance(Request $request): JsonResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'month' => ['sometimes', 'string', 'regex:/^\d{4}-\d{2}$/'],
+            'date' => ['sometimes', 'date_format:Y-m-d'],
+            'from' => ['sometimes', 'date'],
+            'to' => ['sometimes', 'date', 'after_or_equal:from'],
+            'period' => ['sometimes', 'string', 'in:today,yesterday,last_7_days,last_30_days,this_month,last_month'],
+            'store_id' => ['sometimes', 'string'],
         ]);
 
         $user = $request->user();
-        $month = $request->input('month', Carbon::now()->format('Y-m'));
+        $window = $this->resolveReportWindow($validated, 'America/Sao_Paulo');
+        $requestedStoreId = $this->resolveStoreIdFilter($validated['store_id'] ?? null);
 
         // Super admin vê todas as lojas
         if ($user->isSuperAdmin()) {
-            $userStoreIds = \App\Models\Store::where('active', true)->pluck('id')->toArray();
+            $userStoreIds = Store::where('active', true)->pluck('id')->toArray();
         } else {
             $userStoreIds = $user->storeUsers()
                 ->whereIn('role', ['admin', 'gerente'])
@@ -166,9 +175,30 @@ class ReportController extends Controller
         if (empty($userStoreIds)) {
             return $this->forbidden('Você não tem acesso administrativo a nenhuma loja.');
         }
+        if ($requestedStoreId !== null) {
+            if (!in_array($requestedStoreId, $userStoreIds, true)) {
+                return $this->forbidden('Voce nao tem acesso administrativo a esta loja.');
+            }
+            $userStoreIds = [$requestedStoreId];
+        }
 
+        $performance = $this->performanceService->getMultiStorePerformance(
+            $userStoreIds,
+            $window['month'],
+            $window['from_utc'],
+            $window['to_utc'],
+            $window['period_label']
+        );
 
-        $performance = $this->performanceService->getMultiStorePerformance($userStoreIds, $month);
+        $performance['filters'] = [
+            'store_id' => $requestedStoreId,
+            'month' => $window['month'],
+            'period' => $window['period_label'],
+            'mode' => $window['mode'],
+            'from' => $window['from_utc']->toIso8601String(),
+            'to' => $window['to_utc']->toIso8601String(),
+            'timezone' => $window['timezone'],
+        ];
 
         return $this->success($performance);
     }

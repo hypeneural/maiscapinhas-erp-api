@@ -9,6 +9,7 @@ use App\Models\SellerDailyBonus;
 use App\Models\StoreGoalSplit;
 use App\Models\User;
 use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -29,10 +30,17 @@ class RankingService
         ?int $storeId,
         string $month,
         int $limit = 50,
-        string $order = 'desc'
+        string $order = 'desc',
+        ?CarbonImmutable $fromUtc = null,
+        ?CarbonImmutable $toUtc = null,
+        ?string $periodLabel = null
     ): array {
-        $startOfMonth = Carbon::parse($month . '-01')->startOfMonth();
-        $endOfMonth = Carbon::parse($month . '-01')->endOfMonth();
+        $startOfMonth = $fromUtc !== null
+            ? Carbon::instance($fromUtc->toMutable())
+            : Carbon::parse($month . '-01')->startOfMonth();
+        $endOfMonth = $toUtc !== null
+            ? Carbon::instance($toUtc->toMutable())
+            : Carbon::parse($month . '-01')->endOfMonth()->endOfDay();
 
         $storeMapUnique = DB::table('pdv_store_mappings as psm')
             ->selectRaw('psm.pdv_store_id, MIN(psm.store_id) as store_id')
@@ -75,7 +83,7 @@ class RankingService
             ->leftJoin('users as u_guid', function ($join) {
                 $join->on(DB::raw('LOWER(u_guid.guid)'), '=', DB::raw('LOWER(vi.vendedor_guid)'));
             })
-            ->whereBetween('v.data_hora', [$startOfMonth, $endOfMonth->endOfDay()])
+            ->whereBetween('v.data_hora', [$startOfMonth, $endOfMonth])
             ->where(function ($q) {
                 $q->whereNotNull('u_guid.id')
                     ->orWhereNotNull('u_map.id');
@@ -181,7 +189,7 @@ class RankingService
         $restOfRanking = array_slice($ranking, 3, $limit);
 
         return [
-            'period' => $month,
+            'period' => $periodLabel ?? $month,
             'store_id' => $storeId,
             'podium' => $podium,
             'ranking' => $restOfRanking,

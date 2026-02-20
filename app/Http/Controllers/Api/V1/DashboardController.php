@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domains\Reports\Services\SellerGamificationService;
+use App\Http\Controllers\Api\V1\Concerns\ResolvesReportFilters;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
 use App\Models\CashClosing;
-use App\Models\CashShift;
-use App\Models\Sale;
+use App\Models\Store;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -32,6 +32,7 @@ use Illuminate\Support\Facades\DB;
 class DashboardController extends Controller
 {
     use ApiResponse;
+    use ResolvesReportFilters;
 
     public function __construct(
         private SellerGamificationService $gamificationService
@@ -349,16 +350,22 @@ class DashboardController extends Controller
      */
     public function admin(Request $request): JsonResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'month' => ['sometimes', 'string', 'regex:/^\d{4}-\d{2}$/'],
+            'date' => ['sometimes', 'date_format:Y-m-d'],
+            'from' => ['sometimes', 'date'],
+            'to' => ['sometimes', 'date', 'after_or_equal:from'],
+            'period' => ['sometimes', 'string', 'in:today,yesterday,last_7_days,last_30_days,this_month,last_month'],
+            'store_id' => ['sometimes', 'string'],
         ]);
 
         $user = $request->user();
-        $month = $request->input('month', Carbon::now()->format('Y-m'));
+        $window = $this->resolveReportWindow($validated, 'America/Sao_Paulo');
+        $requestedStoreId = $this->resolveStoreIdFilter($validated['store_id'] ?? null);
 
         // Super admin vê todas as lojas
         if ($user->isSuperAdmin()) {
-            $userStoreIds = \App\Models\Store::where('active', true)->pluck('id')->toArray();
+            $userStoreIds = Store::where('active', true)->pluck('id')->toArray();
         } else {
             $userStoreIds = $user->storeUsers()
                 ->whereIn('role', ['admin', 'gerente'])
@@ -370,9 +377,17 @@ class DashboardController extends Controller
             return $this->forbidden('You do not have admin access to any store.');
         }
 
+        if ($requestedStoreId !== null) {
+            if (!in_array($requestedStoreId, $userStoreIds, true)) {
+                return $this->forbidden('You do not have admin access to this store.');
+            }
+            $userStoreIds = [$requestedStoreId];
+        }
 
-        $startOfMonth = Carbon::parse($month . '-01')->startOfMonth();
-        $endOfMonth = Carbon::parse($month . '-01')->endOfMonth();
+        $fromUtc = Carbon::instance($window['from_utc']->toMutable());
+        $toUtc = Carbon::instance($window['to_utc']->toMutable());
+        $fromLocalDate = $window['from_local']->toDateString();
+        $toLocalDate = $window['to_local']->toDateString();
 
         // Resolve store identity for rows that may arrive without store_id:
         // store_id -> erp_loja_uuid -> pdv_lojas.guid_loja -> unique pdv_store_mapping.
@@ -405,7 +420,7 @@ class DashboardController extends Controller
                 $join->on('smu.pdv_store_id', '=', 'v.store_pdv_id');
             })
             ->leftJoin('stores as s_map', 's_map.id', '=', 'smu.store_id')
-            ->whereBetween('v.data_hora', [$startOfMonth, $endOfMonth])
+            ->whereBetween('v.data_hora', [$fromUtc, $toUtc])
             ->whereIn(DB::raw($resolvedStoreIdExpr), $userStoreIds);
 
         $salesByStore = (clone $salesBase)
@@ -425,9 +440,9 @@ class DashboardController extends Controller
             ->selectRaw('COUNT(*) as count, COALESCE(SUM(v.total), 0) as total')
             ->first();
 
-        $closingsSummary = CashClosing::whereHas('cashShift', function ($q) use ($userStoreIds, $startOfMonth, $endOfMonth) {
+        $closingsSummary = CashClosing::whereHas('cashShift', function ($q) use ($userStoreIds, $fromLocalDate, $toLocalDate) {
             $q->whereIn('store_id', $userStoreIds)
-                ->whereBetween('date', [$startOfMonth->format('Y-m-d'), $endOfMonth->format('Y-m-d')]);
+                ->whereBetween('date', [$fromLocalDate, $toLocalDate]);
         })
             ->selectRaw('status, COUNT(*) as count')
             ->groupBy('status')
@@ -466,7 +481,7 @@ class DashboardController extends Controller
                 $join->on(DB::raw('LOWER(u_guid.guid)'), '=', DB::raw('LOWER(vi.vendedor_guid)'));
             })
             ->whereIn(DB::raw($resolvedStoreIdExpr), $userStoreIds)
-            ->whereBetween('v.data_hora', [$startOfMonth, $endOfMonth])
+            ->whereBetween('v.data_hora', [$fromUtc, $toUtc])
             ->where(function ($q) {
                 $q->whereNotNull('u_guid.id')
                     ->orWhereNotNull('u_map.id');
@@ -486,7 +501,9 @@ class DashboardController extends Controller
             ]);
 
         return $this->success([
-            'month' => $month,
+            'month' => $window['month'],
+            'period' => $window['period_label'],
+            'mode' => $window['mode'],
             'total_sales' => [
                 'count' => (int) $totalSales->count,
                 'total' => (float) $totalSales->total,
@@ -494,6 +511,15 @@ class DashboardController extends Controller
             'sales_by_store' => $salesByStore,
             'closings_summary' => $closingsSummary,
             'top_sellers' => $topSellers,
+            'filters' => [
+                'store_id' => $requestedStoreId,
+                'month' => $window['month'],
+                'period' => $window['period_label'],
+                'mode' => $window['mode'],
+                'from' => $window['from_utc']->toIso8601String(),
+                'to' => $window['to_utc']->toIso8601String(),
+                'timezone' => $window['timezone'],
+            ],
         ]);
     }
 }

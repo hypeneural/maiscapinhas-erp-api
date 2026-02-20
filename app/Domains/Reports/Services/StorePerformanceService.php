@@ -6,6 +6,7 @@ namespace App\Domains\Reports\Services;
 
 use App\Models\StoreMonthlyGoal;
 use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -16,16 +17,35 @@ class StorePerformanceService
     /**
      * Gera relatorio de performance da loja.
      */
-    public function getPerformance(int $storeId, string $month, ?string $storeName = null): array
+    public function getPerformance(
+        int $storeId,
+        string $month,
+        ?string $storeName = null,
+        ?CarbonImmutable $fromUtc = null,
+        ?CarbonImmutable $toUtc = null,
+        ?string $periodLabel = null
+    ): array
     {
-        $startOfMonth = Carbon::parse($month . '-01')->startOfMonth();
-        $endOfMonth = Carbon::parse($month . '-01')->endOfMonth();
-        $today = Carbon::today();
+        $isCustomWindow = $fromUtc !== null && $toUtc !== null;
 
-        // Dias corridos (ate hoje ou fim do mes se for mes passado)
-        $effectiveEndDate = $today->lt($endOfMonth) ? $today : $endOfMonth;
-        $daysElapsed = $startOfMonth->diffInDays($effectiveEndDate) + 1;
-        $daysTotal = $endOfMonth->day;
+        if ($isCustomWindow) {
+            $startOfPeriod = Carbon::instance($fromUtc->toMutable());
+            $endOfPeriod = Carbon::instance($toUtc->toMutable());
+            $effectiveEndDate = $endOfPeriod;
+            $daysElapsed = $startOfPeriod->copy()->startOfDay()->diffInDays($effectiveEndDate->copy()->startOfDay()) + 1;
+            $daysTotal = $daysElapsed;
+            $periodOutput = $periodLabel ?? ($startOfPeriod->toDateString() . ' to ' . $endOfPeriod->toDateString());
+        } else {
+            $startOfPeriod = Carbon::parse($month . '-01')->startOfMonth();
+            $endOfPeriod = Carbon::parse($month . '-01')->endOfMonth();
+            $today = Carbon::today();
+
+            // Dias corridos (ate hoje ou fim do mes se for mes passado)
+            $effectiveEndDate = $today->lt($endOfPeriod) ? $today : $endOfPeriod;
+            $daysElapsed = $startOfPeriod->diffInDays($effectiveEndDate) + 1;
+            $daysTotal = $endOfPeriod->day;
+            $periodOutput = $month;
+        }
 
         // Fetch store name if not provided
         if ($storeName === null) {
@@ -35,7 +55,7 @@ class StorePerformanceService
         // Vendas do mes atual (PDV Data Source)
         $currentSales = $this->sumSalesForStore(
             $storeId,
-            $startOfMonth,
+            $startOfPeriod,
             $effectiveEndDate->copy()->endOfDay()
         );
 
@@ -50,13 +70,19 @@ class StorePerformanceService
         $remainingToGoal = max(0, $goalAmount - $currentSales);
 
         // ========== Comparacao YoY ==========
-        $lastYearMonth = Carbon::parse($month . '-01')->subYear()->format('Y-m');
-        $lastYearStart = Carbon::parse($lastYearMonth . '-01')->startOfMonth();
-        $lastYearEnd = Carbon::parse($lastYearMonth . '-01')->endOfMonth();
+        if ($isCustomWindow) {
+            $lastYearStart = $startOfPeriod->copy()->subYear();
+            $lastYearSamePeriodEnd = $effectiveEndDate->copy()->subYear();
+            $lastYearEnd = $lastYearSamePeriodEnd;
+        } else {
+            $lastYearMonth = Carbon::parse($month . '-01')->subYear()->format('Y-m');
+            $lastYearStart = Carbon::parse($lastYearMonth . '-01')->startOfMonth();
+            $lastYearEnd = Carbon::parse($lastYearMonth . '-01')->endOfMonth();
 
-        // Mesmo periodo do ano passado (ate o mesmo dia)
-        $lastYearSameDay = min($daysElapsed, $lastYearEnd->day);
-        $lastYearSamePeriodEnd = $lastYearStart->copy()->addDays($lastYearSameDay - 1);
+            // Mesmo periodo do ano passado (ate o mesmo dia)
+            $lastYearSameDay = min($daysElapsed, $lastYearEnd->day);
+            $lastYearSamePeriodEnd = $lastYearStart->copy()->addDays($lastYearSameDay - 1);
+        }
 
         $samePeriodLastYear = $this->sumSalesForStore(
             $storeId,
@@ -76,13 +102,19 @@ class StorePerformanceService
             : ($currentSales > 0 ? 100 : 0);
 
         // ========== Comparacao MoM (Mes anterior) ==========
-        $lastMonthDate = Carbon::parse($month . '-01')->subMonth();
-        $lastMonthStart = $lastMonthDate->copy()->startOfMonth();
-        $lastMonthEnd = $lastMonthDate->copy()->endOfMonth();
+        if ($isCustomWindow) {
+            $lastMonthStart = $startOfPeriod->copy()->subDays($daysElapsed);
+            $lastMonthSamePeriodEnd = $effectiveEndDate->copy()->subDays($daysElapsed);
+            $lastMonthEnd = $lastMonthSamePeriodEnd;
+        } else {
+            $lastMonthDate = Carbon::parse($month . '-01')->subMonth();
+            $lastMonthStart = $lastMonthDate->copy()->startOfMonth();
+            $lastMonthEnd = $lastMonthDate->copy()->endOfMonth();
 
-        // Mesmo periodo do mes passado (ate o mesmo dia)
-        $lastMonthSameDay = min($daysElapsed, $lastMonthEnd->day);
-        $lastMonthSamePeriodEnd = $lastMonthStart->copy()->addDays($lastMonthSameDay - 1);
+            // Mesmo periodo do mes passado (ate o mesmo dia)
+            $lastMonthSameDay = min($daysElapsed, $lastMonthEnd->day);
+            $lastMonthSamePeriodEnd = $lastMonthStart->copy()->addDays($lastMonthSameDay - 1);
+        }
 
         $samePeriodLastMonth = $this->sumSalesForStore(
             $storeId,
@@ -128,7 +160,8 @@ class StorePerformanceService
         return [
             'store_id' => $storeId,
             'store_name' => $storeName,
-            'period' => $month,
+            'period' => $periodOutput,
+            'month' => $month,
             'days_elapsed' => $daysElapsed,
             'days_total' => $daysTotal,
 
@@ -159,7 +192,13 @@ class StorePerformanceService
     /**
      * Gera relatorio consolidado de multiplas lojas.
      */
-    public function getMultiStorePerformance(array $storeIds, string $month): array
+    public function getMultiStorePerformance(
+        array $storeIds,
+        string $month,
+        ?CarbonImmutable $fromUtc = null,
+        ?CarbonImmutable $toUtc = null,
+        ?string $periodLabel = null
+    ): array
     {
         $results = [];
 
@@ -169,7 +208,7 @@ class StorePerformanceService
 
         foreach ($storeIds as $storeId) {
             $storeName = $storeNames[$storeId] ?? null;
-            $results[] = $this->getPerformance($storeId, $month, $storeName);
+            $results[] = $this->getPerformance($storeId, $month, $storeName, $fromUtc, $toUtc, $periodLabel);
         }
 
         // Totais consolidados
@@ -178,7 +217,8 @@ class StorePerformanceService
         $totalLinearProjection = array_sum(array_column(array_column($results, 'forecast'), 'linear_projection'));
 
         return [
-            'period' => $month,
+            'period' => $periodLabel ?? $month,
+            'month' => $month,
             'stores' => $results,
             'consolidated' => [
                 'total_sales' => $totalCurrentSales,
