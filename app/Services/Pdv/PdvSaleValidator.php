@@ -661,13 +661,7 @@ class PdvSaleValidator
         $this->loadRelationsManual($venda);
 
         // ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Store info from stores table ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
-        $storeInfo = null;
-        if ($venda->store_id) {
-            $storeInfo = DB::table('stores')
-                ->where('id', $venda->store_id)
-                ->select(['name', 'cnpj', 'razao_social'])
-                ->first();
-        }
+        $storeInfo = $this->resolveStoreInfoForVenda($venda);
 
         // Resolve seller info from users table (batch by unique guids)
         $sellerGuids = $venda->itens->pluck('vendedor_guid')->filter()->unique()->values()->all();
@@ -722,12 +716,13 @@ class PdvSaleValidator
 
         return [
             'venda' => [
-                'store_id' => $venda->store_id,
-                'store_name' => $storeInfo->name ?? null,
+                'store_id' => $storeInfo['id'],
+                'store_name' => $storeInfo['name'],
+                'store_city' => $storeInfo['city'],
                 'store_pdv_id' => $venda->store_pdv_id,
                 'store_pdv_name' => $loja->nome_padronizado ?? $loja->nome_hiper ?? null,
-                'store_cnpj' => $storeInfo->cnpj ?? null,
-                'store_razao_social' => $storeInfo->razao_social ?? null,
+                'store_cnpj' => $storeInfo['cnpj'],
+                'store_razao_social' => $storeInfo['razao_social'],
                 'canal' => $venda->canal,
                 'id_operacao' => $venda->id_operacao,
                 'id_turno' => $venda->id_turno,
@@ -736,7 +731,7 @@ class PdvSaleValidator
                 'total' => (float) $venda->total,
                 'status' => $venda->status ?? null,
                 'erp_operacao_uuid' => $venda->erp_operacao_uuid,
-                'erp_loja_uuid' => $venda->erp_loja_uuid,
+                'erp_loja_uuid' => $venda->erp_loja_uuid ?: $storeInfo['guid'],
                 'fiscal' => [
                     'nfce_chave' => $venda->nfce_chave,
                     'nfce_numero' => $venda->nfce_numero,
@@ -768,6 +763,7 @@ class PdvSaleValidator
     private function buildComparison(array $erp, PdvVenda $venda): array
     {
         $this->loadRelationsManual($venda);
+        $storeInfo = $this->resolveStoreInfoForVenda($venda);
 
         // ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Seller resolution ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
         $sellerGuids = $venda->itens->pluck('vendedor_guid')->filter()->unique()->values()->all();
@@ -806,7 +802,7 @@ class PdvSaleValidator
 
         // ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ 2. Loja ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
         $erpLojaUuid = strtolower(trim(data_get($erp, 'LojaId') ?? data_get($erp, 'Loja.Id') ?? data_get($erp, 'Turno.LojaId') ?? ''));
-        $dbLojaUuid = strtolower(trim($venda->erp_loja_uuid ?? ''));
+        $dbLojaUuid = strtolower(trim($venda->erp_loja_uuid ?: ($storeInfo['guid'] ?? '')));
         $loja = $venda->loja;
 
         $lojaSection = [
@@ -815,9 +811,10 @@ class PdvSaleValidator
                 'nome' => data_get($erp, 'Loja.Nome') ?? data_get($erp, 'NomeDaLoja'),
             ],
             'db' => [
-                'uuid' => $venda->erp_loja_uuid,
-                'store_id' => $venda->store_id,
-                'nome' => $loja->nome_hiper ?? null,
+                'uuid' => $venda->erp_loja_uuid ?: $storeInfo['guid'],
+                'store_id' => $storeInfo['id'],
+                'nome' => $storeInfo['name'] ?? ($loja->nome_hiper ?? null),
+                'cidade' => $storeInfo['city'],
                 'store_pdv_id' => $venda->store_pdv_id,
             ],
             'match' => $erpLojaUuid && $dbLojaUuid && $erpLojaUuid === $dbLojaUuid,
@@ -1038,6 +1035,38 @@ class PdvSaleValidator
             ->value('id');
 
         return $storeId !== null ? (int) $storeId : null;
+    }
+
+    /**
+     * @return array{id:int|null,guid:string|null,name:string|null,city:string|null,cnpj:string|null,razao_social:string|null}
+     */
+    private function resolveStoreInfoForVenda(PdvVenda $venda): array
+    {
+        $storeInfo = null;
+        $select = ['id', 'guid', 'name', 'city', 'cnpj', 'razao_social'];
+
+        if ($venda->store_id) {
+            $storeInfo = DB::table('stores')
+                ->where('id', (int) $venda->store_id)
+                ->select($select)
+                ->first();
+        }
+
+        if ($storeInfo === null && $venda->erp_loja_uuid) {
+            $storeInfo = DB::table('stores')
+                ->whereRaw('LOWER(guid) = ?', [strtolower(trim((string) $venda->erp_loja_uuid))])
+                ->select($select)
+                ->first();
+        }
+
+        return [
+            'id' => $storeInfo?->id !== null ? (int) $storeInfo->id : ($venda->store_id ? (int) $venda->store_id : null),
+            'guid' => $storeInfo->guid ?? ($venda->erp_loja_uuid ?: null),
+            'name' => $storeInfo->name ?? null,
+            'city' => $storeInfo->city ?? null,
+            'cnpj' => $storeInfo->cnpj ?? null,
+            'razao_social' => $storeInfo->razao_social ?? null,
+        ];
     }
 
     /**
