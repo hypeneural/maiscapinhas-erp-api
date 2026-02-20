@@ -10,7 +10,6 @@ use App\Models\CashClosingLine;
 use App\Models\CashShift;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
 class CashClosingService
@@ -18,7 +17,6 @@ class CashClosingService
     /**
      * Submit a cash closing for review.
      *
-     * @throws ValidationException
      * @throws ConflictHttpException
      */
     public function submit(CashClosing $closing, User $submittedBy): CashClosing
@@ -38,44 +36,52 @@ class CashClosingService
             $this->recalculateDiffs($closing);
             $totalDiff = $closing->getTotalDifference();
 
-            // CENÁRIO A: Auto-Aprovação (Diferença Zero)
+            // Scenario A: no divergence -> auto approve
             if (abs($totalDiff) < 0.01) {
-                // Se não houver divergência, aprovamos automaticamente
                 $closing->justified = true;
-                $closing->status = CashClosing::STATUS_SUBMITTED; // Fix: Must be submitted to be approved
+                $closing->status = CashClosing::STATUS_SUBMITTED;
                 $closing->save();
 
                 return $this->approve($closing, $submittedBy);
             }
 
-            // CENÁRIO B/C: Divergência
-            // Exige justificativa obrigatória
-            if (!$closing->justification_text && !$closing->areDivergentLinesJustified()) {
-                // Fallback check: ensure strictly one form of justification exists
-                // Note: hasJustifiedLines() must be implemented or verified. 
-                // Assuming checking justification_text first.
-                // If the logic requires justification text on the closing header for ANY divergence:
-                throw ValidationException::withMessages([
-                    'justification_text' => ['A justificativa é obrigatória quando há divergência de valores.']
-                ]);
-            }
+            $hasJustification = !empty(trim((string) $closing->justification_text))
+                || $closing->areDivergentLinesJustified()
+                || (bool) $closing->justified;
 
-            // Update status to SUBMITTED (Awaiting Manager)
+            // Move to submitted
             $beforeStatus = $closing->status;
             $closing->status = CashClosing::STATUS_SUBMITTED;
             $closing->version++;
             $closing->save();
 
-            // Update shift status
+            // Update shift to pending while workflow resolves
             $closing->cashShift->update(['status' => CashShift::STATUS_PENDING]);
 
-            // Log audit
+            // Scenario B: divergence without justification -> auto approve with divergence
+            if (!$hasJustification) {
+                $closing->justified = false;
+                $closing->save();
+
+                AuditLog::logSubmit($closing, [
+                    'status' => $closing->status,
+                    'version' => $closing->version,
+                    'submitted_by' => $submittedBy->id,
+                    'previous_status' => $beforeStatus,
+                    'total_diff' => $totalDiff,
+                    'auto_approved_unjustified_divergence' => true,
+                ]);
+
+                return $this->approve($closing, $submittedBy);
+            }
+
+            // Scenario C: divergence with justification -> await manager approval
             AuditLog::logSubmit($closing, [
                 'status' => $closing->status,
                 'version' => $closing->version,
                 'submitted_by' => $submittedBy->id,
                 'previous_status' => $beforeStatus,
-                'total_diff' => $totalDiff
+                'total_diff' => $totalDiff,
             ]);
 
             return $closing->fresh(['lines']);
