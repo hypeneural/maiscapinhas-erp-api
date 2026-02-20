@@ -813,7 +813,8 @@ class PdvSaleValidator
             'db' => [
                 'uuid' => $venda->erp_loja_uuid ?: $storeInfo['guid'],
                 'store_id' => $storeInfo['id'],
-                'nome' => $storeInfo['name'] ?? ($loja->nome_hiper ?? null),
+                'nome' => $storeInfo['name']
+                    ?? ($loja->nome_padronizado ?? $loja->nome_hiper ?? data_get($erp, 'Loja.Nome') ?? data_get($erp, 'NomeDaLoja')),
                 'cidade' => $storeInfo['city'],
                 'store_pdv_id' => $venda->store_pdv_id,
             ],

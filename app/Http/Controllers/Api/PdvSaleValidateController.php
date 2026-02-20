@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Services\Pdv\PdvSaleValidator;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 class PdvSaleValidateController extends Controller
@@ -207,13 +208,35 @@ class PdvSaleValidateController extends Controller
             'tolerance.total' => ['nullable', 'numeric'],
             'tolerance.start_minus_minutes' => ['nullable', 'integer'],
             'tolerance.end_plus_minutes' => ['nullable', 'integer'],
+            'filters' => ['nullable', 'array'],
+            'filters.store_id' => ['nullable', 'integer', 'exists:stores,id'],
+            'filters.store_guid' => ['nullable', 'string'],
+            'filters.turno_seq' => ['nullable', 'integer', 'min:1', 'max:20'],
+            'filters.operation_code' => ['nullable', 'integer', 'min:1'],
+            'filters.date_from' => ['nullable', 'date'],
+            'filters.date_to' => ['nullable', 'date'],
+            'filters.hour_from' => ['nullable', 'regex:/^(?:[01]\d|2[0-3]):[0-5]\d$/'],
+            'filters.hour_to' => ['nullable', 'regex:/^(?:[01]\d|2[0-3]):[0-5]\d$/'],
+            'filters.value_exact' => ['nullable', 'numeric', 'min:0'],
+            'filters.value_min' => ['nullable', 'numeric', 'min:0'],
+            'filters.value_max' => ['nullable', 'numeric', 'min:0'],
         ]);
 
-        $results = $this->runValidation($data['Lista'], $data);
+        $timezone = $data['timezone'] ?? 'America/Sao_Paulo';
+        $filteredList = $this->applySalesFilters(
+            $data['Lista'],
+            $data['filters'] ?? [],
+            $timezone
+        );
+
+        $results = $this->runValidation($filteredList, $data);
 
         return response()->json([
             'source' => 'json',
+            'input_total' => count($data['Lista']),
+            'input_total_after_filters' => count($filteredList),
             'batch_count' => count($results),
+            'applied_filters' => $this->buildAppliedFiltersMeta($data['filters'] ?? []),
             'results' => $results,
         ]);
     }
@@ -231,6 +254,18 @@ class PdvSaleValidateController extends Controller
             'tolerance.total' => ['nullable', 'numeric'],
             'tolerance.start_minus_minutes' => ['nullable', 'integer'],
             'tolerance.end_plus_minutes' => ['nullable', 'integer'],
+            'filters' => ['nullable', 'array'],
+            'filters.store_id' => ['nullable', 'integer', 'exists:stores,id'],
+            'filters.store_guid' => ['nullable', 'string'],
+            'filters.turno_seq' => ['nullable', 'integer', 'min:1', 'max:20'],
+            'filters.operation_code' => ['nullable', 'integer', 'min:1'],
+            'filters.date_from' => ['nullable', 'date'],
+            'filters.date_to' => ['nullable', 'date'],
+            'filters.hour_from' => ['nullable', 'regex:/^(?:[01]\d|2[0-3]):[0-5]\d$/'],
+            'filters.hour_to' => ['nullable', 'regex:/^(?:[01]\d|2[0-3]):[0-5]\d$/'],
+            'filters.value_exact' => ['nullable', 'numeric', 'min:0'],
+            'filters.value_min' => ['nullable', 'numeric', 'min:0'],
+            'filters.value_max' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         // Defaults: primeira conexão ativa + operacoes.listar
@@ -250,14 +285,43 @@ class PdvSaleValidateController extends Controller
             $data['body'] ?? []
         );
 
+        $timezone = $data['timezone'] ?? 'America/Sao_Paulo';
+        $filters = $data['filters'] ?? [];
+
+        $filterStoreGuid = $this->resolveStoreGuidFromFilters($filters);
+        if ($filterStoreGuid) {
+            $bodyPayload['filtro']['LojaId'] = $filterStoreGuid;
+        }
+        if (isset($filters['operation_code'])) {
+            $bodyPayload['filtro']['CodigoDaOperacao'] = (int) $filters['operation_code'];
+        }
+
         // ── Inject dynamic dates if user didn't override ──
         // The body_template may have stale dates; always use fresh dates
         // unless the caller explicitly sent body.filtro.PeriodoInicial/PeriodoFinal
+        $periodFrom = $this->resolveFilterDateFrom($filters, $timezone);
+        $periodTo = $this->resolveFilterDateTo($filters, $timezone);
+
         if (!isset($data['body']['filtro']['PeriodoInicial'])) {
-            $tz = $data['timezone'] ?? 'America/Sao_Paulo';
-            $now = Carbon::now($tz);
-            $bodyPayload['filtro']['PeriodoInicial'] = $now->copy()->subDays(7)->startOfDay()->format('Y-m-d\\TH:i:sP');
-            $bodyPayload['filtro']['PeriodoFinal'] = $now->copy()->endOfDay()->format('Y-m-d\\TH:i:sP');
+            $now = Carbon::now($timezone);
+
+            if (!$periodFrom && !$periodTo) {
+                $periodFrom = $now->copy()->subDays(7)->startOfDay();
+                $periodTo = $now->copy()->endOfDay();
+            } elseif (!$periodFrom && $periodTo) {
+                $periodFrom = $periodTo->copy()->startOfDay();
+            } elseif ($periodFrom && !$periodTo) {
+                $periodTo = $periodFrom->copy()->endOfDay();
+            }
+
+            if ($periodFrom && $periodTo && $periodFrom->gt($periodTo)) {
+                [$periodFrom, $periodTo] = [$periodTo, $periodFrom];
+            }
+
+            if ($periodFrom && $periodTo) {
+                $bodyPayload['filtro']['PeriodoInicial'] = $periodFrom->format('Y-m-d\\TH:i:sP');
+                $bodyPayload['filtro']['PeriodoFinal'] = $periodTo->format('Y-m-d\\TH:i:sP');
+            }
         }
 
         // ── Cookie header ──
@@ -318,13 +382,16 @@ class PdvSaleValidateController extends Controller
                 ], 422);
             }
 
-            $results = $this->runValidation($lista, $data);
+            $filteredList = $this->applySalesFilters($lista, $filters, $timezone);
+            $results = $this->runValidation($filteredList, $data);
 
             return response()->json([
                 'ok' => true,
                 'source' => 'erp',
                 'batch_count' => count($results),
                 'erp_total_returned' => count($lista),
+                'erp_total_after_filters' => count($filteredList),
+                'applied_filters' => $this->buildAppliedFiltersMeta($filters),
                 'url' => $url,
                 'missing_cookies' => $cookieResult['missing'],
                 'results' => $results,
@@ -353,17 +420,29 @@ class PdvSaleValidateController extends Controller
             'tolerance' => $options['tolerance'] ?? [],
         ];
 
-        // Pre-load store names by guid (single query)
+        // Pre-load store names/cities by guid (single query)
         $storeGuids = collect($lista)
             ->pluck('Turno.LojaId')
             ->filter()
+            ->map(fn($guid) => strtolower(trim((string) $guid)))
             ->unique()
             ->values()
             ->all();
 
-        $storeMap = !empty($storeGuids)
-            ? Store::whereIn('guid', $storeGuids)->pluck('name', 'guid')->all()
-            : [];
+        $storeMap = [];
+        if (!empty($storeGuids)) {
+            $stores = Store::query()
+                ->whereNotNull('guid')
+                ->whereIn(DB::raw('LOWER(guid)'), $storeGuids)
+                ->get(['guid', 'name', 'city']);
+
+            foreach ($stores as $store) {
+                $storeMap[strtolower((string) $store->guid)] = [
+                    'name' => $store->name,
+                    'city' => $store->city,
+                ];
+            }
+        }
 
         foreach ($lista as $item) {
             if (!is_array($item)) {
@@ -380,11 +459,14 @@ class PdvSaleValidateController extends Controller
 
             // ── Sale summary ──
             $lojaId = $item['Turno']['LojaId'] ?? null;
-            $storeName = $lojaId ? ($storeMap[$lojaId] ?? null) : null;
+            $storeMeta = null;
+            if ($lojaId) {
+                $storeMeta = $storeMap[strtolower(trim((string) $lojaId))] ?? null;
+            }
 
             $results[] = [
                 'input_id' => $key,
-                'sale_summary' => $this->buildSaleSummary($item, $storeName, $res),
+                'sale_summary' => $this->buildSaleSummary($item, $storeMeta, $res),
                 'validation' => $res,
             ];
         }
@@ -395,8 +477,11 @@ class PdvSaleValidateController extends Controller
     /**
      * Build a human-readable summary for a single ERP sale item.
      */
-    private function buildSaleSummary(array $item, ?string $storeName, array $validation = []): array
+    private function buildSaleSummary(array $item, ?array $storeMeta, array $validation = []): array
     {
+        $storeName = $storeMeta['name'] ?? null;
+        $storeCity = $storeMeta['city'] ?? null;
+
         // Format date: "16/02/2026 às 14:50"
         $formattedDate = null;
         if (!empty($item['Data'])) {
@@ -428,11 +513,246 @@ class PdvSaleValidateController extends Controller
             'turno_id' => $item['Turno']['Id'] ?? null,
             'loja_erp_id' => $lojaId,
             'loja_nome' => $storeName,
+            'loja_cidade' => $storeCity,
             'found_in_db' => $foundInDb,
             'cancelada' => $item['Cancelada'] ?? false,
             'concluida' => $item['Concluida'] ?? null,
             'tipo' => $item['TipoDaOperacao'] ?? null,
             'itens' => $item['NumeroDeItens'] ?? null,
         ];
+    }
+
+    private function applySalesFilters(array $lista, array $filters, string $timezone): array
+    {
+        if (empty($filters)) {
+            return $lista;
+        }
+
+        $storeGuid = $this->resolveStoreGuidFromFilters($filters);
+        $turnoSeq = isset($filters['turno_seq']) ? (int) $filters['turno_seq'] : null;
+        $operationCode = isset($filters['operation_code']) ? (int) $filters['operation_code'] : null;
+
+        $valueExact = isset($filters['value_exact']) ? (float) $filters['value_exact'] : null;
+        $valueMin = isset($filters['value_min']) ? (float) $filters['value_min'] : null;
+        $valueMax = isset($filters['value_max']) ? (float) $filters['value_max'] : null;
+        if ($valueExact !== null) {
+            $valueMin = $valueExact;
+            $valueMax = $valueExact;
+        }
+
+        $dateFrom = $this->resolveFilterDateFrom($filters, $timezone);
+        $dateTo = $this->resolveFilterDateTo($filters, $timezone);
+        if ($dateFrom && $dateTo && $dateFrom->gt($dateTo)) {
+            [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
+        }
+
+        $hourFrom = $this->parseHourToMinutes($filters['hour_from'] ?? null);
+        $hourTo = $this->parseHourToMinutes($filters['hour_to'] ?? null);
+
+        return array_values(array_filter($lista, function ($item) use (
+            $storeGuid,
+            $turnoSeq,
+            $operationCode,
+            $valueMin,
+            $valueMax,
+            $dateFrom,
+            $dateTo,
+            $hourFrom,
+            $hourTo,
+            $timezone
+        ) {
+            if (!is_array($item)) {
+                return false;
+            }
+
+            $itemStoreGuid = $this->normalizeGuid(
+                data_get($item, 'Turno.LojaId')
+                ?? data_get($item, 'LojaId')
+                ?? data_get($item, 'Loja.LojaId')
+            );
+
+            if ($storeGuid && $itemStoreGuid !== $storeGuid) {
+                return false;
+            }
+
+            if ($turnoSeq !== null && (int) data_get($item, 'Turno.Sequencial', 0) !== $turnoSeq) {
+                return false;
+            }
+
+            if ($operationCode !== null && (int) data_get($item, 'CodigoDaOperacao', 0) !== $operationCode) {
+                return false;
+            }
+
+            $total = (float) (data_get($item, 'ValorTotalLiquido') ?? 0);
+            if ($valueMin !== null && $total < $valueMin) {
+                return false;
+            }
+            if ($valueMax !== null && $total > $valueMax) {
+                return false;
+            }
+
+            $itemDateRaw = data_get($item, 'Data');
+            $itemDate = null;
+            if ($itemDateRaw) {
+                try {
+                    $itemDate = Carbon::parse((string) $itemDateRaw, $timezone);
+                } catch (\Throwable $e) {
+                    $itemDate = null;
+                }
+            }
+
+            if ($dateFrom && (!$itemDate || $itemDate->lt($dateFrom))) {
+                return false;
+            }
+
+            if ($dateTo && (!$itemDate || $itemDate->gt($dateTo))) {
+                return false;
+            }
+
+            if ($hourFrom !== null || $hourTo !== null) {
+                if (!$itemDate) {
+                    return false;
+                }
+
+                $minutes = ((int) $itemDate->format('H')) * 60 + (int) $itemDate->format('i');
+
+                if ($hourFrom !== null && $hourTo !== null) {
+                    if ($hourFrom <= $hourTo) {
+                        if ($minutes < $hourFrom || $minutes > $hourTo) {
+                            return false;
+                        }
+                    } else {
+                        // Overnight window (e.g. 22:00 -> 06:00)
+                        if ($minutes < $hourFrom && $minutes > $hourTo) {
+                            return false;
+                        }
+                    }
+                } elseif ($hourFrom !== null && $minutes < $hourFrom) {
+                    return false;
+                } elseif ($hourTo !== null && $minutes > $hourTo) {
+                    return false;
+                }
+            }
+
+            return true;
+        }));
+    }
+
+    private function buildAppliedFiltersMeta(array $filters): array
+    {
+        $result = [];
+
+        $storeGuid = $this->resolveStoreGuidFromFilters($filters);
+        if ($storeGuid) {
+            $result['store_guid'] = $storeGuid;
+        }
+        if (isset($filters['store_id'])) {
+            $result['store_id'] = (int) $filters['store_id'];
+        }
+        if (isset($filters['turno_seq'])) {
+            $result['turno_seq'] = (int) $filters['turno_seq'];
+        }
+        if (isset($filters['operation_code'])) {
+            $result['operation_code'] = (int) $filters['operation_code'];
+        }
+        if (!empty($filters['date_from'])) {
+            $result['date_from'] = (string) $filters['date_from'];
+        }
+        if (!empty($filters['date_to'])) {
+            $result['date_to'] = (string) $filters['date_to'];
+        }
+        if (!empty($filters['hour_from'])) {
+            $result['hour_from'] = (string) $filters['hour_from'];
+        }
+        if (!empty($filters['hour_to'])) {
+            $result['hour_to'] = (string) $filters['hour_to'];
+        }
+        if (isset($filters['value_exact'])) {
+            $result['value_exact'] = (float) $filters['value_exact'];
+        }
+        if (isset($filters['value_min'])) {
+            $result['value_min'] = (float) $filters['value_min'];
+        }
+        if (isset($filters['value_max'])) {
+            $result['value_max'] = (float) $filters['value_max'];
+        }
+
+        return $result;
+    }
+
+    private function resolveStoreGuidFromFilters(array $filters): ?string
+    {
+        $storeGuid = $this->normalizeGuid($filters['store_guid'] ?? null);
+        if ($storeGuid) {
+            return $storeGuid;
+        }
+
+        if (isset($filters['store_id'])) {
+            $guid = Store::where('id', (int) $filters['store_id'])->value('guid');
+            return $this->normalizeGuid($guid);
+        }
+
+        return null;
+    }
+
+    private function normalizeGuid(?string $guid): ?string
+    {
+        if ($guid === null) {
+            return null;
+        }
+
+        $trimmed = strtolower(trim($guid));
+        return $trimmed !== '' ? $trimmed : null;
+    }
+
+    private function parseHourToMinutes(?string $hour): ?int
+    {
+        if ($hour === null) {
+            return null;
+        }
+        if (!preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $hour)) {
+            return null;
+        }
+
+        [$h, $m] = explode(':', $hour);
+        return ((int) $h) * 60 + (int) $m;
+    }
+
+    private function resolveFilterDateFrom(array $filters, string $timezone): ?Carbon
+    {
+        if (empty($filters['date_from'])) {
+            return null;
+        }
+        try {
+            $raw = trim((string) $filters['date_from']);
+            $parsed = Carbon::parse($raw, $timezone);
+
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $raw)) {
+                return $parsed->startOfDay();
+            }
+
+            return $parsed;
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    private function resolveFilterDateTo(array $filters, string $timezone): ?Carbon
+    {
+        if (empty($filters['date_to'])) {
+            return null;
+        }
+        try {
+            $raw = trim((string) $filters['date_to']);
+            $parsed = Carbon::parse($raw, $timezone);
+
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $raw)) {
+                return $parsed->endOfDay();
+            }
+
+            return $parsed;
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 }
