@@ -34,9 +34,47 @@ class PdvSyncDebugIndexRequest extends FormRequest
         ];
     }
 
+    protected function prepareForValidation(): void
+    {
+        if (!$this->has('has_error')) {
+            return;
+        }
+
+        $this->merge([
+            'has_error' => $this->normalizeBooleanInput($this->input('has_error')),
+        ]);
+    }
+
+    private function normalizeBooleanInput(mixed $value): mixed
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if (is_int($value)) {
+            if ($value === 1) {
+                return true;
+            }
+            if ($value === 0) {
+                return false;
+            }
+        }
+
+        if (is_string($value)) {
+            $normalized = strtolower(trim($value));
+            if (in_array($normalized, ['1', 'true', 'yes', 'on'], true)) {
+                return true;
+            }
+            if (in_array($normalized, ['0', 'false', 'no', 'off'], true)) {
+                return false;
+            }
+        }
+
+        return $value;
+    }
+
     public function queryParameters(): array
     {
         return [];
     }
 }
-
