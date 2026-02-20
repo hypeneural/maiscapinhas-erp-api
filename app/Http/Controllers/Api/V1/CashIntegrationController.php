@@ -417,10 +417,10 @@ class CashIntegrationController extends Controller
         if ($storeId) {
             $dates = (clone $baseQuery)
                 ->where('store_id', (int) $storeId)
-                ->select('date')
+                ->selectRaw('DATE(date) as date_key')
                 ->distinct()
-                ->orderBy('date', 'desc')
-                ->pluck('date')
+                ->orderBy('date_key', 'desc')
+                ->pluck('date_key')
                 ->values();
         }
 
@@ -429,7 +429,7 @@ class CashIntegrationController extends Controller
         if ($storeId && $date) {
             $shifts = (clone $baseQuery)
                 ->where('store_id', (int) $storeId)
-                ->where('date', $date)
+                ->whereDate('date', $date)
                 ->pluck('shift_code')
                 ->map(fn($code) => $this->normalizeShiftCode((string) $code))
                 ->filter()
@@ -444,7 +444,7 @@ class CashIntegrationController extends Controller
             $sellerQuery->where('store_id', (int) $storeId);
         }
         if ($date) {
-            $sellerQuery->where('date', $date);
+            $sellerQuery->whereDate('date', $date);
         }
         if ($shiftCode) {
             $sellerQuery->whereIn('shift_code', $this->shiftCodeAliases($shiftCode));
@@ -501,38 +501,43 @@ class CashIntegrationController extends Controller
     }
 
     /**
-     * Apply scope: only shifts with existing closing + related closed/unified PDV turn.
+     * Apply scope: only closed unified shifts pending conference.
+     *
+     * Pending conference = cash closing exists in internal draft status.
      */
     private function applyConferenceEligibleScope(Builder $query): void
     {
-        $query->whereExists(function ($q) {
-            $q->select(DB::raw(1))
-                ->from('cash_closings as cc')
-                ->whereColumn('cc.cash_shift_id', 'cash_shifts.id');
-        })->whereExists(function ($q) {
-            $q->select(DB::raw(1))
-                ->from('pdv_turnos as pt')
-                ->whereColumn('pt.store_id', 'cash_shifts.store_id')
-                ->whereRaw('DATE(pt.data_hora_inicio) = cash_shifts.date')
-                ->where('pt.fechado', 1)
-                ->whereNotNull('pt.closure_uuid')
-                ->where(function ($shiftMatch) {
-                    $shiftMatch
-                        ->whereRaw('CAST(pt.sequencial AS CHAR) = cash_shifts.shift_code')
-                        ->orWhere(function ($alias) {
-                            $alias->where('pt.sequencial', 1)
-                                ->whereRaw("UPPER(cash_shifts.shift_code) = 'M'");
-                        })
-                        ->orWhere(function ($alias) {
-                            $alias->where('pt.sequencial', 2)
-                                ->whereRaw("UPPER(cash_shifts.shift_code) = 'T'");
-                        })
-                        ->orWhere(function ($alias) {
-                            $alias->where('pt.sequencial', 3)
-                                ->whereRaw("UPPER(cash_shifts.shift_code) = 'N'");
-                        });
-                });
-        });
+        $query->where('cash_shifts.status', CashShift::STATUS_CLOSED)
+            ->whereExists(function ($q) {
+                $q->select(DB::raw(1))
+                    ->from('pdv_turnos as pt')
+                    ->whereColumn('pt.store_id', 'cash_shifts.store_id')
+                    ->whereRaw('DATE(pt.data_hora_inicio) = cash_shifts.date')
+                    ->where('pt.fechado', 1)
+                    ->whereNotNull('pt.closure_uuid')
+                    ->where(function ($shiftMatch) {
+                        $shiftMatch
+                            ->whereRaw('CAST(pt.sequencial AS CHAR) = cash_shifts.shift_code')
+                            ->orWhere(function ($alias) {
+                                $alias->where('pt.sequencial', 1)
+                                    ->whereRaw("UPPER(cash_shifts.shift_code) = 'M'");
+                            })
+                            ->orWhere(function ($alias) {
+                                $alias->where('pt.sequencial', 2)
+                                    ->whereRaw("UPPER(cash_shifts.shift_code) = 'T'");
+                            })
+                            ->orWhere(function ($alias) {
+                                $alias->where('pt.sequencial', 3)
+                                    ->whereRaw("UPPER(cash_shifts.shift_code) = 'N'");
+                            });
+                    });
+            })
+            ->whereExists(function ($q) {
+                $q->select(DB::raw(1))
+                    ->from('cash_closings as cc')
+                    ->whereColumn('cc.cash_shift_id', 'cash_shifts.id')
+                    ->where('cc.status', 'draft');
+            });
     }
 
     /**
