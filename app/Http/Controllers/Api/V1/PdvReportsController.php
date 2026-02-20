@@ -1851,6 +1851,12 @@ class PdvReportsController extends Controller
         // Subquery 2: Fechamento de Caixa (Turnos)
         // ============================================
         if ($tipoOperacao === null || $tipoOperacao === 'fechamento_caixa') {
+            // For closures we must prioritize the declared closing timestamp (`data_hora_fechamento`)
+            // to avoid day drift when one channel (HIPER_LOJA) updates turno start/end much later.
+            $turnoDateExpr = 'COALESCE(t.data_hora_fechamento, t.data_hora_termino, t.data_hora_inicio)';
+            // Group closures by closure_uuid when available; fallback keeps legacy/open rows grouped.
+            $turnoGroupExpr = "COALESCE(t.closure_uuid, DATE($turnoDateExpr))";
+
             $turnosQuery = DB::table('pdv_turnos as t')
                 ->leftJoin('stores as s2', 't.store_id', '=', 's2.id')
                 ->leftJoin('pdv_closures as pc', function ($join) {
@@ -1861,7 +1867,7 @@ class PdvReportsController extends Controller
                 })
                 ->select([
                     DB::raw("'fechamento_caixa' as tipo_operacao"),
-                    DB::raw('MAX(COALESCE(t.data_hora_termino, t.data_hora_inicio)) as data_hora'),
+                    DB::raw("MAX($turnoDateExpr) as data_hora"),
                     't.store_id',
                     DB::raw('MAX(s2.name) as store_name'),
                     't.store_pdv_id',
@@ -1883,7 +1889,10 @@ class PdvReportsController extends Controller
                     DB::raw('MAX(t.id) as internal_id'), // Use MAX id for paging stability
                 ])
                 ->where(function ($q) use ($from, $to) {
-                    $q->whereBetween(DB::raw('COALESCE(t.data_hora_termino, t.data_hora_inicio)'), [$from->toDateTimeString(), $to->toDateTimeString()]);
+                    $q->whereBetween(
+                        DB::raw('COALESCE(t.data_hora_fechamento, t.data_hora_termino, t.data_hora_inicio)'),
+                        [$from->toDateTimeString(), $to->toDateTimeString()]
+                    );
                 });
 
             $this->applyStoreScopeToQuery($turnosQuery, $scope, 't');
@@ -1909,7 +1918,7 @@ class PdvReportsController extends Controller
                 't.store_id',
                 't.store_pdv_id',
                 't.sequencial',
-                DB::raw('DATE(t.data_hora_inicio)'),
+                DB::raw($turnoGroupExpr),
                 // We don't group by 'canal' to merge them.
             ]);
 

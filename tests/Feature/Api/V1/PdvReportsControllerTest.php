@@ -773,6 +773,87 @@ test('pdv reports operacoes accepts store uuid in store_id filter', function () 
         ->assertJsonPath('filters.store_id', $store->id);
 });
 
+test('pdv reports operacoes uses fechamento timestamp reference for closure day filtering', function () {
+    $user = User::factory()->create(['is_super_admin' => false]);
+    $store = Store::factory()->create();
+    linkUserToStore($user, $store, 'admin');
+    mapPdvStore(13, $store);
+
+    $closureUuid = 'cccf416f-6017-4096-a1c0-1fad1fdd4ff6';
+
+    // HIPER_CAIXA component (real fechamento timestamp: 2026-02-18 22:12:55 -03 => 2026-02-19 01:12:55 UTC)
+    seedPdvTurno([
+        'store_pdv_id' => 13,
+        'store_id' => $store->id,
+        'canal' => 'HIPER_CAIXA',
+        'id_turno' => 'turno-caixa-001',
+        'sequencial' => 3,
+        'fechado' => true,
+        'data_hora_inicio' => '2026-02-19 01:12:01',
+        'data_hora_termino' => '2026-02-19 01:12:55',
+        'data_hora_fechamento' => '2026-02-19 01:12:55',
+        'closure_uuid' => $closureUuid,
+        'operador_nome' => 'Loja 01 - Komprao Centro/Tijucas',
+        'total_sistema' => 35.00,
+        'qtd_vendas_sistema' => 1,
+        'qtd_vendas' => 1,
+        'total_vendas' => 35.00,
+        'total_declarado' => 35.00,
+    ]);
+
+    // HIPER_LOJA component ingested later in the next day, but same closure_uuid.
+    seedPdvTurno([
+        'store_pdv_id' => 13,
+        'store_id' => $store->id,
+        'canal' => 'HIPER_LOJA',
+        'id_turno' => 'turno-loja-001',
+        'sequencial' => 3,
+        'fechado' => true,
+        'data_hora_inicio' => '2026-02-19 22:14:08',
+        'data_hora_termino' => '2026-02-19 22:14:08',
+        'data_hora_fechamento' => '2026-02-19 01:12:55',
+        'closure_uuid' => $closureUuid,
+        'operador_nome' => 'Loja 01 - Komprao Centro/Tijucas',
+        'total_sistema' => 0.00,
+        'qtd_vendas_sistema' => 0,
+        'qtd_vendas' => 0,
+        'total_vendas' => 0.00,
+        'total_declarado' => 35.00,
+    ]);
+
+    // Must NOT show on local day 2026-02-19 (America/Sao_Paulo).
+    actingAs($user)
+        ->getJson('/api/v1/pdv/reports/operacoes?' . http_build_query([
+            'store_id' => $store->id,
+            'tipo_operacao' => 'fechamento_caixa',
+            'status' => 'FECHADO',
+            'from' => '2026-02-19',
+            'to' => '2026-02-19',
+            'sort' => 'desc',
+        ]))
+        ->assertStatus(200)
+        ->assertJsonPath('summary.total_operacoes', 0)
+        ->assertJsonPath('summary.total_fechamentos', 0)
+        ->assertJsonCount(0, 'data');
+
+    // Must show on local day 2026-02-18.
+    actingAs($user)
+        ->getJson('/api/v1/pdv/reports/operacoes?' . http_build_query([
+            'store_id' => $store->id,
+            'tipo_operacao' => 'fechamento_caixa',
+            'status' => 'FECHADO',
+            'from' => '2026-02-18',
+            'to' => '2026-02-18',
+            'sort' => 'desc',
+        ]))
+        ->assertStatus(200)
+        ->assertJsonPath('summary.total_operacoes', 1)
+        ->assertJsonPath('summary.total_fechamentos', 1)
+        ->assertJsonPath('data.0.closure_uuid', $closureUuid)
+        ->assertJsonPath('data.0.turno_seq', 3)
+        ->assertJsonPath('data.0.data_hora', '2026-02-19T01:12:55+00:00');
+});
+
 test('pdv reports ranking vendedores keeps aggregation consistency and canal filter', function () {
     $user = User::factory()->create(['is_super_admin' => false]);
     $store = Store::factory()->create();
