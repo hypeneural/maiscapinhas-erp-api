@@ -1762,8 +1762,8 @@ class PdvReportsController extends Controller
                 ])
                 ->groupBy('vp.store_pdv_id', 'vp.canal', 'vp.id_operacao');
 
-            $vendaResolvedStoreIdExpr = 'COALESCE(v.store_id, s_guid.id, s_pl_guid.id, smu.store_id)';
-            $vendaResolvedStoreNameExpr = "COALESCE(s.name, s_guid.name, s_pl_guid.name, s_map.name, pl.nome_padronizado, pl.nome_hiper, CONCAT('Loja PDV ', v.store_pdv_id))";
+            $vendaResolvedStoreIdExpr = 'COALESCE(v.store_id, s_guid.id, s_pl_guid.id, s_pl_name.id, smu.store_id)';
+            $vendaResolvedStoreNameExpr = "COALESCE(s.name, s_guid.name, s_pl_guid.name, s_pl_name.name, s_map.name, pl.nome_padronizado, pl.nome_hiper, CONCAT('Loja PDV ', v.store_pdv_id))";
 
             $vendasQuery = DB::table('pdv_vendas as v')
                 ->leftJoin('stores as s', 'v.store_id', '=', 's.id')
@@ -1773,6 +1773,13 @@ class PdvReportsController extends Controller
                 ->leftJoin('pdv_lojas as pl', 'pl.id_ponto_venda', '=', 'v.store_pdv_id')
                 ->leftJoin('stores as s_pl_guid', function ($join) {
                     $join->on(DB::raw('LOWER(s_pl_guid.guid)'), '=', DB::raw('LOWER(pl.guid_loja)'));
+                })
+                ->leftJoin('stores as s_pl_name', function ($join) {
+                    $join->on(
+                        DB::raw('LOWER(s_pl_name.name)'),
+                        '=',
+                        DB::raw('LOWER(COALESCE(pl.nome_padronizado, pl.nome_hiper))')
+                    );
                 })
                 ->leftJoinSub($storeMapUnique, 'smu', function ($join): void {
                     $join->on('smu.pdv_store_id', '=', 'v.store_pdv_id');
@@ -1884,8 +1891,8 @@ class PdvReportsController extends Controller
             $turnoDateExpr = 'COALESCE(t.data_hora_fechamento, t.data_hora_termino, t.data_hora_inicio)';
             // Group closures by closure_uuid when available; fallback keeps legacy/open rows grouped.
             $turnoGroupExpr = "COALESCE(t.closure_uuid, DATE($turnoDateExpr))";
-            $turnoResolvedStoreIdExpr = 'COALESCE(t.store_id, pc.store_id, s2_guid.id, smu2.store_id)';
-            $turnoResolvedStoreNameExpr = "COALESCE(s2.name, s2_guid.name, s2_map.name, pl2.nome_padronizado, pl2.nome_hiper, CONCAT('Loja PDV ', t.store_pdv_id))";
+            $turnoResolvedStoreIdExpr = 'COALESCE(t.store_id, pc.store_id, s2_guid.id, s2_name.id, smu2.store_id)';
+            $turnoResolvedStoreNameExpr = "COALESCE(s2.name, s2_guid.name, s2_name.name, s2_map.name, pl2.nome_padronizado, pl2.nome_hiper, CONCAT('Loja PDV ', t.store_pdv_id))";
 
             $turnosQuery = DB::table('pdv_turnos as t')
                 ->leftJoin('stores as s2', 't.store_id', '=', 's2.id')
@@ -1900,6 +1907,13 @@ class PdvReportsController extends Controller
                         DB::raw('LOWER(s2_guid.guid)'),
                         '=',
                         DB::raw('LOWER(COALESCE(pc.store_loja_guid, pl2.guid_loja))')
+                    );
+                })
+                ->leftJoin('stores as s2_name', function ($join) {
+                    $join->on(
+                        DB::raw('LOWER(s2_name.name)'),
+                        '=',
+                        DB::raw('LOWER(COALESCE(pl2.nome_padronizado, pl2.nome_hiper))')
                     );
                 })
                 ->leftJoinSub($storeMapUnique, 'smu2', function ($join): void {

@@ -40,7 +40,7 @@ class RankingService
             ->groupBy('psm.pdv_store_id')
             ->havingRaw('COUNT(DISTINCT psm.store_id) = 1');
 
-        $resolvedStoreIdExpr = 'COALESCE(v.store_id, s_guid.id, s_pl_guid.id, smu.store_id)';
+        $resolvedStoreIdExpr = 'COALESCE(v.store_id, s_guid.id, s_pl_guid.id, s_pl_name.id, smu.store_id)';
 
         // Query de vendas agrupadas por vendedor (PDV Data Source)
         $salesQuery = DB::table('pdv_venda_itens as vi')
@@ -55,6 +55,13 @@ class RankingService
             ->leftJoin('pdv_lojas as pl', 'pl.id_ponto_venda', '=', 'v.store_pdv_id')
             ->leftJoin('stores as s_pl_guid', function ($join) {
                 $join->on(DB::raw('LOWER(s_pl_guid.guid)'), '=', DB::raw('LOWER(pl.guid_loja)'));
+            })
+            ->leftJoin('stores as s_pl_name', function ($join) {
+                $join->on(
+                    DB::raw('LOWER(s_pl_name.name)'),
+                    '=',
+                    DB::raw('LOWER(COALESCE(pl.nome_padronizado, pl.nome_hiper))')
+                );
             })
             ->leftJoinSub($storeMapUnique, 'smu', function ($join): void {
                 $join->on('smu.pdv_store_id', '=', 'v.store_pdv_id');

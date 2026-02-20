@@ -382,8 +382,8 @@ class DashboardController extends Controller
             ->groupBy('psm.pdv_store_id')
             ->havingRaw('COUNT(DISTINCT psm.store_id) = 1');
 
-        $resolvedStoreIdExpr = 'COALESCE(v.store_id, s_guid.id, s_pl_guid.id, smu.store_id)';
-        $resolvedStoreNameExpr = "COALESCE(s.name, s_guid.name, s_pl_guid.name, s_map.name, pl.nome_padronizado, pl.nome_hiper, CONCAT('Loja PDV ', v.store_pdv_id))";
+        $resolvedStoreIdExpr = 'COALESCE(v.store_id, s_guid.id, s_pl_guid.id, s_pl_name.id, smu.store_id)';
+        $resolvedStoreNameExpr = "COALESCE(s.name, s_guid.name, s_pl_guid.name, s_pl_name.name, s_map.name, pl.nome_padronizado, pl.nome_hiper, CONCAT('Loja PDV ', v.store_pdv_id))";
 
         $salesBase = DB::table('pdv_vendas as v')
             ->leftJoin('stores as s', 's.id', '=', 'v.store_id')
@@ -393,6 +393,13 @@ class DashboardController extends Controller
             ->leftJoin('pdv_lojas as pl', 'pl.id_ponto_venda', '=', 'v.store_pdv_id')
             ->leftJoin('stores as s_pl_guid', function ($join) {
                 $join->on(DB::raw('LOWER(s_pl_guid.guid)'), '=', DB::raw('LOWER(pl.guid_loja)'));
+            })
+            ->leftJoin('stores as s_pl_name', function ($join) {
+                $join->on(
+                    DB::raw('LOWER(s_pl_name.name)'),
+                    '=',
+                    DB::raw('LOWER(COALESCE(pl.nome_padronizado, pl.nome_hiper))')
+                );
             })
             ->leftJoinSub($storeMapUnique, 'smu', function ($join): void {
                 $join->on('smu.pdv_store_id', '=', 'v.store_pdv_id');
@@ -438,6 +445,13 @@ class DashboardController extends Controller
             ->leftJoin('pdv_lojas as pl', 'pl.id_ponto_venda', '=', 'v.store_pdv_id')
             ->leftJoin('stores as s_pl_guid', function ($join) {
                 $join->on(DB::raw('LOWER(s_pl_guid.guid)'), '=', DB::raw('LOWER(pl.guid_loja)'));
+            })
+            ->leftJoin('stores as s_pl_name', function ($join) {
+                $join->on(
+                    DB::raw('LOWER(s_pl_name.name)'),
+                    '=',
+                    DB::raw('LOWER(COALESCE(pl.nome_padronizado, pl.nome_hiper))')
+                );
             })
             ->leftJoinSub($storeMapUnique, 'smu', function ($join): void {
                 $join->on('smu.pdv_store_id', '=', 'v.store_pdv_id');
