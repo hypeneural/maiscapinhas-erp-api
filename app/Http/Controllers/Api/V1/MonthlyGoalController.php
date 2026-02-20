@@ -141,7 +141,7 @@ class MonthlyGoalController extends Controller
     {
         $request->validate([
             'splits' => ['required', 'array', 'min:1'],
-            'splits.*.user_id' => ['required', 'integer', 'exists:users,id'],
+            'splits.*.user_id' => ['required', 'integer', 'exists:users,id', 'distinct'],
             'splits.*.percent' => ['required', 'numeric', 'min:0', 'max:100'],
         ]);
 

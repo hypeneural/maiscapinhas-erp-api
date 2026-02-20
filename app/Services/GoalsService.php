@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Models\AuditLog;
 use App\Models\StoreGoalSplit;
 use App\Models\StoreMonthlyGoal;
+use App\Models\StoreUser;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -64,6 +65,7 @@ class GoalsService
      */
     public function setSplits(StoreMonthlyGoal $goal, array $splits, User $actor): StoreMonthlyGoal
     {
+        $this->validateSplitUsers($goal, $splits);
         $this->validateSplitsSum($splits);
 
         return DB::transaction(function () use ($goal, $splits, $actor) {
@@ -103,6 +105,67 @@ class GoalsService
         if (abs($sum - 100.00) > self::SPLIT_TOLERANCE) {
             throw ValidationException::withMessages([
                 'splits' => ["The sum of split percentages must equal 100%. Current sum: {$sum}%"],
+            ]);
+        }
+    }
+
+    /**
+     * Validate split users are active and linked to the goal store.
+     *
+     * Allowed roles for split users: vendedor, gerente, admin.
+     */
+    private function validateSplitUsers(StoreMonthlyGoal $goal, array $splits): void
+    {
+        $userIds = array_values(array_unique(array_map(
+            static fn(array $split): int => (int) ($split['user_id'] ?? 0),
+            $splits
+        )));
+
+        if ($userIds === []) {
+            throw ValidationException::withMessages([
+                'splits' => ['At least one split user is required.'],
+            ]);
+        }
+
+        $allowedUserIds = StoreUser::query()
+            ->where('store_id', $goal->store_id)
+            ->whereIn('user_id', $userIds)
+            ->whereIn('role', [
+                StoreUser::ROLE_VENDEDOR,
+                StoreUser::ROLE_GERENTE,
+                StoreUser::ROLE_ADMIN,
+            ])
+            ->pluck('user_id')
+            ->map(static fn(mixed $id): int => (int) $id)
+            ->all();
+
+        $allowedLookup = array_fill_keys($allowedUserIds, true);
+        $invalidStoreUsers = array_values(array_filter(
+            $userIds,
+            static fn(int $userId): bool => !isset($allowedLookup[$userId])
+        ));
+
+        if ($invalidStoreUsers !== []) {
+            throw ValidationException::withMessages([
+                'splits' => [
+                    'Some users are not linked to this store with an allowed role (vendedor/gerente/admin): '
+                    . implode(', ', $invalidStoreUsers),
+                ],
+            ]);
+        }
+
+        $inactiveUsers = User::query()
+            ->whereIn('id', $userIds)
+            ->where('active', false)
+            ->pluck('id')
+            ->map(static fn(mixed $id): int => (int) $id)
+            ->all();
+
+        if ($inactiveUsers !== []) {
+            throw ValidationException::withMessages([
+                'splits' => [
+                    'Some users are inactive and cannot receive goal splits: ' . implode(', ', $inactiveUsers),
+                ],
             ]);
         }
     }

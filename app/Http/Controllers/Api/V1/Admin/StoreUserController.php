@@ -13,6 +13,7 @@ use App\Models\StoreUser;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * @group Administração - Vínculos Loja-Usuário
@@ -88,8 +89,38 @@ class StoreUserController extends Controller
     {
         $this->authorizeAdmin($request);
 
-        $bindings = StoreUser::where('store_id', $store->id)
+        $request->validate([
+            'role' => ['sometimes', Rule::enum(StoreUserRole::class)],
+            'active' => ['sometimes', 'boolean'],
+            'search' => ['sometimes', 'string', 'max:120'],
+            'only_sellers' => ['sometimes', 'boolean'],
+        ]);
+
+        $query = StoreUser::query()
+            ->where('store_id', $store->id)
             ->with('user:id,name,email,active')
+            ->orderBy('role')
+            ->orderBy('created_at');
+
+        if ($request->boolean('only_sellers')) {
+            $query->where('role', StoreUserRole::VENDEDOR->value);
+        } elseif ($request->filled('role')) {
+            $query->where('role', (string) $request->input('role'));
+        }
+
+        if ($request->has('active')) {
+            $query->whereHas('user', fn($q) => $q->where('active', $request->boolean('active')));
+        }
+
+        if ($request->filled('search')) {
+            $term = trim((string) $request->input('search'));
+            $query->whereHas('user', function ($q) use ($term): void {
+                $q->where('name', 'like', "%{$term}%")
+                    ->orWhere('email', 'like', "%{$term}%");
+            });
+        }
+
+        $bindings = $query
             ->get()
             ->map(fn($su) => [
                 'user_id' => $su->user_id,
@@ -97,6 +128,7 @@ class StoreUserController extends Controller
                 'user_email' => $su->user->email,
                 'user_active' => $su->user->active,
                 'role' => $su->role,
+                'role_label' => StoreUserRole::tryFrom($su->role)?->label(),
                 'created_at' => $su->created_at?->toIso8601String(),
             ]);
 
