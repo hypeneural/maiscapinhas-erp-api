@@ -10,8 +10,10 @@ use App\Models\PdvTurno;
 use App\Models\Store;
 use App\Models\User;
 use App\Services\Pdv\PdvClosureUnifiedService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @group Fechamento de Caixa
@@ -363,6 +365,115 @@ class CashIntegrationController extends Controller
 
 
     /**
+     * List pending conference turns (closed/unified PDV turns without conference status).
+     *
+     * @queryParam store_id integer ID da loja (optional)
+     * @queryParam date string Data YYYY-MM-DD (optional)
+     * @queryParam shift_code string Codigo do turno (optional)
+     * @queryParam limit integer Limite de linhas retornadas (1-300). Example: 100
+     */
+    public function getConferencePendingTurns(Request $request): JsonResponse
+    {
+        $request->validate([
+            'store_id' => ['nullable', 'integer', 'exists:stores,id'],
+            'date' => ['nullable', 'date'],
+            'shift_code' => ['nullable', 'string', 'in:M,T,N,1,2,3'],
+            'limit' => ['nullable', 'integer', 'min:1', 'max:300'],
+        ]);
+
+        $user = $request->user();
+        $storeId = $request->input('store_id');
+        $date = $request->input('date');
+        $shiftCode = $request->filled('shift_code')
+            ? $this->normalizeShiftCode($request->input('shift_code'))
+            : null;
+        $limit = (int) $request->input('limit', 100);
+
+        $allowedStoreIds = $this->resolveAllowedStoreIds($user);
+
+        if ($storeId && !$user->isSuperAdmin() && !in_array((int) $storeId, $allowedStoreIds, true)) {
+            return $this->forbidden('You do not have access to this store.');
+        }
+
+        $basePendingQuery = $this->pendingConferenceTurnosQuery($allowedStoreIds)
+            ->join('stores as s', 's.id', '=', 'pt.store_id')
+            ->leftJoin('pdv_closures as pc', 'pc.closure_uuid', '=', 'pt.closure_uuid');
+
+        if ($storeId) {
+            $basePendingQuery->where('pt.store_id', (int) $storeId);
+        }
+
+        if ($date) {
+            $basePendingQuery->whereDate('pt.data_hora_inicio', $date);
+        }
+
+        if ($shiftCode) {
+            $basePendingQuery->where('pt.sequencial', (int) $shiftCode);
+        }
+
+        $totalPending = (clone $basePendingQuery)
+            ->distinct('pt.closure_uuid')
+            ->count('pt.closure_uuid');
+
+        $turns = (clone $basePendingQuery)
+            ->selectRaw('
+                pt.closure_uuid,
+                pt.store_id,
+                s.name as store_name,
+                s.guid as store_guid,
+                DATE(pt.data_hora_inicio) as date_key,
+                CAST(pt.sequencial AS CHAR) as shift_code_raw,
+                MAX(COALESCE(pt.data_hora_fechamento, pt.data_hora_termino, pt.data_hora_inicio)) as reference_datetime,
+                MAX(pt.data_hora_inicio) as started_at,
+                MAX(pt.data_hora_termino) as ended_at,
+                MAX(pt.responsavel_nome) as responsavel_nome,
+                MAX(pt.responsavel_guid) as responsavel_guid,
+                MAX(pt.operador_nome) as operador_nome,
+                COALESCE(MAX(pc.total_sistema_unificado), 0) as total_value
+            ')
+            ->groupBy(
+                'pt.closure_uuid',
+                'pt.store_id',
+                's.name',
+                's.guid',
+                DB::raw('DATE(pt.data_hora_inicio)'),
+                DB::raw('CAST(pt.sequencial AS CHAR)')
+            )
+            ->orderByRaw('DATE(pt.data_hora_inicio) DESC')
+            ->orderByRaw('MAX(COALESCE(pt.data_hora_fechamento, pt.data_hora_termino, pt.data_hora_inicio)) DESC')
+            ->limit($limit)
+            ->get()
+            ->map(function ($row) {
+                return [
+                    'closure_uuid' => $row->closure_uuid,
+                    'store' => [
+                        'id' => (int) $row->store_id,
+                        'name' => $row->store_name,
+                        'guid' => $row->store_guid,
+                    ],
+                    'date' => $row->date_key,
+                    'shift_code' => $this->normalizeShiftCode((string) $row->shift_code_raw),
+                    'reference_datetime' => $row->reference_datetime,
+                    'started_at' => $row->started_at,
+                    'ended_at' => $row->ended_at,
+                    'responsavel' => [
+                        'nome' => $row->responsavel_nome,
+                        'guid' => $row->responsavel_guid,
+                    ],
+                    'operador_nome' => $row->operador_nome,
+                    'total_value' => (float) $row->total_value,
+                ];
+            })
+            ->values();
+
+        return $this->success([
+            'total_pending' => $totalPending,
+            'limit' => $limit,
+            'turns' => $turns,
+        ]);
+    }
+
+    /**
      * Get cascading filters for closure validation (Stores -> Dates -> Shifts -> Sellers)
      *
      * @queryParam store_id integer ID of the store (optional)
@@ -384,33 +495,20 @@ class CashIntegrationController extends Controller
             ? $this->normalizeShiftCode($request->input('shift_code'))
             : null;
 
-        $allowedStoreIds = $user->isSuperAdmin()
-            ? Store::query()->where('active', true)->pluck('id')->toArray()
-            : $user->storeUsers()->pluck('store_id')->toArray();
-
-        if (empty($allowedStoreIds)) {
-            // Conferentes sem vínculo explícito em store_users ainda precisam consultar fechamentos.
-            $allowedStoreIds = Store::query()
-                ->where('active', true)
-                ->pluck('id')
-                ->toArray();
-        }
+        $allowedStoreIds = $this->resolveAllowedStoreIds($user);
 
         if ($storeId && !$user->isSuperAdmin() && !in_array((int) $storeId, $allowedStoreIds, true)) {
             return $this->forbidden('You do not have access to this store.');
         }
 
-        // A conferência deve trabalhar apenas com turnos fechados e unificados do PDV.
-        $pdvBaseQuery = PdvTurno::query()
-            ->whereIn('store_id', $allowedStoreIds)
-            ->where('fechado', 1)
-            ->whereNotNull('closure_uuid');
+        // A conferencia de lancamento deve listar apenas turnos pendentes (sem status de closing).
+        $pendingBaseQuery = $this->pendingConferenceTurnosQuery($allowedStoreIds);
 
         // 1. Stores
-        $storeIds = (clone $pdvBaseQuery)
-            ->select('store_id')
+        $storeIds = (clone $pendingBaseQuery)
+            ->select('pt.store_id')
             ->distinct()
-            ->pluck('store_id');
+            ->pluck('pt.store_id');
 
         $stores = Store::query()
             ->whereIn('id', $storeIds)
@@ -421,9 +519,9 @@ class CashIntegrationController extends Controller
         // 2. Dates (store-scoped)
         $dates = collect();
         if ($storeId) {
-            $dates = (clone $pdvBaseQuery)
-                ->where('store_id', (int) $storeId)
-                ->selectRaw('DATE(data_hora_inicio) as date_key')
+            $dates = (clone $pendingBaseQuery)
+                ->where('pt.store_id', (int) $storeId)
+                ->selectRaw('DATE(pt.data_hora_inicio) as date_key')
                 ->distinct()
                 ->orderBy('date_key', 'desc')
                 ->pluck('date_key')
@@ -433,10 +531,10 @@ class CashIntegrationController extends Controller
         // 3. Shifts (store + date scoped)
         $shifts = collect();
         if ($storeId && $date) {
-            $shifts = (clone $pdvBaseQuery)
-                ->where('store_id', (int) $storeId)
-                ->whereDate('data_hora_inicio', $date)
-                ->pluck('sequencial')
+            $shifts = (clone $pendingBaseQuery)
+                ->where('pt.store_id', (int) $storeId)
+                ->whereDate('pt.data_hora_inicio', $date)
+                ->pluck('pt.sequencial')
                 ->map(fn($code) => $this->normalizeShiftCode((string) $code))
                 ->filter()
                 ->unique()
@@ -456,12 +554,12 @@ class CashIntegrationController extends Controller
 
         if ($storeId && $date && $shiftCode) {
             // Find canonical PDV responsible for this closed shift.
-            $turno = (clone $pdvBaseQuery)
-                ->where('store_id', (int) $storeId)
-                ->whereDate('data_hora_inicio', $date)
-                ->where('sequencial', (int) $shiftCode)
-                ->orderByDesc('data_hora_fechamento')
-                ->orderByDesc('id')
+            $turno = (clone $pendingBaseQuery)
+                ->where('pt.store_id', (int) $storeId)
+                ->whereDate('pt.data_hora_inicio', $date)
+                ->where('pt.sequencial', (int) $shiftCode)
+                ->orderByDesc('pt.data_hora_fechamento')
+                ->orderByDesc('pt.id')
                 ->first();
 
             if ($turno && $turno->responsavel_guid) {
@@ -488,6 +586,68 @@ class CashIntegrationController extends Controller
                 'all' => $allSellers,
             ],
         ]);
+    }
+
+    /**
+     * Resolve stores available for the current user.
+     *
+     * For users without store_users bindings, fallback to active stores
+     * so conference screens keep working for global roles.
+     *
+     * @return array<int, int>
+     */
+    private function resolveAllowedStoreIds($user): array
+    {
+        $allowedStoreIds = $user->isSuperAdmin()
+            ? Store::query()->where('active', true)->pluck('id')->toArray()
+            : $user->storeUsers()->pluck('store_id')->toArray();
+
+        if (!empty($allowedStoreIds)) {
+            return array_values(array_unique(array_map('intval', $allowedStoreIds)));
+        }
+
+        return Store::query()
+            ->where('active', true)
+            ->pluck('id')
+            ->map(fn($id) => (int) $id)
+            ->toArray();
+    }
+
+    /**
+     * Base query for pending conference turns:
+     * - PDV turno fechado + unificado
+     * - Sem qualquer cash_closing associado para a combinacao loja/data/turno
+     */
+    private function pendingConferenceTurnosQuery(array $allowedStoreIds): Builder
+    {
+        return PdvTurno::query()
+            ->from('pdv_turnos as pt')
+            ->whereIn('pt.store_id', $allowedStoreIds)
+            ->where('pt.fechado', 1)
+            ->whereNotNull('pt.closure_uuid')
+            ->whereNotExists(function ($sub) {
+                $sub->selectRaw('1')
+                    ->from('cash_shifts as cs')
+                    ->join('cash_closings as cc', 'cc.cash_shift_id', '=', 'cs.id')
+                    ->whereColumn('cs.store_id', 'pt.store_id')
+                    ->whereRaw('cs.date = DATE(pt.data_hora_inicio)')
+                    ->where(function ($shiftMatch) {
+                        $shiftMatch
+                            ->whereRaw('CAST(cs.shift_code AS CHAR) = CAST(pt.sequencial AS CHAR)')
+                            ->orWhere(function ($alias) {
+                                $alias->whereRaw('pt.sequencial = 1')
+                                    ->whereRaw("UPPER(cs.shift_code) = 'M'");
+                            })
+                            ->orWhere(function ($alias) {
+                                $alias->whereRaw('pt.sequencial = 2')
+                                    ->whereRaw("UPPER(cs.shift_code) = 'T'");
+                            })
+                            ->orWhere(function ($alias) {
+                                $alias->whereRaw('pt.sequencial = 3')
+                                    ->whereRaw("UPPER(cs.shift_code) = 'N'");
+                            });
+                    });
+            });
     }
 
     /**
