@@ -68,6 +68,8 @@ class CashShiftController extends Controller
         $request->validate([
             'store_id' => ['sometimes', 'integer', 'exists:stores,id'],
             'date' => ['sometimes', 'date'],
+            'from' => ['sometimes', 'date'],
+            'to' => ['sometimes', 'date'],
             'status' => ['sometimes', 'string', 'in:open,closed,pending,approved,rejected,submitted'],
             'seller_id' => ['sometimes', 'integer', 'exists:users,id'],
             'shift_code' => ['sometimes', 'string', 'regex:/^\d+$/'],
@@ -96,6 +98,14 @@ class CashShiftController extends Controller
 
         if ($request->filled('date')) {
             $query->where('date', $request->input('date'));
+        }
+
+        if ($request->filled('from')) {
+            $query->where('date', '>=', $request->input('from'));
+        }
+
+        if ($request->filled('to')) {
+            $query->where('date', '<=', $request->input('to'));
         }
 
         if ($request->filled('status')) {
