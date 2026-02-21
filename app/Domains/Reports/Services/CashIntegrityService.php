@@ -213,7 +213,8 @@ class CashIntegrityService
     /**
      * Gera relatório GLOBAL de integridade agregando todas as lojas.
      *
-     * Usa 2 queries SQL com GROUP BY store_id (não N+1).
+     * Usa queries SQL com GROUP BY store_id (não N+1).
+     * Inclui comparativo vs mês anterior.
      *
      * @param int[] $storeIds IDs das lojas do usuário
      * @param string $month Mês no formato YYYY-MM
@@ -222,23 +223,205 @@ class CashIntegrityService
     {
         $startTime = microtime(true);
 
+        // Nomes das lojas (1 query, reusada)
+        $storeNames = DB::table('stores')
+            ->whereIn('id', $storeIds)
+            ->pluck('name', 'id');
+
+        // ── Mês atual ──
+        $current = $this->aggregateByPeriod($storeIds, $month, $storeNames);
+
+        // ── Mês anterior (M-1) ──
+        $prevMonth = Carbon::parse($month . '-01')->subMonth()->format('Y-m');
+        $previous = $this->aggregateByPeriod($storeIds, $prevMonth, $storeNames);
+
+        // ── Calcular deltas globais ──
+        $deltaBreakPct = round($current['global']['cash_break_percentage'] - $previous['global']['cash_break_percentage'], 4);
+        $deltaDivergence = round($current['global']['total_divergence'] - $previous['global']['total_divergence'], 2);
+
+        $globalTrend = 'STABLE';
+        if (abs($deltaBreakPct) >= 0.1) {
+            $globalTrend = $deltaBreakPct > 0 ? 'UP' : 'DOWN';
+        }
+
+        // Merge comparison into global
+        $current['global']['prev_cash_break_percentage'] = $previous['global']['cash_break_percentage'];
+        $current['global']['delta_break_pct'] = $deltaBreakPct;
+        $current['global']['prev_total_divergence'] = $previous['global']['total_divergence'];
+        $current['global']['delta_divergence'] = $deltaDivergence;
+        $current['global']['trend'] = $globalTrend;
+
+        // ── Calcular deltas por store ──
+        $prevByStore = collect($previous['by_store'])->keyBy('store_id');
+
+        foreach ($current['by_store'] as &$store) {
+            $prev = $prevByStore->get($store['store_id']);
+            $prevBreak = $prev ? $prev['cash_break_percentage'] : 0;
+            $prevDiv = $prev ? $prev['total_divergence'] : 0;
+
+            $store['prev_cash_break_percentage'] = $prevBreak;
+            $store['delta_break_pct'] = round($store['cash_break_percentage'] - $prevBreak, 4);
+            $store['prev_total_divergence'] = $prevDiv;
+            $store['delta_divergence'] = round($store['total_divergence'] - $prevDiv, 2);
+
+            $storeDelta = $store['delta_break_pct'];
+            $store['trend'] = abs($storeDelta) >= 0.1
+                ? ($storeDelta > 0 ? 'UP' : 'DOWN')
+                : 'STABLE';
+        }
+        unset($store);
+
+        // ── Top Drivers (causa raiz) ──
         $startOfMonth = Carbon::parse($month . '-01')->startOfMonth()->format('Y-m-d');
         $endOfMonth = Carbon::parse($month . '-01')->endOfMonth()->format('Y-m-d');
 
-        // ──────────────────────────────────────────────────────
-        // Query 1: Agregação de linhas por store (integridade + divergências)
-        // ──────────────────────────────────────────────────────
-        $integrityRows = DB::table('cash_closing_lines as ccl')
+        // Driver 1: Por meio de pagamento (label)
+        $byLabel = DB::table('cash_closing_lines as ccl')
             ->join('cash_closings as cc', 'cc.id', '=', 'ccl.cash_closing_id')
             ->join('cash_shifts as cs', 'cs.id', '=', 'cc.cash_shift_id')
-            ->join('stores as s', 's.id', '=', 'cs.store_id')
             ->whereIn('cs.store_id', $storeIds)
             ->where('cc.status', 'approved')
             ->whereBetween('cs.date', [$startOfMonth, $endOfMonth])
-            ->groupBy('cs.store_id', 's.name')
+            ->whereRaw('ABS(ccl.diff_value) > 0.01')
+            ->groupBy('ccl.label')
             ->select([
+                'ccl.label',
+                DB::raw('SUM(ABS(ccl.diff_value)) as total_abs_diff'),
+                DB::raw('SUM(ccl.diff_value) as total_diff'),
+                DB::raw('COUNT(*) as occurrences'),
+            ])
+            ->orderByDesc('total_abs_diff')
+            ->limit(5)
+            ->get()
+            ->map(fn($row) => [
+                'label' => $row->label,
+                'total_abs_divergence' => round((float) $row->total_abs_diff, 2),
+                'total_divergence' => round((float) $row->total_diff, 2),
+                'occurrences' => (int) $row->occurrences,
+            ])
+            ->toArray();
+
+        // Driver 2: Por operador (closed_by)
+        $byOperator = DB::table('cash_closing_lines as ccl')
+            ->join('cash_closings as cc', 'cc.id', '=', 'ccl.cash_closing_id')
+            ->join('cash_shifts as cs', 'cs.id', '=', 'cc.cash_shift_id')
+            ->join('users as u', 'u.id', '=', 'cc.closed_by')
+            ->whereIn('cs.store_id', $storeIds)
+            ->where('cc.status', 'approved')
+            ->whereBetween('cs.date', [$startOfMonth, $endOfMonth])
+            ->whereRaw('ABS(ccl.diff_value) > 0.01')
+            ->groupBy('cc.closed_by', 'u.name')
+            ->select([
+                'cc.closed_by as user_id',
+                'u.name as user_name',
+                DB::raw('SUM(ABS(ccl.diff_value)) as total_abs_diff'),
+                DB::raw('SUM(ccl.diff_value) as total_diff'),
+                DB::raw('COUNT(*) as occurrences'),
+            ])
+            ->orderByDesc('total_abs_diff')
+            ->limit(5)
+            ->get()
+            ->map(fn($row) => [
+                'user_id' => (int) $row->user_id,
+                'user_name' => $row->user_name,
+                'total_abs_divergence' => round((float) $row->total_abs_diff, 2),
+                'total_divergence' => round((float) $row->total_diff, 2),
+                'occurrences' => (int) $row->occurrences,
+            ])
+            ->toArray();
+
+        // Driver 3: Top 10 turnos mais impactantes
+        $topShifts = DB::table('cash_closing_lines as ccl')
+            ->join('cash_closings as cc', 'cc.id', '=', 'ccl.cash_closing_id')
+            ->join('cash_shifts as cs', 'cs.id', '=', 'cc.cash_shift_id')
+            ->join('stores as s', 's.id', '=', 'cs.store_id')
+            ->join('users as u', 'u.id', '=', 'cs.seller_id')
+            ->whereIn('cs.store_id', $storeIds)
+            ->where('cc.status', 'approved')
+            ->whereBetween('cs.date', [$startOfMonth, $endOfMonth])
+            ->groupBy('cs.id', 'cs.date', 'cs.shift_code', 's.name', 'u.name', 'cs.store_id')
+            ->select([
+                'cs.id as shift_id',
                 'cs.store_id',
                 's.name as store_name',
+                'cs.date',
+                'cs.shift_code',
+                'u.name as seller_name',
+                DB::raw('SUM(ABS(ccl.diff_value)) as total_abs_diff'),
+                DB::raw('SUM(ccl.diff_value) as total_diff'),
+            ])
+            ->orderByDesc('total_abs_diff')
+            ->limit(10)
+            ->get()
+            ->map(fn($row) => [
+                'shift_id' => (int) $row->shift_id,
+                'store_id' => (int) $row->store_id,
+                'store_name' => $row->store_name,
+                'date' => $row->date,
+                'shift_code' => $row->shift_code,
+                'seller_name' => $row->seller_name,
+                'total_abs_divergence' => round((float) $row->total_abs_diff, 2),
+                'total_divergence' => round((float) $row->total_diff, 2),
+            ])
+            ->toArray();
+
+        $queryMs = round((microtime(true) - $startTime) * 1000, 1);
+
+        return [
+            'period' => $month,
+            'prev_period' => $prevMonth,
+
+            'global' => $current['global'],
+            'by_store' => $current['by_store'],
+            'alerts' => $current['alerts'],
+            'store_count' => count($storeIds),
+
+            'top_drivers' => [
+                'by_payment_method' => $byLabel,
+                'by_operator' => $byOperator,
+                'top_shifts' => $topShifts,
+            ],
+
+            'comparison' => [
+                'prev_period' => $prevMonth,
+                'prev_global' => $previous['global'],
+            ],
+
+            'meta' => [
+                'generated_at' => now()->toIso8601String(),
+                'query_ms' => $queryMs,
+                'stores_count' => count($storeIds),
+                'stores_with_data' => $current['stores_with_data'],
+                'data_completeness' => count($storeIds) > 0
+                    ? round($current['stores_with_data'] / count($storeIds), 2)
+                    : 0,
+            ],
+        ];
+    }
+
+    /**
+     * Agrega dados de integridade para um período específico.
+     *
+     * @param int[] $storeIds
+     * @param string $month YYYY-MM
+     * @param \Illuminate\Support\Collection $storeNames [id => name]
+     * @return array{global: array, by_store: array, alerts: array, stores_with_data: int}
+     */
+    private function aggregateByPeriod(array $storeIds, string $month, $storeNames): array
+    {
+        $startOfMonth = Carbon::parse($month . '-01')->startOfMonth()->format('Y-m-d');
+        $endOfMonth = Carbon::parse($month . '-01')->endOfMonth()->format('Y-m-d');
+
+        // Query 1: Integrity lines
+        $integrityRows = DB::table('cash_closing_lines as ccl')
+            ->join('cash_closings as cc', 'cc.id', '=', 'ccl.cash_closing_id')
+            ->join('cash_shifts as cs', 'cs.id', '=', 'cc.cash_shift_id')
+            ->whereIn('cs.store_id', $storeIds)
+            ->where('cc.status', 'approved')
+            ->whereBetween('cs.date', [$startOfMonth, $endOfMonth])
+            ->groupBy('cs.store_id')
+            ->select([
+                'cs.store_id',
                 DB::raw('SUM(ccl.system_value) as total_system'),
                 DB::raw('SUM(ccl.real_value) as total_real'),
                 DB::raw('SUM(ccl.diff_value) as total_diff'),
@@ -249,10 +432,7 @@ class CashIntegrityService
             ->get()
             ->keyBy('store_id');
 
-        // ──────────────────────────────────────────────────────
-        // Query 2: Workflow por store (PDV turnos totais + cash_closings status)
-        // ──────────────────────────────────────────────────────
-        // 2a: Total de turnos fechados no PDV por store
+        // Query 2a: PDV shifts
         $pdvShifts = DB::table('pdv_turnos')
             ->whereIn('store_id', $storeIds)
             ->where('fechado', 1)
@@ -268,7 +448,7 @@ class CashIntegrityService
             ->get()
             ->keyBy('store_id');
 
-        // 2b: Contagem de cash_closings por status por store
+        // Query 2b: Cash closings per status
         $closingCounts = DB::table('cash_closings as cc')
             ->join('cash_shifts as cs', 'cs.id', '=', 'cc.cash_shift_id')
             ->whereIn('cs.store_id', $storeIds)
@@ -282,13 +462,7 @@ class CashIntegrityService
             ->get()
             ->keyBy('store_id');
 
-        // ──────────────────────────────────────────────────────
-        // Montar by_store + aggregar globais
-        // ──────────────────────────────────────────────────────
-        $storeNames = DB::table('stores')
-            ->whereIn('id', $storeIds)
-            ->pluck('name', 'id');
-
+        // Build per-store + aggregate global
         $globalSystem = 0;
         $globalReal = 0;
         $globalDivergence = 0;
@@ -379,10 +553,10 @@ class CashIntegrityService
             }
         }
 
-        // Sort by_store by cash_break_percentage descending (worst first)
+        // Sort by_store by cash_break_percentage descending
         usort($byStore, fn($a, $b) => $b['cash_break_percentage'] <=> $a['cash_break_percentage']);
 
-        // Global percentages
+        // Global computed fields
         $globalBreakPct = $globalSystem > 0
             ? round((abs($globalDivergence) / $globalSystem) * 100, 4)
             : 0;
@@ -401,11 +575,7 @@ class CashIntegrityService
             ? round(($globalClosedCount / $globalTotalShifts) * 100, 2)
             : 0;
 
-        $queryMs = round((microtime(true) - $startTime) * 1000, 1);
-
         return [
-            'period' => $month,
-
             'global' => [
                 'total_system_value' => round($globalSystem, 2),
                 'total_real_value' => round($globalReal, 2),
@@ -421,20 +591,9 @@ class CashIntegrityService
                 'unjustified_count' => $globalUnjustified,
                 'justified_rate' => $globalJustifiedRate,
             ],
-
             'by_store' => $byStore,
             'alerts' => $allAlerts,
-            'store_count' => count($storeIds),
-
-            'meta' => [
-                'generated_at' => now()->toIso8601String(),
-                'query_ms' => $queryMs,
-                'stores_count' => count($storeIds),
-                'stores_with_data' => $storesWithData,
-                'data_completeness' => count($storeIds) > 0
-                    ? round($storesWithData / count($storeIds), 2)
-                    : 0,
-            ],
+            'stores_with_data' => $storesWithData,
         ];
     }
 }
