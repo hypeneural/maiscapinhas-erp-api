@@ -199,7 +199,7 @@ class CashClosingController extends Controller
     public function reject(Request $request, CashShift $shift): JsonResponse
     {
         $request->validate([
-            'reason' => ['required', 'string', 'min:10', 'max:500'],
+            'reason' => ['nullable', 'string', 'max:500'],
         ]);
 
         $user = $request->user();
