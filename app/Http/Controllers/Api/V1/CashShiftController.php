@@ -70,7 +70,7 @@ class CashShiftController extends Controller
             'date' => ['sometimes', 'date'],
             'status' => ['sometimes', 'string', 'in:open,closed,pending,approved,rejected,submitted'],
             'seller_id' => ['sometimes', 'integer', 'exists:users,id'],
-            'shift_code' => ['sometimes', 'string', 'in:1,2,3,M,T,N'],
+            'shift_code' => ['sometimes', 'string', 'regex:/^\d+$/'],
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
         ]);
 
@@ -167,7 +167,7 @@ class CashShiftController extends Controller
         $request->validate([
             'store_id' => ['required', 'integer', 'exists:stores,id'],
             'date' => ['required', 'date'],
-            'shift_code' => ['required', 'string', 'in:1,2,3,M,T,N'],
+            'shift_code' => ['required', 'string', 'regex:/^\d+$/'],
             'seller_id' => ['sometimes', 'integer', 'exists:users,id'],
         ]);
 

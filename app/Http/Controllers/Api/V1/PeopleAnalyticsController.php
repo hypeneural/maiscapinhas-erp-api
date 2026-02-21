@@ -68,7 +68,7 @@ class PeopleAnalyticsController extends Controller
         $request->validate([
             'store_id' => ['required', 'integer', 'exists:stores,id'],
             'date' => ['required', 'date'],
-            'shift_code' => ['required', 'string', 'in:1,2,3,M,T,N'],
+            'shift_code' => ['required', 'string', 'regex:/^\d+$/'],
             'in_count' => ['required', 'integer', 'min:0'],
             'out_count' => ['required', 'integer', 'min:0'],
             'staff_in' => ['sometimes', 'integer', 'min:0'],

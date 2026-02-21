@@ -45,7 +45,7 @@ class CashIntegrationController extends Controller
         $request->validate([
             'store_id' => ['required', 'integer', 'exists:stores,id'],
             'date' => ['required', 'date'],
-            'shift_code' => ['required', 'string', 'in:M,T,N,1,2,3'],
+            'shift_code' => ['required', 'string', 'regex:/^\d+$/'],
         ]);
 
         $storeId = (int) $request->input('store_id');
@@ -377,7 +377,7 @@ class CashIntegrationController extends Controller
         $request->validate([
             'store_id' => ['nullable', 'integer', 'exists:stores,id'],
             'date' => ['nullable', 'date'],
-            'shift_code' => ['nullable', 'string', 'in:M,T,N,1,2,3'],
+            'shift_code' => ['nullable', 'string', 'regex:/^\d+$/'],
             'limit' => ['nullable', 'integer', 'min:1', 'max:300'],
         ]);
 
@@ -474,7 +474,7 @@ class CashIntegrationController extends Controller
         $request->validate([
             'store_id' => ['nullable', 'integer', 'exists:stores,id'],
             'date' => ['nullable', 'date'],
-            'shift_code' => ['nullable', 'string', 'in:M,T,N,1,2,3'],
+            'shift_code' => ['nullable', 'string', 'regex:/^\d+$/'],
         ]);
 
         $user = $request->user();
@@ -625,7 +625,7 @@ class CashIntegrationController extends Controller
             ->selectRaw('
                 pt.closure_uuid,
                 pt.store_id,
-                DATE(MIN(pt.data_hora_inicio)) as date_key,
+                DATE(CONVERT_TZ(MIN(pt.data_hora_inicio), \'+00:00\', \'-03:00\')) as date_key,
                 CAST(pt.sequencial AS CHAR) as shift_code_raw,
                 MAX(COALESCE(pt.data_hora_fechamento, pt.data_hora_termino, pt.data_hora_inicio)) as reference_datetime,
                 MIN(pt.data_hora_inicio) as started_at,
