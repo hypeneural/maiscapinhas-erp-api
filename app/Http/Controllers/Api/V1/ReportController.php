@@ -289,4 +289,55 @@ class ReportController extends Controller
 
         return $this->success($integrity);
     }
+
+    /**
+     * Integridade de Caixa — Global (Multi-Loja)
+     *
+     * Retorna métricas de auditoria de caixa agregadas para todas as lojas
+     * do usuário (ou uma loja específica se store_id for informado).
+     *
+     * @queryParam store_id integer Filtrar por loja específica. Example: 1
+     * @queryParam month string Mês (YYYY-MM), default: mês atual. Example: 2026-01
+     */
+    public function cashIntegrityGlobal(Request $request): JsonResponse
+    {
+        $request->validate([
+            'store_id' => ['sometimes', 'integer', 'exists:stores,id'],
+            'month' => ['sometimes', 'string', 'regex:/^\d{4}-\d{2}$/'],
+        ]);
+
+        $user = $request->user();
+        $month = $request->input('month', Carbon::now()->format('Y-m'));
+        $requestedStoreId = $request->input('store_id');
+
+        // Resolve user store IDs
+        if ($user->isSuperAdmin()) {
+            $userStoreIds = Store::where('active', true)->pluck('id')->toArray();
+        } else {
+            $userStoreIds = $user->storeUsers()
+                ->whereIn('role', ['admin', 'gerente', 'conferente'])
+                ->pluck('store_id')
+                ->toArray();
+        }
+
+        if (empty($userStoreIds)) {
+            return $this->forbidden('Você não tem acesso a nenhuma loja.');
+        }
+
+        // If specific store requested, validate access and filter
+        if ($requestedStoreId) {
+            $requestedStoreId = (int) $requestedStoreId;
+            if (!in_array($requestedStoreId, $userStoreIds, true)) {
+                return $this->forbidden('Você não tem acesso a esta loja.');
+            }
+            // Single store — return per-store report
+            $integrity = $this->integrityService->getIntegrityReport($requestedStoreId, $month);
+            return $this->success($integrity);
+        }
+
+        // Global: aggregate all stores
+        $global = $this->integrityService->getGlobalIntegrityReport($userStoreIds, $month);
+
+        return $this->success($global);
+    }
 }

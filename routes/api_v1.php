@@ -250,6 +250,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/store-performance', [ReportController::class, 'storePerformance'])->name('store-performance');
         Route::get('/consolidated', [ReportController::class, 'consolidatedPerformance'])->name('consolidated');
         Route::get('/cash-integrity', [ReportController::class, 'cashIntegrity'])->name('cash-integrity');
+        Route::get('/cash-integrity-global', [ReportController::class, 'cashIntegrityGlobal'])->name('cash-integrity-global');
         Route::get('/ranking', [RankingController::class, 'index'])->name('ranking');
     });
 

@@ -209,4 +209,117 @@ class CashIntegrityService
 
         return $alerts;
     }
+
+    /**
+     * Gera relatório GLOBAL de integridade agregando todas as lojas.
+     *
+     * @param int[] $storeIds IDs das lojas do usuário
+     * @param string $month Mês no formato YYYY-MM
+     */
+    public function getGlobalIntegrityReport(array $storeIds, string $month): array
+    {
+        $globalSystem = 0;
+        $globalReal = 0;
+        $globalDivergence = 0;
+        $globalDivergenceLines = 0;
+        $globalJustified = 0;
+        $globalUnjustified = 0;
+        $globalTotalShifts = 0;
+        $globalClosedCount = 0;
+        $globalPending = 0;
+        $allAlerts = [];
+        $byStore = [];
+
+        foreach ($storeIds as $storeId) {
+            $report = $this->getIntegrityReport($storeId, $month);
+
+            $ci = $report['cash_integrity'];
+            $da = $report['divergence_analysis'];
+            $ws = $report['workflow_status'];
+
+            $globalSystem += $ci['total_system_value'];
+            $globalReal += $ci['total_real_value'];
+            $globalDivergence += $ci['total_divergence'];
+            $globalDivergenceLines += $da['total_lines_with_divergence'];
+            $globalJustified += $da['justified_count'];
+            $globalUnjustified += $da['unjustified_count'];
+            $globalTotalShifts += $ws['total_shifts'];
+            $globalClosedCount += $ws['closed_count'];
+            $globalPending += $ws['pending_approval'];
+
+            // Store name
+            $store = \App\Models\Store::find($storeId);
+
+            $byStore[] = [
+                'store_id' => $storeId,
+                'store_name' => $store?->name ?? "Loja #{$storeId}",
+                'cash_break_percentage' => $ci['cash_break_percentage'],
+                'status' => $ci['status'],
+                'total_divergence' => $ci['total_divergence'],
+                'total_system_value' => $ci['total_system_value'],
+                'total_real_value' => $ci['total_real_value'],
+                'completion_rate' => $ws['completion_rate'],
+                'shifts_total' => $ws['total_shifts'],
+                'shifts_closed' => $ws['closed_count'],
+                'pending_approval' => $ws['pending_approval'],
+                'divergence_lines' => $da['total_lines_with_divergence'],
+                'justified_count' => $da['justified_count'],
+                'unjustified_count' => $da['unjustified_count'],
+            ];
+
+            // Collect store-specific critical/warning alerts
+            foreach ($report['alerts'] as $alert) {
+                $alert['store_id'] = $storeId;
+                $alert['store_name'] = $store?->name ?? "Loja #{$storeId}";
+                $allAlerts[] = $alert;
+            }
+        }
+
+        // Sort by_store by cash_break_percentage descending (worst first)
+        usort($byStore, fn($a, $b) => $b['cash_break_percentage'] <=> $a['cash_break_percentage']);
+
+        // Global percentages
+        $globalBreakPct = $globalSystem > 0
+            ? round((abs($globalDivergence) / $globalSystem) * 100, 4)
+            : 0;
+
+        $globalJustifiedRate = $globalDivergenceLines > 0
+            ? round(($globalJustified / $globalDivergenceLines) * 100, 2)
+            : 100;
+
+        $globalStatus = 'GREEN';
+        if ($globalBreakPct > 5) {
+            $globalStatus = 'RED';
+        } elseif ($globalBreakPct > 2) {
+            $globalStatus = 'YELLOW';
+        }
+
+        $globalCompletionRate = $globalTotalShifts > 0
+            ? round(($globalClosedCount / $globalTotalShifts) * 100, 2)
+            : 0;
+
+        return [
+            'period' => $month,
+
+            'global' => [
+                'total_system_value' => round($globalSystem, 2),
+                'total_real_value' => round($globalReal, 2),
+                'total_divergence' => round($globalDivergence, 2),
+                'cash_break_percentage' => $globalBreakPct,
+                'status' => $globalStatus,
+                'total_shifts' => $globalTotalShifts,
+                'closed_count' => $globalClosedCount,
+                'pending_approval' => $globalPending,
+                'completion_rate' => $globalCompletionRate,
+                'total_divergences' => $globalDivergenceLines,
+                'justified_count' => $globalJustified,
+                'unjustified_count' => $globalUnjustified,
+                'justified_rate' => $globalJustifiedRate,
+            ],
+
+            'by_store' => $byStore,
+            'alerts' => $allAlerts,
+            'store_count' => count($storeIds),
+        ];
+    }
 }
