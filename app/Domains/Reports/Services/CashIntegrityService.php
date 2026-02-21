@@ -301,18 +301,18 @@ class CashIntegrityService
             ])
             ->toArray();
 
-        // Driver 2: Por operador (closed_by)
-        $byOperator = DB::table('cash_closing_lines as ccl')
+        // Driver 2: Por vendedor (seller_id = responsável pelo caixa)
+        $bySeller = DB::table('cash_closing_lines as ccl')
             ->join('cash_closings as cc', 'cc.id', '=', 'ccl.cash_closing_id')
             ->join('cash_shifts as cs', 'cs.id', '=', 'cc.cash_shift_id')
-            ->join('users as u', 'u.id', '=', 'cc.closed_by')
+            ->join('users as u', 'u.id', '=', 'cs.seller_id')
             ->whereIn('cs.store_id', $storeIds)
             ->where('cc.status', 'approved')
             ->whereBetween('cs.date', [$startOfMonth, $endOfMonth])
             ->whereRaw('ABS(ccl.diff_value) > 0.01')
-            ->groupBy('cc.closed_by', 'u.name')
+            ->groupBy('cs.seller_id', 'u.name')
             ->select([
-                'cc.closed_by as user_id',
+                'cs.seller_id as user_id',
                 'u.name as user_name',
                 DB::raw('SUM(ABS(ccl.diff_value)) as total_abs_diff'),
                 DB::raw('SUM(ccl.diff_value) as total_diff'),
@@ -365,6 +365,37 @@ class CashIntegrityService
             ])
             ->toArray();
 
+        // Driver 4: Top vendedores por loja (para ranking table tooltip)
+        $sellersByStore = DB::table('cash_closing_lines as ccl')
+            ->join('cash_closings as cc', 'cc.id', '=', 'ccl.cash_closing_id')
+            ->join('cash_shifts as cs', 'cs.id', '=', 'cc.cash_shift_id')
+            ->join('users as u', 'u.id', '=', 'cs.seller_id')
+            ->whereIn('cs.store_id', $storeIds)
+            ->where('cc.status', 'approved')
+            ->whereBetween('cs.date', [$startOfMonth, $endOfMonth])
+            ->whereRaw('ABS(ccl.diff_value) > 0.01')
+            ->groupBy('cs.store_id', 'cs.seller_id', 'u.name')
+            ->select([
+                'cs.store_id',
+                'cs.seller_id as user_id',
+                'u.name as user_name',
+                DB::raw('SUM(ABS(ccl.diff_value)) as total_abs_diff'),
+                DB::raw('SUM(ccl.diff_value) as total_diff'),
+                DB::raw('COUNT(*) as occurrences'),
+            ])
+            ->orderBy('cs.store_id')
+            ->orderByDesc('total_abs_diff')
+            ->get()
+            ->groupBy('store_id')
+            ->map(fn($rows) => $rows->map(fn($row) => [
+                'user_id' => (int) $row->user_id,
+                'user_name' => $row->user_name,
+                'total_abs_divergence' => round((float) $row->total_abs_diff, 2),
+                'total_divergence' => round((float) $row->total_diff, 2),
+                'occurrences' => (int) $row->occurrences,
+            ])->values()->toArray())
+            ->toArray();
+
         $queryMs = round((microtime(true) - $startTime) * 1000, 1);
 
         return [
@@ -378,8 +409,9 @@ class CashIntegrityService
 
             'top_drivers' => [
                 'by_payment_method' => $byLabel,
-                'by_operator' => $byOperator,
+                'by_seller' => $bySeller,
                 'top_shifts' => $topShifts,
+                'sellers_by_store' => $sellersByStore,
             ],
 
             'comparison' => [
