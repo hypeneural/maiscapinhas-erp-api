@@ -157,7 +157,7 @@ class CashIntegrityService
         if ($cashBreakPercentage > 5) {
             $alerts[] = [
                 'type' => 'CRITICAL',
-                'code' => 'HIGH_CASH_BREAK',
+                'code' => 'QUEBRA_ELEVADA',
                 'message' => sprintf(
                     'Quebra de caixa de %.2f%% está acima do limite crítico (5%%).',
                     $cashBreakPercentage
@@ -166,7 +166,7 @@ class CashIntegrityService
         } elseif ($cashBreakPercentage > 2) {
             $alerts[] = [
                 'type' => 'WARNING',
-                'code' => 'ELEVATED_CASH_BREAK',
+                'code' => 'QUEBRA_ACIMA_LIMITE',
                 'message' => sprintf(
                     'Quebra de caixa de %.2f%% está acima do limite aceitável (2%%).',
                     $cashBreakPercentage
@@ -177,9 +177,9 @@ class CashIntegrityService
         if ($unjustifiedCount > 0) {
             $alerts[] = [
                 'type' => 'WARNING',
-                'code' => 'UNJUSTIFIED_DIVERGENCES',
+                'code' => 'DIVERGENCIAS_SEM_JUSTIFICATIVA',
                 'message' => sprintf(
-                    'Existem %d divergências não justificadas.',
+                    'Existem %d divergências não justificadas que precisam de atenção.',
                     $unjustifiedCount
                 ),
             ];
@@ -188,7 +188,7 @@ class CashIntegrityService
         if ($pendingCount > 5) {
             $alerts[] = [
                 'type' => 'INFO',
-                'code' => 'PENDING_BACKLOG',
+                'code' => 'APROVACOES_PENDENTES',
                 'message' => sprintf(
                     '%d fechamentos aguardando aprovação.',
                     $pendingCount
@@ -199,7 +199,7 @@ class CashIntegrityService
         if ($openCount > 3) {
             $alerts[] = [
                 'type' => 'WARNING',
-                'code' => 'OPEN_SHIFTS',
+                'code' => 'TURNOS_ABERTOS',
                 'message' => sprintf(
                     '%d turnos ainda não foram fechados.',
                     $openCount
