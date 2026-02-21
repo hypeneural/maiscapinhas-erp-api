@@ -213,11 +213,82 @@ class CashIntegrityService
     /**
      * Gera relatório GLOBAL de integridade agregando todas as lojas.
      *
+     * Usa 2 queries SQL com GROUP BY store_id (não N+1).
+     *
      * @param int[] $storeIds IDs das lojas do usuário
      * @param string $month Mês no formato YYYY-MM
      */
     public function getGlobalIntegrityReport(array $storeIds, string $month): array
     {
+        $startTime = microtime(true);
+
+        $startOfMonth = Carbon::parse($month . '-01')->startOfMonth()->format('Y-m-d');
+        $endOfMonth = Carbon::parse($month . '-01')->endOfMonth()->format('Y-m-d');
+
+        // ──────────────────────────────────────────────────────
+        // Query 1: Agregação de linhas por store (integridade + divergências)
+        // ──────────────────────────────────────────────────────
+        $integrityRows = DB::table('cash_closing_lines as ccl')
+            ->join('cash_closings as cc', 'cc.id', '=', 'ccl.cash_closing_id')
+            ->join('cash_shifts as cs', 'cs.id', '=', 'cc.cash_shift_id')
+            ->join('stores as s', 's.id', '=', 'cs.store_id')
+            ->whereIn('cs.store_id', $storeIds)
+            ->where('cc.status', 'approved')
+            ->whereBetween('cs.date', [$startOfMonth, $endOfMonth])
+            ->groupBy('cs.store_id', 's.name')
+            ->select([
+                'cs.store_id',
+                's.name as store_name',
+                DB::raw('SUM(ccl.system_value) as total_system'),
+                DB::raw('SUM(ccl.real_value) as total_real'),
+                DB::raw('SUM(ccl.diff_value) as total_diff'),
+                DB::raw('COUNT(CASE WHEN ABS(ccl.diff_value) > 0.01 THEN 1 END) as divergence_lines'),
+                DB::raw("COUNT(CASE WHEN ABS(ccl.diff_value) > 0.01 AND (ccl.justification_text IS NOT NULL AND ccl.justification_text != '') THEN 1 END) as justified_count"),
+                DB::raw("COUNT(CASE WHEN ABS(ccl.diff_value) > 0.01 AND (ccl.justification_text IS NULL OR ccl.justification_text = '') THEN 1 END) as unjustified_count"),
+            ])
+            ->get()
+            ->keyBy('store_id');
+
+        // ──────────────────────────────────────────────────────
+        // Query 2: Workflow por store (PDV turnos totais + cash_closings status)
+        // ──────────────────────────────────────────────────────
+        // 2a: Total de turnos fechados no PDV por store
+        $pdvShifts = DB::table('pdv_turnos')
+            ->whereIn('store_id', $storeIds)
+            ->where('fechado', 1)
+            ->whereBetween('data_hora_inicio', [
+                $startOfMonth . ' 00:00:00',
+                $endOfMonth . ' 23:59:59',
+            ])
+            ->groupBy('store_id')
+            ->select([
+                'store_id',
+                DB::raw('COUNT(*) as total_shifts'),
+            ])
+            ->get()
+            ->keyBy('store_id');
+
+        // 2b: Contagem de cash_closings por status por store
+        $closingCounts = DB::table('cash_closings as cc')
+            ->join('cash_shifts as cs', 'cs.id', '=', 'cc.cash_shift_id')
+            ->whereIn('cs.store_id', $storeIds)
+            ->whereBetween('cs.date', [$startOfMonth, $endOfMonth])
+            ->groupBy('cs.store_id')
+            ->select([
+                'cs.store_id',
+                DB::raw("COUNT(CASE WHEN cc.status = 'approved' THEN 1 END) as closed_count"),
+                DB::raw("COUNT(CASE WHEN cc.status = 'submitted' THEN 1 END) as pending_count"),
+            ])
+            ->get()
+            ->keyBy('store_id');
+
+        // ──────────────────────────────────────────────────────
+        // Montar by_store + aggregar globais
+        // ──────────────────────────────────────────────────────
+        $storeNames = DB::table('stores')
+            ->whereIn('id', $storeIds)
+            ->pluck('name', 'id');
+
         $globalSystem = 0;
         $globalReal = 0;
         $globalDivergence = 0;
@@ -227,50 +298,83 @@ class CashIntegrityService
         $globalTotalShifts = 0;
         $globalClosedCount = 0;
         $globalPending = 0;
-        $allAlerts = [];
         $byStore = [];
+        $allAlerts = [];
+        $storesWithData = 0;
 
         foreach ($storeIds as $storeId) {
-            $report = $this->getIntegrityReport($storeId, $month);
+            $integrity = $integrityRows->get($storeId);
+            $shifts = $pdvShifts->get($storeId);
+            $closings = $closingCounts->get($storeId);
 
-            $ci = $report['cash_integrity'];
-            $da = $report['divergence_analysis'];
-            $ws = $report['workflow_status'];
+            $system = $integrity ? (float) $integrity->total_system : 0;
+            $real = $integrity ? (float) $integrity->total_real : 0;
+            $diff = $integrity ? (float) $integrity->total_diff : 0;
+            $divLines = $integrity ? (int) $integrity->divergence_lines : 0;
+            $just = $integrity ? (int) $integrity->justified_count : 0;
+            $unjust = $integrity ? (int) $integrity->unjustified_count : 0;
 
-            $globalSystem += $ci['total_system_value'];
-            $globalReal += $ci['total_real_value'];
-            $globalDivergence += $ci['total_divergence'];
-            $globalDivergenceLines += $da['total_lines_with_divergence'];
-            $globalJustified += $da['justified_count'];
-            $globalUnjustified += $da['unjustified_count'];
-            $globalTotalShifts += $ws['total_shifts'];
-            $globalClosedCount += $ws['closed_count'];
-            $globalPending += $ws['pending_approval'];
+            $totalShifts = $shifts ? (int) $shifts->total_shifts : 0;
+            $closedCount = $closings ? (int) $closings->closed_count : 0;
+            $pendingCount = $closings ? (int) $closings->pending_count : 0;
 
-            // Store name
-            $store = \App\Models\Store::find($storeId);
+            $breakPct = $system > 0
+                ? round((abs($diff) / $system) * 100, 4)
+                : 0;
+
+            $status = 'GREEN';
+            if ($breakPct > 5)
+                $status = 'RED';
+            elseif ($breakPct > 2)
+                $status = 'YELLOW';
+
+            $completionRate = $totalShifts > 0
+                ? round(($closedCount / $totalShifts) * 100, 2)
+                : 0;
+
+            $storeName = $storeNames->get($storeId, "Loja #{$storeId}");
+
+            if ($integrity || $shifts || $closings) {
+                $storesWithData++;
+            }
+
+            $globalSystem += $system;
+            $globalReal += $real;
+            $globalDivergence += $diff;
+            $globalDivergenceLines += $divLines;
+            $globalJustified += $just;
+            $globalUnjustified += $unjust;
+            $globalTotalShifts += $totalShifts;
+            $globalClosedCount += $closedCount;
+            $globalPending += $pendingCount;
 
             $byStore[] = [
                 'store_id' => $storeId,
-                'store_name' => $store?->name ?? "Loja #{$storeId}",
-                'cash_break_percentage' => $ci['cash_break_percentage'],
-                'status' => $ci['status'],
-                'total_divergence' => $ci['total_divergence'],
-                'total_system_value' => $ci['total_system_value'],
-                'total_real_value' => $ci['total_real_value'],
-                'completion_rate' => $ws['completion_rate'],
-                'shifts_total' => $ws['total_shifts'],
-                'shifts_closed' => $ws['closed_count'],
-                'pending_approval' => $ws['pending_approval'],
-                'divergence_lines' => $da['total_lines_with_divergence'],
-                'justified_count' => $da['justified_count'],
-                'unjustified_count' => $da['unjustified_count'],
+                'store_name' => $storeName,
+                'cash_break_percentage' => $breakPct,
+                'status' => $status,
+                'total_divergence' => round($diff, 2),
+                'total_system_value' => round($system, 2),
+                'total_real_value' => round($real, 2),
+                'completion_rate' => $completionRate,
+                'shifts_total' => $totalShifts,
+                'shifts_closed' => $closedCount,
+                'pending_approval' => $pendingCount,
+                'divergence_lines' => $divLines,
+                'justified_count' => $just,
+                'unjustified_count' => $unjust,
             ];
 
-            // Collect store-specific critical/warning alerts
-            foreach ($report['alerts'] as $alert) {
+            // Alerts per store
+            $storeAlerts = $this->generateAlerts(
+                $breakPct,
+                $unjust,
+                $pendingCount,
+                $totalShifts - $closedCount - $pendingCount
+            );
+            foreach ($storeAlerts as $alert) {
                 $alert['store_id'] = $storeId;
-                $alert['store_name'] = $store?->name ?? "Loja #{$storeId}";
+                $alert['store_name'] = $storeName;
                 $allAlerts[] = $alert;
             }
         }
@@ -288,15 +392,16 @@ class CashIntegrityService
             : 100;
 
         $globalStatus = 'GREEN';
-        if ($globalBreakPct > 5) {
+        if ($globalBreakPct > 5)
             $globalStatus = 'RED';
-        } elseif ($globalBreakPct > 2) {
+        elseif ($globalBreakPct > 2)
             $globalStatus = 'YELLOW';
-        }
 
         $globalCompletionRate = $globalTotalShifts > 0
             ? round(($globalClosedCount / $globalTotalShifts) * 100, 2)
             : 0;
+
+        $queryMs = round((microtime(true) - $startTime) * 1000, 1);
 
         return [
             'period' => $month,
@@ -320,6 +425,16 @@ class CashIntegrityService
             'by_store' => $byStore,
             'alerts' => $allAlerts,
             'store_count' => count($storeIds),
+
+            'meta' => [
+                'generated_at' => now()->toIso8601String(),
+                'query_ms' => $queryMs,
+                'stores_count' => count($storeIds),
+                'stores_with_data' => $storesWithData,
+                'data_completeness' => count($storeIds) > 0
+                    ? round($storesWithData / count($storeIds), 2)
+                    : 0,
+            ],
         ];
     }
 }
