@@ -512,7 +512,7 @@ class CashIntegrationController extends Controller
                 ->where('pending.store_id', (int) $storeId)
                 ->select('pending.date_key')
                 ->distinct()
-                ->orderBy('pending.date_key', 'desc')
+                ->orderBy('pending.date_key', 'asc')
                 ->pluck('date_key')
                 ->values();
         }
