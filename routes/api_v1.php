@@ -171,6 +171,10 @@ Route::middleware('auth:sanctum')->group(function () {
             ->name('closure-filters')
             ->middleware('permission:caixa.view');
 
+        Route::get('/history-filters', [CashShiftController::class, 'historyFilters'])
+            ->name('history-filters')
+            ->middleware('permission:caixa.view');
+
         Route::get('/conference-pending-turns', [CashIntegrationController::class, 'getConferencePendingTurns'])
             ->name('conference-pending-turns')
             ->middleware('permission:caixa.view');

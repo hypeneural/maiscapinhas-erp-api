@@ -465,5 +465,108 @@ class CashShiftController extends Controller
             'shifts' => $result->values(),
         ]);
     }
+
+    /**
+     * Smart filters for history page
+     *
+     * Returns only stores, sellers, shifts, statuses, and months that actually
+     * exist in the data (cash_shifts with closings).
+     *
+     * @queryParam from string Start date YYYY-MM-DD (optional)
+     * @queryParam to string End date YYYY-MM-DD (optional)
+     * @queryParam store_id integer Filter by store (optional)
+     */
+    public function historyFilters(Request $request): JsonResponse
+    {
+        $request->validate([
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date'],
+            'store_id' => ['nullable', 'integer', 'exists:stores,id'],
+        ]);
+
+        $user = $request->user();
+
+        if ($user->isSuperAdmin()) {
+            $userStoreIds = \App\Models\Store::where('active', true)->pluck('id')->toArray();
+        } else {
+            $userStoreIds = $user->storeUsers()->pluck('store_id')->toArray();
+        }
+
+        // Base query: cash_shifts that have a closing with status
+        $baseQuery = CashShift::query()
+            ->whereIn('store_id', $userStoreIds)
+            ->whereHas('cashClosing', function ($q) {
+                $q->whereIn('status', ['submitted', 'approved', 'rejected']);
+            });
+
+        // Apply date range if provided
+        if ($request->filled('from')) {
+            $baseQuery->where('date', '>=', $request->input('from'));
+        }
+        if ($request->filled('to')) {
+            $baseQuery->where('date', '<=', $request->input('to'));
+        }
+
+        // 1. Stores with closings in range
+        $storeIds = (clone $baseQuery)->select('store_id')->distinct()->pluck('store_id');
+        $stores = \App\Models\Store::whereIn('id', $storeIds)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        // 2. Sellers (scoped by store if selected)
+        $sellerQuery = clone $baseQuery;
+        if ($request->filled('store_id')) {
+            $sellerQuery->where('store_id', (int) $request->input('store_id'));
+        }
+        $sellerIds = $sellerQuery->select('seller_id')->distinct()->pluck('seller_id');
+        $sellers = \App\Models\User::whereIn('id', $sellerIds)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        // 3. Shift codes
+        $shiftQuery = clone $baseQuery;
+        if ($request->filled('store_id')) {
+            $shiftQuery->where('store_id', (int) $request->input('store_id'));
+        }
+        $shifts = $shiftQuery->select('shift_code')
+            ->distinct()
+            ->pluck('shift_code')
+            ->sort()
+            ->values();
+
+        // 4. Statuses
+        $statusQuery = clone $baseQuery;
+        if ($request->filled('store_id')) {
+            $statusQuery->where('store_id', (int) $request->input('store_id'));
+        }
+        $statuses = $statusQuery
+            ->join('cash_closings', 'cash_shifts.id', '=', 'cash_closings.cash_shift_id')
+            ->select('cash_closings.status')
+            ->distinct()
+            ->pluck('status')
+            ->values();
+
+        // 5. Available months (unscoped - always show all months with data)
+        $monthsQuery = CashShift::query()
+            ->whereIn('store_id', $userStoreIds)
+            ->whereHas('cashClosing', function ($q) {
+                $q->whereIn('status', ['submitted', 'approved', 'rejected']);
+            });
+        $months = $monthsQuery
+            ->selectRaw("DISTINCT DATE_FORMAT(date, '%Y-%m') as month_key")
+            ->orderByDesc('month_key')
+            ->pluck('month_key')
+            ->values();
+
+        return $this->success([
+            'stores' => $stores,
+            'sellers' => $sellers,
+            'shifts' => $shifts,
+            'statuses' => $statuses,
+            'months' => $months,
+        ]);
+    }
 }
 
