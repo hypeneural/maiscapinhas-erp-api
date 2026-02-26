@@ -443,6 +443,7 @@ class CashShiftController extends Controller
             $daysPending = \Carbon\Carbon::parse($shift->date)->diffInDays($today);
 
             $hasJustification = !empty($shift->cashClosing->justification_text) ||
+                !empty($shift->cashClosing->observer_notes) ||
                 $shift->cashClosing?->lines
                     ->where('diff_value', '!=', 0)
                     ->every(fn($line) => !empty($line->justification_text));

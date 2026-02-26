@@ -274,6 +274,7 @@ class CashClosingController extends Controller
             'lines.*.real_value' => ['required', 'numeric', 'min:0'],
             'justification_text' => ['nullable', 'string', 'max:1000'],
             'justified' => ['nullable', 'boolean'],
+            'observer_notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $user = $request->user();
@@ -291,7 +292,8 @@ class CashClosingController extends Controller
             $shift,
             $request->input('lines'),
             $request->input('justification_text'),
-            $request->boolean('justified', false)
+            $request->boolean('justified', false),
+            $request->input('observer_notes')
         );
 
         return $this->created($closing->load(['cashShift.store', 'cashShift.seller']));
@@ -338,6 +340,7 @@ class CashClosingController extends Controller
             'lines.*.real_value' => ['required', 'numeric', 'min:0'],
             'justification_text' => ['nullable', 'string', 'max:1000'],
             'justified' => ['nullable', 'boolean'],
+            'observer_notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $user = $request->user();
@@ -357,7 +360,8 @@ class CashClosingController extends Controller
                 $closing,
                 $request->input('lines'),
                 $request->input('justification_text'),
-                $request->boolean('justified', false)
+                $request->boolean('justified', false),
+                $request->input('observer_notes')
             );
 
             return $this->success($closing->load(['cashShift.store', 'cashShift.seller']));

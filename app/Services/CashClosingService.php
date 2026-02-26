@@ -46,6 +46,7 @@ class CashClosingService
             }
 
             $hasJustification = !empty(trim((string) $closing->justification_text))
+                || !empty(trim((string) $closing->observer_notes))
                 || $closing->areDivergentLinesJustified()
                 || (bool) $closing->justified;
 
@@ -165,22 +166,25 @@ class CashClosingService
      *
      * @param CashShift $shift The shift to create closing for
      * @param array $lines Array of line data (label, system_value, real_value)
-     * @param string|null $justificationText Optional justification text for the entire shift
+     * @param string|null $justificationText Optional seller justification text
      * @param bool $justified Whether the divergence (if any) is justified
+     * @param string|null $observerNotes Optional conference observer notes
      */
     public function createWithLines(
         CashShift $shift,
         array $lines,
         ?string $justificationText = null,
-        bool $justified = false
+        bool $justified = false,
+        ?string $observerNotes = null
     ): CashClosing {
-        return DB::transaction(function () use ($shift, $lines, $justificationText, $justified) {
+        return DB::transaction(function () use ($shift, $lines, $justificationText, $justified, $observerNotes) {
             $closing = CashClosing::create([
                 'cash_shift_id' => $shift->id,
                 'status' => CashClosing::STATUS_DRAFT,
                 'version' => 1,
                 'justification_text' => $justificationText,
                 'justified' => $justified,
+                'observer_notes' => $observerNotes,
             ]);
 
             $this->createLines($closing, $lines);
@@ -198,9 +202,10 @@ class CashClosingService
         CashClosing $closing,
         array $lines,
         ?string $justificationText = null,
-        bool $justified = false
+        bool $justified = false,
+        ?string $observerNotes = null
     ): CashClosing {
-        return DB::transaction(function () use ($closing, $lines, $justificationText, $justified) {
+        return DB::transaction(function () use ($closing, $lines, $justificationText, $justified, $observerNotes) {
             $closing = CashClosing::lockForUpdate()->find($closing->id);
 
             // Can only update if draft or rejected
@@ -213,6 +218,7 @@ class CashClosingService
             // Update closing fields
             $closing->justification_text = $justificationText;
             $closing->justified = $justified;
+            $closing->observer_notes = $observerNotes;
             $closing->version++;
             $closing->save();
 
