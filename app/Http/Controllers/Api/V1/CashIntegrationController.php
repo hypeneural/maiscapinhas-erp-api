@@ -91,8 +91,26 @@ class CashIntegrationController extends Controller
         $sobraTotal = $closures->sum('totais.sobra');
         $declaredConsistent = $closures->every('totais.declared_consistent');
 
-        // Agregar pagamentos sistema (somar por id_finalizador entre closures)
+        // Agregar pagamentos sistema usando entries_expected (valor correto por meio)
+        // IMPORTANTE: NÃO usar pagamentos.sistema (soma bruta CAIXA+LOJA) — ele inclui
+        // orçamentos/pedidos de HIPER_LOJA que inflam os valores.
+        // Usar pagamentos.por_meio que já tem entries_expected = declarado + falta - sobra.
         $paymentsSistema = $closures
+            ->flatMap(fn($c) => $c['pagamentos']['por_meio'])
+            ->groupBy('id_finalizador')
+            ->map(function ($group) {
+                $first = $group->first();
+                return [
+                    'id_finalizador' => $first['id_finalizador'],
+                    'label' => $first['meio_pagamento'],
+                    'value' => (float) $group->sum('entries_expected'),
+                    'qtd_vendas' => 0,
+                ];
+            })
+            ->values();
+
+        // Soma bruta (CAIXA+LOJA) mantida para referência/debugging
+        $paymentsRawSistema = $closures
             ->flatMap(fn($c) => $c['pagamentos']['sistema'])
             ->groupBy('id_finalizador')
             ->map(function ($group) {
@@ -170,6 +188,7 @@ class CashIntegrationController extends Controller
             'has_loja_sales' => $systemLoja > 0,
             'canais_presentes' => $canais,
             'payments_sistema' => $paymentsSistema,
+            'payments_sistema_raw' => $paymentsRawSistema,
             'payments_declarado' => $paymentsDeclarado,
             'payments_falta' => $paymentsFalta,
             'payments_sobra' => $paymentsSobra,
