@@ -23,6 +23,7 @@ class CashClosing extends Model
         'version',
         'justification_text',
         'justified',
+        'observer_notes',
     ];
 
     protected $casts = [
@@ -179,7 +180,7 @@ class CashClosing extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['status', 'closed_by', 'closed_at', 'version', 'justified', 'justification_text'])
+            ->logOnly(['status', 'closed_by', 'closed_at', 'version', 'justified', 'justification_text', 'observer_notes'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }
