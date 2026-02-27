@@ -53,6 +53,7 @@ class CashClosingService
             // Move to submitted
             $beforeStatus = $closing->status;
             $closing->status = CashClosing::STATUS_SUBMITTED;
+            $closing->closed_by = $submittedBy->id;
             $closing->version++;
             $closing->save();
 

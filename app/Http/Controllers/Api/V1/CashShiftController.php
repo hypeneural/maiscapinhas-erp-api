@@ -448,6 +448,22 @@ class CashShiftController extends Controller
                     ->where('diff_value', '!=', 0)
                     ->every(fn($line) => !empty($line->justification_text));
 
+            // Get conferente name: prefer closedByUser, fallback to audit log
+            $conferenteName = $shift->cashClosing?->closedByUser?->name;
+            if (!$conferenteName && $shift->cashClosing) {
+                $auditEntry = \App\Models\AuditLog::where('entity_type', 'cash_closing')
+                    ->where('entity_id', $shift->cashClosing->id)
+                    ->where('action', 'submitted')
+                    ->latest()
+                    ->first();
+                if ($auditEntry) {
+                    $submittedById = $auditEntry->after['submitted_by'] ?? null;
+                    if ($submittedById) {
+                        $conferenteName = \App\Models\User::where('id', $submittedById)->value('name');
+                    }
+                }
+            }
+
             return [
                 'id' => $shift->id,
                 'date' => $shift->date,
@@ -457,7 +473,7 @@ class CashShiftController extends Controller
                 'divergence' => round($divergence, 2),
                 'has_justification' => $hasJustification,
                 'days_pending' => $daysPending,
-                'conferente_name' => $shift->cashClosing?->closedByUser?->name,
+                'conferente_name' => $conferenteName,
                 'submitted_at' => $shift->cashClosing?->updated_at?->toIso8601String(),
                 'justification_text' => $shift->cashClosing?->justification_text,
                 'observer_notes' => $shift->cashClosing?->observer_notes,
