@@ -73,7 +73,7 @@ class CashShiftController extends Controller
             'status' => ['sometimes', 'string', 'in:open,closed,pending,approved,rejected,submitted'],
             'seller_id' => ['sometimes', 'integer', 'exists:users,id'],
             'shift_code' => ['sometimes', 'string', 'regex:/^\d+$/'],
-            'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:250'],
         ]);
 
         $user = $request->user();
