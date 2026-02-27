@@ -424,14 +424,14 @@ class CashShiftController extends Controller
             return $this->forbidden('Você não tem acesso a esta loja.');
         }
 
-        $shifts = CashShift::with(['store:id,name', 'seller:id,name', 'cashClosing.lines'])
+        $shifts = CashShift::with(['store:id,name', 'seller:id,name', 'cashClosing.lines', 'cashClosing.closedByUser:id,name'])
             ->whereIn('store_id', $storeId ? [$storeId] : $userStoreIds)
             // Only list shifts that are waiting for approval (SUBMITTED)
             ->whereHas('cashClosing', function ($q) {
                 $q->where('status', \App\Models\CashClosing::STATUS_SUBMITTED)
                     ->whereHas('lines', fn($l) => $l->where('diff_value', '!=', 0));
             })
-            ->orderByDesc('date')
+            ->orderBy('date')
             ->get();
 
         $today = now()->startOfDay();
@@ -457,6 +457,8 @@ class CashShiftController extends Controller
                 'divergence' => round($divergence, 2),
                 'has_justification' => $hasJustification,
                 'days_pending' => $daysPending,
+                'conferente_name' => $shift->cashClosing?->closedByUser?->name,
+                'submitted_at' => $shift->cashClosing?->updated_at?->toIso8601String(),
             ];
         });
 
