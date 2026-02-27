@@ -68,6 +68,22 @@ class PdvClosureUnifiedService
             return collect();
         }
 
+        // Deduplicação: priorizar closure_uuid que tem HIPER_CAIXA no range pedido
+        if ($closureUuids->count() > 1) {
+            $preferred = PdvTurno::where('store_pdv_id', $storePdvId)
+                ->whereIn('closure_uuid', $closureUuids)
+                ->where('canal', 'HIPER_CAIXA')
+                ->where('fechado', true)
+                ->pluck('closure_uuid')
+                ->unique();
+
+            if ($preferred->isNotEmpty()) {
+                // Manter apenas closures que não estão duplicados, ou que têm CAIXA
+                $duplicated = $closureUuids->diff($preferred);
+                $closureUuids = $closureUuids->diff($duplicated)->merge($preferred)->unique();
+            }
+        }
+
         // Carrega todos os turnos de uma vez (evita N+1)
         $allTurnos = PdvTurno::whereIn('closure_uuid', $closureUuids)->get();
 
@@ -98,6 +114,21 @@ class PdvClosureUnifiedService
 
         if ($closureUuids->isEmpty()) {
             return collect();
+        }
+
+        // Deduplicação: priorizar closure_uuid que tem HIPER_CAIXA no dia pedido
+        if ($closureUuids->count() > 1) {
+            $preferred = PdvTurno::where('store_id', $storeId)
+                ->whereIn('closure_uuid', $closureUuids)
+                ->where('canal', 'HIPER_CAIXA')
+                ->where('fechado', true)
+                ->whereRaw("DATE(CONVERT_TZ(data_hora_inicio, '+00:00', '-03:00')) = ?", [$date])
+                ->pluck('closure_uuid')
+                ->unique();
+
+            if ($preferred->isNotEmpty()) {
+                $closureUuids = $preferred;
+            }
         }
 
         $allTurnos = PdvTurno::whereIn('closure_uuid', $closureUuids)->get();
@@ -144,6 +175,24 @@ class PdvClosureUnifiedService
 
         if ($closureUuids->isEmpty()) {
             return collect();
+        }
+
+        // Deduplicação: se múltiplos closure_uuids foram encontrados (ex: um turno
+        // HIPER_LOJA de outro dia cruzou a meia-noite), priorizar o que tem HIPER_CAIXA
+        // neste dia — ele é o "dono" legítimo do dia.
+        if ($closureUuids->count() > 1) {
+            $preferred = PdvTurno::where('store_id', $storeId)
+                ->whereIn('closure_uuid', $closureUuids)
+                ->where('canal', 'HIPER_CAIXA')
+                ->where('fechado', true)
+                ->whereRaw("DATE(CONVERT_TZ(data_hora_inicio, '+00:00', '-03:00')) = ?", [$date])
+                ->where('sequencial', $sequencial)
+                ->pluck('closure_uuid')
+                ->unique();
+
+            if ($preferred->isNotEmpty()) {
+                $closureUuids = $preferred;
+            }
         }
 
         $allTurnos = PdvTurno::whereIn('closure_uuid', $closureUuids)->get();
