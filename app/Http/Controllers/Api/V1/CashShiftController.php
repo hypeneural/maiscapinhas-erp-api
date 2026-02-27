@@ -459,6 +459,8 @@ class CashShiftController extends Controller
                 'days_pending' => $daysPending,
                 'conferente_name' => $shift->cashClosing?->closedByUser?->name,
                 'submitted_at' => $shift->cashClosing?->updated_at?->toIso8601String(),
+                'justification_text' => $shift->cashClosing?->justification_text,
+                'observer_notes' => $shift->cashClosing?->observer_notes,
             ];
         });
 
