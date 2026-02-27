@@ -219,7 +219,7 @@ class CashClosingController extends Controller
         }
 
         try {
-            $closing = $this->cashClosingService->reject($closing, $user, $request->input('reason'));
+            $closing = $this->cashClosingService->reject($closing, $user, $request->input('reason', ''));
             return $this->success($closing->load(['lines', 'cashShift.store', 'cashShift.seller']));
         } catch (ConflictHttpException $e) {
             return $this->conflict($e->getMessage());

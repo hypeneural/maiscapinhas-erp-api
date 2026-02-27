@@ -131,7 +131,7 @@ class CashClosingService
      *
      * @throws ConflictHttpException
      */
-    public function reject(CashClosing $closing, User $rejectedBy, string $reason): CashClosing
+    public function reject(CashClosing $closing, User $rejectedBy, ?string $reason = ''): CashClosing
     {
         return DB::transaction(function () use ($closing, $rejectedBy, $reason) {
             $closing = CashClosing::lockForUpdate()->find($closing->id);
