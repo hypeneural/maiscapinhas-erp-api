@@ -411,6 +411,108 @@ class CashClosingController extends Controller
             return $this->notFound('No closing found for this shift.');
         }
 
-        return $this->success($closing->load(['lines', 'cashShift.store', 'cashShift.seller', 'closedByUser', 'activities.causer']));
+        return $this->success($closing->load(['lines', 'cashShift.store', 'cashShift.seller', 'closedByUser', 'attachments', 'activities.causer']));
+    }
+
+    /**
+     * Upload attachment to closing
+     *
+     * Uploads a file (image or PDF) as an attachment to a cash closing.
+     * Maximum file size: 5MB. Allowed types: jpg, jpeg, png, pdf.
+     *
+     * @urlParam shift integer required ID do turno. Example: 1
+     * @bodyParam file file required The file to upload (max 5MB, jpg/png/pdf).
+     *
+     * @response 201 scenario="Anexo criado" {
+     *   "data": {
+     *     "id": 1,
+     *     "file_name": "comprovante.pdf",
+     *     "file_type": "application/pdf",
+     *     "file_size": 204800,
+     *     "url": "https://api.maiscapinhas.com.br/storage/cash-closings/1/comprovante.pdf",
+     *     "uploaded_by": 3,
+     *     "created_at": "2026-03-02T13:50:00Z"
+     *   },
+     *   "meta": { "timestamp": "2026-03-02T13:50:00Z" }
+     * }
+     */
+    public function uploadAttachment(Request $request, CashShift $shift): JsonResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'max:5120', 'mimes:jpg,jpeg,png,pdf'],
+        ]);
+
+        $user = $request->user();
+
+        if (!$user->hasAccessToStore($shift->store_id)) {
+            return $this->forbidden('You do not have access to this store.');
+        }
+
+        $closing = $shift->cashClosing;
+
+        if (!$closing) {
+            return $this->notFound('No closing found for this shift. Create a closing first.');
+        }
+
+        // Limit to 5 attachments per closing
+        if ($closing->attachments()->count() >= 5) {
+            return $this->conflict('Maximum of 5 attachments per closing reached.');
+        }
+
+        $file = $request->file('file');
+        $directory = "cash-closings/{$closing->id}";
+        $path = $file->store($directory, 'public');
+
+        $attachment = $closing->attachments()->create([
+            'file_name' => $file->getClientOriginalName(),
+            'file_path' => $path,
+            'file_type' => $file->getMimeType(),
+            'file_size' => $file->getSize(),
+            'uploaded_by' => $user->id,
+        ]);
+
+        return $this->created($attachment);
+    }
+
+    /**
+     * Delete attachment from closing
+     *
+     * Removes an attachment file from storage and deletes the database record.
+     *
+     * @urlParam shift integer required ID do turno. Example: 1
+     * @urlParam attachment integer required ID do anexo. Example: 1
+     *
+     * @response 200 scenario="Anexo removido" {
+     *   "message": "Attachment deleted successfully."
+     * }
+     */
+    public function deleteAttachment(Request $request, CashShift $shift, int $attachmentId): JsonResponse
+    {
+        $user = $request->user();
+
+        if (!$user->hasAccessToStore($shift->store_id)) {
+            return $this->forbidden('You do not have access to this store.');
+        }
+
+        $closing = $shift->cashClosing;
+
+        if (!$closing) {
+            return $this->notFound('No closing found for this shift.');
+        }
+
+        $attachment = $closing->attachments()->find($attachmentId);
+
+        if (!$attachment) {
+            return $this->notFound('Attachment not found.');
+        }
+
+        // Delete file from storage
+        \Illuminate\Support\Facades\Storage::disk('public')->delete($attachment->file_path);
+
+        // Delete record
+        $attachment->delete();
+
+        return $this->success(['message' => 'Attachment deleted successfully.']);
     }
 }
+

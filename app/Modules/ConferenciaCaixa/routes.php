@@ -64,4 +64,13 @@ Route::prefix('closings')->name('closings.')->group(function () {
     Route::post('/{shift}/reject', [CashClosingController::class, 'reject'])
         ->name('reject')
         ->middleware('permission:caixa.closing.reject');
+
+    // Attachments
+    Route::post('/{shift}/attachments', [CashClosingController::class, 'uploadAttachment'])
+        ->name('attachments.store')
+        ->middleware('permission:caixa.closing.create');
+
+    Route::delete('/{shift}/attachments/{attachment}', [CashClosingController::class, 'deleteAttachment'])
+        ->name('attachments.destroy')
+        ->middleware('permission:caixa.closing.create');
 });

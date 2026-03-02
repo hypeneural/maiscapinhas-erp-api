@@ -63,6 +63,11 @@ class CashClosing extends Model
         return $this->hasMany(CashClosingLine::class);
     }
 
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(CashClosingAttachment::class);
+    }
+
     // ========================================
     // Scopes
     // ========================================
