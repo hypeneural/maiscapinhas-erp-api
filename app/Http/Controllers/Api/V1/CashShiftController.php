@@ -424,7 +424,7 @@ class CashShiftController extends Controller
             return $this->forbidden('Você não tem acesso a esta loja.');
         }
 
-        $shifts = CashShift::with(['store:id,name', 'seller:id,name', 'cashClosing.lines', 'cashClosing.closedByUser:id,name'])
+        $shifts = CashShift::with(['store:id,name', 'seller:id,name', 'cashClosing.lines', 'cashClosing.closedByUser:id,name', 'cashClosing.attachments'])
             ->whereIn('store_id', $storeId ? [$storeId] : $userStoreIds)
             // Only list shifts that are waiting for approval (SUBMITTED)
             ->whereHas('cashClosing', function ($q) {
@@ -477,6 +477,13 @@ class CashShiftController extends Controller
                 'submitted_at' => $shift->cashClosing?->updated_at?->toIso8601String(),
                 'justification_text' => $shift->cashClosing?->justification_text,
                 'observer_notes' => $shift->cashClosing?->observer_notes,
+                'attachments' => $shift->cashClosing?->attachments?->map(fn($att) => [
+                    'id' => $att->id,
+                    'file_name' => $att->file_name,
+                    'file_type' => $att->file_type,
+                    'file_size' => $att->file_size,
+                    'url' => $att->url,
+                ]) ?? [],
             ];
         });
 
