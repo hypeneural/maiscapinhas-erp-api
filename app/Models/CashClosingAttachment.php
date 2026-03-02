@@ -48,7 +48,8 @@ class CashClosingAttachment extends Model
 
     public function getUrlAttribute(): string
     {
-        return Storage::disk('public')->url($this->file_path);
+        $baseUrl = rtrim(config('app.url'), '/');
+        return $baseUrl . '/storage/' . ltrim($this->file_path, '/');
     }
 
     // ========================================
