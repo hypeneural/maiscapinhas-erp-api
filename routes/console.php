@@ -40,6 +40,10 @@ Schedule::command('pdv:stale-vendas-check --json')
     ->withoutOverlapping()
     ->when(static fn () => (bool) config('pdv.stale_vendas_check_enabled', false));
 
+Schedule::command('tv:monitor-health --json')
+    ->everyMinute()
+    ->withoutOverlapping();
+
 Schedule::command(sprintf(
     'pdv:queue-consume --max-time=%d --sleep=%d --memory=%d',
     (int) config('pdv.cron_queue_consumer_max_time', 50),

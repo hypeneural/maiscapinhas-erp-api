@@ -37,6 +37,23 @@ class AppServiceProvider extends ServiceProvider
                 ->by($key);
         });
 
+        // Proxy-safe rate limiters for TV Digital Signage (avoids shared 127.0.0.1 proxy bucket!)
+        RateLimiter::for('tv-runtime', function (Request $request) {
+            $slug = (string) ($request->route('slugOrToken') ?? 'unknown');
+
+            return Limit::perMinute((int) config('tv.runtime_rate_limit_per_minute', 180))
+                ->by('tv-runtime|' . $slug);
+        });
+
+        RateLimiter::for('tv-status', function (Request $request) {
+            $ip = $request->header('CF-Connecting-IP')
+                ?: trim(explode(',', (string) $request->header('X-Forwarded-For', ''))[0] ?? '')
+                ?: $request->ip();
+
+            return Limit::perMinute((int) config('tv.status_rate_limit_per_minute', 120))
+                ->by('tv-status|' . ($ip ?: 'global'));
+        });
+
         // Register model observers
         Sale::observe(SaleObserver::class);
         CashClosing::observe(CashClosingObserver::class);

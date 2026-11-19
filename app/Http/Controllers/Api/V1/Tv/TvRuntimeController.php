@@ -10,13 +10,17 @@ use App\Models\TvAd;
 use App\Models\TvAdImpression;
 use App\Models\TvLog;
 use App\Models\TvScreen;
-use App\Models\TvScreenSession;
+use App\Services\Tv\TvHealthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class TvRuntimeController extends Controller
 {
+    public function __construct(
+        private TvHealthService $healthService
+    ) {
+    }
     /**
      * Obter o template de design padrão da rede.
      */
@@ -137,6 +141,8 @@ class TvRuntimeController extends Controller
             'is_global' => $ad->is_global,
         ])->values();
 
+        $playlistVersion = $this->healthService->computePlaylistVersion($storeId, $screen);
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -153,6 +159,8 @@ class TvRuntimeController extends Controller
                     'provider' => 'ably',
                     'channel' => $screen ? "tv:screen:{$screen->screen_key}" : 'tv:screen:global',
                 ],
+                'playlist_version' => $playlistVersion,
+                'recommended_ping_seconds' => (int) config('tv.heartbeat_interval_seconds', 30),
                 'playlist_count' => $playlist->count(),
                 'playlist' => $playlist,
                 'server_time' => now()->toISOString(),
@@ -161,7 +169,7 @@ class TvRuntimeController extends Controller
     }
 
     /**
-     * Heartbeat da TV com telemetria avançada e gerenciamento de sessões de uptime.
+     * Heartbeat da TV com telemetria avançada, detecção de transições e sessão atômica.
      */
     public function ping(Request $request, string $slugOrToken): JsonResponse
     {
@@ -169,81 +177,50 @@ class TvRuntimeController extends Controller
             ->where('slug', $slugOrToken)
             ->orWhere('screen_key', $slugOrToken)
             ->orWhere('access_token', $slugOrToken)
-            ->with('store:id,name')
+            ->with('store')
             ->first();
 
         if ($screen) {
-            $currentAdTitle = $request->input('current_ad_title');
-            $currentAdId = $request->input('current_ad_id');
-            $fps = $request->input('fps');
-            $uptimeSeconds = (int) $request->input('uptime_seconds', 0);
-            $now = now();
+            $state = $this->healthService->recordPing($screen, $request->all(), $request);
 
-            $screen->update([
-                'is_online' => true,
-                'current_ad_title' => $currentAdTitle,
-                'current_ad_id' => $currentAdId ? (int) $currentAdId : null,
-                'fps' => $fps ? (int) $fps : null,
-                'uptime_seconds' => $uptimeSeconds,
-                'last_ping_at' => $now,
-                'device_info' => array_merge($screen->device_info ?? [], [
-                    'user_agent' => $request->userAgent(),
-                    'ip' => $request->ip(),
-                    'screen_width' => $request->input('width'),
-                    'screen_height' => $request->input('height'),
-                    'offline_cached' => $request->boolean('offline_cached'),
-                    'pinged_at' => $now->toISOString(),
-                ]),
-            ]);
-
-            // Gerenciamento de Sessão de Funcionamento (Uptime) se a TV não estiver em Standby
-            if (!$screen->is_blackout) {
-                $activeSession = TvScreenSession::where('screen_id', $screen->id)
-                    ->whereNull('ended_at')
-                    ->latest('id')
-                    ->first();
-
-                if ($activeSession) {
-                    if ($activeSession->last_ping_at->lt($now->copy()->subMinutes(5))) {
-                        $activeSession->close('timeout_disconnected');
-                        $activeSession = TvScreenSession::create([
-                            'store_id' => $screen->store_id,
-                            'screen_id' => $screen->id,
-                            'screen_slug' => $screen->slug,
-                            'started_at' => $now,
-                            'last_ping_at' => $now,
-                            'duration_minutes' => 0,
-                            'device_info' => ['user_agent' => $request->userAgent(), 'ip' => $request->ip()],
-                        ]);
-                    } else {
-                        $duration = max(1, (int) $activeSession->started_at->diffInMinutes($now));
-                        $activeSession->update([
-                            'last_ping_at' => $now,
-                            'duration_minutes' => $duration,
-                        ]);
-                    }
-                } else {
-                    TvScreenSession::create([
-                        'store_id' => $screen->store_id,
-                        'screen_id' => $screen->id,
-                        'screen_slug' => $screen->slug,
-                        'started_at' => $now,
-                        'last_ping_at' => $now,
-                        'duration_minutes' => 0,
-                        'device_info' => ['user_agent' => $request->userAgent(), 'ip' => $request->ip()],
-                    ]);
-
-                    TvLog::log('info', 'tv_turned_on', "TV da loja '{$screen->store?->name}' conectou e iniciou transmissão", $screen->slug, $screen->store_id, [
-                        'ip' => $request->ip(),
-                        'user_agent' => $request->userAgent(),
-                    ]);
-                }
-            }
+            return response()->json(array_merge(['success' => true], $state));
         }
 
         return response()->json([
             'success' => true,
             'status' => 'online',
+            'recommended_ping_seconds' => (int) config('tv.heartbeat_interval_seconds', 30),
+            'server_time' => now()->toISOString(),
+        ]);
+    }
+
+    /**
+     * Desconexão graciosa via navigator.sendBeacon (pagehide / beforeunload).
+     */
+    public function disconnect(Request $request, string $slugOrToken): JsonResponse
+    {
+        $screen = TvScreen::query()
+            ->where('slug', $slugOrToken)
+            ->orWhere('screen_key', $slugOrToken)
+            ->orWhere('access_token', $slugOrToken)
+            ->with('store')
+            ->first();
+
+        if ($screen) {
+            $payload = $request->all();
+            if ($payload === [] && $request->getContent() !== '') {
+                $decoded = json_decode((string) $request->getContent(), true);
+                if (is_array($decoded)) {
+                    $payload = $decoded;
+                }
+            }
+
+            $this->healthService->recordGracefulDisconnect($screen, $payload, $request);
+        }
+
+        return response()->json([
+            'success' => true,
+            'status' => 'offline',
             'server_time' => now()->toISOString(),
         ]);
     }
@@ -253,6 +230,14 @@ class TvRuntimeController extends Controller
      */
     public function impression(Request $request, string $slugOrToken): JsonResponse
     {
+        if ($request->boolean('preview') || filter_var($request->query('preview', false), FILTER_VALIDATE_BOOLEAN)) {
+            return response()->json([
+                'success' => true,
+                'ignored_preview' => true,
+                'message' => 'Preview impression ignored',
+            ]);
+        }
+
         $request->validate([
             'tv_ad_id' => 'required|integer|exists:tv_ads,id',
             'duration_played_seconds' => 'nullable|integer',
@@ -289,17 +274,26 @@ class TvRuntimeController extends Controller
      */
     public function logError(Request $request, string $slugOrToken): JsonResponse
     {
+        if ($request->boolean('preview') || filter_var($request->query('preview', false), FILTER_VALIDATE_BOOLEAN)) {
+            return response()->json(['success' => true, 'ignored_preview' => true]);
+        }
+
         $screen = TvScreen::query()
             ->where('slug', $slugOrToken)
             ->orWhere('screen_key', $slugOrToken)
             ->first();
 
-        TvLog::log('error', 'tv_player_error', $request->input('message', 'Erro no player de TV'), $screen?->slug ?? $slugOrToken, $screen?->store_id, [
-            'url' => $request->input('url'),
+        $message = (string) $request->input('message', 'Erro no player de TV');
+        $mediaUrl = $request->input('url') ? (string) $request->input('url') : null;
+
+        TvLog::log('error', 'tv_player_error', $message, $screen?->slug ?? $slugOrToken, $screen?->store_id, [
+            'url' => $mediaUrl,
             'type' => $request->input('type'),
             'user_agent' => $request->userAgent(),
-            'ip' => $request->ip(),
+            'ip' => $this->healthService->resolveClientIp($request),
         ]);
+
+        $this->healthService->handlePlayerErrorLogged($screen, $message, $mediaUrl);
 
         return response()->json(['success' => true]);
     }

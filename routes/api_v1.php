@@ -87,12 +87,23 @@ Route::prefix('bio')->name('bio.')->group(function () {
 Route::post('/capas-personalizadas/{capa}/upload-publico', [CapaPersonalizadaController::class, 'uploadPublico'])
     ->name('capas-personalizadas.upload-publico');
 
-// TV Runtime routes (public for TV player)
+// TV Runtime & Public Status/History routes (public, no authentication required)
 Route::prefix('tv')->name('tv.')->group(function () {
-    Route::get('/playlist/{slugOrToken}', [\App\Http\Controllers\Api\V1\Tv\TvRuntimeController::class, 'playlist'])->name('playlist');
-    Route::post('/ping/{slugOrToken}', [\App\Http\Controllers\Api\V1\Tv\TvRuntimeController::class, 'ping'])->name('ping');
-    Route::post('/impression/{slugOrToken}', [\App\Http\Controllers\Api\V1\Tv\TvRuntimeController::class, 'impression'])->name('impression');
-    Route::post('/error/{slugOrToken}', [\App\Http\Controllers\Api\V1\Tv\TvRuntimeController::class, 'logError'])->name('error');
+    // Public Pull Status & History API (100% open, read-only, sanitized)
+    Route::middleware('throttle:tv-status')->group(function () {
+        Route::get('/status', [\App\Http\Controllers\Api\V1\Tv\TvStatusController::class, 'index'])->name('status.index');
+        Route::get('/status/{slug}', [\App\Http\Controllers\Api\V1\Tv\TvStatusController::class, 'show'])->name('status.show');
+        Route::get('/history', [\App\Http\Controllers\Api\V1\Tv\TvStatusController::class, 'history'])->name('history');
+    });
+
+    // TV Player Runtime (proxy-safe throttle by slugOrToken)
+    Route::middleware('throttle:tv-runtime')->group(function () {
+        Route::get('/playlist/{slugOrToken}', [\App\Http\Controllers\Api\V1\Tv\TvRuntimeController::class, 'playlist'])->name('playlist');
+        Route::post('/ping/{slugOrToken}', [\App\Http\Controllers\Api\V1\Tv\TvRuntimeController::class, 'ping'])->name('ping');
+        Route::post('/disconnect/{slugOrToken}', [\App\Http\Controllers\Api\V1\Tv\TvRuntimeController::class, 'disconnect'])->name('disconnect');
+        Route::post('/impression/{slugOrToken}', [\App\Http\Controllers\Api\V1\Tv\TvRuntimeController::class, 'impression'])->name('impression');
+        Route::post('/error/{slugOrToken}', [\App\Http\Controllers\Api\V1\Tv\TvRuntimeController::class, 'logError'])->name('error');
+    });
 });
 
 // ============================================
@@ -425,6 +436,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::put('/ads/{id}', [\App\Http\Controllers\Api\V1\Admin\TvAdController::class, 'update'])->name('ads.update');
             Route::delete('/ads/{id}', [\App\Http\Controllers\Api\V1\Admin\TvAdController::class, 'destroy'])->name('ads.destroy');
             Route::get('/screens', [\App\Http\Controllers\Api\V1\Admin\TvAdController::class, 'screens'])->name('screens.index');
+            Route::patch('/screens/{screenId}', [\App\Http\Controllers\Api\V1\Admin\TvAdController::class, 'updateScreen'])->name('screens.update');
             Route::post('/screens/{screenId}/command', [\App\Http\Controllers\Api\V1\Admin\TvAdController::class, 'sendCommand'])->name('screens.command');
             Route::get('/stats', [\App\Http\Controllers\Api\V1\Admin\TvAdController::class, 'stats'])->name('stats');
             Route::get('/analytics', [\App\Http\Controllers\Api\V1\Admin\TvAdController::class, 'analytics'])->name('analytics');
@@ -434,6 +446,14 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::delete('/design/stores/{storeId}', [\App\Http\Controllers\Api\V1\Admin\TvAdController::class, 'resetStoreDesign'])->name('design.store.reset');
             Route::post('/design/upload-logo', [\App\Http\Controllers\Api\V1\Admin\TvAdController::class, 'uploadLogo'])->name('design.upload_logo');
             Route::get('/logs', [\App\Http\Controllers\Api\V1\Admin\TvAdController::class, 'logs'])->name('logs');
+            Route::prefix('webhooks')->name('webhooks.')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Api\V1\Admin\TvWebhookAdminController::class, 'index'])->name('index');
+                Route::post('/', [\App\Http\Controllers\Api\V1\Admin\TvWebhookAdminController::class, 'store'])->name('store');
+                Route::get('/deliveries', [\App\Http\Controllers\Api\V1\Admin\TvWebhookAdminController::class, 'deliveries'])->name('deliveries');
+                Route::put('/{id}', [\App\Http\Controllers\Api\V1\Admin\TvWebhookAdminController::class, 'update'])->name('update');
+                Route::delete('/{id}', [\App\Http\Controllers\Api\V1\Admin\TvWebhookAdminController::class, 'destroy'])->name('destroy');
+                Route::post('/{id}/test', [\App\Http\Controllers\Api\V1\Admin\TvWebhookAdminController::class, 'test'])->name('test');
+            });
         });
     });
 

@@ -11,6 +11,7 @@ use App\Models\TvAdImpression;
 use App\Models\TvLog;
 use App\Models\TvScreen;
 use App\Models\TvScreenSession;
+use App\Services\Tv\TvHealthService;
 use App\Services\Wheel\AblyPublisher;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -23,7 +24,8 @@ use Illuminate\Support\Str;
 class TvAdController extends Controller
 {
     public function __construct(
-        private ?AblyPublisher $ably = null
+        private ?AblyPublisher $ably = null,
+        private ?TvHealthService $healthService = null
     ) {
     }
 
@@ -277,6 +279,12 @@ class TvAdController extends Controller
             ]);
 
             $this->notifyScreens();
+            $this->healthService?->notifyPlaylistUpdated(
+                'ad_created',
+                "Novo anúncio '{$ad->title}' publicado",
+                $isGlobal ? null : ($request->store_ids[0] ?? null),
+                ['ad_id' => $ad->id, 'title' => $ad->title]
+            );
 
             return response()->json([
                 'success' => true,
@@ -406,6 +414,12 @@ class TvAdController extends Controller
         ]);
 
         $this->notifyScreens();
+        $this->healthService?->notifyPlaylistUpdated(
+            'ad_updated',
+            "Anúncio '{$ad->title}' atualizado",
+            null,
+            ['ad_id' => $ad->id, 'title' => $ad->title]
+        );
 
         return response()->json([
             'success' => true,
@@ -435,6 +449,12 @@ class TvAdController extends Controller
         ]);
 
         $this->notifyScreens();
+        $this->healthService?->notifyPlaylistUpdated(
+            'ad_deleted',
+            "Anúncio '{$title}' removido da grade",
+            null,
+            ['ad_id' => $id, 'title' => $title]
+        );
 
         return response()->json([
             'success' => true,
@@ -443,10 +463,14 @@ class TvAdController extends Controller
     }
 
     /**
-     * Listar todas as telas/links das lojas físicas e telemetria atual.
+     * Listar todas as telas/links das lojas físicas e telemetria atual enriquecida.
      */
     public function screens(): JsonResponse
     {
+        $healthService = $this->healthService ?? app(TvHealthService::class);
+        $fleet = $healthService->buildFleetStatus(['include_history' => false]);
+        $dtoByScreenId = collect($fleet['data'])->keyBy('screen_id');
+
         $stores = Store::query()
             ->orderBy('id', 'asc')
             ->get();
@@ -461,10 +485,13 @@ class TvAdController extends Controller
                     'orientation' => 'auto',
                     'is_online' => false,
                     'is_blackout' => false,
+                    'health_status' => 'never_connected',
+                    'monitoring_enabled' => true,
                 ]
             );
 
-            $isOnline = $screen->is_online && $screen->last_ping_at && $screen->last_ping_at->gt(now()->subMinutes(2));
+            $dto = $dtoByScreenId->get($screen->id);
+            $isOnline = $dto ? (bool) $dto['is_online'] : ($screen->is_online && $screen->last_ping_at && $screen->last_ping_at->gt(now()->subSeconds((int) config('tv.offline_threshold_seconds', 180))));
 
             $screens[] = [
                 'store_id' => $store->id,
@@ -476,18 +503,49 @@ class TvAdController extends Controller
                 'orientation' => $screen->orientation,
                 'is_online' => $isOnline,
                 'is_blackout' => (bool) $screen->is_blackout,
+                'health_status' => $dto['status'] ?? ($screen->health_status ?: 'never_connected'),
+                'status_label' => $dto['status_label'] ?? ($isOnline ? 'Online' : 'Offline'),
+                'severity' => $dto['severity'] ?? 'info',
+                'monitoring_enabled' => (bool) $screen->monitoring_enabled,
                 'current_ad_title' => $screen->current_ad_title,
                 'current_ad_id' => $screen->current_ad_id,
                 'fps' => $screen->fps,
                 'uptime_seconds' => $screen->uptime_seconds,
                 'last_ping_at' => $screen->last_ping_at?->toISOString(),
                 'public_url' => config('app.frontend_url', config('app.url')) . '/tv/' . $screen->slug,
+                'public_status_url' => rtrim((string) config('app.url'), '/') . '/api/v1/tv/status/' . $screen->slug,
+                'store_hours' => $dto['store_hours'] ?? null,
+                'timing' => $dto['timing'] ?? null,
+                'display' => $dto['display'] ?? null,
+                'client' => $dto['client'] ?? null,
+                'playback' => $dto['playback'] ?? null,
             ];
         }
 
         return response()->json([
             'success' => true,
             'data' => $screens,
+            'summary' => $fleet['summary'] ?? null,
+        ]);
+    }
+
+    /**
+     * Atualizar configurações de monitoramento/orientação de uma tela específica.
+     */
+    public function updateScreen(Request $request, int $screenId): JsonResponse
+    {
+        $screen = TvScreen::findOrFail($screenId);
+        $validated = $request->validate([
+            'monitoring_enabled' => 'sometimes|boolean',
+            'orientation' => 'sometimes|in:auto,horizontal,vertical',
+        ]);
+
+        $screen->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Configuração da TV atualizada com sucesso.',
+            'data' => $screen->fresh(),
         ]);
     }
 
@@ -522,13 +580,16 @@ class TvAdController extends Controller
                 ->latest('id')
                 ->first();
             if ($activeSession) {
-                $activeSession->close('standby_turned_off');
+                $activeSession->close('standby_turned_off', now());
             }
+            $this->healthService?->recordStandbyTransition($screen, true, $request->user()?->name);
         } elseif ($command === 'turn_on') {
             $screen->update(['is_blackout' => false]);
+            $this->healthService?->recordStandbyTransition($screen, false, $request->user()?->name);
         } elseif ($command === 'toggle_power') {
             $screen->update(['is_blackout' => !$screen->is_blackout]);
             $command = $screen->is_blackout ? 'turn_off' : 'turn_on';
+            $this->healthService?->recordStandbyTransition($screen, (bool) $screen->is_blackout, $request->user()?->name);
         }
 
         $humanCommand = $humanCommandNames[$command] ?? $command;
@@ -780,14 +841,17 @@ class TvAdController extends Controller
      */
     public function stats(): JsonResponse
     {
+        $this->healthService?->reconcileStaleScreens();
+
         $now = now();
         $today = $now->copy()->startOfDay();
+        $offlineThreshold = (int) config('tv.offline_threshold_seconds', 180);
 
         $totalActiveAds = TvAd::query()->currentlyActive()->count();
         $totalScreens = TvScreen::count();
         $onlineScreens = TvScreen::query()
             ->where('is_online', true)
-            ->where('last_ping_at', '>', $now->subMinutes(2))
+            ->where('last_ping_at', '>', $now->copy()->subSeconds($offlineThreshold))
             ->count();
 
         $impressionsToday = TvAdImpression::where('displayed_at', '>=', $today)->count();
@@ -902,6 +966,10 @@ class TvAdController extends Controller
         ]);
 
         $this->notifyScreens();
+        $this->healthService?->notifyPlaylistUpdated(
+            'design_global_updated',
+            'Design padrão global das TVs atualizado'
+        );
 
         return response()->json([
             'success' => true,
@@ -937,6 +1005,11 @@ class TvAdController extends Controller
         ]);
 
         $this->notifyScreens();
+        $this->healthService?->notifyPlaylistUpdated(
+            'design_store_updated',
+            "Design exclusivo da loja '{$store->name}' atualizado",
+            $store->id
+        );
 
         return response()->json([
             'success' => true,

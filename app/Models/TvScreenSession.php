@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -48,15 +49,25 @@ class TvScreenSession extends Model
     }
 
     /**
-     * Fechar a sessão ativa.
+     * Fechar a sessão ativa preservando a duração real.
+     * Em timeout_disconnected, usa last_ping_at para jamais contar tempo offline como online.
      */
-    public function close(string $reason): void
+    public function close(string $reason, ?Carbon $endedAt = null): void
     {
-        $endedAt = now();
-        $duration = max(1, (int) $this->started_at->diffInMinutes($endedAt));
+        $effectiveEnd = $endedAt ?? ($reason === 'timeout_disconnected' && $this->last_ping_at
+            ? $this->last_ping_at->copy()
+            : now());
+
+        if ($this->started_at && $effectiveEnd->lt($this->started_at)) {
+            $effectiveEnd = $this->started_at->copy();
+        }
+
+        $duration = $this->started_at
+            ? max(0, (int) $this->started_at->diffInMinutes($effectiveEnd))
+            : 0;
 
         $this->update([
-            'ended_at' => $endedAt,
+            'ended_at' => $effectiveEnd,
             'duration_minutes' => $duration,
             'ended_reason' => $reason,
         ]);
