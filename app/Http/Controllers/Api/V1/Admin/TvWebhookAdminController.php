@@ -95,7 +95,7 @@ class TvWebhookAdminController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Webhook de monitoramento cadastrado com sucesso!',
+            'message' => 'Alerta cadastrado com sucesso!',
             'data' => $webhook->load('creator:id,name'),
         ], 201);
     }
@@ -139,7 +139,7 @@ class TvWebhookAdminController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Webhook atualizado com sucesso!',
+            'message' => 'Alerta atualizado com sucesso!',
             'data' => $webhook->fresh()->load('creator:id,name'),
         ]);
     }
@@ -154,7 +154,7 @@ class TvWebhookAdminController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Webhook removido com sucesso.',
+            'message' => 'Alerta removido com sucesso.',
         ]);
     }
 
@@ -178,8 +178,8 @@ class TvWebhookAdminController extends Controller
         return response()->json([
             'success' => $delivery->status === 'delivered',
             'message' => $delivery->status === 'delivered'
-                ? "Teste entregue com sucesso (HTTP {$delivery->http_status} em {$delivery->duration_ms}ms)."
-                : "Falha ao entregar teste: " . ($delivery->error_message ?: 'Erro desconhecido'),
+                ? "Envio de teste realizado com sucesso (código {$delivery->http_status} em {$delivery->duration_ms} ms)."
+                : "Falha ao enviar o teste: " . ($delivery->error_message ?: 'Erro desconhecido'),
             'data' => $delivery,
         ], $delivery->status === 'delivered' ? 200 : 502);
     }

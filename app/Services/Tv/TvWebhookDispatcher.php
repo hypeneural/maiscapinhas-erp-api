@@ -211,7 +211,7 @@ class TvWebhookDispatcher
                     'status' => 'skipped_cooldown',
                     'attempt' => 0,
                     'payload' => $payloadWithId,
-                    'error_message' => "Ignorado por cooldown anti-flapping ({$cooldownSeconds}s).",
+                    'error_message' => "Ignorado: aviso repetido dentro do intervalo mínimo de {$cooldownSeconds}s.",
                     'dispatched_at' => $now,
                     'created_at' => $now,
                 ]);
