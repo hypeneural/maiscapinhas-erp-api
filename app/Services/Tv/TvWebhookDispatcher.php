@@ -233,8 +233,16 @@ class TvWebhookDispatcher
         ]);
 
         try {
-            if ($sync || config('queue.default') === 'sync') {
+            $dispatchMode = strtolower((string) config('tv.webhook_dispatch_mode', 'after_response'));
+
+            if ($sync || config('queue.default') === 'sync' || $dispatchMode === 'sync') {
                 DispatchTvWebhookJob::dispatchSync($delivery->id, false);
+            } elseif ($dispatchMode === 'after_response') {
+                if (app()->runningInConsole() || app()->runningUnitTests()) {
+                    DispatchTvWebhookJob::dispatchSync($delivery->id, false);
+                } else {
+                    DispatchTvWebhookJob::dispatchAfterResponse($delivery->id, false);
+                }
             } else {
                 DispatchTvWebhookJob::dispatch($delivery->id, true);
             }

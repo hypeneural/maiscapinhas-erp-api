@@ -50,6 +50,9 @@ return [
     'webhook_timeout_seconds' => (int) env('TV_WEBHOOK_TIMEOUT_SECONDS', 8),
     'webhook_max_retries' => (int) env('TV_WEBHOOK_MAX_RETRIES', 3),
     'webhook_default_cooldown_seconds' => (int) env('TV_WEBHOOK_COOLDOWN_SECONDS', 60),
+    // 'after_response' delivers immediately in CLI cron and post-response in HTTP (reliable without external queue daemon);
+    // 'sync' always delivers inline; 'queue' uses Laravel's default queue worker.
+    'webhook_dispatch_mode' => env('TV_WEBHOOK_DISPATCH_MODE', 'after_response'),
     'webhook_allow_private_targets' => filter_var(
         env('TV_WEBHOOK_ALLOW_PRIVATE_TARGETS', false),
         FILTER_VALIDATE_BOOLEAN
