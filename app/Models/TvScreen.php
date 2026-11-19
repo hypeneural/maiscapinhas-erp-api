@@ -25,6 +25,13 @@ class TvScreen extends Model
         'orientation',
         'is_online',
         'is_blackout',
+        'health_status',
+        'status_changed_at',
+        'online_since',
+        'offline_since',
+        'last_device_id',
+        'playlist_version',
+        'monitoring_enabled',
         'current_ad_title',
         'current_ad_id',
         'fps',
@@ -39,6 +46,10 @@ class TvScreen extends Model
         return [
             'is_online' => 'boolean',
             'is_blackout' => 'boolean',
+            'monitoring_enabled' => 'boolean',
+            'status_changed_at' => 'datetime',
+            'online_since' => 'datetime',
+            'offline_since' => 'datetime',
             'last_ping_at' => 'datetime',
             'device_info' => 'array',
             'design_template' => 'array',
@@ -70,5 +81,10 @@ class TvScreen extends Model
     public function sessions(): HasMany
     {
         return $this->hasMany(TvScreenSession::class, 'screen_id');
+    }
+
+    public function statusEvents(): HasMany
+    {
+        return $this->hasMany(TvScreenStatusEvent::class, 'screen_id');
     }
 }
