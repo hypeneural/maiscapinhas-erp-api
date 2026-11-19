@@ -80,10 +80,12 @@ class MeController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'active' => $user->active,
-                'is_super_admin' => $user->is_super_admin ?? false,
+                'is_super_admin' => $user->isSuperAdmin(),
                 'is_global_admin' => $user->isGlobalAdmin(),
-                'has_fabrica_access' => $user->hasRole('fabrica'),
-                'roles' => $user->getRoleNames()->toArray(),
+                'has_fabrica_access' => $user->isSuperAdmin() || $user->hasRole('fabrica'),
+                'roles' => $user->isSuperAdmin()
+                    ? array_values(array_unique(array_merge($user->getRoleNames()->toArray(), ['super_admin', 'admin'])))
+                    : $user->getRoleNames()->toArray(),
                 'whatsapp' => $user->whatsapp,
                 'avatar_url' => $user->avatar_url,
                 'instagram' => $user->instagram,
@@ -109,6 +111,65 @@ class MeController extends Controller
      */
     protected function resolveUserPermissions($user): array
     {
+        if ($user->isSuperAdmin()) {
+            $allDbPermissions = \Spatie\Permission\Models\Permission::pluck('name')->toArray();
+            $allScreenPermissions = [
+                'screen.dashboard',
+                'screen.pedidos',
+                'screen.pedidos.detail',
+                'screen.pedidos.create',
+                'screen.capas',
+                'screen.capas.list',
+                'screen.capas.detail',
+                'screen.capas.create',
+                'screen.reports',
+                'screen.users',
+                'screen.stores',
+                'screen.audit',
+                'screen.roles',
+                'screen.permissions',
+                'screen.modules',
+                'screen.pdv.mapping',
+                'screen.pdv.validation',
+                'screen.pdv.closures',
+                'screen.hiper.connection',
+                'screen.tv.ads',
+                'screen.comunicados',
+                'screen.celebrations',
+                'screen.ranking',
+                'screen.desempenho',
+                'screen.quebracaixa',
+                'screen.kpis',
+                'screen.sales.history',
+                'screen.sales.sync',
+                'screen.pdv.debug',
+                'screen.operacoes.history',
+                'screen.metas',
+                'screen.tabela.bonus',
+                'screen.regras.comissao',
+                'screen.extrato.vendas',
+                'screen.meus.bonus',
+                'screen.minhas.comissoes',
+                'screen.lancar.turno',
+                'screen.divergencias',
+                'screen.historico.envelopes',
+                'screen.clientes',
+                'screen.phone.catalog',
+                'screen.whatsapp.instances',
+                'screen.producao.carrinho',
+                'screen.producao.pedidos',
+                'screen.fabrica.pedidos',
+                'wheel.admin',
+                'wheel.manage',
+            ];
+
+            return [
+                'permissions' => array_values(array_unique(array_merge($allDbPermissions, $allScreenPermissions))),
+                'temporary_permissions' => [],
+                'expiring_soon' => [],
+            ];
+        }
+
         // Get all permissions from roles and overrides
         $allPermissions = [];
         $temporaryPermissions = [];
@@ -161,7 +222,7 @@ class MeController extends Controller
         }
 
         return [
-            'permissions' => array_unique($allPermissions),
+            'permissions' => array_values(array_unique($allPermissions)),
             'temporary_permissions' => $temporaryPermissions,
             'expiring_soon' => $expiringSoon,
         ];

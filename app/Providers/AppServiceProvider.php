@@ -43,5 +43,12 @@ class AppServiceProvider extends ServiceProvider
 
         // Register policies
         Gate::policy(Announcement::class, AnnouncementPolicy::class);
+
+        // Super Admin bypass for all gates and policies
+        Gate::before(function ($user, $ability) {
+            if ($user && method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin()) {
+                return true;
+            }
+        });
     }
 }

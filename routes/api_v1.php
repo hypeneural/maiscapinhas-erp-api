@@ -87,6 +87,14 @@ Route::prefix('bio')->name('bio.')->group(function () {
 Route::post('/capas-personalizadas/{capa}/upload-publico', [CapaPersonalizadaController::class, 'uploadPublico'])
     ->name('capas-personalizadas.upload-publico');
 
+// TV Runtime routes (public for TV player)
+Route::prefix('tv')->name('tv.')->group(function () {
+    Route::get('/playlist/{slugOrToken}', [\App\Http\Controllers\Api\V1\Tv\TvRuntimeController::class, 'playlist'])->name('playlist');
+    Route::post('/ping/{slugOrToken}', [\App\Http\Controllers\Api\V1\Tv\TvRuntimeController::class, 'ping'])->name('ping');
+    Route::post('/impression/{slugOrToken}', [\App\Http\Controllers\Api\V1\Tv\TvRuntimeController::class, 'impression'])->name('impression');
+    Route::post('/error/{slugOrToken}', [\App\Http\Controllers\Api\V1\Tv\TvRuntimeController::class, 'logError'])->name('error');
+});
+
 // ============================================
 // Protected Routes (authentication required)
 // ============================================
@@ -407,6 +415,25 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/', [AuditLogController::class, 'index'])->name('index');
             Route::get('/stats', [AuditLogController::class, 'stats'])->name('stats');
             Route::get('/{auditLog}', [AuditLogController::class, 'show'])->name('show');
+        });
+
+        // TV Signage / Ads Management
+        Route::prefix('tv')->name('tv.')->group(function () {
+            Route::get('/ads', [\App\Http\Controllers\Api\V1\Admin\TvAdController::class, 'index'])->name('ads.index');
+            Route::post('/ads/upload-chunk', [\App\Http\Controllers\Api\V1\Admin\TvAdController::class, 'uploadChunk'])->name('ads.upload-chunk');
+            Route::post('/ads', [\App\Http\Controllers\Api\V1\Admin\TvAdController::class, 'store'])->name('ads.store');
+            Route::put('/ads/{id}', [\App\Http\Controllers\Api\V1\Admin\TvAdController::class, 'update'])->name('ads.update');
+            Route::delete('/ads/{id}', [\App\Http\Controllers\Api\V1\Admin\TvAdController::class, 'destroy'])->name('ads.destroy');
+            Route::get('/screens', [\App\Http\Controllers\Api\V1\Admin\TvAdController::class, 'screens'])->name('screens.index');
+            Route::post('/screens/{screenId}/command', [\App\Http\Controllers\Api\V1\Admin\TvAdController::class, 'sendCommand'])->name('screens.command');
+            Route::get('/stats', [\App\Http\Controllers\Api\V1\Admin\TvAdController::class, 'stats'])->name('stats');
+            Route::get('/analytics', [\App\Http\Controllers\Api\V1\Admin\TvAdController::class, 'analytics'])->name('analytics');
+            Route::get('/design', [\App\Http\Controllers\Api\V1\Admin\TvAdController::class, 'getDesignSettings'])->name('design.index');
+            Route::post('/design/global', [\App\Http\Controllers\Api\V1\Admin\TvAdController::class, 'saveGlobalDesign'])->name('design.global.save');
+            Route::post('/design/stores/{storeId}', [\App\Http\Controllers\Api\V1\Admin\TvAdController::class, 'saveStoreDesign'])->name('design.store.save');
+            Route::delete('/design/stores/{storeId}', [\App\Http\Controllers\Api\V1\Admin\TvAdController::class, 'resetStoreDesign'])->name('design.store.reset');
+            Route::post('/design/upload-logo', [\App\Http\Controllers\Api\V1\Admin\TvAdController::class, 'uploadLogo'])->name('design.upload_logo');
+            Route::get('/logs', [\App\Http\Controllers\Api\V1\Admin\TvAdController::class, 'logs'])->name('logs');
         });
     });
 
