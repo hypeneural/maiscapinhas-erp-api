@@ -109,7 +109,7 @@ class User extends Authenticatable
 
     public function isSuperAdmin(): bool
     {
-        return $this->is_super_admin === true;
+        return $this->is_super_admin === true || $this->hasRole('super_admin');
     }
 
     // ========================================
@@ -126,6 +126,9 @@ class User extends Authenticatable
 
     public function roleInStore(int $storeId): ?string
     {
+        if ($this->isSuperAdmin()) {
+            return StoreUser::ROLE_ADMIN;
+        }
         $storeUser = $this->storeUsers()->where('store_id', $storeId)->first();
         return $storeUser?->role;
     }
@@ -146,6 +149,9 @@ class User extends Authenticatable
 
     public function isAdminInStore(int $storeId): bool
     {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
         return $this->roleInStore($storeId) === StoreUser::ROLE_ADMIN;
     }
 
@@ -165,6 +171,20 @@ class User extends Authenticatable
 
     public function getStoresWithRoles(): array
     {
+        if ($this->isSuperAdmin()) {
+            return Store::query()
+                ->where('active', true)
+                ->orderBy('name')
+                ->get()
+                ->map(fn(Store $s) => [
+                    'id' => $s->id,
+                    'name' => $s->name,
+                    'city' => $s->city,
+                    'role' => StoreUser::ROLE_ADMIN,
+                ])
+                ->toArray();
+        }
+
         return $this->storeUsers()
             ->with('store')
             ->get()
