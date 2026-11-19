@@ -123,6 +123,7 @@ class TvSignageTest extends TestCase
                 'database/migrations/2026_03_03_120000_add_is_blackout_to_tv_screens.php',
                 'database/migrations/2026_03_03_130000_create_tv_screen_sessions_table.php',
                 'database/migrations/2026_03_03_140000_add_design_template_to_tv_screens_and_globals.php',
+                'database/migrations/2026_11_19_180000_create_tv_health_events_and_webhooks_tables.php',
             ];
 
             foreach ($migrations as $path) {
